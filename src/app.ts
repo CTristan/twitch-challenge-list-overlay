@@ -8,6 +8,17 @@ import EnhancedCommandHandler from "./utils/EnhancedCommandHandler.js";
 // Commands and responses are loaded from ConfigManager
 
 /**
+ * Get a value from an array by cycling through it based on an index
+ * @param index - The index to use for cycling (0-based)
+ * @param values - Array of values to cycle through
+ * @returns The value at the cycled index or null if no values configured
+ */
+function getCyclicArrayValue<T>(index: number, values: T[]): T | null {
+  if (!values || values.length === 0) return null;
+  return values[index % values.length];
+}
+
+/**
  * Get the background color for a challenge row based on its index and configured colors
  * @param rowIndex - The index of the row (0-based)
  * @param colors - Array of color values to cycle through
@@ -17,8 +28,7 @@ function getRowBackgroundColor(
   rowIndex: number,
   colors: string[]
 ): string | null {
-  if (!colors || colors.length === 0) return null;
-  return colors[rowIndex % colors.length];
+  return getCyclicArrayValue(rowIndex, colors);
 }
 
 /**
@@ -31,8 +41,7 @@ function getRowTextColor(
   rowIndex: number,
   colors: string[]
 ): string | null {
-  if (!colors || colors.length === 0) return null;
-  return colors[rowIndex % colors.length];
+  return getCyclicArrayValue(rowIndex, colors);
 }
 
 /**
