@@ -4,34 +4,35 @@
   --card-font-family: Roboto Mono;
 
   /* App Styles */
-  --app-border-radius: 8px;
-  --app-padding: 8px;
+  --app-border-radius: 0.5rem;
+  --app-padding: 0.75rem;
   --app-background-image: url(../images/transparent-image.png);
   --app-background-color: rgba(130, 130, 130, 0);
 
   /* Header */
   --header-display: flex;
-  --header-border-radius: 8px;
-  --header-margin-bottom: 6px;
-  --header-padding: 16px;
+  --header-border-radius: 0.5rem;
+  --header-margin-bottom: 0.75rem;
+  --header-padding: 1.5rem;
   --header-background-color: rgba(45, 45, 45, 0.7);
-  --header-font-size: 18px;
+  --header-font-size: 2.25rem;
   --header-font-color: white;
   --header-font-weight: normal;
 
   /* Card */
-  --card-gap-between: 6px;
-  --card-border-radius: 8px;
+  --card-gap-between: 0.75rem;
+  --card-border-radius: 0.5rem;
   --card-background-color: rgba(100, 100, 100, 0.6);
-  --card-padding: 16px;
+  --card-padding: 1.5rem;
 
   /* User Name */
-  --username-font-size: 18px;
+  --username-font-size: 2.25rem;
   --username-color: #ffffff;
   --username-font-weight: normal;
 
   /* User Challenge */
-  --challenge-font-size: 16px;
+  --challenge-font-size: 2rem;
+  --challenge-description-font-size: 1.7rem;
   --challenge-font-color: #ffffff;
   --challenge-font-weight: normal;
 
@@ -40,11 +41,12 @@
   --challenge-done-text-decoration: line-through;
 
   /* Challenge Checkbox */
-  --challenge-checkbox-size: 20px;
-  --challenge-checkbox-margin-right: 8px;
-  --challenge-checkbox-border-width: 2px;
+  --challenge-checkbox-size: 2.5rem;
+  --challenge-checkbox-checkmark-size: 2.75rem;
+  --challenge-checkbox-margin-right: 1rem;
+  --challenge-checkbox-border-width: 0.25rem;
   --challenge-checkbox-border-color: #ffffff;
-  --challenge-checkbox-border-radius: 3px;
+  --challenge-checkbox-border-radius: 0.375rem;
   --challenge-checkbox-background-color: transparent;
   --challenge-checkbox-checked-border-color: #4a90e2;
   --challenge-checkbox-checkmark-color: #4a90e2;

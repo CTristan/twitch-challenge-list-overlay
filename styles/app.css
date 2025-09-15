@@ -1,8 +1,6 @@
 *,
 *:before,
 *:after {
-  -webkit-box-sizing: border-box;
-  -moz-box-sizing: border-box;
   box-sizing: border-box;
   margin: 0;
   padding: 0;
@@ -12,7 +10,7 @@
   display: flex;
   flex-direction: column;
   min-height: 100vh;
-  padding: calc(var(--app-padding) * 2);
+  padding: var(--app-padding);
   border-radius: var(--app-border-radius);
   background-color: var(--app-background-color);
   background-image: var(--app-background-image);
@@ -21,16 +19,16 @@
 
 .header {
   display: var(--header-display, flex);
-  margin-bottom: calc(var(--header-margin-bottom) * 2);
+  margin-bottom: var(--header-margin-bottom);
   border-top: 1px solid rgba(255, 255, 255, 0.2);
   border-left: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: var(--header-border-radius);
-  padding: calc(var(--header-padding, 12px) * 2);
+  padding: var(--header-padding);
   box-shadow: 1px 1px 1px 0 rgba(0, 0, 0, 0.2);
   background-color: var(--header-background-color);
   font-family: var(--header-font-family, "arial");
   color: var(--header-font-color);
-  font-size: calc(var(--header-font-size, 18) * 2);
+  font-size: var(--header-font-size);
   font-weight: var(--header-font-weight);
 }
 
@@ -53,8 +51,8 @@
   border-left: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: var(--card-border-radius);
   background-color: var(--card-background-color);
-  margin-bottom: calc(var(--card-gap-between) * 2);
-  padding: calc(var(--card-padding, 10px) * 2);
+  margin-bottom: var(--card-gap-between);
+  padding: var(--card-padding);
   box-shadow: 1px 1px 1px 0 rgba(0, 0, 0, 0.2);
   font-family: var(--card-font-family, "arial");
 }
@@ -67,7 +65,7 @@
   max-width: 90%;
   width: fit-content;
   color: var(--username-color);
-  font-size: calc(var(--username-font-size, 18px) * 2);
+  font-size: var(--username-font-size);
   font-weight: var(--username-font-weight, normal);
 }
 
@@ -79,7 +77,7 @@
   display: flex;
   align-items: flex-start;
   overflow: hidden;
-  font-size: calc(var(--challenge-font-size, 16px) * 2);
+  font-size: var(--challenge-font-size);
   color: var(--challenge-font-color);
   font-weight: var(--challenge-font-weight, normal);
   padding: 2px 0;
@@ -87,13 +85,13 @@
 
 .challenge-checkbox {
   flex-shrink: 0;
-  width: calc(var(--challenge-checkbox-size, 20px) * 2);
-  height: calc(var(--challenge-checkbox-size, 20px) * 2);
-  margin-right: calc(var(--challenge-checkbox-margin-right, 8px) * 2);
+  width: var(--challenge-checkbox-size);
+  height: var(--challenge-checkbox-size);
+  margin-right: var(--challenge-checkbox-margin-right);
   margin-top: 2px;
-  border: calc(var(--challenge-checkbox-border-width, 2px) * 2) solid
+  border: var(--challenge-checkbox-border-width) solid
     var(--challenge-checkbox-border-color, #ffffff);
-  border-radius: calc(var(--challenge-checkbox-border-radius, 3px) * 2);
+  border-radius: var(--challenge-checkbox-border-radius);
   background-color: var(--challenge-checkbox-background-color, transparent);
   position: relative;
   display: inline-flex;
@@ -108,7 +106,7 @@
 .challenge-checkbox.checked::after {
   content: "✓";
   color: var(--challenge-checkbox-checkmark-color, #4a90e2);
-  font-size: calc(var(--challenge-checkbox-size, 20px) * 2.2);
+  font-size: var(--challenge-checkbox-checkmark-size);
   font-weight: 900;
   line-height: 1;
   text-shadow: 0 0 3px rgba(0, 0, 0, 0.5);
@@ -137,7 +135,7 @@
 }
 
 .challenge-description {
-  font-size: calc(var(--challenge-font-size, 16px) * 2 * 0.85);
+  font-size: var(--challenge-description-font-size);
   font-weight: 300;
   color: inherit;
   opacity: 0.85;

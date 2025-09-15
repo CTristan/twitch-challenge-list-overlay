@@ -27,34 +27,35 @@ function getDefaultStyles(): Record<string, string> {
     cardFontFamily: "Roboto Mono",
 
     // App container styling
-    appBorderRadius: "8px",
-    appPadding: "6px",
+    appBorderRadius: "0.5rem",
+    appPadding: "0.75rem",
     appBackgroundColor: "rgba(0, 0, 0, 0)",
     appBackgroundImage: "url(../images/transparent-image.png)",
 
     // Header styling
     headerDisplay: "flex",
-    headerBorderRadius: "8px",
-    headerMarginBottom: "6px",
-    headerPadding: "12px",
+    headerBorderRadius: "0.5rem",
+    headerMarginBottom: "0.75rem",
+    headerPadding: "1.5rem",
     headerBackgroundColor: "rgba(0, 0, 0, 0.7)",
-    headerFontSize: "18px",
+    headerFontSize: "2.25rem",
     headerFontColor: "#FFFFFF",
     headerFontWeight: "normal",
 
     // Challenge card styling
-    cardGapBetween: "6px",
-    cardBorderRadius: "8px",
-    cardPadding: "12px",
+    cardGapBetween: "0.75rem",
+    cardBorderRadius: "0.5rem",
+    cardPadding: "1.5rem",
     cardBackgroundColor: "rgba(0, 0, 0, 0.7)",
 
     // Username styling
-    usernameFontSize: "18px",
+    usernameFontSize: "2.25rem",
     usernameColor: "#FFFFFF",
     usernameFontWeight: "normal",
 
     // Challenge text styling
-    challengeFontSize: "16px",
+    challengeFontSize: "2rem",
+    challengeDescriptionFontSize: "1.7rem",
     challengeFontColor: "#FFFFFF",
     challengeFontWeight: "normal",
     challengeDoneFontColor: "#b0b0b0",
@@ -62,14 +63,15 @@ function getDefaultStyles(): Record<string, string> {
     challengeDoneTextDecoration: "line-through",
     challengeFocusFontColor: "#111111",
     challengeFocusBackgroundColor: "rgba(255, 255, 255, 0.7)",
-    challengeFocusBorderRadius: "8px",
+    challengeFocusBorderRadius: "0.5rem",
 
     // Checkbox styling
-    challengeCheckboxSize: "20px",
-    challengeCheckboxMarginRight: "8px",
-    challengeCheckboxBorderWidth: "2px",
+    challengeCheckboxSize: "2.5rem",
+    challengeCheckboxCheckmarkSize: "2.75rem",
+    challengeCheckboxMarginRight: "1rem",
+    challengeCheckboxBorderWidth: "0.25rem",
     challengeCheckboxBorderColor: "#ffffff",
-    challengeCheckboxBorderRadius: "3px",
+    challengeCheckboxBorderRadius: "0.375rem",
     challengeCheckboxBackgroundColor: "transparent",
     challengeCheckboxCheckedBorderColor: "#4a90e2",
     challengeCheckboxCheckmarkColor: "#4a90e2",
