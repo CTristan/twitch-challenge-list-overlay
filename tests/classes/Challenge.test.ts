@@ -2,8 +2,7 @@ import { beforeEach, describe, expect, it } from "vitest";
 import Challenge from "../../src/classes/Challenge";
 
 describe("Challenge", () => {
-  /** @type Challenge */
-  let challenge;
+  let challenge: Challenge;
 
   beforeEach(() => {
     challenge = new Challenge("Buy groceries");
@@ -31,16 +30,16 @@ describe("Challenge", () => {
     });
 
     it("should throw Error if description is not a string", () => {
-      expect(() => challenge.validateDescription(123)).toThrow(
+      expect(() => challenge.validateDescription(123 as any)).toThrow(
         "Challenge description must be of type string"
       );
-      expect(() => challenge.validateDescription(true)).toThrow(
+      expect(() => challenge.validateDescription(true as any)).toThrow(
         "Challenge description must be of type string"
       );
-      expect(() => challenge.validateDescription([])).toThrow(
+      expect(() => challenge.validateDescription([] as any)).toThrow(
         "Challenge description must be of type string"
       );
-      expect(() => challenge.validateDescription({})).toThrow(
+      expect(() => challenge.validateDescription({} as any)).toThrow(
         "Challenge description must be of type string"
       );
     });
@@ -74,7 +73,7 @@ describe("Challenge", () => {
     });
 
     it("should return Error if status is not a boolean", () => {
-      expect(() => challenge.setCompletionStatus("true")).toThrow(
+      expect(() => challenge.setCompletionStatus("true" as any)).toThrow(
         "Completion status must be of type boolean"
       );
     });

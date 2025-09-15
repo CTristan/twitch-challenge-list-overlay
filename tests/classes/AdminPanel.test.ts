@@ -68,9 +68,6 @@ describe("AdminPanel", () => {
 
     // Create mock app with required methods
     mockApp = {
-      userList: {
-        clearUserList: vi.fn(),
-      },
       clearListFromDOM: vi.fn(),
       renderChallengeCount: vi.fn(),
     };
