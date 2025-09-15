@@ -37,10 +37,7 @@ function getRowBackgroundColor(
  * @param colors - Array of color values to cycle through
  * @returns The text color string or null if no colors configured
  */
-function getRowTextColor(
-  rowIndex: number,
-  colors: string[]
-): string | null {
+function getRowTextColor(rowIndex: number, colors: string[]): string | null {
   return getCyclicArrayValue(rowIndex, colors);
 }
 
@@ -60,9 +57,11 @@ function createChallengeTextElement(challenge: Challenge): HTMLElement {
   textContainer.appendChild(titleElement);
 
   // Add description if it's different from title and not empty
-  if (challenge.title !== challenge.description &&
-      challenge.description &&
-      challenge.description.trim() !== "") {
+  if (
+    challenge.title !== challenge.description &&
+    challenge.description &&
+    challenge.description.trim() !== ""
+  ) {
     const descriptionElement = document.createElement("div");
     descriptionElement.classList.add("challenge-description");
     descriptionElement.textContent = challenge.description;
@@ -71,8 +70,6 @@ function createChallengeTextElement(challenge: Challenge): HTMLElement {
 
   return textContainer;
 }
-
-
 
 /**
  * @class App
@@ -93,7 +90,10 @@ export default class App {
   constructor(storeName: string) {
     this.#configManager = ConfigManager.getInstance();
     this.challengeList = new ChallengeList(storeName);
-    this.#enhancedCommandHandler = new EnhancedCommandHandler(this.challengeList, this.#configManager);
+    this.#enhancedCommandHandler = new EnhancedCommandHandler(
+      this.challengeList,
+      this.#configManager
+    );
     loadStyles(this.#configManager.getAll());
     this.#maxChallengesTotal = this.#configManager.get("maxChallenges");
   }
@@ -149,9 +149,18 @@ export default class App {
 
       // Apply checkbox colors to match text color if configured
       if (textColor) {
-        checkbox.style.setProperty('--challenge-checkbox-border-color', textColor);
-        checkbox.style.setProperty('--challenge-checkbox-checked-border-color', textColor);
-        checkbox.style.setProperty('--challenge-checkbox-checkmark-color', textColor);
+        checkbox.style.setProperty(
+          "--challenge-checkbox-border-color",
+          textColor
+        );
+        checkbox.style.setProperty(
+          "--challenge-checkbox-checked-border-color",
+          textColor
+        );
+        checkbox.style.setProperty(
+          "--challenge-checkbox-checkmark-color",
+          textColor
+        );
       }
 
       listItem.appendChild(checkbox);
@@ -163,8 +172,12 @@ export default class App {
       if (textColor) {
         textElement.style.color = textColor;
         // Also apply to child elements
-        const titleElement = textElement.querySelector(".challenge-title") as HTMLElement;
-        const descriptionElement = textElement.querySelector(".challenge-description") as HTMLElement;
+        const titleElement = textElement.querySelector(
+          ".challenge-title"
+        ) as HTMLElement;
+        const descriptionElement = textElement.querySelector(
+          ".challenge-description"
+        ) as HTMLElement;
         if (titleElement) titleElement.style.color = textColor;
         if (descriptionElement) descriptionElement.style.color = textColor;
       }
@@ -294,7 +307,9 @@ export default class App {
         if (enhancedResponse.action !== "not_enhanced") {
           // Handle DOM updates for enhanced commands
           if (!enhancedResponse.error && enhancedResponse.challengeId) {
-            const challenge = this.challengeList.challenges.find(c => c.shortId === enhancedResponse.challengeId);
+            const challenge = this.challengeList.challenges.find(
+              (c) => c.shortId === enhancedResponse.challengeId
+            );
             if (challenge) {
               if (enhancedResponse.action === "add") {
                 this.addChallengeToDOM(challenge);
@@ -308,7 +323,7 @@ export default class App {
 
           return {
             error: enhancedResponse.error,
-            message: enhancedResponse.message
+            message: enhancedResponse.message,
           };
         }
       }
@@ -547,9 +562,18 @@ export default class App {
 
     // Apply checkbox colors to match text color if configured
     if (textColor) {
-      checkbox.style.setProperty('--challenge-checkbox-border-color', textColor);
-      checkbox.style.setProperty('--challenge-checkbox-checked-border-color', textColor);
-      checkbox.style.setProperty('--challenge-checkbox-checkmark-color', textColor);
+      checkbox.style.setProperty(
+        "--challenge-checkbox-border-color",
+        textColor
+      );
+      checkbox.style.setProperty(
+        "--challenge-checkbox-checked-border-color",
+        textColor
+      );
+      checkbox.style.setProperty(
+        "--challenge-checkbox-checkmark-color",
+        textColor
+      );
     }
 
     challengeElement.appendChild(checkbox);
@@ -561,8 +585,12 @@ export default class App {
     if (textColor) {
       textElement.style.color = textColor;
       // Also apply to child elements
-      const titleElement = textElement.querySelector(".challenge-title") as HTMLElement;
-      const descriptionElement = textElement.querySelector(".challenge-description") as HTMLElement;
+      const titleElement = textElement.querySelector(
+        ".challenge-title"
+      ) as HTMLElement;
+      const descriptionElement = textElement.querySelector(
+        ".challenge-description"
+      ) as HTMLElement;
       if (titleElement) titleElement.style.color = textColor;
       if (descriptionElement) descriptionElement.style.color = textColor;
     }
@@ -577,17 +605,30 @@ export default class App {
       cloneChallengeElement.style.backgroundColor = backgroundColor;
     }
     if (textColor) {
-      const clonedTextElement = cloneChallengeElement.querySelector(".challenge-text") as HTMLElement;
+      const clonedTextElement = cloneChallengeElement.querySelector(
+        ".challenge-text"
+      ) as HTMLElement;
       if (clonedTextElement) {
         clonedTextElement.style.color = textColor;
       }
 
       // Apply checkbox colors to the cloned checkbox as well
-      const clonedCheckbox = cloneChallengeElement.querySelector(".challenge-checkbox") as HTMLElement;
+      const clonedCheckbox = cloneChallengeElement.querySelector(
+        ".challenge-checkbox"
+      ) as HTMLElement;
       if (clonedCheckbox) {
-        clonedCheckbox.style.setProperty('--challenge-checkbox-border-color', textColor);
-        clonedCheckbox.style.setProperty('--challenge-checkbox-checked-border-color', textColor);
-        clonedCheckbox.style.setProperty('--challenge-checkbox-checkmark-color', textColor);
+        clonedCheckbox.style.setProperty(
+          "--challenge-checkbox-border-color",
+          textColor
+        );
+        clonedCheckbox.style.setProperty(
+          "--challenge-checkbox-checked-border-color",
+          textColor
+        );
+        clonedCheckbox.style.setProperty(
+          "--challenge-checkbox-checkmark-color",
+          textColor
+        );
       }
     }
 
@@ -617,7 +658,9 @@ export default class App {
     const challengeElements: NodeListOf<HTMLElement> =
       document.querySelectorAll(`[data-challenge-id="${challenge.id}"]`);
     for (const challengeElement of challengeElements) {
-      const textElement = challengeElement.querySelector(".challenge-text") as HTMLElement;
+      const textElement = challengeElement.querySelector(
+        ".challenge-text"
+      ) as HTMLElement;
       if (textElement) {
         // Replace the entire text element with new structure
         const newTextElement = createChallengeTextElement(challenge);
@@ -626,10 +669,15 @@ export default class App {
         const existingColor = textElement.style.color;
         if (existingColor) {
           newTextElement.style.color = existingColor;
-          const titleElement = newTextElement.querySelector(".challenge-title") as HTMLElement;
-          const descriptionElement = newTextElement.querySelector(".challenge-description") as HTMLElement;
+          const titleElement = newTextElement.querySelector(
+            ".challenge-title"
+          ) as HTMLElement;
+          const descriptionElement = newTextElement.querySelector(
+            ".challenge-description"
+          ) as HTMLElement;
           if (titleElement) titleElement.style.color = existingColor;
-          if (descriptionElement) descriptionElement.style.color = existingColor;
+          if (descriptionElement)
+            descriptionElement.style.color = existingColor;
         }
 
         textElement.parentNode?.replaceChild(newTextElement, textElement);
@@ -698,9 +746,7 @@ function respondMessage(
   error: boolean = false
 ): { message: string; error: boolean } {
   return {
-    message:
-      "🤖💬 " +
-      template.replace("{user}", username).replace("{message}", message),
+    message: template.replace("{user}", username).replace("{message}", message),
     error,
   };
 }

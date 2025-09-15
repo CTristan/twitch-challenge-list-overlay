@@ -61,7 +61,7 @@ describe("App.chatHandler", () => {
         HELP: "help",
       },
     };
-    const botResponsePrefix = "🤖💬 ";
+    const botResponsePrefix = "";
 
     beforeEach(() => {
       challengeList.clearChallengeList();
