@@ -24,9 +24,8 @@ describe("App.chatHandler", () => {
         userColor: "#FF0000",
       },
       command: {
-        CLEARLIST: "clearList",
+        CLEARALL: "clearAll",
         CLEARDONE: "clearDone",
-        CLEARUSER: "clearUser",
       },
     };
     const chatUser = {
@@ -76,11 +75,11 @@ describe("App.chatHandler", () => {
     });
 
     describe("Admin commands", () => {
-      describe("!clearList command", () => {
-        it("should return a success message when an Admin user submits !clearList ", () => {
+      describe("!clearAll command (clearlist/clearuser aliases)", () => {
+        it("should return a success message when an Admin user submits clearAll command", () => {
           const response = app.chatHandler(
             adminUser.username,
-            adminUser.command.CLEARLIST,
+            adminUser.command.CLEARALL,
             "",
             adminUser.flags,
             adminUser.extra
@@ -91,10 +90,10 @@ describe("App.chatHandler", () => {
           );
         });
 
-        it("should return a error when an non-Admin user submits !clearList ", () => {
+        it("should return a error when an non-Admin user submits clearAll command", () => {
           const response = app.chatHandler(
             chatUser.username,
-            adminUser.command.CLEARLIST,
+            adminUser.command.CLEARALL,
             "",
             chatUser.flags,
             chatUser.extra
@@ -118,21 +117,6 @@ describe("App.chatHandler", () => {
         expect(response.error).toBe(false);
         expect(response.message).toBe(
           botResponsePrefix + "All done challenges have been cleared"
-        );
-      });
-
-      it("!clearUser command", () => {
-        const response = app.chatHandler(
-          adminUser.username,
-          adminUser.command.CLEARUSER,
-          "anyuser", // In single-streamer mode, this clears all challenges
-          adminUser.flags,
-          adminUser.extra
-        );
-        expect(challengeList.challenges.length).toBe(0);
-        expect(response.message).toBe(
-          botResponsePrefix +
-            "All challenges for all challenges have been cleared"
         );
       });
     });

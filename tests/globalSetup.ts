@@ -24,9 +24,8 @@ const testConfig: Config = {
   // Chat Commands Configuration
   commands: {
     // Admin commands
-    clearList: ["!clearlist"],
+    clearAll: ["!clearlist", "!clearuser", "!clearall"],
     clearDone: ["!cleardone"],
-    clearUser: ["!clearuser"],
 
     // User commands
     addChallenge: ["!challenge", "!add"],
@@ -40,9 +39,8 @@ const testConfig: Config = {
   // Bot Response Messages
   responses: {
     // Admin responses
-    clearList: "All challenges have been cleared",
+    clearAll: "All challenges have been cleared",
     clearDone: "All done challenges have been cleared",
-    clearUser: "All challenges for {message} have been cleared",
 
     // User responses
     addChallenge: "Challenge(s) {message} added!",

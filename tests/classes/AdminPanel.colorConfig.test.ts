@@ -38,9 +38,8 @@ describe("AdminPanel Color Configuration", () => {
       maxChallenges: 10,
       challengeRowColors: [],
       commands: {
-        clearList: ["!clearlist"],
+        clearAll: ["!clearlist", "!clearuser", "!clearall"],
         clearDone: ["!cleardone"],
-        clearUser: ["!clearuser"],
         addChallenge: ["!add"],
         editChallenge: ["!edit"],
         finishChallenge: ["!done"],
@@ -49,9 +48,8 @@ describe("AdminPanel Color Configuration", () => {
         help: ["!help"],
       },
       responses: {
-        clearList: "List cleared!",
+        clearAll: "All challenges cleared!",
         clearDone: "Done challenges cleared!",
-        clearUser: "User cleared!",
         addChallenge: "Challenge added!",
         editChallenge: "Challenge edited!",
         finishChallenge: "Challenge completed!",
@@ -98,11 +96,21 @@ describe("AdminPanel Color Configuration", () => {
       // Create a new AdminPanel to test population
       const newAdminPanel = new AdminPanel(mockApp);
 
-      const primaryCheckbox = document.getElementById("primary-color-enabled") as HTMLInputElement;
-      const primaryBgColor = document.getElementById("primary-bg-color") as HTMLInputElement;
-      const secondaryCheckbox = document.getElementById("secondary-color-enabled") as HTMLInputElement;
-      const secondaryBgColor = document.getElementById("secondary-bg-color") as HTMLInputElement;
-      const tertiaryCheckbox = document.getElementById("tertiary-color-enabled") as HTMLInputElement;
+      const primaryCheckbox = document.getElementById(
+        "primary-color-enabled"
+      ) as HTMLInputElement;
+      const primaryBgColor = document.getElementById(
+        "primary-bg-color"
+      ) as HTMLInputElement;
+      const secondaryCheckbox = document.getElementById(
+        "secondary-color-enabled"
+      ) as HTMLInputElement;
+      const secondaryBgColor = document.getElementById(
+        "secondary-bg-color"
+      ) as HTMLInputElement;
+      const tertiaryCheckbox = document.getElementById(
+        "tertiary-color-enabled"
+      ) as HTMLInputElement;
 
       // Primary should be enabled with red color
       expect(primaryCheckbox.checked).toBe(true);
@@ -123,17 +131,29 @@ describe("AdminPanel Color Configuration", () => {
       // Create a fresh AdminPanel to test initial state
       const freshAdminPanel = new AdminPanel(mockApp);
 
-      const primaryCheckbox = document.getElementById("primary-color-enabled") as HTMLInputElement;
-      const primaryBgColor = document.getElementById("primary-bg-color") as HTMLInputElement;
-      const primaryTextColor = document.getElementById("primary-text-color") as HTMLInputElement;
-      const primaryPickersContainer = document.getElementById("primary-color-pickers");
+      const primaryCheckbox = document.getElementById(
+        "primary-color-enabled"
+      ) as HTMLInputElement;
+      const primaryBgColor = document.getElementById(
+        "primary-bg-color"
+      ) as HTMLInputElement;
+      const primaryTextColor = document.getElementById(
+        "primary-text-color"
+      ) as HTMLInputElement;
+      const primaryPickersContainer = document.getElementById(
+        "primary-color-pickers"
+      );
 
       // Initially unchecked, so pickers should be disabled and collapsed
       expect(primaryCheckbox.checked).toBe(false);
       expect(primaryBgColor.disabled).toBe(true);
       expect(primaryTextColor.disabled).toBe(true);
-      expect(primaryPickersContainer?.classList.contains("disabled")).toBe(true);
-      expect(primaryPickersContainer?.classList.contains("expanded")).toBe(false);
+      expect(primaryPickersContainer?.classList.contains("disabled")).toBe(
+        true
+      );
+      expect(primaryPickersContainer?.classList.contains("expanded")).toBe(
+        false
+      );
 
       // Check the checkbox
       primaryCheckbox.checked = true;
@@ -142,8 +162,12 @@ describe("AdminPanel Color Configuration", () => {
       // Pickers should now be enabled and expanded
       expect(primaryBgColor.disabled).toBe(false);
       expect(primaryTextColor.disabled).toBe(false);
-      expect(primaryPickersContainer?.classList.contains("disabled")).toBe(false);
-      expect(primaryPickersContainer?.classList.contains("expanded")).toBe(true);
+      expect(primaryPickersContainer?.classList.contains("disabled")).toBe(
+        false
+      );
+      expect(primaryPickersContainer?.classList.contains("expanded")).toBe(
+        true
+      );
     });
 
     it("should show collapsible behavior with smooth transitions", () => {
@@ -153,30 +177,48 @@ describe("AdminPanel Color Configuration", () => {
       // Create a fresh AdminPanel to test collapsible behavior
       const freshAdminPanel = new AdminPanel(mockApp);
 
-      const secondaryCheckbox = document.getElementById("secondary-color-enabled") as HTMLInputElement;
-      const secondaryPickersContainer = document.getElementById("secondary-color-pickers");
+      const secondaryCheckbox = document.getElementById(
+        "secondary-color-enabled"
+      ) as HTMLInputElement;
+      const secondaryPickersContainer = document.getElementById(
+        "secondary-color-pickers"
+      );
 
       // Initially collapsed
       expect(secondaryCheckbox.checked).toBe(false);
-      expect(secondaryPickersContainer?.classList.contains("expanded")).toBe(false);
+      expect(secondaryPickersContainer?.classList.contains("expanded")).toBe(
+        false
+      );
 
       // Expand by checking
       secondaryCheckbox.checked = true;
       secondaryCheckbox.dispatchEvent(new Event("change"));
-      expect(secondaryPickersContainer?.classList.contains("expanded")).toBe(true);
+      expect(secondaryPickersContainer?.classList.contains("expanded")).toBe(
+        true
+      );
 
       // Collapse by unchecking
       secondaryCheckbox.checked = false;
       secondaryCheckbox.dispatchEvent(new Event("change"));
-      expect(secondaryPickersContainer?.classList.contains("expanded")).toBe(false);
+      expect(secondaryPickersContainer?.classList.contains("expanded")).toBe(
+        false
+      );
     });
 
     it("should convert UI configuration to challengeRowColors array when saving", () => {
       // Enable primary and secondary colors
-      const primaryCheckbox = document.getElementById("primary-color-enabled") as HTMLInputElement;
-      const primaryBgColor = document.getElementById("primary-bg-color") as HTMLInputElement;
-      const secondaryCheckbox = document.getElementById("secondary-color-enabled") as HTMLInputElement;
-      const secondaryBgColor = document.getElementById("secondary-bg-color") as HTMLInputElement;
+      const primaryCheckbox = document.getElementById(
+        "primary-color-enabled"
+      ) as HTMLInputElement;
+      const primaryBgColor = document.getElementById(
+        "primary-bg-color"
+      ) as HTMLInputElement;
+      const secondaryCheckbox = document.getElementById(
+        "secondary-color-enabled"
+      ) as HTMLInputElement;
+      const secondaryBgColor = document.getElementById(
+        "secondary-bg-color"
+      ) as HTMLInputElement;
 
       primaryCheckbox.checked = true;
       primaryBgColor.value = "#ff0000";
@@ -184,7 +226,9 @@ describe("AdminPanel Color Configuration", () => {
       secondaryBgColor.value = "#00ff00";
 
       // Trigger save
-      const saveBtn = document.getElementById("save-config-btn") as HTMLButtonElement;
+      const saveBtn = document.getElementById(
+        "save-config-btn"
+      ) as HTMLButtonElement;
       saveBtn.click();
 
       // Check that the configuration was saved correctly

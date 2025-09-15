@@ -329,10 +329,12 @@ export default class App {
       }
       // ADMIN COMMANDS
       if (isMod(flags)) {
-        if (this.#configManager.get("commands.clearList").includes(command)) {
+        if (this.#configManager.get("commands.clearAll").includes(command)) {
+          // Clear all challenges
           this.challengeList.clearChallengeList();
           this.clearListFromDOM();
-          template = this.#configManager.get("responses.clearList");
+          responseDetail = "all challenges";
+          template = this.#configManager.get("responses.clearAll");
           return respondMessage(template, username, responseDetail);
         } else if (
           this.#configManager.get("commands.clearDone").includes(command)
@@ -342,15 +344,6 @@ export default class App {
             this.deleteChallengeFromDOM(id);
           });
           template = this.#configManager.get("responses.clearDone");
-          return respondMessage(template, username, responseDetail);
-        } else if (
-          this.#configManager.get("commands.clearUser").includes(command)
-        ) {
-          // In single-streamer mode, clearUser becomes clearAll
-          this.challengeList.clearChallengeList();
-          this.clearListFromDOM();
-          responseDetail = "all challenges";
-          template = this.#configManager.get("responses.clearUser");
           return respondMessage(template, username, responseDetail);
         }
       }

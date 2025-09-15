@@ -37,9 +37,8 @@ interface Config {
   // Chat commands configuration
   commands: {
     // Admin commands
-    clearList: string[];
+    clearAll: string[];
     clearDone: string[];
-    clearUser: string[];
 
     // Legacy user commands
     addChallenge: string[];
@@ -66,9 +65,8 @@ interface Config {
   // Bot response messages
   responses: {
     // Admin responses
-    clearList: string;
+    clearAll: string;
     clearDone: string;
-    clearUser: string;
 
     // User responses
     addChallenge: string;

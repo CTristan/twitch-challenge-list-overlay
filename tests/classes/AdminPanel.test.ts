@@ -35,9 +35,8 @@ describe("AdminPanel", () => {
       maxChallenges: 10,
       challengeRowColors: [],
       commands: {
-        clearList: ["!clearlist"],
+        clearAll: ["!clearlist", "!clearuser", "!clearall"],
         clearDone: ["!cleardone"],
-        clearUser: ["!clearuser"],
         addChallenge: ["!challenge", "!add"],
         editChallenge: ["!edit"],
         finishChallenge: ["!done"],
@@ -46,9 +45,8 @@ describe("AdminPanel", () => {
         help: ["!help"],
       },
       responses: {
-        clearList: "All challenges cleared",
+        clearAll: "All challenges cleared",
         clearDone: "Done challenges cleared",
-        clearUser: "User challenges cleared",
         addChallenge: "Challenge added",
         editChallenge: "Challenge edited",
         finishChallenge: "Challenge completed",
