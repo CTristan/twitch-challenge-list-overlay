@@ -6,45 +6,32 @@ import ConfigManager from "../../src/classes/ConfigManager";
 const mockSetTimeout = vi.fn();
 global.setTimeout = mockSetTimeout as any;
 
-describe("AdminPanel", () => {
-  let adminPanel: AdminPanel;
-  let mockApp: any;
-  let clearButton: HTMLButtonElement;
-
-  beforeEach(() => {
-    // Set up real DOM elements (jsdom provides real DOM)
-    document.body.innerHTML = `
-      <button id="clear-localstorage-btn">Clear LocalStorage</button>
-    `;
-
-    clearButton = document.getElementById(
-      "clear-localstorage-btn"
-    ) as HTMLButtonElement;
-
-    // Reset all mocks - do this before creating new instances
-    vi.clearAllMocks();
-    mockSetTimeout.mockClear();
-
-    // Initialize ConfigManager with test configuration
-    const testConfig: Config = {
-      auth: {
+// Test Utilities
+const createTestConfig = (): Config => ({
+    auth: {
         twitch_oauth: "test_oauth",
         twitch_username: "test_user",
         twitch_channel: "test_channel",
-      },
-      maxChallenges: 10,
-      challengeRowColors: [],
-      commands: {
-        clearAll: ["!clearlist", "!clearuser", "!clearall"],
-        clearDone: ["!cleardone"],
-        addChallenge: ["!challenge", "!add"],
-        editChallenge: ["!edit"],
-        finishChallenge: ["!done"],
-        deleteChallenge: ["!delete"],
-        check: ["!check"],
-        help: ["!help"],
-      },
-      responses: {
+    },
+    maxChallenges: 10,
+    challengeRowColors: [],
+    commands: {
+        clearAll: ["!ch clearlist", "!ch clearall"],
+        clearDone: ["!ch cleardone"],
+        addChallenge: ["!ch add"],
+        editChallenge: ["!ch edit"],
+        finishChallenge: ["!ch done"],
+        deleteChallenge: ["!ch delete", "!ch del"],
+        check: ["!ch check"],
+        help: ["!ch help"],
+        incrementChallenge: ["!ch +"],
+        decrementChallenge: ["!ch -"],
+        setProgress: ["!ch set"],
+        failChallenge: ["!ch fail"],
+        listChallenges: ["!ch list"],
+        showChallenge: ["!ch show"],
+    },
+    responses: {
         clearAll: "All challenges cleared",
         clearDone: "Done challenges cleared",
         addChallenge: "Challenge added",
@@ -57,258 +44,290 @@ describe("AdminPanel", () => {
         maxChallengesAdded: "Max challenges reached",
         noChallengeFound: "No challenge found",
         invalidCommand: "Invalid command",
-      },
-    };
+    },
+});
 
-    // Reset ConfigManager singleton for testing
+const setupDOMElements = (): HTMLButtonElement => {
+    document.body.innerHTML = `
+        <button id="clear-localstorage-btn">Clear LocalStorage</button>
+    `;
+    return document.getElementById("clear-localstorage-btn") as HTMLButtonElement;
+};
+
+const setupMocks = (): void => {
+    vi.clearAllMocks();
+    mockSetTimeout.mockClear();
+};
+
+const setupConfigManager = (config: Config = createTestConfig()): void => {
     (ConfigManager as any).instance = null;
-    ConfigManager.getInstance(testConfig);
+    ConfigManager.getInstance(config);
+};
 
-    // Create mock app with required methods
-    mockApp = {
-      clearListFromDOM: vi.fn(),
-      renderChallengeCount: vi.fn(),
-    };
+const createMockApp = (): any => ({
+    clearListFromDOM: vi.fn(),
+    renderChallengeCount: vi.fn(),
+});
 
-    // Clear only configuration-related localStorage items
+const setupLocalStorage = (): void => {
     localStorage.removeItem("overlay_config");
-
-    // Add some test data to localStorage to verify clearing
     localStorage.setItem("testKey", "testValue");
-  });
+};
 
-  describe("when in admin mode", () => {
+const setupTestEnvironment = (adminMode: boolean = false): {
+    clearButton: HTMLButtonElement;
+    mockApp: any;
+} => {
+    const clearButton = setupDOMElements();
+    setupMocks();
+    setupConfigManager();
+    const mockApp = createMockApp();
+    setupLocalStorage();
+
+    window.location.hash = adminMode ? "#admin" : "";
+
+    return { clearButton, mockApp };
+};
+
+const assertButtonFeedback = (
+    button: HTMLButtonElement,
+    expectedText: string,
+    expectedBgColor: string
+): void => {
+    expect(button.textContent).toBe(expectedText);
+    expect(button.style.backgroundColor).toBe(expectedBgColor);
+};
+
+const triggerTimeoutCallback = (): void => {
+    expect(mockSetTimeout).toHaveBeenCalledWith(expect.any(Function), 2000);
+    const timeoutCallback = mockSetTimeout.mock.calls[mockSetTimeout.mock.calls.length - 1][0];
+    timeoutCallback();
+};
+
+describe("AdminPanel", () => {
+    let adminPanel: AdminPanel;
+    let mockApp: any;
+    let clearButton: HTMLButtonElement;
+
     beforeEach(() => {
-      // Set admin mode
-      window.location.hash = "#admin";
-      adminPanel = new AdminPanel(mockApp);
+        const testEnv = setupTestEnvironment();
+        clearButton = testEnv.clearButton;
+        mockApp = testEnv.mockApp;
     });
 
-    it("should initialize and add click listener to clear button", () => {
-      // Verify button exists and has expected initial state
-      expect(clearButton).toBeTruthy();
-      expect(clearButton.textContent).toBe("Clear LocalStorage");
+    describe("when in admin mode", () => {
+        beforeEach(() => {
+            window.location.hash = "#admin";
+            adminPanel = new AdminPanel(mockApp);
+        });
 
-      // Add some configuration data to localStorage
-      localStorage.setItem("overlay_config", JSON.stringify({ test: "data" }));
-      expect(localStorage.getItem("overlay_config")).toBeTruthy();
+        it("should initialize and add click listener to clear button", () => {
+            // Verify button exists and has expected initial state
+            expect(clearButton).toBeTruthy();
+            expect(clearButton.textContent).toBe("Clear LocalStorage");
 
-      // Click the button to test the actual behavior
-      clearButton.click();
+            // Add some configuration data to localStorage
+            localStorage.setItem("overlay_config", JSON.stringify({ test: "data" }));
+            expect(localStorage.getItem("overlay_config")).toBeTruthy();
 
-      // Check that configuration was cleared (but other localStorage items remain)
-      expect(localStorage.getItem("overlay_config")).toBeNull();
-      expect(localStorage.getItem("testKey")).toBe("testValue"); // Other items should remain
+            // Click the button to test the actual behavior
+            clearButton.click();
 
-      // Check visual feedback (real DOM changes)
-      expect(clearButton.textContent).toBe("Cleared!");
-      expect(clearButton.style.backgroundColor).toBe("rgb(40, 167, 69)");
+            // Check that configuration was cleared (but other localStorage items remain)
+            expect(localStorage.getItem("overlay_config")).toBeNull();
+            expect(localStorage.getItem("testKey")).toBe("testValue"); // Other items should remain
 
-      // Verify setTimeout was called for the reset
-      expect(mockSetTimeout).toHaveBeenCalledWith(expect.any(Function), 2000);
+            // Check visual feedback using helper function
+            assertButtonFeedback(clearButton, "Cleared!", "rgb(40, 167, 69)");
+
+            // Verify setTimeout was called for the reset
+            expect(mockSetTimeout).toHaveBeenCalledWith(expect.any(Function), 2000);
+        });
+
+        it("should handle localStorage errors gracefully", () => {
+            // Mock the ConfigManager's clearStorage method to return false (indicating error)
+            const configManager = ConfigManager.getInstance();
+            const originalClearStorage = configManager.clearStorage;
+            configManager.clearStorage = vi.fn(() => false);
+
+            // Mock console.error to verify error logging
+            const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+
+            // Click the button to trigger the error
+            clearButton.click();
+
+            // Check that clearStorage was attempted
+            expect(configManager.clearStorage).toHaveBeenCalled();
+
+            // Check visual feedback for error using helper function
+            assertButtonFeedback(clearButton, "Error!", "rgb(220, 53, 69)");
+
+            // Restore original method and console
+            configManager.clearStorage = originalClearStorage;
+            consoleSpy.mockRestore();
+        });
+
+        it("should reset button appearance after timeout", () => {
+            // Store original text
+            const originalText = clearButton.textContent;
+
+            // Click the button
+            clearButton.click();
+
+            // Verify initial feedback using helper function
+            assertButtonFeedback(clearButton, "Cleared!", "rgb(40, 167, 69)");
+
+            // Execute timeout callback using helper function
+            triggerTimeoutCallback();
+
+            // Verify button was reset to original text
+            expect(clearButton.textContent).toBe(originalText);
+            expect(clearButton.style.backgroundColor).toBe("");
+        });
     });
 
-    it("should handle localStorage errors gracefully", () => {
-      // Mock the ConfigManager's clearStorage method to return false (indicating error)
-      const configManager = ConfigManager.getInstance();
-      const originalClearStorage = configManager.clearStorage;
-      configManager.clearStorage = vi.fn(() => false);
+    describe("when not in admin mode", () => {
+        beforeEach(() => {
+            window.location.hash = "";
+            adminPanel = new AdminPanel(mockApp);
+        });
 
-      // Mock console.error to verify error logging
-      const consoleSpy = vi
-        .spyOn(console, "error")
-        .mockImplementation(() => {});
+        it("should not add click listener when not in admin mode", () => {
+            // Verify localStorage still has test data
+            expect(localStorage.getItem("testKey")).toBe("testValue");
 
-      // Click the button to trigger the error
-      clearButton.click();
+            // Click the button - should not trigger clear functionality
+            clearButton.click();
 
-      // Check that clearStorage was attempted
-      expect(configManager.clearStorage).toHaveBeenCalled();
+            // Verify localStorage was NOT cleared
+            expect(localStorage.getItem("testKey")).toBe("testValue");
+            expect(localStorage.length).toBe(1);
 
-      // Check visual feedback for error
-      expect(clearButton.textContent).toBe("Error!");
-      expect(clearButton.style.backgroundColor).toBe("rgb(220, 53, 69)");
+            // Verify button appearance unchanged using helper function
+            assertButtonFeedback(clearButton, "Clear LocalStorage", "");
 
-      // Restore original method and console
-      configManager.clearStorage = originalClearStorage;
-      consoleSpy.mockRestore();
+            // Verify setTimeout was not called for the clear functionality
+            const clearTimeoutCalls = mockSetTimeout.mock.calls.filter(call => call[1] === 2000);
+            expect(clearTimeoutCalls).toHaveLength(0);
+        });
     });
 
-    it("should reset button appearance after timeout", () => {
-      // Store original text
-      const originalText = clearButton.textContent;
+    describe("hash change handling", () => {
+        it("should reinitialize when hash changes to admin", () => {
+            // Start in non-admin mode
+            window.location.hash = "";
+            adminPanel = new AdminPanel(mockApp);
 
-      // Click the button
-      clearButton.click();
+            // Verify button doesn't work initially
+            clearButton.click();
+            expect(localStorage.getItem("testKey")).toBe("testValue");
 
-      // Verify initial feedback
-      expect(clearButton.textContent).toBe("Cleared!");
-      expect(clearButton.style.backgroundColor).toBe("rgb(40, 167, 69)");
+            // Change to admin mode
+            window.location.hash = "#admin";
 
-      // Get the timeout callback and execute it
-      expect(mockSetTimeout).toHaveBeenCalledWith(expect.any(Function), 2000);
-      const timeoutCallback =
-        mockSetTimeout.mock.calls[mockSetTimeout.mock.calls.length - 1][0];
-      timeoutCallback();
+            // Trigger hashchange event
+            const hashChangeEvent = new Event("hashchange");
+            window.dispatchEvent(hashChangeEvent);
 
-      // Verify button was reset to original text
-      expect(clearButton.textContent).toBe(originalText);
-      expect(clearButton.style.backgroundColor).toBe("");
-    });
-  });
-
-  describe("when not in admin mode", () => {
-    beforeEach(() => {
-      window.location.hash = "";
-      adminPanel = new AdminPanel(mockApp);
+            // Now button should work
+            clearButton.click();
+            expect(localStorage.getItem("overlay_config")).toBeNull();
+            expect(clearButton.textContent).toBe("Cleared!");
+        });
     });
 
-    it("should not add click listener when not in admin mode", () => {
-      // Verify localStorage still has test data
-      expect(localStorage.getItem("testKey")).toBe("testValue");
+    describe("import/export functionality", () => {
+        beforeEach(() => {
+            window.location.hash = "#admin";
+            adminPanel = new AdminPanel(mockApp);
+        });
 
-      // Click the button - should not trigger clear functionality
-      clearButton.click();
+        const createValidConfig = () => ({
+            auth: {
+                twitch_oauth: "oauth:test",
+                twitch_username: "testuser",
+                twitch_channel: "testchannel",
+            },
+            maxChallenges: 5,
+            commands: {
+                addChallenge: ["!add"],
+                editChallenge: ["!edit"],
+                finishChallenge: ["!done"],
+                deleteChallenge: ["!delete"],
+            },
+            responses: {
+                addChallenge: "Added",
+                editChallenge: "Edited",
+                finishChallenge: "Finished",
+                deleteChallenge: "Deleted",
+            },
+        });
 
-      // Verify localStorage was NOT cleared
-      expect(localStorage.getItem("testKey")).toBe("testValue");
-      expect(localStorage.length).toBe(1);
+        const validateConfiguration = (config: any) =>
+            (adminPanel as any).validateImportedConfiguration(config);
 
-      // Verify button appearance unchanged
-      expect(clearButton.textContent).toBe("Clear LocalStorage");
-      expect(clearButton.style.backgroundColor).toBe("");
+        it("should validate imported configuration correctly", () => {
+            const validConfig = createValidConfig();
+            const result = validateConfiguration(validConfig);
 
-      // Verify setTimeout was not called for the clear functionality
-      // (Note: setTimeout might be called by other parts of the system, so we check
-      // that it wasn't called with our specific 2000ms timeout)
-      const clearTimeoutCalls = mockSetTimeout.mock.calls.filter(
-        (call) => call[1] === 2000
-      );
-      expect(clearTimeoutCalls).toHaveLength(0);
+            expect(result.isValid).toBe(true);
+            expect(result.errorMessage).toBe("");
+        });
+
+        // Parameterized validation tests
+        const invalidConfigTestCases = [
+            {
+                name: "missing auth property",
+                config: { maxChallenges: 5, commands: {}, responses: {} },
+                expectedError: "Missing required property: auth"
+            },
+            {
+                name: "missing maxChallenges property",
+                config: { auth: { twitch_oauth: "test", twitch_username: "test", twitch_channel: "test" }, commands: {}, responses: {} },
+                expectedError: "Missing required property: maxChallenges"
+            },
+            {
+                name: "missing commands property",
+                config: { auth: { twitch_oauth: "test", twitch_username: "test", twitch_channel: "test" }, maxChallenges: 5, responses: {} },
+                expectedError: "Missing required property: commands"
+            },
+            {
+                name: "missing responses property",
+                config: { auth: { twitch_oauth: "test", twitch_username: "test", twitch_channel: "test" }, maxChallenges: 5, commands: {} },
+                expectedError: "Missing required property: responses"
+            }
+        ];
+
+        invalidConfigTestCases.forEach(({ name, config, expectedError }) => {
+            it(`should reject configuration with ${name}`, () => {
+                const result = validateConfiguration(config);
+                expect(result.isValid).toBe(false);
+                expect(result.errorMessage).toContain(expectedError);
+            });
+        });
+
+        it("should handle metadata-wrapped configuration", () => {
+            const wrappedConfig = {
+                _metadata: {
+                    exportedAt: "2024-01-01T00:00:00.000Z",
+                    version: "1.0.0",
+                    source: "Test",
+                },
+                config: createValidConfig(),
+            };
+
+            const consoleSpy = vi.spyOn(console, "log").mockImplementation(() => {});
+
+            (adminPanel as any).processImportedConfiguration(
+                JSON.stringify(wrappedConfig),
+                "test-btn"
+            );
+
+            expect(consoleSpy).toHaveBeenCalledWith(
+                expect.stringContaining("Importing configuration exported on: 2024-01-01T00:00:00.000Z")
+            );
+
+            consoleSpy.mockRestore();
+        });
     });
-  });
-
-  describe("hash change handling", () => {
-    it("should reinitialize when hash changes to admin", () => {
-      // Start in non-admin mode
-      window.location.hash = "";
-      adminPanel = new AdminPanel(mockApp);
-
-      // Verify button doesn't work initially
-      clearButton.click();
-      expect(localStorage.getItem("testKey")).toBe("testValue");
-
-      // Change to admin mode
-      window.location.hash = "#admin";
-
-      // Trigger hashchange event
-      const hashChangeEvent = new Event("hashchange");
-      window.dispatchEvent(hashChangeEvent);
-
-      // Now button should work
-      clearButton.click();
-      expect(localStorage.getItem("overlay_config")).toBeNull();
-      expect(clearButton.textContent).toBe("Cleared!");
-    });
-  });
-
-  describe("import/export functionality", () => {
-    beforeEach(() => {
-      window.location.hash = "#admin";
-      adminPanel = new AdminPanel(mockApp);
-    });
-
-    it("should validate imported configuration correctly", () => {
-      // Test valid configuration
-      const validConfig = {
-        auth: {
-          twitch_oauth: "oauth:test",
-          twitch_username: "testuser",
-          twitch_channel: "testchannel",
-        },
-        maxChallenges: 5,
-        commands: {
-          addChallenge: ["!add"],
-          editChallenge: ["!edit"],
-          finishChallenge: ["!done"],
-          deleteChallenge: ["!delete"],
-        },
-        responses: {
-          addChallenge: "Added",
-          editChallenge: "Edited",
-          finishChallenge: "Finished",
-          deleteChallenge: "Deleted",
-        },
-      };
-
-      // Access the private method through type assertion
-      const result = (adminPanel as any).validateImportedConfiguration(
-        validConfig
-      );
-      expect(result.isValid).toBe(true);
-      expect(result.errorMessage).toBe("");
-    });
-
-    it("should reject invalid configuration with helpful error messages", () => {
-      // Test missing auth
-      const invalidConfig = {
-        maxChallenges: 5,
-        commands: {},
-        responses: {},
-      };
-
-      const result = (adminPanel as any).validateImportedConfiguration(
-        invalidConfig
-      );
-      expect(result.isValid).toBe(false);
-      expect(result.errorMessage).toContain("Missing required property: auth");
-    });
-
-    it("should handle metadata-wrapped configuration", () => {
-      const wrappedConfig = {
-        _metadata: {
-          exportedAt: "2024-01-01T00:00:00.000Z",
-          version: "1.0.0",
-          source: "Test",
-        },
-        config: {
-          auth: {
-            twitch_oauth: "oauth:test",
-            twitch_username: "testuser",
-            twitch_channel: "testchannel",
-          },
-          maxChallenges: 5,
-          commands: {
-            addChallenge: ["!add"],
-            editChallenge: ["!edit"],
-            finishChallenge: ["!done"],
-            deleteChallenge: ["!delete"],
-          },
-          responses: {
-            addChallenge: "Added",
-            editChallenge: "Edited",
-            finishChallenge: "Finished",
-            deleteChallenge: "Deleted",
-          },
-        },
-      };
-
-      // Mock the processImportedConfiguration method to test metadata handling
-      const consoleSpy = vi.spyOn(console, "log").mockImplementation(() => {});
-
-      (adminPanel as any).processImportedConfiguration(
-        JSON.stringify(wrappedConfig),
-        "test-btn"
-      );
-
-      // Verify that metadata was logged
-      expect(consoleSpy).toHaveBeenCalledWith(
-        expect.stringContaining(
-          "Importing configuration exported on: 2024-01-01T00:00:00.000Z"
-        )
-      );
-
-      consoleSpy.mockRestore();
-    });
-  });
 });

@@ -1,405 +1,277 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, it } from "vitest";
 import App from "../../src/app";
+import { CommandType } from "../../src/types/CommandTypes";
+import {
+    addChallengesUpToLimit,
+    createAdminUser,
+    createChatUser,
+    createMockApp,
+    createModUser,
+    executeChallengeCommand,
+    executeCommand,
+    expectChallengeCount,
+    expectInvalidCommandError,
+    expectPermissionError,
+    expectSuccessResponse,
+    setupTestEnvironment,
+    TEST_CONSTANTS,
+    testCommandLimit,
+    testCommandPermissions,
+    testMultipleTargetCommand,
+} from "../utils/chatHandlerTestUtils";
+
+// ============================================================================
+// TEST CONSTANTS AND SHARED DATA
+// ============================================================================
+
+const {
+    EXPECTED_CHALLENGE_COUNT,
+    EXPECTED_MESSAGES,
+    TEST_CHALLENGE_IDS,
+    TEST_CHALLENGE_NAMES,
+} = TEST_CONSTANTS;
+
+// Create shared user instances (immutable, can be reused across tests)
+const SHARED_USERS = {
+    admin: createAdminUser(),
+    moderator: createModUser(),
+    regular: createChatUser(),
+} as const;
 
 describe("App.chatHandler", () => {
-  describe("chatHandler", () => {
-    const app = new App("TestStore");
-    const challengeList = app.challengeList;
-
-    app.renderCommandTips = vi.fn();
-    app.renderCustomText = vi.fn();
-    app.clearListFromDOM = vi.fn();
-    app.addChallengeToDOM = vi.fn();
-    app.editChallengeFromDOM = vi.fn();
-    app.completeChallengeFromDOM = vi.fn();
-    app.deleteChallengeFromDOM = vi.fn();
-
-    const adminUser = {
-      username: "bobTheAdmin",
-      flags: {
-        broadcaster: true,
-        mod: false,
-      },
-      extra: {
-        userColor: "#FF0000",
-      },
-      command: {
-        CLEARALL: "clearAll",
-        CLEARDONE: "clearDone",
-      },
-    };
-    const chatUser = {
-      username: "joeTheUser",
-      flags: {
-        broadcaster: false,
-        mod: false,
-      },
-      extra: { userColor: "#00FFFF" },
-      command: {
-        ADDCHALLENGE: "challenge",
-        EDITCHALLENGE: "edit",
-        DONECHALLENGE: "done",
-        DELETECHALLENGE: "delete",
-        CHECKCHALLENGE: "check",
-        HELP: "help",
-      },
-    };
-    const modUser = {
-      username: "modUser",
-      flags: {
-        broadcaster: false,
-        mod: true,
-      },
-      extra: { userColor: "#00FF00" },
-      command: {
-        ADDCHALLENGE: "challenge",
-        EDITCHALLENGE: "edit",
-        DONECHALLENGE: "done",
-        DELETECHALLENGE: "delete",
-        CHECKCHALLENGE: "check",
-        HELP: "help",
-      },
-    };
-    const botResponsePrefix = "";
+    let app: App;
 
     beforeEach(() => {
-      challengeList.clearChallengeList();
-      challengeList.addChallenges([
-        "challenge1",
-        "challenge2",
-        "challenge3",
-        "admin challenge1",
-        "admin challenge2",
-      ]);
-      challengeList.completeChallenges(1); // Complete challenge2
+        // Create fresh app instance for each test
+        app = createMockApp("TestStore");
+
+        // Set up test environment with standard challenges
+        setupTestEnvironment(app);
     });
 
-    describe("Admin commands", () => {
-      describe("!clearAll command (clearlist/clearuser aliases)", () => {
-        it("should return a success message when an Admin user submits clearAll command", () => {
-          const response = app.chatHandler(
-            adminUser.username,
-            adminUser.command.CLEARALL,
-            "",
-            adminUser.flags,
-            adminUser.extra
-          );
-          expect(challengeList.challenges.length).toBe(0);
-          expect(response.message).toBe(
-            botResponsePrefix + "All challenges have been cleared"
-          );
-        });
-
-        it("should return a error when an non-Admin user submits clearAll command", () => {
-          const response = app.chatHandler(
-            chatUser.username,
-            adminUser.command.CLEARALL,
-            "",
-            chatUser.flags,
-            chatUser.extra
-          );
-          expect(challengeList.challenges.length).toBe(5); // Should remain unchanged
-          expect(response.message).toBe(
-            botResponsePrefix + "Invalid command: command not found. Try !help"
-          );
-        });
-      });
-
-      it("!clearDone command", () => {
-        const response = app.chatHandler(
-          adminUser.username,
-          adminUser.command.CLEARDONE,
-          "",
-          adminUser.flags,
-          adminUser.extra
-        );
-        expect(challengeList.challenges.length).toBe(4); // Should remove 1 completed challenge
-        expect(response.error).toBe(false);
-        expect(response.message).toBe(
-          botResponsePrefix + "All done challenges have been cleared"
-        );
-      });
-    });
-
-    describe("User commands", () => {
-      describe("Invalid command", () => {
+    describe("Command Validation", () => {
         it("should error if the command is empty", () => {
-          const response = app.chatHandler(
-            chatUser.username,
-            "",
-            "",
-            chatUser.flags,
-            chatUser.extra
-          );
-          expect(response.error).toBe(true);
-          expect(response.message).toBe(
-            botResponsePrefix + "Invalid command: command not found. Try !help"
-          );
+            const response = executeCommand(app, SHARED_USERS.regular, "", "");
+            expectInvalidCommandError(response);
         });
 
         it("should error if the command is not found", () => {
-          const response = app.chatHandler(
-            chatUser.username,
-            "invalidCommand",
-            "",
-            chatUser.flags,
-            chatUser.extra
-          );
-          expect(response.message).toBe(
-            botResponsePrefix + "Invalid command: command not found. Try !help"
-          );
+            const response = executeCommand(
+                app,
+                SHARED_USERS.regular,
+                "invalidCommand",
+                ""
+            );
+            expectInvalidCommandError(response);
         });
-      });
-
-      describe("!challenge command", () => {
-        it("should add challenge when moderator uses command", () => {
-          const response = app.chatHandler(
-            modUser.username,
-            modUser.command.ADDCHALLENGE,
-            "newChallenge",
-            modUser.flags,
-            modUser.extra
-          );
-
-          expect(response.error).toBe(false);
-          expect(response.message).toBe(
-            botResponsePrefix + 'Challenge(s) 📝 "newChallenge" added!'
-          );
-        });
-
-        it("should return a success message showing the added challenges", () => {
-          const response = app.chatHandler(
-            modUser.username,
-            modUser.command.ADDCHALLENGE,
-            "newChallenge",
-            modUser.flags,
-            modUser.extra
-          );
-          expect(response.error).toBe(false);
-          expect(response.message).toBe(
-            botResponsePrefix + 'Challenge(s) 📝 "newChallenge" added!'
-          );
-        });
-
-        it("should accept multiple, comma separated, challenges", () => {
-          const response = app.chatHandler(
-            modUser.username,
-            modUser.command.ADDCHALLENGE,
-            "newChallenge, newChallenge2",
-            modUser.flags,
-            modUser.extra
-          );
-          expect(response.error).toBe(false);
-          expect(response.message).toBe(
-            botResponsePrefix +
-              'Challenge(s) 📝 "newChallenge" & 📝 "newChallenge2" added!'
-          );
-        });
-
-        it("should letting the user know they reached max challenge limit", () => {
-          const response = app.chatHandler(
-            modUser.username,
-            modUser.command.ADDCHALLENGE,
-            "newChallenge4, newChallenge5, newChallenge6, newChallenge7, newChallenge8, newChallenge9, newChallenge10, newChallenge11",
-            modUser.flags,
-            modUser.extra
-          );
-          expect(response.error).toBe(false);
-          expect(response.message).toBe(
-            botResponsePrefix +
-              "Maximum number of challenges reached, try deleting old challenges."
-          );
-        });
-
-        it("should error if regular user tries to add challenge", () => {
-          const response = app.chatHandler(
-            chatUser.username,
-            chatUser.command.ADDCHALLENGE,
-            "newChallenge",
-            chatUser.flags,
-            chatUser.extra
-          );
-          expect(response.error).toBe(true);
-          expect(response.message).toBe(
-            botResponsePrefix +
-              "Invalid command: Only moderators and the broadcaster can add challenges. Try !help"
-          );
-        });
-      });
-
-      describe("!edit command", () => {
-        it("should edit challenge when moderator uses command", () => {
-          const response = app.chatHandler(
-            modUser.username,
-            modUser.command.EDITCHALLENGE,
-            "2 editedChallenge",
-            modUser.flags,
-            modUser.extra
-          );
-          expect(response.error).toBe(false);
-          expect(response.message).toBe(
-            botResponsePrefix + "Challenge 2 updated!"
-          );
-        });
-
-        it("should error if regular user tries to edit challenge", () => {
-          const response = app.chatHandler(
-            chatUser.username,
-            chatUser.command.EDITCHALLENGE,
-            "2 editedChallenge",
-            chatUser.flags,
-            chatUser.extra
-          );
-          expect(response.error).toBe(true);
-          expect(response.message).toBe(
-            botResponsePrefix +
-              "Invalid command: Only moderators and the broadcaster can edit challenges. Try !help"
-          );
-        });
-      });
-
-      describe("!done command", () => {
-        it("returns a success message when moderator marks challenge as done", () => {
-          const response = app.chatHandler(
-            modUser.username,
-            modUser.command.DONECHALLENGE,
-            "1",
-            modUser.flags,
-            modUser.extra
-          );
-          expect(response.error).toBe(false);
-          expect(response.message).toBe(
-            botResponsePrefix +
-              'Good job on completing challenge(s) ✅ "challenge1"!'
-          );
-        });
-
-        it("returns a success message when moderator marks multiple challenge as done", () => {
-          const response = app.chatHandler(
-            modUser.username,
-            modUser.command.DONECHALLENGE,
-            "1, 3",
-            modUser.flags,
-            modUser.extra
-          );
-          expect(response.error).toBe(false);
-          expect(response.message).toBe(
-            botResponsePrefix +
-              'Good job on completing challenge(s) ✅ "challenge1" & ✅ "challenge3"!'
-          );
-        });
-
-        it("should error if regular user tries to complete challenge", () => {
-          const response = app.chatHandler(
-            chatUser.username,
-            chatUser.command.DONECHALLENGE,
-            "1",
-            chatUser.flags,
-            chatUser.extra
-          );
-
-          expect(response.error).toBe(true);
-          expect(response.message).toBe(
-            botResponsePrefix +
-              "Invalid command: Only moderators and the broadcaster can complete challenges. Try !help"
-          );
-        });
-      });
-
-      describe("!delete command", () => {
-        it("should delete challenge when moderator uses command", () => {
-          const response = app.chatHandler(
-            modUser.username,
-            modUser.command.DELETECHALLENGE,
-            "1",
-            modUser.flags,
-            modUser.extra
-          );
-
-          expect(response.error).toBe(false);
-          expect(response.message).toBe(
-            botResponsePrefix + "Challenge(s) 1 has been deleted!"
-          );
-        });
-
-        it("should delete all challenges when moderator uses 'all'", () => {
-          const response = app.chatHandler(
-            modUser.username,
-            modUser.command.DELETECHALLENGE,
-            "all",
-            modUser.flags,
-            modUser.extra
-          );
-          expect(response.error).toBe(false);
-          expect(response.message).toBe(
-            botResponsePrefix + "All of your challenges have been deleted!"
-          );
-        });
-
-        it("should error if regular user tries to delete challenge", () => {
-          const response = app.chatHandler(
-            chatUser.username,
-            chatUser.command.DELETECHALLENGE,
-            "1",
-            chatUser.flags,
-            chatUser.extra
-          );
-          expect(response.error).toBe(true);
-          expect(response.message).toBe(
-            botResponsePrefix +
-              "Invalid command: Only moderators and the broadcaster can delete challenges. Try !help"
-          );
-        });
-      });
-
-      describe("!check command", () => {
-        it("should list all uncompleted challenges", () => {
-          const response = app.chatHandler(
-            chatUser.username,
-            chatUser.command.CHECKCHALLENGE,
-            "",
-            chatUser.flags,
-            chatUser.extra
-          );
-          expect(response.error).toBe(false);
-          expect(response.message).toBe(
-            botResponsePrefix +
-              "Your current challenge(s) are: 📝 1. challenge1 📝 3. challenge3 📝 4. admin challenge1 📝 5. admin challenge2"
-          );
-        });
-
-        it("should if no challenges are found", () => {
-          challengeList.completeChallenges([0, 2, 3, 4]); // Complete all remaining challenges
-          const response = app.chatHandler(
-            chatUser.username,
-            chatUser.command.CHECKCHALLENGE,
-            "",
-            chatUser.flags,
-            chatUser.extra
-          );
-          expect(response.error).toBe(false);
-          expect(response.message).toBe(
-            botResponsePrefix +
-              "That challenge doesn't seem to exist, try adding one!"
-          );
-        });
-      });
-
-      describe("!help command", () => {
-        it("should return a helpful message", () => {
-          const response = app.chatHandler(
-            chatUser.username,
-            chatUser.command.HELP,
-            "",
-            chatUser.flags,
-            chatUser.extra
-          );
-          expect(response.message).toBe(
-            botResponsePrefix +
-              "Try these commands - !challenge !edit !done !delete !check"
-          );
-        });
-      });
     });
-  });
+
+    describe("Administrative Commands", () => {
+        describe("Clear All Commands", () => {
+            it("should clear all challenges when admin uses clearall command", () => {
+                testCommandPermissions(
+                    app,
+                    CommandType.CLEAR_ALL,
+                    "",
+                    SHARED_USERS.admin,
+                    SHARED_USERS.regular,
+                    [EXPECTED_MESSAGES.ALL_CLEARED]
+                );
+                expectChallengeCount(
+                    app,
+                    EXPECTED_CHALLENGE_COUNT.AFTER_CLEAR_ALL
+                );
+            });
+
+            it("should clear all challenges when moderator uses clearall command", () => {
+                const response = executeChallengeCommand(
+                    app,
+                    SHARED_USERS.moderator,
+                    CommandType.CLEAR_ALL
+                );
+                expectSuccessResponse(response, [
+                    EXPECTED_MESSAGES.ALL_CLEARED,
+                ]);
+                expectChallengeCount(
+                    app,
+                    EXPECTED_CHALLENGE_COUNT.AFTER_CLEAR_ALL
+                );
+            });
+        });
+
+        describe("Clear Done Commands", () => {
+            it("should clear completed challenges when admin uses cleardone command", () => {
+                const response = executeChallengeCommand(
+                    app,
+                    SHARED_USERS.admin,
+                    CommandType.CLEAR_DONE
+                );
+                expectSuccessResponse(response, [
+                    EXPECTED_MESSAGES.DONE_CLEARED,
+                ]);
+                expectChallengeCount(
+                    app,
+                    EXPECTED_CHALLENGE_COUNT.AFTER_CLEAR_DONE
+                );
+            });
+
+            it("should deny access to regular users for cleardone command", () => {
+                const response = executeChallengeCommand(
+                    app,
+                    SHARED_USERS.regular,
+                    CommandType.CLEAR_DONE
+                );
+                expectPermissionError(response);
+                expectChallengeCount(app, EXPECTED_CHALLENGE_COUNT.INITIAL); // Should remain unchanged
+            });
+        });
+    });
+
+    describe("Challenge Management Commands", () => {
+        describe("Add Challenge Command", () => {
+            it("should add single challenge when moderator uses command", () => {
+                testCommandPermissions(
+                    app,
+                    CommandType.ADD,
+                    TEST_CHALLENGE_NAMES.NEW,
+                    SHARED_USERS.moderator,
+                    SHARED_USERS.regular,
+                    [
+                        TEST_CHALLENGE_NAMES.NEW,
+                        EXPECTED_MESSAGES.CHALLENGE_ADDED,
+                    ]
+                );
+            });
+
+            it("should accept multiple comma-separated challenges", () => {
+                const response = executeChallengeCommand(
+                    app,
+                    SHARED_USERS.moderator,
+                    CommandType.ADD,
+                    TEST_CHALLENGE_NAMES.NEW_MULTIPLE
+                );
+                expectSuccessResponse(response, [
+                    "newChallenge",
+                    "newChallenge2",
+                    EXPECTED_MESSAGES.CHALLENGE_ADDED,
+                ]);
+            });
+
+            it("should notify user when max challenge limit is reached", () => {
+                testCommandLimit(
+                    app,
+                    SHARED_USERS.moderator,
+                    CommandType.ADD,
+                    TEST_CHALLENGE_NAMES.LIMIT_TEST,
+                    () => addChallengesUpToLimit(app, SHARED_USERS.moderator),
+                    EXPECTED_MESSAGES.MAX_REACHED
+                );
+            });
+        });
+
+        describe("Edit Challenge Command", () => {
+            it("should edit challenge when moderator uses command", () => {
+                testCommandPermissions(
+                    app,
+                    CommandType.EDIT,
+                    `${TEST_CHALLENGE_IDS.SECOND} title="${TEST_CHALLENGE_NAMES.EDITED}"`,
+                    SHARED_USERS.moderator,
+                    SHARED_USERS.regular,
+                    [
+                        EXPECTED_MESSAGES.CHALLENGE_UPDATED,
+                        TEST_CHALLENGE_IDS.SECOND,
+                    ]
+                );
+            });
+        });
+
+        describe("Complete Challenge Command", () => {
+            it("should complete single challenge when moderator uses command", () => {
+                testCommandPermissions(
+                    app,
+                    CommandType.DONE,
+                    TEST_CHALLENGE_IDS.FIRST,
+                    SHARED_USERS.moderator,
+                    SHARED_USERS.regular,
+                    [
+                        EXPECTED_MESSAGES.CHALLENGE_COMPLETED,
+                        TEST_CHALLENGE_IDS.FIRST,
+                    ]
+                );
+            });
+
+            it("should complete multiple challenges when moderator uses command", () => {
+                testMultipleTargetCommand(
+                    app,
+                    SHARED_USERS.moderator,
+                    CommandType.DONE,
+                    TEST_CHALLENGE_IDS.MULTIPLE,
+                    [EXPECTED_MESSAGES.CHALLENGE_COMPLETED, "1", "3"]
+                );
+            });
+        });
+
+        describe("Delete Challenge Command", () => {
+            it("should delete single challenge when moderator uses command", () => {
+                testCommandPermissions(
+                    app,
+                    CommandType.DELETE,
+                    TEST_CHALLENGE_IDS.FIRST,
+                    SHARED_USERS.moderator,
+                    SHARED_USERS.regular,
+                    [
+                        EXPECTED_MESSAGES.CHALLENGE_DELETED,
+                        TEST_CHALLENGE_IDS.FIRST,
+                    ]
+                );
+            });
+        });
+    });
+
+    describe("Information Commands", () => {
+        describe("Check Command", () => {
+            it("should list uncompleted challenges for moderators", () => {
+                testCommandPermissions(
+                    app,
+                    CommandType.CHECK,
+                    "",
+                    SHARED_USERS.moderator,
+                    SHARED_USERS.regular,
+                    [EXPECTED_MESSAGES.CURRENT_CHALLENGES]
+                );
+            });
+
+            it("should return no challenges message when all completed", () => {
+                // Complete all remaining challenges
+                app.challengeList.completeChallenges([0, 2, 3, 4]);
+                const response = executeChallengeCommand(
+                    app,
+                    SHARED_USERS.moderator,
+                    CommandType.CHECK
+                );
+                expectSuccessResponse(response, [
+                    EXPECTED_MESSAGES.NO_CHALLENGES,
+                    "add",
+                ]);
+            });
+        });
+
+        describe("Help Command", () => {
+            it("should provide help information for moderators", () => {
+                testCommandPermissions(
+                    app,
+                    CommandType.HELP,
+                    "",
+                    SHARED_USERS.moderator,
+                    SHARED_USERS.regular,
+                    [
+                        EXPECTED_MESSAGES.HELP_AVAILABLE,
+                        "!ch add",
+                        "!ch edit",
+                        "!ch done",
+                    ]
+                );
+            });
+        });
+    });
 });

@@ -1,199 +1,320 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import Timer from "../../src/utils/Timer";
 
+// ============================================================================
+// TEST CONSTANTS AND DATA
+// ============================================================================
+
+/**
+ * Standard test durations for consistent testing
+ */
+const TEST_DURATIONS = {
+    SHORT: 60,      // 1 minute
+    MEDIUM: 300,    // 5 minutes
+    LONG: 3600,     // 1 hour
+} as const;
+
+/**
+ * Time advancement values in milliseconds
+ */
+const TIME_ADVANCES = {
+    SHORT: 30000,   // 30 seconds
+    MEDIUM: 60000,  // 1 minute
+    LONG: 120000,   // 2 minutes
+    EXPIRE: 310000, // 5+ minutes (to expire 5-minute timer)
+} as const;
+
+/**
+ * Expected status display emojis
+ */
+const STATUS_EMOJIS = {
+    INACTIVE: "",
+    NORMAL: "⏱️",
+    WARNING: "🟡",
+    CRITICAL: "🔴",
+    EXPIRED: "⏰",
+    PAUSED: "⏸️",
+} as const;
+
+/**
+ * Test data for valid duration parsing
+ */
+const VALID_DURATION_TEST_CASES: [string, number, string][] = [
+    // [input, expectedSeconds, description]
+    ["90s", 90, "seconds format"],
+    ["30s", 30, "seconds format"],
+    ["10m", 600, "minutes format"],
+    ["5m", 300, "minutes format"],
+    ["1h", 3600, "hours format"],
+    ["2h", 7200, "hours format"],
+    ["1h30m", 5400, "combined hours and minutes"],
+    ["1h30m45s", 5445, "combined hours, minutes, and seconds"],
+    ["25m30s", 1530, "combined minutes and seconds"],
+    ["12:30", 750, "clock format mm:ss"],
+    ["05:00", 300, "clock format mm:ss with leading zero"],
+    ["1:30:45", 5445, "clock format hh:mm:ss"],
+    ["0:05:30", 330, "clock format hh:mm:ss with zero hour"],
+    ["10M", 600, "case insensitive minutes"],
+    ["1H30M", 5400, "case insensitive combined format"],
+];
+
+/**
+ * Test data for duration parsing errors
+ */
+const ERROR_TEST_CASES: [string, string, string][] = [
+    // [input, expectedErrorMessage, description]
+    ["invalid", "Invalid timer format", "invalid format"],
+    ["", "Timer duration must be a string", "empty string"],
+    ["10x", "Invalid timer format", "invalid unit"],
+    ["25:70", "Invalid time values", "invalid minutes in clock format"],
+    ["1:70:30", "Invalid time values", "invalid minutes in hh:mm:ss format"],
+    ["1:30:70", "Invalid time values", "invalid seconds in hh:mm:ss format"],
+    ["0s", "Timer duration must be greater than 0", "zero duration"],
+    ["-5m", "Invalid duration value", "negative duration"],
+];
+
+/**
+ * Test data for time formatting
+ */
+const TIME_FORMAT_TEST_CASES: [number, string][] = [
+    [0, "0s"],
+    [30, "30s"],
+    [60, "1m"],
+    [90, "1m 30s"],
+    [3600, "1h"],
+    [3661, "1h 1m 1s"],
+];
+
+// ============================================================================
+// TEST UTILITIES
+// ============================================================================
+
+/**
+ * Creates a test timer with specified duration
+ * @param duration - Duration in seconds (defaults to TEST_DURATIONS.MEDIUM)
+ * @returns Timer instance ready for testing
+ */
+const createTestTimer = (duration: number = TEST_DURATIONS.MEDIUM): Timer => {
+    return new Timer(duration);
+};
+
+/**
+ * Asserts timer state properties
+ * @param timer - Timer instance to check
+ * @param expected - Expected state properties
+ */
+const assertTimerState = (
+    timer: Timer,
+    expected: {
+        isActive?: boolean;
+        isPaused?: boolean;
+        duration?: number;
+    }
+): void => {
+    if (expected.isActive !== undefined) {
+        expect(timer.isActive).toBe(expected.isActive);
+    }
+    if (expected.isPaused !== undefined) {
+        expect(timer.isPaused).toBe(expected.isPaused);
+    }
+    if (expected.duration !== undefined) {
+        expect(timer.duration).toBe(expected.duration);
+    }
+};
+
+/**
+ * Advances time and asserts remaining time
+ * @param timer - Timer instance
+ * @param advanceMs - Milliseconds to advance
+ * @param expectedRemaining - Expected remaining seconds
+ */
+const advanceTimeAndAssert = (
+    timer: Timer,
+    advanceMs: number,
+    expectedRemaining: number
+): void => {
+    vi.advanceTimersByTime(advanceMs);
+    expect(timer.getRemainingTime()).toBe(expectedRemaining);
+};
+
+/**
+ * Asserts timer status display
+ * @param timer - Timer instance
+ * @param expectedStatus - Expected status emoji
+ */
+const assertTimerStatus = (timer: Timer, expectedStatus: string): void => {
+    expect(timer.getStatusDisplay()).toBe(expectedStatus);
+};
+
+// ============================================================================
+// TESTS
+// ============================================================================
+
 describe("Timer", () => {
-  beforeEach(() => {
-    vi.useFakeTimers();
-  });
-
-  afterEach(() => {
-    vi.useRealTimers();
-  });
-
-  describe("parseDuration", () => {
-    it("should parse seconds format", () => {
-      expect(Timer.parseDuration("90s")).toBe(90);
-      expect(Timer.parseDuration("30s")).toBe(30);
-    });
-
-    it("should parse minutes format", () => {
-      expect(Timer.parseDuration("10m")).toBe(600);
-      expect(Timer.parseDuration("5m")).toBe(300);
-    });
-
-    it("should parse hours format", () => {
-      expect(Timer.parseDuration("1h")).toBe(3600);
-      expect(Timer.parseDuration("2h")).toBe(7200);
-    });
-
-    it("should parse combined format", () => {
-      expect(Timer.parseDuration("1h30m")).toBe(5400); // 1 hour + 30 minutes
-      expect(Timer.parseDuration("1h30m45s")).toBe(5445); // 1 hour + 30 minutes + 45 seconds
-      expect(Timer.parseDuration("25m30s")).toBe(1530); // 25 minutes + 30 seconds
-    });
-
-    it("should parse clock format mm:ss", () => {
-      expect(Timer.parseDuration("12:30")).toBe(750); // 12 minutes 30 seconds
-      expect(Timer.parseDuration("05:00")).toBe(300); // 5 minutes
-    });
-
-    it("should parse clock format hh:mm:ss", () => {
-      expect(Timer.parseDuration("1:30:45")).toBe(5445); // 1 hour 30 minutes 45 seconds
-      expect(Timer.parseDuration("0:05:30")).toBe(330); // 5 minutes 30 seconds
-    });
-
-    it("should handle case insensitive input", () => {
-      expect(Timer.parseDuration("10M")).toBe(600);
-      expect(Timer.parseDuration("1H30M")).toBe(5400);
-    });
-
-    it("should throw error for invalid format", () => {
-      expect(() => Timer.parseDuration("invalid")).toThrow("Invalid timer format");
-      expect(() => Timer.parseDuration("")).toThrow("Timer duration must be a string");
-      expect(() => Timer.parseDuration("10x")).toThrow("Invalid timer format");
-    });
-
-    it("should throw error for invalid clock format", () => {
-      expect(() => Timer.parseDuration("25:70")).toThrow("Invalid time values");
-      expect(() => Timer.parseDuration("1:70:30")).toThrow("Invalid time values");
-      expect(() => Timer.parseDuration("1:30:70")).toThrow("Invalid time values");
-    });
-
-    it("should throw error for zero duration", () => {
-      expect(() => Timer.parseDuration("0s")).toThrow("Timer duration must be greater than 0");
-    });
-
-    it("should throw error for negative values", () => {
-      expect(() => Timer.parseDuration("-5m")).toThrow("Invalid duration value");
-    });
-  });
-
-  describe("Timer functionality", () => {
-    let timer: Timer;
-
     beforeEach(() => {
-      timer = new Timer(300); // 300 seconds (5 minutes) for better testing
+        vi.useFakeTimers();
     });
 
-    it("should initialize with correct properties", () => {
-      expect(timer.duration).toBe(300);
-      expect(timer.isActive).toBe(false);
-      expect(timer.isPaused).toBe(false);
+    afterEach(() => {
+        vi.useRealTimers();
     });
 
-    it("should start timer correctly", () => {
-      const startTime = Date.now();
-      timer.start();
+    describe("parseDuration", () => {
+        describe("valid formats", () => {
+            it.each(VALID_DURATION_TEST_CASES)(
+                "should parse %s as %d seconds (%s)",
+                (input, expectedSeconds) => {
+                    expect(Timer.parseDuration(input)).toBe(expectedSeconds);
+                }
+            );
+        });
 
-      expect(timer.isActive).toBe(true);
-      expect(timer.isPaused).toBe(false);
-      expect(timer.startTime).toBe(startTime);
-      expect(timer.endTime).toBe(startTime + 300000);
+        describe("error cases", () => {
+            it.each(ERROR_TEST_CASES)(
+                "should throw error for %s (%s)",
+                (input, expectedError) => {
+                    expect(() => Timer.parseDuration(input)).toThrow(expectedError);
+                }
+            );
+        });
     });
 
-    it("should calculate remaining time correctly", () => {
-      timer.start();
-      
-      // Advance time by 30 seconds
-      vi.advanceTimersByTime(30000);
+    describe("Timer functionality", () => {
+        let timer: Timer;
 
-      expect(timer.getRemainingTime()).toBe(270);
+        beforeEach(() => {
+            timer = createTestTimer(); // 300 seconds (5 minutes) for testing
+        });
+
+        describe("initialization", () => {
+            it("should initialize with correct properties", () => {
+                assertTimerState(timer, {
+                    duration: TEST_DURATIONS.MEDIUM,
+                    isActive: false,
+                    isPaused: false,
+                });
+            });
+        });
+
+        describe("timing operations", () => {
+            it("should start timer correctly", () => {
+                const startTime = Date.now();
+                timer.start();
+
+                assertTimerState(timer, { isActive: true, isPaused: false });
+                expect(timer.startTime).toBe(startTime);
+                expect(timer.endTime).toBe(startTime + TEST_DURATIONS.MEDIUM * 1000);
+            });
+
+            it("should calculate remaining time correctly", () => {
+                timer.start();
+                advanceTimeAndAssert(timer, TIME_ADVANCES.SHORT, 270);
+            });
+
+            it("should detect expiration", () => {
+                timer.start();
+                advanceTimeAndAssert(timer, TIME_ADVANCES.EXPIRE, 0);
+                expect(timer.isExpired()).toBe(true);
+            });
+
+            it("should stop timer correctly", () => {
+                timer.start();
+                vi.advanceTimersByTime(TIME_ADVANCES.SHORT);
+
+                timer.stop();
+
+                assertTimerState(timer, { isActive: false, isPaused: false });
+                expect(timer.getRemainingTime()).toBe(0);
+            });
+        });
+
+        describe("pause and resume", () => {
+            it("should pause and resume correctly", () => {
+                timer.start();
+
+                // Advance 20 seconds, then pause
+                vi.advanceTimersByTime(20000);
+                timer.pause();
+
+                assertTimerState(timer, { isPaused: true });
+                expect(timer.getRemainingTime()).toBe(280);
+
+                // Advance 10 seconds while paused (should not affect remaining time)
+                vi.advanceTimersByTime(10000);
+                expect(timer.getRemainingTime()).toBe(280);
+
+                // Resume
+                timer.resume();
+                assertTimerState(timer, { isPaused: false });
+
+                // Advance 20 more seconds
+                advanceTimeAndAssert(timer, 20000, 260);
+            });
+        });
+
+        describe("time formatting", () => {
+            it.each(TIME_FORMAT_TEST_CASES)(
+                "should format %d seconds as '%s'",
+                (seconds, expectedFormat) => {
+                    expect(timer.getFormattedTime(seconds)).toBe(expectedFormat);
+                }
+            );
+        });
+
+        describe("status display", () => {
+            it("should show correct status for inactive timer", () => {
+                assertTimerStatus(timer, STATUS_EMOJIS.INACTIVE);
+            });
+
+            it("should show correct status for active timer", () => {
+                timer.start();
+                assertTimerStatus(timer, STATUS_EMOJIS.NORMAL);
+            });
+
+            it("should show warning status when time is low", () => {
+                timer.start();
+                // Advance to 118 seconds remaining (warning threshold is 120s)
+                vi.advanceTimersByTime(182000);
+                assertTimerStatus(timer, STATUS_EMOJIS.WARNING);
+            });
+
+            it("should show critical status when time is very low", () => {
+                timer.start();
+                // Advance to 29 seconds remaining (critical threshold is 30s)
+                vi.advanceTimersByTime(271000);
+                assertTimerStatus(timer, STATUS_EMOJIS.CRITICAL);
+            });
+
+            it("should show expired status when timer expires", () => {
+                timer.start();
+                vi.advanceTimersByTime(TIME_ADVANCES.EXPIRE);
+                assertTimerStatus(timer, STATUS_EMOJIS.EXPIRED);
+            });
+
+            it("should show paused status when timer is paused", () => {
+                timer.start();
+                timer.pause();
+                assertTimerStatus(timer, STATUS_EMOJIS.PAUSED);
+            });
+        });
     });
 
-    it("should detect expiration", () => {
-      timer.start();
-      
-      // Advance time beyond duration
-      vi.advanceTimersByTime(310000);
+    describe("serialization", () => {
+        it("should serialize and deserialize correctly", () => {
+            const originalTimer = createTestTimer(120);
+            originalTimer.start();
 
-      expect(timer.isExpired()).toBe(true);
-      expect(timer.getRemainingTime()).toBe(0);
+            const data = originalTimer.toData();
+            const deserializedTimer = Timer.fromData(data);
+
+            // Verify all properties are preserved
+            expect(deserializedTimer.duration).toBe(originalTimer.duration);
+            expect(deserializedTimer.startTime).toBe(originalTimer.startTime);
+            expect(deserializedTimer.endTime).toBe(originalTimer.endTime);
+            assertTimerState(deserializedTimer, {
+                isActive: originalTimer.isActive,
+                isPaused: originalTimer.isPaused,
+            });
+        });
     });
-
-    it("should pause and resume correctly", () => {
-      timer.start();
-      
-      // Advance 20 seconds, then pause
-      vi.advanceTimersByTime(20000);
-      timer.pause();
-      
-      expect(timer.isPaused).toBe(true);
-      expect(timer.getRemainingTime()).toBe(280);
-
-      // Advance 10 seconds while paused (should not affect remaining time)
-      vi.advanceTimersByTime(10000);
-      expect(timer.getRemainingTime()).toBe(280);
-
-      // Resume
-      timer.resume();
-      expect(timer.isPaused).toBe(false);
-
-      // Advance 20 more seconds
-      vi.advanceTimersByTime(20000);
-      expect(timer.getRemainingTime()).toBe(260);
-    });
-
-    it("should stop timer correctly", () => {
-      timer.start();
-      vi.advanceTimersByTime(30000);
-      
-      timer.stop();
-      
-      expect(timer.isActive).toBe(false);
-      expect(timer.isPaused).toBe(false);
-      expect(timer.getRemainingTime()).toBe(0);
-    });
-
-    it("should format time correctly", () => {
-      expect(timer.getFormattedTime(0)).toBe("0s");
-      expect(timer.getFormattedTime(30)).toBe("30s");
-      expect(timer.getFormattedTime(90)).toBe("1m 30s");
-      expect(timer.getFormattedTime(3661)).toBe("1h 1m 1s");
-      expect(timer.getFormattedTime(3600)).toBe("1h");
-      expect(timer.getFormattedTime(60)).toBe("1m");
-    });
-
-    it("should provide correct status display", () => {
-      // Not active
-      expect(timer.getStatusDisplay()).toBe("");
-      
-      // Active, normal time
-      timer.start();
-      expect(timer.getStatusDisplay()).toBe("⏱️");
-      
-      // Warning time (2 minutes)
-      vi.advanceTimersByTime(182000); // 182 seconds elapsed, 118 seconds remaining
-      expect(timer.getStatusDisplay()).toBe("🟡");
-
-      // Critical time (30 seconds)
-      vi.advanceTimersByTime(89000); // 271 seconds elapsed, 29 seconds remaining
-      expect(timer.getStatusDisplay()).toBe("🔴");
-      
-      // Expired
-      vi.advanceTimersByTime(30000); // Advance enough to expire
-      expect(timer.getStatusDisplay()).toBe("⏰");
-      
-      // Paused
-      timer = new Timer(300);
-      timer.start();
-      timer.pause();
-      expect(timer.getStatusDisplay()).toBe("⏸️");
-    });
-  });
-
-  describe("serialization", () => {
-    it("should serialize and deserialize correctly", () => {
-      const timer = new Timer(120);
-      timer.start();
-      
-      const data = timer.toData();
-      const newTimer = Timer.fromData(data);
-      
-      expect(newTimer.duration).toBe(timer.duration);
-      expect(newTimer.startTime).toBe(timer.startTime);
-      expect(newTimer.endTime).toBe(timer.endTime);
-      expect(newTimer.isActive).toBe(timer.isActive);
-      expect(newTimer.isPaused).toBe(timer.isPaused);
-    });
-  });
 });
