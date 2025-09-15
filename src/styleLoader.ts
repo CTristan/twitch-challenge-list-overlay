@@ -1,0 +1,98 @@
+/**
+ * Load hardcoded default styles for the overlay.
+ * @param {Config} config - Configuration object (only used for future extensibility).
+ * @returns {void}
+ */
+export function loadStyles(config: Config): void {
+  const root: HTMLElement = document.querySelector(":root") as HTMLElement;
+
+  // Load default Google Fonts
+  loadGoogleFont("Roboto Mono");
+
+  // Apply hardcoded default styles as CSS variables
+  const defaultStyles = getDefaultStyles();
+  for (let [key, val] of Object.entries(defaultStyles)) {
+    root.style.setProperty(convertToCSSVar(key), val);
+  }
+}
+
+/**
+ * Get hardcoded default styles for the overlay
+ * @returns {Record<string, string>} Default style values
+ */
+function getDefaultStyles(): Record<string, string> {
+  return {
+    // Font settings
+    headerFontFamily: "Roboto Mono",
+    cardFontFamily: "Roboto Mono",
+
+    // App container styling
+    appBorderRadius: "8px",
+    appPadding: "6px",
+    appBackgroundColor: "rgba(0, 0, 0, 0)",
+    appBackgroundImage: "url(../images/transparent-image.png)",
+
+    // Header styling
+    headerDisplay: "flex",
+    headerBorderRadius: "8px",
+    headerMarginBottom: "6px",
+    headerPadding: "12px",
+    headerBackgroundColor: "rgba(0, 0, 0, 0.7)",
+    headerFontSize: "18px",
+    headerFontColor: "#FFFFFF",
+    headerFontWeight: "normal",
+
+    // Challenge card styling
+    cardGapBetween: "6px",
+    cardBorderRadius: "8px",
+    cardPadding: "12px",
+    cardBackgroundColor: "rgba(0, 0, 0, 0.7)",
+
+    // Username styling
+    usernameFontSize: "18px",
+    usernameColor: "#FFFFFF",
+    usernameFontWeight: "normal",
+
+    // Challenge text styling
+    challengeFontSize: "16px",
+    challengeFontColor: "#FFFFFF",
+    challengeFontWeight: "normal",
+    challengeDoneFontColor: "#b0b0b0",
+    challengeDoneFontStyle: "italic",
+    challengeDoneTextDecoration: "line-through",
+    challengeFocusFontColor: "#111111",
+    challengeFocusBackgroundColor: "rgba(255, 255, 255, 0.7)",
+    challengeFocusBorderRadius: "8px",
+
+    // Checkbox styling
+    challengeCheckboxSize: "20px",
+    challengeCheckboxMarginRight: "8px",
+    challengeCheckboxBorderWidth: "2px",
+    challengeCheckboxBorderColor: "#ffffff",
+    challengeCheckboxBorderRadius: "3px",
+    challengeCheckboxBackgroundColor: "transparent",
+    challengeCheckboxCheckedBorderColor: "#4a90e2",
+    challengeCheckboxCheckmarkColor: "#4a90e2",
+  };
+}
+
+/**
+ * @param {string} font - Font family name.
+ * @returns {void}
+ */
+function loadGoogleFont(font: string): void {
+  window.WebFont.load({
+    google: {
+      families: [`${font}:100,400,700`],
+    },
+  });
+}
+
+/**
+ * @param {string} name - The name of the CSS variable.
+ * @returns {string}
+ */
+function convertToCSSVar(name: string): string {
+  let cssVar = name.replace(/([A-Z])/g, "-$1").toLowerCase();
+  return `--${cssVar}`;
+}

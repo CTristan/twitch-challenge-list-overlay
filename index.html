@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta author="jujoco" />
+    <meta name="keywords" content="twitch, chat, challengeList, jujoco" />
+    <meta name="description" content="A Challenge list for twitch chat" />
+    <link
+      rel="icon"
+      type="image/png"
+      href="https://github.githubassets.com/favicons/favicon-dark.png"
+    />
+    <link rel="stylesheet" type="text/css" href="./styles/index.css" />
+    <script src="https://ajax.googleapis.com/ajax/libs/webfont/1.6.26/webfont.js"></script>
+    <script defer src="./_config.js"></script>
+    <script defer src="./dist/challengeBot.iife.js"></script>
+    <title>Multi Challenge List</title>
+  </head>
+
+  <body>
+    <main id="app">
+      <div class="header">
+        <div class="header-features">
+          <div class="command-tips hidden">
+            <span class="command-code">!help</span>
+          </div>
+
+          <div class="custom-header hidden">
+            <span class="custom-text">Custom Header Text</span>
+          </div>
+
+          <div class="challenge-title">
+            <span class="challenge-title">challenges</span>
+            <span class="challenge-count">0/0</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="challenge-wrapper">
+        <div class="challenge-container primary"></div>
+        <div class="challenge-container secondary"></div>
+      </div>
+
+      <!-- Admin Panel - Only visible when URL fragment is #admin -->
+      <div id="admin-panel" class="admin-panel hidden">
+        <div class="admin-content">
+          <h2>Twitch Overlay Admin Panel</h2>
+          <p>Manage your overlay configuration and export settings.</p>
+
+          <!-- Configuration form will be dynamically inserted here by AdminPanel.ts -->
+        </div>
+      </div>
+    </main>
+
+    <div id="modal" class="modal hidden justify-center items-center absolute">
+      <div class="modal-content">
+        <h2 class="modal-header">Invalid oAuth access token</h2>
+        <div class="modal-body">
+          <p>Possible Reasons:</p>
+          <ul class="modal-list">
+            <li>Token entered incorrectly.</li>
+            <li>Token could have expired. Generate a new access token.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

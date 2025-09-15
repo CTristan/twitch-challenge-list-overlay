@@ -1,0 +1,20 @@
+# Configuration files (user-editable)
+_config.js
+
+# coverage
+coverage/
+
+# Dependency directories
+node_modules/
+
+# dotenv environment variable files
+.env
+.env.local
+
+# Misc files
+.DS_Store
+.todo.md
+.vscode/settings.json
+
+# notes
+devNotes.md
