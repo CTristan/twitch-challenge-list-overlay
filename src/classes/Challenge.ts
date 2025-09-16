@@ -21,44 +21,28 @@ export default class Challenge {
 
     /**
      * @constructor
-     * @param titleOrDescription - Challenge title (new format) or description (legacy)
+     * @param title - Challenge title
      * @param options - Optional configuration for enhanced features
      */
     constructor(
-        titleOrDescription: string,
+        title: string,
         options: {
             description?: string;
             amount?: number;
             timer?: string | number;
-            isLegacy?: boolean;
         } = {}
     ) {
-        const {
-            description = "",
-            amount = 1,
-            timer,
-            isLegacy = false,
-        } = options;
+        const { description = "", amount = 1, timer } = options;
 
-        // Handle legacy constructor (single description parameter)
-        if (isLegacy || Object.keys(options).length === 0) {
-            // Legacy format: titleOrDescription is actually the description
-            this.description = ValidationUtils.validateChallengeDescription(
-                titleOrDescription,
-                { legacy: true }
-            );
-            this.title = this.description; // Use description as title for backward compatibility
-        } else {
-            // New format: separate title and description
-            this.title =
-                ValidationUtils.validateChallengeTitle(titleOrDescription);
-            // Allow empty descriptions for title-only challenges
-            this.description = description
-                ? ValidationUtils.validateChallengeDescription(description, {
-                      allowEmpty: true,
-                  })
-                : "";
-        }
+        // Validate and set title and description
+        this.title = ValidationUtils.validateChallengeTitle(title);
+
+        // Allow empty descriptions for title-only challenges
+        this.description = description
+            ? ValidationUtils.validateChallengeDescription(description, {
+                  allowEmpty: true,
+              })
+            : "";
 
         this.amount = ValidationUtils.validateChallengeAmount(amount);
         this.progress = 0;
@@ -94,28 +78,6 @@ export default class Challenge {
      */
     validateAmount(amount: number): number {
         return ValidationUtils.validateChallengeAmount(amount);
-    }
-
-    /**
-     * Validate description string (internal method)
-     * @param description - The description to validate
-     * @returns Validated description
-     * @throws Error if description is invalid
-     */
-    validateDescriptionString(description: string): string {
-        return ValidationUtils.validateChallengeDescription(description, {
-            legacy: true,
-        });
-    }
-
-    /**
-     * Legacy method: Validate description (for backward compatibility)
-     * @param description - The description to validate
-     * @returns Validated description
-     * @throws Error if description is invalid
-     */
-    validateDescription(description: string): string {
-        return this.validateDescriptionString(description);
     }
 
     /**
@@ -352,28 +314,13 @@ export default class Challenge {
      * @returns Challenge instance
      */
     static fromSerializedData(data: any): Challenge {
-        // Handle legacy format (just description and completionStatus)
-        if (
-            typeof data === "object" &&
-            data.description &&
-            data.completionStatus !== undefined
-        ) {
-            const challenge = new Challenge(data.description, {
-                isLegacy: true,
-            });
-            challenge.setCompletionStatus(data.completionStatus);
-            return challenge;
-        }
-
-        // Handle enhanced format
-        const challenge = new Challenge(data.title || data.description, {
-            description:
-                data.description && data.description.trim()
-                    ? data.description
-                    : "",
-            amount: data.amount || 1,
-            isLegacy: !data.title,
-        });
+        const challenge = new Challenge(
+            data.title || data.description || "Untitled Challenge",
+            {
+                description: data.description || "",
+                amount: data.amount || 1,
+            }
+        );
 
         challenge.progress = data.progress || 0;
         challenge.completionStatus = data.completionStatus || false;

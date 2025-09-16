@@ -5,7 +5,9 @@ describe("Challenge", () => {
     let challenge: Challenge;
 
     beforeEach(() => {
-        challenge = new Challenge("Buy groceries");
+        challenge = new Challenge("Buy groceries", {
+            description: "Buy groceries from the store",
+        });
     });
 
     describe("constructor", () => {
@@ -16,38 +18,9 @@ describe("Challenge", () => {
         });
     });
 
-    describe("validateDescription", () => {
-        it("should return the description if it is valid", () => {
-            expect(challenge.validateDescription("Buy groceries")).toBe(
-                "Buy groceries"
-            );
-        });
-
-        it("should throw an error if the description is invalid", () => {
-            expect(() => challenge.validateDescription("")).toThrow(
-                "Challenge description cannot be empty"
-            );
-        });
-
-        it("should throw Error if description is not a string", () => {
-            expect(() => challenge.validateDescription(123 as any)).toThrow(
-                "Challenge description must be of type string"
-            );
-            expect(() => challenge.validateDescription(true as any)).toThrow(
-                "Challenge description must be of type string"
-            );
-            expect(() => challenge.validateDescription([] as any)).toThrow(
-                "Challenge description must be of type string"
-            );
-            expect(() => challenge.validateDescription({} as any)).toThrow(
-                "Challenge description must be of type string"
-            );
-        });
-    });
-
     describe("getDescription", () => {
         it("should return the description of the challenge", () => {
-            expect(challenge.description).toBe("Buy groceries");
+            expect(challenge.description).toBe("Buy groceries from the store");
         });
     });
 

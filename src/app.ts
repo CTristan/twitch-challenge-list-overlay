@@ -135,10 +135,8 @@ export default class App {
      * @returns {void}
      */
     renderChallengeList(): void {
-        if (this.challengeList.challenges.length === 0) {
-            return;
-        }
-
+        // Always create the challenge card with header, even when there are no challenges
+        // This ensures the "Challenges" header remains visible in all states (including 0/0)
         const cardEl = createChallengeCard(
             this.challengeList.challengesCompleted,
             this.challengeList.totalChallenges
@@ -150,80 +148,89 @@ export default class App {
             return;
         }
 
-        // Create DocumentFragment for batch DOM operations to reduce reflows
-        const fragment = document.createDocumentFragment();
+        // Only populate the list with challenge items if there are challenges
+        if (this.challengeList.challenges.length > 0) {
+            // Create DocumentFragment for batch DOM operations to reduce reflows
+            const fragment = document.createDocumentFragment();
 
-        this.challengeList.getAllChallenges().forEach((challenge, index) => {
-            const listItem = document.createElement("li");
-            listItem.classList.add("challenge");
-            listItem.dataset["challengeId"] = `${challenge.id}`;
+            this.challengeList
+                .getAllChallenges()
+                .forEach((challenge, index) => {
+                    const listItem = document.createElement("li");
+                    listItem.classList.add("challenge");
+                    listItem.dataset["challengeId"] = `${challenge.id}`;
 
-            // Apply row background color if configured
-            const backgroundColor = getRowBackgroundColor(
-                index,
-                this.#configManager.get("challengeRowColors") || []
-            );
-            if (backgroundColor) {
-                listItem.style.backgroundColor = backgroundColor;
-            }
+                    // Apply row background color if configured
+                    const backgroundColor = getRowBackgroundColor(
+                        index,
+                        this.#configManager.get("challengeRowColors") || []
+                    );
+                    if (backgroundColor) {
+                        listItem.style.backgroundColor = backgroundColor;
+                    }
 
-            // Apply row text color if configured
-            const textColor = getRowTextColor(
-                index,
-                this.#configManager.get("challengeRowTextColors") || []
-            );
+                    // Apply row text color if configured
+                    const textColor = getRowTextColor(
+                        index,
+                        this.#configManager.get("challengeRowTextColors") || []
+                    );
 
-            // Create checkbox element
-            const checkbox = createChallengeCheckbox(challenge.isComplete());
+                    // Create checkbox element
+                    const checkbox = createChallengeCheckbox(
+                        challenge.isComplete()
+                    );
 
-            // Apply checkbox colors to match text color if configured
-            if (textColor) {
-                checkbox.style.setProperty(
-                    "--challenge-checkbox-border-color",
-                    textColor
-                );
-                checkbox.style.setProperty(
-                    "--challenge-checkbox-checked-border-color",
-                    textColor
-                );
-                checkbox.style.setProperty(
-                    "--challenge-checkbox-checkmark-color",
-                    textColor
-                );
-            }
+                    // Apply checkbox colors to match text color if configured
+                    if (textColor) {
+                        checkbox.style.setProperty(
+                            "--challenge-checkbox-border-color",
+                            textColor
+                        );
+                        checkbox.style.setProperty(
+                            "--challenge-checkbox-checked-border-color",
+                            textColor
+                        );
+                        checkbox.style.setProperty(
+                            "--challenge-checkbox-checkmark-color",
+                            textColor
+                        );
+                    }
 
-            listItem.appendChild(checkbox);
+                    listItem.appendChild(checkbox);
 
-            // Create text element for challenge title and description
-            const textElement = createChallengeTextElement(challenge);
+                    // Create text element for challenge title and description
+                    const textElement = createChallengeTextElement(challenge);
 
-            // Apply text color to the text element if configured
-            if (textColor) {
-                textElement.style.color = textColor;
-                // Also apply to child elements
-                const titleElement = textElement.querySelector(
-                    ".challenge-title"
-                ) as HTMLElement;
-                const descriptionElement = textElement.querySelector(
-                    ".challenge-description"
-                ) as HTMLElement;
-                if (titleElement) titleElement.style.color = textColor;
-                if (descriptionElement)
-                    descriptionElement.style.color = textColor;
-            }
+                    // Apply text color to the text element if configured
+                    if (textColor) {
+                        textElement.style.color = textColor;
+                        // Also apply to child elements
+                        const titleElement = textElement.querySelector(
+                            ".challenge-title"
+                        ) as HTMLElement;
+                        const descriptionElement = textElement.querySelector(
+                            ".challenge-description"
+                        ) as HTMLElement;
+                        if (titleElement) titleElement.style.color = textColor;
+                        if (descriptionElement)
+                            descriptionElement.style.color = textColor;
+                    }
 
-            listItem.appendChild(textElement);
+                    listItem.appendChild(textElement);
 
-            if (challenge.isComplete()) {
-                listItem.classList.add("done");
-            }
-            // Append to fragment instead of directly to DOM
-            fragment.appendChild(listItem);
-        });
+                    if (challenge.isComplete()) {
+                        listItem.classList.add("done");
+                    }
+                    // Append to fragment instead of directly to DOM
+                    fragment.appendChild(listItem);
+                });
 
-        // Single DOM append operation to reduce reflows
-        list.appendChild(fragment);
+            // Single DOM append operation to reduce reflows
+            list.appendChild(fragment);
+        }
 
+        // Always append the card to containers, even if the list is empty
+        // This ensures the header is always visible
         const primaryContainer = document.querySelector(
             ".challenge-container.primary"
         );
@@ -247,8 +254,6 @@ export default class App {
 
         animateScroll();
     }
-
-
 
     /**
      * Render custom text to the DOM
@@ -613,7 +618,10 @@ function respondMessage(
  * @param {number} totalCount - Total number of challenges
  * @returns {HTMLDivElement}
  */
-function createChallengeCard(completedCount: number = 0, totalCount: number = 0): HTMLDivElement {
+function createChallengeCard(
+    completedCount: number = 0,
+    totalCount: number = 0
+): HTMLDivElement {
     const cardEl = document.createElement("div");
     cardEl.classList.add("card");
     const headerDiv = document.createElement("div");

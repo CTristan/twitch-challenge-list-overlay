@@ -25,15 +25,23 @@ describe("ChallengeList", () => {
                 "challengeList",
                 JSON.stringify([
                     {
-                        description: "Challenge 1",
+                        title: "Challenge 1",
+                        description: "Description for challenge 1",
+                        amount: 1,
+                        progress: 0,
                         completionStatus: false,
+                        failureStatus: false,
+                        createdAt: Date.now(),
                     },
                 ])
             );
             challengeList = new ChallengeList();
             const challenge = challengeList.challenges[0];
             if (!challenge) throw new Error("Challenge not found");
-            expect(challenge.description).toEqual("Challenge 1");
+            expect(challenge.title).toEqual("Challenge 1");
+            expect(challenge.description).toEqual(
+                "Description for challenge 1"
+            );
             expect(challenge.completionStatus).toEqual(false);
         });
     });
@@ -45,8 +53,8 @@ describe("ChallengeList", () => {
             expect(challenges).toHaveLength(2);
             if (!challenges[0] || !challenges[1])
                 throw new Error("Challenges not found");
-            expect(challenges[0].description).toEqual("Challenge 1");
-            expect(challenges[1].description).toEqual("Challenge 2");
+            expect(challenges[0].title).toEqual("Challenge 1");
+            expect(challenges[1].title).toEqual("Challenge 2");
         });
 
         it("should return an empty array if there are no challenges", () => {
@@ -58,7 +66,7 @@ describe("ChallengeList", () => {
         it("should return challenge by index", () => {
             challengeList.addChallenges("Challenge 1");
             const challenge = challengeList.getChallenge(0);
-            expect(challenge!.description).toEqual("Challenge 1");
+            expect(challenge!.title).toEqual("Challenge 1");
             expect(challenge).toBeInstanceOf(Challenge);
         });
 
@@ -72,7 +80,7 @@ describe("ChallengeList", () => {
             const challenges = challengeList.addChallenges("Challenge 1");
             expect(challenges).toHaveLength(1);
             if (!challenges[0]) throw new Error("Challenge not found");
-            expect(challenges[0].description).toEqual("Challenge 1");
+            expect(challenges[0].title).toEqual("Challenge 1");
             expect(challenges[0]).toBeInstanceOf(Challenge);
             expect(challengeList.totalChallenges).toEqual(1);
         });
@@ -85,8 +93,8 @@ describe("ChallengeList", () => {
             expect(challenges).toHaveLength(2);
             if (!challenges[0] || !challenges[1])
                 throw new Error("Challenges not found");
-            expect(challenges[0].description).toEqual("Challenge 1");
-            expect(challenges[1].description).toEqual("Challenge 2");
+            expect(challenges[0].title).toEqual("Challenge 1");
+            expect(challenges[1].title).toEqual("Challenge 2");
             expect(challengeList.totalChallenges).toEqual(2);
         });
     });
@@ -152,7 +160,7 @@ describe("ChallengeList", () => {
             expect(deletedChallenges).toHaveLength(1);
             if (!deletedChallenges[0])
                 throw new Error("Deleted challenge not found");
-            expect(deletedChallenges[0].description).toEqual("Challenge 1");
+            expect(deletedChallenges[0].title).toEqual("Challenge 1");
             expect(challengeList.challenges).toHaveLength(1);
             expect(challengeList.totalChallenges).toEqual(1);
         });
@@ -167,14 +175,12 @@ describe("ChallengeList", () => {
             expect(deletedChallenges).toHaveLength(2);
             if (!deletedChallenges[0] || !deletedChallenges[1])
                 throw new Error("Deleted challenges not found");
-            expect(deletedChallenges[0].description).toEqual("Challenge 1");
-            expect(deletedChallenges[1].description).toEqual("Challenge 3");
+            expect(deletedChallenges[0].title).toEqual("Challenge 1");
+            expect(deletedChallenges[1].title).toEqual("Challenge 3");
             expect(challengeList.challenges).toHaveLength(1);
             if (!challengeList.challenges[0])
                 throw new Error("Remaining challenge not found");
-            expect(challengeList.challenges[0].description).toEqual(
-                "Challenge 2"
-            );
+            expect(challengeList.challenges[0].title).toEqual("Challenge 2");
         });
 
         it("should return empty array if indices are out of bounds", () => {
@@ -197,7 +203,7 @@ describe("ChallengeList", () => {
             challengeList.completeChallenges(0);
             const challengeMap = challengeList.checkChallenges();
             expect(challengeMap.size).toEqual(1);
-            expect(challengeMap.get(1)!.description).toEqual("Challenge 2");
+            expect(challengeMap.get(1)!.title).toEqual("Challenge 2");
         });
 
         it("should return completed challenges when specified", () => {
@@ -205,7 +211,7 @@ describe("ChallengeList", () => {
             challengeList.completeChallenges(0);
             const challengeMap = challengeList.checkChallenges("complete");
             expect(challengeMap.size).toEqual(1);
-            expect(challengeMap.get(0)!.description).toEqual("Challenge 1");
+            expect(challengeMap.get(0)!.title).toEqual("Challenge 1");
         });
 
         it("should return empty map if no challenges match status", () => {
@@ -239,9 +245,7 @@ describe("ChallengeList", () => {
             expect(challengeList.challenges).toHaveLength(1);
             if (!challengeList.challenges[0])
                 throw new Error("Remaining challenge not found");
-            expect(challengeList.challenges[0].description).toEqual(
-                "Challenge 2"
-            );
+            expect(challengeList.challenges[0].title).toEqual("Challenge 2");
             expect(challengeList.challengesCompleted).toEqual(0);
             expect(challengeList.totalChallenges).toEqual(1);
         });

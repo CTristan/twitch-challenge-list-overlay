@@ -19,15 +19,20 @@ let configManager: ConfigManager;
 try {
     configManager = ConfigManager.getInstance(_config);
 } catch (error) {
-    console.warn("Failed to load configuration from _config.js, using minimal fallback configuration:", error);
-    console.warn("Please configure the application through the admin panel (#admin)");
+    console.warn(
+        "Failed to load configuration from _config.js, using minimal fallback configuration:",
+        error
+    );
+    console.warn(
+        "Please configure the application through the admin panel (#admin)"
+    );
 
     // Create minimal default configuration for fallback
     const minimalConfig: Config = {
         auth: {
-            twitch_oauth: '',
-            twitch_username: '',
-            twitch_channel: ''
+            twitch_oauth: "",
+            twitch_username: "",
+            twitch_channel: "",
         },
         maxChallenges: 10,
         commands: {
@@ -51,7 +56,7 @@ try {
             listChallenges: ["!ch list"],
             showChallenge: ["!ch show"],
             check: ["!ch check"],
-            help: ["!ch help"]
+            help: ["!ch help"],
         },
         responses: {
             // Admin responses
@@ -66,10 +71,12 @@ try {
             deleteAll: "All of your challenges have been deleted!",
             check: "Your current challenge(s) are: {message}",
             help: "Try these commands - !ch add, !ch edit, !ch done, !ch delete, !ch check, !ch clearlist, !ch cleardone, !ch help",
-            maxChallengesAdded: "Maximum number of challenges reached, try deleting old challenges.",
-            noChallengeFound: "That challenge doesn't seem to exist, try adding one!",
-            invalidCommand: "Invalid command: {message}. Try !help"
-        }
+            maxChallengesAdded:
+                "Maximum number of challenges reached, try deleting old challenges.",
+            noChallengeFound:
+                "That challenge doesn't seem to exist, try adding one!",
+            invalidCommand: "Invalid command: {message}. Try !help",
+        },
     };
 
     // Create ConfigManager instance with minimal fallback configuration
@@ -111,7 +118,10 @@ window.addEventListener("load", () => {
             client.say(response.message, extra.messageId);
         } else {
             // error logs also are added to OBS logs
-            console.error(response.message);
+            if (response.message) {
+                console.error(`Command error: ${response.message}`);
+            }
+            // Note: Silent ignores (empty error messages) are not logged here to avoid spam
         }
     });
 

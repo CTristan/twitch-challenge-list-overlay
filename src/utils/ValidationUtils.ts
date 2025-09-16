@@ -172,20 +172,11 @@ export class ValidationUtils {
      */
     static validateChallengeDescription(
         description: any,
-        options: { allowEmpty?: boolean; legacy?: boolean } = {}
+        options: { allowEmpty?: boolean } = {}
     ): string {
-        const { allowEmpty = false, legacy = false } = options;
+        const { allowEmpty = true } = options;
 
-        if (legacy) {
-            // Legacy validation: description cannot be empty
-            return this.validateString(description, "Challenge description", {
-                required: true,
-                maxLength: 200,
-                allowEmpty: false,
-            });
-        }
-
-        // New validation: description can be empty for title-only challenges
+        // Description validation: can be empty for title-only challenges
         return this.validateString(description, "Challenge description", {
             required: false,
             maxLength: 200,

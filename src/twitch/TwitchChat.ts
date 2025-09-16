@@ -17,6 +17,20 @@ interface ParsedMessage {
     parameters: string | null;
 }
 
+interface CommandData {
+    user: string;
+    command: string;
+    message: string;
+    flags: {
+        broadcaster: boolean;
+        mod: boolean;
+    };
+    extra: {
+        userColor: string;
+        messageId: string;
+    };
+}
+
 /**
  * @class TwitchChat
  * @extends EventEmitter
@@ -97,6 +111,7 @@ export default class TwitchChat extends EventEmitter {
                             ) {
                                 const data =
                                     convertToCommandFormat(parsedMessage);
+
                                 this.emit("command", data);
                             }
                             break;
@@ -204,9 +219,9 @@ export default class TwitchChat extends EventEmitter {
 /**
  * Converts a parsed message to a command format
  * @param {ParsedMessage} message
- * @returns {Object}
+ * @returns {CommandData}
  */
-function convertToCommandFormat(message: ParsedMessage): object {
+function convertToCommandFormat(message: ParsedMessage): CommandData {
     return {
         user: message.tags?.["display-name"] || "",
         command: message.command?.botCommand || "",

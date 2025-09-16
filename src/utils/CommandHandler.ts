@@ -57,7 +57,10 @@ export default class CommandHandler {
             if (!fullCommand.trim()) {
                 // Default to help command for empty input
                 const helpParsed = CommandParser.parseCommand("help");
-                return this.commandRegistry.executeCommand(helpParsed, username);
+                return this.commandRegistry.executeCommand(
+                    helpParsed,
+                    username
+                );
             }
 
             const parsed = CommandParser.parseCommand(fullCommand);

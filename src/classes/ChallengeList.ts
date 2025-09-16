@@ -5,8 +5,14 @@ import Challenge from "./Challenge";
  * Interface for serialized challenge data in localStorage
  */
 interface SerializedChallenge {
+    title: string;
     description: string;
+    amount: number;
+    progress: number;
     completionStatus: boolean;
+    failureStatus: boolean;
+    createdAt: number;
+    timer?: any;
 }
 
 /**
@@ -46,17 +52,9 @@ export default class ChallengeList {
 
         if (result.success && result.data && Array.isArray(result.data)) {
             result.data.forEach((serializedChallenge) => {
-                const challenge = new Challenge(
-                    serializedChallenge.description
-                );
+                const challenge =
+                    Challenge.fromSerializedData(serializedChallenge);
                 this.totalChallenges++;
-
-                if (serializedChallenge.completionStatus) {
-                    challenge.setCompletionStatus(
-                        serializedChallenge.completionStatus
-                    );
-                    this.challengesCompleted++;
-                }
 
                 challengeList.push(challenge);
             });
@@ -72,11 +70,8 @@ export default class ChallengeList {
      * Commit challenge list changes to local storage
      */
     #commitToLocalStorage(): void {
-        const serializedChallenges: SerializedChallenge[] = this.challenges.map(
-            (challenge) => ({
-                description: challenge.description,
-                completionStatus: challenge.completionStatus,
-            })
+        const serializedChallenges = this.challenges.map((challenge) =>
+            challenge.toSerializedData()
         );
 
         const result = StorageManager.save(
@@ -109,18 +104,18 @@ export default class ChallengeList {
 
     /**
      * Add challenges to the list
-     * @param challengeDescriptions - The challenge descriptions to add
+     * @param challengeTitles - The challenge titles to add
      * @returns The added challenges
      */
-    addChallenges(challengeDescriptions: string | string[]): Challenge[] {
-        const descriptions = Array.isArray(challengeDescriptions)
-            ? challengeDescriptions
-            : [challengeDescriptions];
+    addChallenges(challengeTitles: string | string[]): Challenge[] {
+        const titles = Array.isArray(challengeTitles)
+            ? challengeTitles
+            : [challengeTitles];
 
         const addedChallenges: Challenge[] = [];
 
-        descriptions.forEach((challengeDesc) => {
-            const challenge = new Challenge(challengeDesc);
+        titles.forEach((challengeTitle) => {
+            const challenge = new Challenge(challengeTitle);
             this.challenges.push(challenge);
             addedChallenges.push(challenge);
             this.totalChallenges++;
