@@ -11,13 +11,13 @@ import {
     executeCommand,
     expectChallengeCount,
     expectInvalidCommandError,
-    expectPermissionError,
+    expectSilentIgnore,
     expectSuccessResponse,
     setupTestEnvironment,
     TEST_CONSTANTS,
     testCommandLimit,
     testCommandPermissions,
-    testMultipleTargetCommand,
+    testMultipleTargetCommand
 } from "../utils/chatHandlerTestUtils";
 
 // ============================================================================
@@ -115,13 +115,13 @@ describe("App.chatHandler", () => {
                 );
             });
 
-            it("should deny access to regular users for cleardone command", () => {
+            it("should silently ignore cleardone command from regular users", () => {
                 const response = executeChallengeCommand(
                     app,
                     SHARED_USERS.regular,
                     CommandType.CLEAR_DONE
                 );
-                expectPermissionError(response);
+                expectSilentIgnore(response);
                 expectChallengeCount(app, EXPECTED_CHALLENGE_COUNT.INITIAL); // Should remain unchanged
             });
         });

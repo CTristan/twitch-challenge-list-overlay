@@ -42,6 +42,24 @@ export default class CommandHandler {
             // Parse the command
             // For "ch" command, the actual subcommand is in the message parameter
             const fullCommand = message || "";
+
+            // Check permissions first - ALL commands require moderator/broadcaster privileges
+            // For unauthorized users, silently ignore all commands (no response sent to chat)
+            if (!this.isMod(flags)) {
+                return {
+                    message: "", // Empty message for silent ignore
+                    error: true, // Mark as error so no response is sent to chat
+                    action: "silent_ignore", // Special action to indicate silent ignore
+                };
+            }
+
+            // Handle empty command - default to help for authorized users
+            if (!fullCommand.trim()) {
+                // Default to help command for empty input
+                const helpParsed = CommandParser.parseCommand("help");
+                return this.commandRegistry.executeCommand(helpParsed, username);
+            }
+
             const parsed = CommandParser.parseCommand(fullCommand);
 
             if (!parsed.isValid) {
@@ -56,15 +74,6 @@ export default class CommandHandler {
             if (!commandType) {
                 return {
                     message: `Unknown command: ${parsed.command}. Try !ch help`,
-                    error: true,
-                };
-            }
-
-            // Check permissions - ALL commands require moderator/broadcaster privileges
-            if (!this.isMod(flags)) {
-                return {
-                    message:
-                        "Only moderators and the broadcaster can manage challenges",
                     error: true,
                 };
             }

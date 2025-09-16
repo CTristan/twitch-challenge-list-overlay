@@ -6,7 +6,7 @@ import {
     createChatUser,
     createModUser,
     executeCommand,
-    expectPermissionError,
+    expectSilentIgnore,
     expectSuccessResponse,
     resetIDManager,
     type ChatResponse,
@@ -223,14 +223,14 @@ describe("Command Handler Integration", () => {
     describe("Permission Handling", () => {
         const testCommand = 'add t="Test" d="Test"';
 
-        it("should reject commands from non-moderators", () => {
+        it("should silently ignore commands from non-moderators", () => {
             const response = executeChallengeCommand(
                 app,
                 chatUser,
                 testCommand
             );
 
-            expectPermissionError(response);
+            expectSilentIgnore(response);
             expect(challengeList.challenges.length).toBe(0);
         });
 
@@ -264,13 +264,13 @@ describe("Command Handler Integration", () => {
                 // Reset app for each test
                 const { app: testApp } = createTestApp();
 
-                // Test that regular users are consistently rejected
+                // Test that regular users are consistently silently ignored
                 const userResponse = executeChallengeCommand(
                     testApp,
                     chatUser,
                     command
                 );
-                expectPermissionError(userResponse);
+                expectSilentIgnore(userResponse);
 
                 // Test that authorized users are consistently accepted
                 const authResponse = executeChallengeCommand(

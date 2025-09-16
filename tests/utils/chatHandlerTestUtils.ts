@@ -67,12 +67,6 @@ export const DEFAULT_TEST_CHALLENGES: string[] = [
 ];
 
 /**
- * Permission error message constant
- */
-export const PERMISSION_ERROR_MESSAGE =
-    "Only moderators and the broadcaster can manage challenges";
-
-/**
  * Bot response prefix (empty for this application)
  */
 export const BOT_RESPONSE_PREFIX = "";
@@ -298,11 +292,12 @@ export const expectErrorResponse = (
 };
 
 /**
- * Asserts that a command response indicates a permission error
+ * Asserts that a command response indicates silent ignore behavior for unauthorized users
  * @param response - Chat response to check
  */
-export const expectPermissionError = (response: ChatResponse): void => {
-    expectErrorResponse(response, PERMISSION_ERROR_MESSAGE);
+export const expectSilentIgnore = (response: ChatResponse): void => {
+    expect(response.error).toBe(true);
+    expect(response.message).toBe(""); // Empty message for silent ignore
 };
 
 /**
@@ -352,41 +347,7 @@ export const runCommandTestCase = (
     }
 };
 
-/**
- * Tests that a command works for moderators but fails for regular users
- * @param app - App instance to test on
- * @param commandType - Command type to test
- * @param parameters - Command parameters
- * @param modUser - Moderator user for testing
- * @param chatUser - Regular user for testing
- * @param expectedSuccessContains - Optional strings that should be in success message
- */
-export const testPermissionCommand = (
-    app: App,
-    commandType: CommandTypeValue,
-    parameters: string,
-    modUser: TestUser,
-    chatUser: TestUser,
-    expectedSuccessContains?: string[]
-): void => {
-    // Test that moderator can execute command
-    const modResponse = executeChallengeCommand(
-        app,
-        modUser,
-        commandType,
-        parameters
-    );
-    expectSuccessResponse(modResponse, expectedSuccessContains);
 
-    // Test that regular user cannot execute command
-    const userResponse = executeChallengeCommand(
-        app,
-        chatUser,
-        commandType,
-        parameters
-    );
-    expectPermissionError(userResponse);
-};
 
 /**
  * Adds challenges up to the specified limit for testing
@@ -477,14 +438,14 @@ export const testCommandPermissions = (
     );
     expectSuccessResponse(authorizedResponse, expectedSuccessContains);
 
-    // Test that regular user cannot execute command
+    // Test that regular user gets silent ignore
     const regularResponse = executeChallengeCommand(
         app,
         regularUser,
         commandType,
         parameters
     );
-    expectPermissionError(regularResponse);
+    expectSilentIgnore(regularResponse);
 };
 
 /**
