@@ -131,6 +131,9 @@ export default class App {
             return;
         }
 
+        // Create DocumentFragment for batch DOM operations to reduce reflows
+        const fragment = document.createDocumentFragment();
+
         this.challengeList.getAllChallenges().forEach((challenge, index) => {
             const listItem = document.createElement("li");
             listItem.classList.add("challenge");
@@ -195,8 +198,12 @@ export default class App {
             if (challenge.isComplete()) {
                 listItem.classList.add("done");
             }
-            list.appendChild(listItem);
+            // Append to fragment instead of directly to DOM
+            fragment.appendChild(listItem);
         });
+
+        // Single DOM append operation to reduce reflows
+        list.appendChild(fragment);
 
         const primaryContainer = document.querySelector(
             ".challenge-container.primary"
