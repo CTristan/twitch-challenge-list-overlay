@@ -1,19 +1,19 @@
 .flex {
-	display: flex;
+  display: flex;
 }
 
 .hidden {
-	display: none;
+  display: none;
 }
 
 .justify-center {
-	justify-content: center;
+  justify-content: center;
 }
 
 .items-center {
-	align-items: center;
+  align-items: center;
 }
 
 .absolute {
-	position: absolute;
+  position: absolute;
 }
