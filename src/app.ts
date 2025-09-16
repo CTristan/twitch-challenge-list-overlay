@@ -98,6 +98,14 @@ export default class App {
     }
 
     /**
+     * Get the ConfigManager instance for testing purposes
+     * @returns {ConfigManager} The ConfigManager instance
+     */
+    getConfigManager(): ConfigManager {
+        return this.#configManager;
+    }
+
+    /**
      * Initial render the components to the DOM. Should only be called once.
      * @returns {void}
      */
@@ -585,8 +593,8 @@ function respondMessage(
 ): { message: string; error: boolean } {
     return {
         message: template
-            .replace("{user}", username)
-            .replace("{message}", message),
+            .replaceAll("{user}", username)
+            .replaceAll("{message}", message),
         error,
     };
 }
