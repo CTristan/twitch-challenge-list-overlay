@@ -71,7 +71,7 @@ export class StorageManager {
         }
 
         try {
-            const serialized = JSON.stringify(dataToStore, null, 2);
+            const serialized = JSON.stringify(dataToStore);
             localStorage.setItem(key, serialized);
 
             return {
@@ -109,7 +109,7 @@ export class StorageManager {
             ) {
                 try {
                     this.cleanupOldData();
-                    const serialized = JSON.stringify(dataToStore, null, 2);
+                    const serialized = JSON.stringify(dataToStore);
                     localStorage.setItem(key, serialized);
 
                     return {
