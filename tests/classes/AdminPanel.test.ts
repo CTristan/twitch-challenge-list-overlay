@@ -68,7 +68,6 @@ const setupConfigManager = (config: Config = createTestConfig()): void => {
 
 const createMockApp = (): any => ({
     clearListFromDOM: vi.fn(),
-    renderChallengeCount: vi.fn(),
 });
 
 const setupLocalStorage = (): void => {

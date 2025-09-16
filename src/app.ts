@@ -111,7 +111,23 @@ export default class App {
      */
     render(): void {
         this.renderChallengeList();
-        this.renderChallengeHeader();
+    }
+
+    /**
+     * Update the challenge count in existing card headers
+     * @returns {void}
+     */
+    updateChallengeCount(): void {
+        const completedCount = this.challengeList.challengesCompleted;
+        const totalCount = this.challengeList.totalChallenges;
+
+        // Update all card headers with the current count
+        const cardHeaders = document.querySelectorAll(".card .username");
+        cardHeaders.forEach((header) => {
+            if (header instanceof HTMLElement) {
+                header.innerText = `Challenges ${completedCount}/${totalCount}`;
+            }
+        });
     }
 
     /**
@@ -123,7 +139,10 @@ export default class App {
             return;
         }
 
-        const cardEl = createChallengeCard();
+        const cardEl = createChallengeCard(
+            this.challengeList.challengesCompleted,
+            this.challengeList.totalChallenges
+        );
         const list = cardEl.querySelector("ol");
 
         if (!list) {
@@ -229,27 +248,7 @@ export default class App {
         animateScroll();
     }
 
-    /**
-     * Render the challenge header to the DOM
-     * @returns {void}
-     */
-    renderChallengeHeader(): void {
-        this.renderChallengeCount();
-    }
 
-    /**
-     * Render the challenge count to the DOM
-     * @returns {void}
-     */
-    renderChallengeCount(): void {
-        let completedChallengesCount = this.challengeList.challengesCompleted;
-        let totalChallengesCount = this.challengeList.totalChallenges;
-        const totalChallengesElement: HTMLElement | null =
-            document.querySelector(".challenge-count");
-        if (totalChallengesElement) {
-            totalChallengesElement.innerText = `${completedChallengesCount}/${totalChallengesCount}`;
-        }
-    }
 
     /**
      * Render custom text to the DOM
@@ -357,7 +356,6 @@ export default class App {
         if (secondaryContainer) {
             secondaryContainer.innerHTML = "";
         }
-        this.renderChallengeCount();
     }
 
     /**
@@ -378,7 +376,10 @@ export default class App {
         const challengeCardEls = document.querySelectorAll(".card");
 
         if (challengeCardEls.length === 0) {
-            const challengeCard = createChallengeCard();
+            const challengeCard = createChallengeCard(
+                this.challengeList.challengesCompleted,
+                this.challengeList.totalChallenges
+            );
             const clonedChallengeCard = challengeCard.cloneNode(true);
             primaryContainer.appendChild(challengeCard);
             secondaryContainer.appendChild(clonedChallengeCard);
@@ -492,7 +493,7 @@ export default class App {
             secondaryChallengesList.appendChild(cloneChallengeElement);
         }
 
-        this.renderChallengeCount();
+        this.updateChallengeCount();
         animateScroll();
     }
 
@@ -556,7 +557,7 @@ export default class App {
                 checkbox.classList.add("checked");
             }
         }
-        this.renderChallengeCount();
+        this.updateChallengeCount();
     }
 
     /**
@@ -580,7 +581,7 @@ export default class App {
                 challengeElement.remove();
             }
         }
-        this.renderChallengeCount();
+        this.updateChallengeCount();
     }
 }
 
@@ -608,14 +609,16 @@ function respondMessage(
 
 /**
  * Create a challenge card element for the single challenge list
+ * @param {number} completedCount - Number of completed challenges
+ * @param {number} totalCount - Total number of challenges
  * @returns {HTMLDivElement}
  */
-function createChallengeCard(): HTMLDivElement {
+function createChallengeCard(completedCount: number = 0, totalCount: number = 0): HTMLDivElement {
     const cardEl = document.createElement("div");
     cardEl.classList.add("card");
     const headerDiv = document.createElement("div");
     headerDiv.classList.add("username");
-    headerDiv.innerText = "Challenges"; // Static header for single challenge list
+    headerDiv.innerText = `Challenges ${completedCount}/${totalCount}`;
     cardEl.appendChild(headerDiv);
     const list = document.createElement("ol");
     list.classList.add("challenges");
