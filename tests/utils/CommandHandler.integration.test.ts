@@ -122,6 +122,7 @@ function assertChallengeCreated(
     expect(challengeList.challenges.length).toBe(1);
 
     const challenge = challengeList.challenges[0];
+    if (!challenge) throw new Error("Challenge not found");
     expect(challenge.title).toBe(expectedTitle);
     expect(challenge.description).toBe(expectedDescription);
 }
@@ -157,9 +158,9 @@ describe("Command Handler Integration", () => {
             );
 
             // Verify title and description are different
-            expect(challengeList.challenges[0].title).not.toBe(
-                challengeList.challenges[0].description
-            );
+            const challenge = challengeList.challenges[0];
+            if (!challenge) throw new Error("Challenge not found");
+            expect(challenge.title).not.toBe(challenge.description);
         });
 
         it("should create proper DOM structure with title and description", () => {

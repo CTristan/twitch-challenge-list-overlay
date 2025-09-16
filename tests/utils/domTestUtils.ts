@@ -36,7 +36,8 @@ export const TEST_CHALLENGE_DATA: Record<string, ChallengeTestData> = {
     TITLE_AND_DESC: {
         title: "Testing Descriptions",
         description: "Should see a description for this challenge!",
-        command: 'add t="Testing Descriptions" d="Should see a description for this challenge!"',
+        command:
+            'add t="Testing Descriptions" d="Should see a description for this challenge!"',
     },
     TITLE_ONLY: {
         title: "Title Only Challenge",
@@ -69,24 +70,26 @@ export const setupChallengeTestDOM = (): void => {
  * @param storeName - Optional store name for localStorage isolation
  * @returns Object containing app and challengeList instances
  */
-export const createTestApp = (storeName: string = "TestStore"): {
+export const createTestApp = (
+    storeName: string = "TestStore"
+): {
     app: App;
     challengeList: ChallengeList;
 } => {
     // Clear localStorage to avoid conflicts with existing data
     localStorage.clear();
-    
+
     // Set up DOM structure
     setupChallengeTestDOM();
-    
+
     // Reset IDManager singleton for test isolation
     resetIDManager();
-    
+
     // Create fresh app instance
     const app = new App(storeName);
     const challengeList = app.challengeList;
     challengeList.clearChallengeList();
-    
+
     return { app, challengeList };
 };
 
@@ -106,7 +109,8 @@ export const assertChallengeDOMStructure = (
     options: DOMAssertionOptions = {}
 ): void => {
     const {
-        expectDescription = expectedDescription.length > 0 && expectedDescription !== expectedTitle,
+        expectDescription = expectedDescription.length > 0 &&
+            expectedDescription !== expectedTitle,
         validateSeparateElements = true,
         validateCSSClasses = true,
     } = options;
@@ -121,12 +125,14 @@ export const assertChallengeDOMStructure = (
         expect(titleElement?.textContent).toBe(expectedTitle);
 
         // Validate description element based on expectations
-        const descriptionElement = textElement.querySelector(".challenge-description");
-        
+        const descriptionElement = textElement.querySelector(
+            ".challenge-description"
+        );
+
         if (expectDescription) {
             expect(descriptionElement).toBeTruthy();
             expect(descriptionElement?.textContent).toBe(expectedDescription);
-            
+
             if (validateSeparateElements) {
                 // Ensure title and description are different when both exist
                 expect(expectedTitle).not.toBe(expectedDescription);
@@ -138,9 +144,15 @@ export const assertChallengeDOMStructure = (
 
         // Validate CSS classes if requested
         if (validateCSSClasses) {
-            expect(titleElement?.classList.contains("challenge-title")).toBe(true);
+            expect(titleElement?.classList.contains("challenge-title")).toBe(
+                true
+            );
             if (expectDescription && descriptionElement) {
-                expect(descriptionElement.classList.contains("challenge-description")).toBe(true);
+                expect(
+                    descriptionElement.classList.contains(
+                        "challenge-description"
+                    )
+                ).toBe(true);
             }
         }
     });
@@ -162,12 +174,13 @@ export const assertChallengeCreated = (
     expect(challengeList.challenges.length).toBe(expectedCount);
 
     const challenge = challengeList.challenges[expectedCount - 1]; // Get the last added challenge
+    if (!challenge) throw new Error("Challenge not found");
     expect(challenge.title).toBe(expectedTitle);
     expect(challenge.description).toBe(expectedDescription);
 };
 
 /**
- * Validates the complete challenge creation flow including command execution, 
+ * Validates the complete challenge creation flow including command execution,
  * challenge list updates, and DOM rendering
  * @param app - App instance
  * @param challengeList - ChallengeList instance
@@ -175,7 +188,7 @@ export const assertChallengeCreated = (
  * @param response - Command execution response to validate
  */
 export const validateCompleteChallengFlow = (
-    app: App,
+    _app: App,
     challengeList: ChallengeList,
     testData: ChallengeTestData,
     response: { error: boolean; message: string }
@@ -195,7 +208,9 @@ export const validateCompleteChallengFlow = (
  * Asserts that challenge elements have proper styling and layout structure
  * @param expectTwoLineLayout - Whether to expect two-line layout (title + description)
  */
-export const assertChallengeLayoutStructure = (expectTwoLineLayout: boolean = true): void => {
+export const assertChallengeLayoutStructure = (
+    expectTwoLineLayout: boolean = true
+): void => {
     const textElements = document.querySelectorAll(".challenge-text");
     expect(textElements.length).toBeGreaterThan(0);
 
@@ -205,18 +220,24 @@ export const assertChallengeLayoutStructure = (expectTwoLineLayout: boolean = tr
         expect(textElement.classList.contains("challenge-text")).toBe(true);
 
         // Validate title element structure
-        const titleElement = textElement.querySelector(".challenge-title") as HTMLElement;
+        const titleElement = textElement.querySelector(
+            ".challenge-title"
+        ) as HTMLElement;
         expect(titleElement).toBeTruthy();
         expect(titleElement.tagName).toBe("DIV");
         expect(titleElement.classList.contains("challenge-title")).toBe(true);
 
         // Validate description element structure based on layout expectation
-        const descriptionElement = textElement.querySelector(".challenge-description") as HTMLElement;
-        
+        const descriptionElement = textElement.querySelector(
+            ".challenge-description"
+        ) as HTMLElement;
+
         if (expectTwoLineLayout) {
             expect(descriptionElement).toBeTruthy();
             expect(descriptionElement.tagName).toBe("DIV");
-            expect(descriptionElement.classList.contains("challenge-description")).toBe(true);
+            expect(
+                descriptionElement.classList.contains("challenge-description")
+            ).toBe(true);
         } else {
             expect(descriptionElement).toBeNull();
         }
@@ -228,8 +249,12 @@ export const assertChallengeLayoutStructure = (expectTwoLineLayout: boolean = tr
  */
 export const assertChallengeRowAlignment = (): void => {
     const challengeRow = document.querySelector(".challenge") as HTMLElement;
-    const checkbox = challengeRow?.querySelector(".challenge-checkbox") as HTMLElement;
-    const textElement = challengeRow?.querySelector(".challenge-text") as HTMLElement;
+    const checkbox = challengeRow?.querySelector(
+        ".challenge-checkbox"
+    ) as HTMLElement;
+    const textElement = challengeRow?.querySelector(
+        ".challenge-text"
+    ) as HTMLElement;
 
     expect(challengeRow).toBeTruthy();
     expect(checkbox).toBeTruthy();

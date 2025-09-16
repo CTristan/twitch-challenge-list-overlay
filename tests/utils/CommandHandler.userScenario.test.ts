@@ -24,7 +24,8 @@ import {
 /**
  * Specific test scenario data for the user's exact request
  */
-const USER_SCENARIO_DATA: ChallengeTestData = TEST_CHALLENGE_DATA.TITLE_AND_DESC;
+const USER_SCENARIO_DATA: ChallengeTestData =
+    TEST_CHALLENGE_DATA["TITLE_AND_DESC"]!;
 
 // ============================================================================
 // TEST SUITE
@@ -52,7 +53,12 @@ describe("Command Handler - User Scenario", () => {
             );
 
             // Validate complete challenge creation flow
-            validateCompleteChallengFlow(app, challengeList, USER_SCENARIO_DATA, response);
+            validateCompleteChallengFlow(
+                app,
+                challengeList,
+                USER_SCENARIO_DATA,
+                response
+            );
         });
     });
 
@@ -69,6 +75,7 @@ describe("Command Handler - User Scenario", () => {
 
             // Ensure title and description are different (not legacy behavior)
             const challenge = challengeList.challenges[0];
+            if (!challenge) throw new Error("Challenge not found");
             expect(challenge.title).not.toBe(challenge.description);
         });
     });

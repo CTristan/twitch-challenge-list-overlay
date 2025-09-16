@@ -1,5 +1,6 @@
 import { normalizeCommand, TARGET_ID_COMMANDS } from "../types/CommandTypes";
 import Timer from "./Timer";
+import { ValidationUtils } from "./ValidationUtils";
 
 /**
  * @class CommandParser
@@ -46,8 +47,12 @@ export default class CommandParser {
             // Split into command and parameters
             const parts = CommandParser.splitCommand(trimmed);
             result.command = parts.command;
-            result.subCommand = parts.subCommand;
-            result.targetId = parts.targetId;
+            if (parts.subCommand !== undefined) {
+                result.subCommand = parts.subCommand;
+            }
+            if (parts.targetId !== undefined) {
+                result.targetId = parts.targetId;
+            }
 
             if (parts.parameterString) {
                 result.rawParameters = parts.parameterString;
@@ -93,26 +98,131 @@ export default class CommandParser {
         parameterString?: string;
     } {
         const parts = input.split(/\s+/);
-        const command = parts[0].toLowerCase();
+        const command = parts[0]?.toLowerCase() ?? "";
 
         // Normalize command using the type system
         const normalizedCommand = normalizeCommand(command);
 
         // Handle different command patterns based on command type
         if (normalizedCommand && TARGET_ID_COMMANDS.has(normalizedCommand)) {
-            // Commands with target ID: "+ A7 5" or "edit A7 title=..."
-            const targetId = parts[1];
-            return {
-                command,
-                targetId,
-                parameterString: parts.slice(2).join(" "),
-            };
+            // Commands with target ID: "done 1,3" or "edit A7 title=..." or "+ A7 5"
+            const remainingParts = parts.slice(1);
+
+            if (remainingParts.length > 0) {
+                const firstPart = remainingParts[0];
+                if (!firstPart) {
+                    return { command };
+                }
+
+                // Special handling for increment/decrement commands: "+ A7 5" or "- A7 3"
+                if (
+                    (normalizedCommand === "+" ||
+                        normalizedCommand === "-" ||
+                        normalizedCommand === "set") &&
+                    remainingParts.length >= 2
+                ) {
+                    // Format: "command targetId amount"
+                    const targetId = remainingParts[0];
+                    const parameterString = remainingParts.slice(1).join(" ");
+                    const result: {
+                        command: string;
+                        targetId?: string;
+                        parameterString?: string;
+                    } = { command };
+
+                    if (targetId !== undefined) {
+                        result.targetId = targetId;
+                    }
+                    if (parameterString) {
+                        result.parameterString = parameterString;
+                    }
+                    return result;
+                }
+
+                const secondPart = remainingParts[1];
+                // For commands that support multiple targets, check if we have comma-separated IDs
+                if (
+                    firstPart.includes(",") ||
+                    (remainingParts.length > 1 &&
+                        secondPart &&
+                        !secondPart.includes("="))
+                ) {
+                    // Find where parameters start (first part with =)
+                    let paramStartIndex = remainingParts.findIndex((part) =>
+                        part.includes("=")
+                    );
+                    if (paramStartIndex === -1) {
+                        // No parameters, everything is target IDs
+                        const result: {
+                            command: string;
+                            targetId?: string;
+                        } = { command };
+
+                        const targetIdString = remainingParts.join(" ");
+                        if (targetIdString) {
+                            result.targetId = targetIdString;
+                        }
+                        return result;
+                    } else {
+                        // Split between target IDs and parameters
+                        const result: {
+                            command: string;
+                            targetId?: string;
+                            parameterString?: string;
+                        } = { command };
+
+                        const targetIdString = remainingParts
+                            .slice(0, paramStartIndex)
+                            .join(" ");
+                        const paramString = remainingParts
+                            .slice(paramStartIndex)
+                            .join(" ");
+
+                        if (targetIdString) {
+                            result.targetId = targetIdString;
+                        }
+                        if (paramString) {
+                            result.parameterString = paramString;
+                        }
+                        return result;
+                    }
+                } else {
+                    // Single target ID: "edit A7 title=..."
+                    const targetId = remainingParts[0];
+                    const result: {
+                        command: string;
+                        targetId?: string;
+                        parameterString?: string;
+                    } = { command };
+
+                    if (targetId !== undefined) {
+                        result.targetId = targetId;
+                    }
+
+                    const paramString = remainingParts.slice(1).join(" ");
+                    if (paramString) {
+                        result.parameterString = paramString;
+                    }
+                    return result;
+                }
+            } else {
+                // No target ID provided
+                return {
+                    command,
+                };
+            }
         } else {
             // Simple commands: "add title=..." or "list" or "clearlist"
-            return {
-                command,
-                parameterString: parts.slice(1).join(" "),
-            };
+            const result: {
+                command: string;
+                parameterString?: string;
+            } = { command };
+
+            const paramString = parts.slice(1).join(" ");
+            if (paramString) {
+                result.parameterString = paramString;
+            }
+            return result;
         }
     }
 
@@ -129,6 +239,7 @@ export default class CommandParser {
 
         for (let i = 0; i < tokens.length; i++) {
             const token = tokens[i];
+            if (!token) continue;
 
             if (token.includes("=")) {
                 const [key, ...valueParts] = token.split("=");
@@ -224,29 +335,11 @@ export default class CommandParser {
             }
         }
 
-        // Validate specific parameter values
-        if (parameters.title !== undefined) {
-            const title = CommandParser.unquoteString(parameters.title);
-            if (!title.trim()) {
-                errors.push("Title cannot be empty");
-            } else if (title.length > 100) {
-                errors.push("Title too long (max 100 characters)");
-            }
-        }
-
-        if (parameters.desc !== undefined) {
-            const desc = CommandParser.unquoteString(parameters.desc);
-            if (desc.length > 200) {
-                errors.push("Description too long (max 200 characters)");
-            }
-        }
-
-        if (parameters.amount !== undefined) {
-            const amount = parseInt(parameters.amount, 10);
-            if (isNaN(amount) || amount < 1) {
-                errors.push("Amount must be a positive integer");
-            }
-        }
+        // Validate specific parameter values using ValidationUtils
+        const paramValidation =
+            ValidationUtils.validateCommandParameters(parameters);
+        errors.push(...paramValidation.errors);
+        warnings.push(...paramValidation.warnings);
 
         if (parameters.timer !== undefined) {
             try {
@@ -283,19 +376,7 @@ export default class CommandParser {
      * @returns Unquoted string
      */
     static unquoteString(value: string): string {
-        if (!value) return "";
-
-        const trimmed = value.trim();
-        if (
-            (trimmed.startsWith('"') && trimmed.endsWith('"')) ||
-            (trimmed.startsWith("'") && trimmed.endsWith("'"))
-        ) {
-            const unquoted = trimmed.slice(1, -1);
-            // Handle escaped quotes
-            return unquoted.replace(/\\"/g, '"').replace(/\\'/g, "'");
-        }
-
-        return trimmed;
+        return ValidationUtils.unquoteString(value);
     }
 
     /**

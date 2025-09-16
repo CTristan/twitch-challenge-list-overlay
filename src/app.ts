@@ -15,7 +15,8 @@ import CommandHandler from "./utils/CommandHandler";
  */
 function getCyclicArrayValue<T>(index: number, values: T[]): T | null {
     if (!values || values.length === 0) return null;
-    return values[index % values.length];
+    const value = values[index % values.length];
+    return value !== undefined ? value : null;
 }
 
 /**
@@ -78,7 +79,6 @@ function createChallengeTextElement(challenge: Challenge): HTMLElement {
  * @method chatHandler - Handles chat commands and responses
  */
 export default class App {
-    #maxChallengesTotal: number;
     #configManager: ConfigManager;
     challengeList: ChallengeList;
     #commandHandler: CommandHandler;
@@ -95,7 +95,6 @@ export default class App {
             this.#configManager
         );
         loadStyles(this.#configManager.getAll());
-        this.#maxChallengesTotal = this.#configManager.get("maxChallenges");
     }
 
     /**
@@ -127,7 +126,7 @@ export default class App {
         this.challengeList.getAllChallenges().forEach((challenge, index) => {
             const listItem = document.createElement("li");
             listItem.classList.add("challenge");
-            listItem.dataset.challengeId = `${challenge.id}`;
+            listItem.dataset["challengeId"] = `${challenge.id}`;
 
             // Apply row background color if configured
             const backgroundColor = getRowBackgroundColor(
@@ -372,7 +371,7 @@ export default class App {
 
         const challengeElement = document.createElement("li");
         challengeElement.classList.add("challenge");
-        challengeElement.dataset.challengeId = `${challenge.id}`;
+        challengeElement.dataset["challengeId"] = `${challenge.id}`;
 
         // Apply row background color if configured
         // Calculate the row index based on current challenge count (newly added challenge is at the end)
@@ -590,24 +589,6 @@ function respondMessage(
             .replace("{message}", message),
         error,
     };
-}
-
-/**
- * Check if the user is a mod or broadcaster
- * @param {{broadcaster: boolean, mod: boolean}} flags
- * @returns {boolean}
- */
-function isMod(flags: { broadcaster: boolean; mod: boolean }): boolean {
-    return flags.broadcaster || flags.mod;
-}
-
-/**
- * Parse the challenge index
- * @param {string} index
- * @returns {number}
- */
-function parseChallengeIndex(index: string): number {
-    return parseInt(index, 10) - 1;
 }
 
 /**

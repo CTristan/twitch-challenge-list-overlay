@@ -121,10 +121,10 @@ function expectCheckboxState(
 
 function createFreshAdminPanel(
     configManager: ConfigManager,
-    mockApp: App
+    _mockApp: App
 ): AdminPanel {
     configManager.set("challengeRowColors", []);
-    return new AdminPanel(mockApp);
+    return new AdminPanel();
 }
 
 function setColorConfiguration(configManager: ConfigManager, colors: string[]) {
@@ -132,7 +132,6 @@ function setColorConfiguration(configManager: ConfigManager, colors: string[]) {
 }
 
 describe("AdminPanel Color Configuration", () => {
-    let adminPanel: AdminPanel;
     let configManager: ConfigManager;
     let mockApp: App;
 
@@ -151,7 +150,7 @@ describe("AdminPanel Color Configuration", () => {
 
         configManager = ConfigManager.getInstance(createMockConfig());
         mockApp = new App("testChallengeList");
-        adminPanel = new AdminPanel(mockApp);
+        new AdminPanel();
     });
 
     describe("Color Configuration UI", () => {
@@ -170,7 +169,7 @@ describe("AdminPanel Color Configuration", () => {
             ]);
 
             // Create a new AdminPanel to test population
-            new AdminPanel(mockApp);
+            new AdminPanel();
 
             const primaryElements = getColorTierElements("primary");
             const secondaryElements = getColorTierElements("secondary");

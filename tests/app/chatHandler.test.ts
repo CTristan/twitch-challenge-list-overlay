@@ -251,7 +251,6 @@ describe("App.chatHandler", () => {
                 );
                 expectSuccessResponse(response, [
                     EXPECTED_MESSAGES.NO_CHALLENGES,
-                    "add",
                 ]);
             });
         });

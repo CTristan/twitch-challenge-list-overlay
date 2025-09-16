@@ -51,7 +51,9 @@ const setupDOMElements = (): HTMLButtonElement => {
     document.body.innerHTML = `
         <button id="clear-localstorage-btn">Clear LocalStorage</button>
     `;
-    return document.getElementById("clear-localstorage-btn") as HTMLButtonElement;
+    return document.getElementById(
+        "clear-localstorage-btn"
+    ) as HTMLButtonElement;
 };
 
 const setupMocks = (): void => {
@@ -74,7 +76,9 @@ const setupLocalStorage = (): void => {
     localStorage.setItem("testKey", "testValue");
 };
 
-const setupTestEnvironment = (adminMode: boolean = false): {
+const setupTestEnvironment = (
+    adminMode: boolean = false
+): {
     clearButton: HTMLButtonElement;
     mockApp: any;
 } => {
@@ -100,25 +104,27 @@ const assertButtonFeedback = (
 
 const triggerTimeoutCallback = (): void => {
     expect(mockSetTimeout).toHaveBeenCalledWith(expect.any(Function), 2000);
-    const timeoutCallback = mockSetTimeout.mock.calls[mockSetTimeout.mock.calls.length - 1][0];
-    timeoutCallback();
+    const lastCall =
+        mockSetTimeout.mock.calls[mockSetTimeout.mock.calls.length - 1];
+    if (lastCall && lastCall[0]) {
+        const timeoutCallback = lastCall[0];
+        timeoutCallback();
+    }
 };
 
 describe("AdminPanel", () => {
     let adminPanel: AdminPanel;
-    let mockApp: any;
     let clearButton: HTMLButtonElement;
 
     beforeEach(() => {
         const testEnv = setupTestEnvironment();
         clearButton = testEnv.clearButton;
-        mockApp = testEnv.mockApp;
     });
 
     describe("when in admin mode", () => {
         beforeEach(() => {
             window.location.hash = "#admin";
-            adminPanel = new AdminPanel(mockApp);
+            adminPanel = new AdminPanel();
         });
 
         it("should initialize and add click listener to clear button", () => {
@@ -127,7 +133,10 @@ describe("AdminPanel", () => {
             expect(clearButton.textContent).toBe("Clear LocalStorage");
 
             // Add some configuration data to localStorage
-            localStorage.setItem("overlay_config", JSON.stringify({ test: "data" }));
+            localStorage.setItem(
+                "overlay_config",
+                JSON.stringify({ test: "data" })
+            );
             expect(localStorage.getItem("overlay_config")).toBeTruthy();
 
             // Click the button to test the actual behavior
@@ -141,7 +150,10 @@ describe("AdminPanel", () => {
             assertButtonFeedback(clearButton, "Cleared!", "rgb(40, 167, 69)");
 
             // Verify setTimeout was called for the reset
-            expect(mockSetTimeout).toHaveBeenCalledWith(expect.any(Function), 2000);
+            expect(mockSetTimeout).toHaveBeenCalledWith(
+                expect.any(Function),
+                2000
+            );
         });
 
         it("should handle localStorage errors gracefully", () => {
@@ -151,7 +163,9 @@ describe("AdminPanel", () => {
             configManager.clearStorage = vi.fn(() => false);
 
             // Mock console.error to verify error logging
-            const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+            const consoleSpy = vi
+                .spyOn(console, "error")
+                .mockImplementation(() => {});
 
             // Click the button to trigger the error
             clearButton.click();
@@ -189,7 +203,7 @@ describe("AdminPanel", () => {
     describe("when not in admin mode", () => {
         beforeEach(() => {
             window.location.hash = "";
-            adminPanel = new AdminPanel(mockApp);
+            adminPanel = new AdminPanel();
         });
 
         it("should not add click listener when not in admin mode", () => {
@@ -207,7 +221,9 @@ describe("AdminPanel", () => {
             assertButtonFeedback(clearButton, "Clear LocalStorage", "");
 
             // Verify setTimeout was not called for the clear functionality
-            const clearTimeoutCalls = mockSetTimeout.mock.calls.filter(call => call[1] === 2000);
+            const clearTimeoutCalls = mockSetTimeout.mock.calls.filter(
+                (call) => call[1] === 2000
+            );
             expect(clearTimeoutCalls).toHaveLength(0);
         });
     });
@@ -216,7 +232,7 @@ describe("AdminPanel", () => {
         it("should reinitialize when hash changes to admin", () => {
             // Start in non-admin mode
             window.location.hash = "";
-            adminPanel = new AdminPanel(mockApp);
+            adminPanel = new AdminPanel();
 
             // Verify button doesn't work initially
             clearButton.click();
@@ -239,7 +255,7 @@ describe("AdminPanel", () => {
     describe("import/export functionality", () => {
         beforeEach(() => {
             window.location.hash = "#admin";
-            adminPanel = new AdminPanel(mockApp);
+            adminPanel = new AdminPanel();
         });
 
         const createValidConfig = () => ({
@@ -279,23 +295,47 @@ describe("AdminPanel", () => {
             {
                 name: "missing auth property",
                 config: { maxChallenges: 5, commands: {}, responses: {} },
-                expectedError: "Missing required property: auth"
+                expectedError: "Missing required property: auth",
             },
             {
                 name: "missing maxChallenges property",
-                config: { auth: { twitch_oauth: "test", twitch_username: "test", twitch_channel: "test" }, commands: {}, responses: {} },
-                expectedError: "Missing required property: maxChallenges"
+                config: {
+                    auth: {
+                        twitch_oauth: "test",
+                        twitch_username: "test",
+                        twitch_channel: "test",
+                    },
+                    commands: {},
+                    responses: {},
+                },
+                expectedError: "Missing required property: maxChallenges",
             },
             {
                 name: "missing commands property",
-                config: { auth: { twitch_oauth: "test", twitch_username: "test", twitch_channel: "test" }, maxChallenges: 5, responses: {} },
-                expectedError: "Missing required property: commands"
+                config: {
+                    auth: {
+                        twitch_oauth: "test",
+                        twitch_username: "test",
+                        twitch_channel: "test",
+                    },
+                    maxChallenges: 5,
+                    responses: {},
+                },
+                expectedError: "Missing required property: commands",
             },
             {
                 name: "missing responses property",
-                config: { auth: { twitch_oauth: "test", twitch_username: "test", twitch_channel: "test" }, maxChallenges: 5, commands: {} },
-                expectedError: "Missing required property: responses"
-            }
+                config: {
+                    auth: {
+                        twitch_oauth: "test",
+                        twitch_username: "test",
+                        twitch_channel: "test",
+                    },
+                    maxChallenges: 5,
+                    commands: {},
+                },
+                expectedError: "Missing required property: responses",
+            },
         ];
 
         invalidConfigTestCases.forEach(({ name, config, expectedError }) => {
@@ -316,7 +356,9 @@ describe("AdminPanel", () => {
                 config: createValidConfig(),
             };
 
-            const consoleSpy = vi.spyOn(console, "log").mockImplementation(() => {});
+            const consoleSpy = vi
+                .spyOn(console, "log")
+                .mockImplementation(() => {});
 
             (adminPanel as any).processImportedConfiguration(
                 JSON.stringify(wrappedConfig),
@@ -324,7 +366,9 @@ describe("AdminPanel", () => {
             );
 
             expect(consoleSpy).toHaveBeenCalledWith(
-                expect.stringContaining("Importing configuration exported on: 2024-01-01T00:00:00.000Z")
+                expect.stringContaining(
+                    "Importing configuration exported on: 2024-01-01T00:00:00.000Z"
+                )
             );
 
             consoleSpy.mockRestore();

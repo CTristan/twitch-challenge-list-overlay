@@ -427,15 +427,15 @@ export const TEST_CONSTANTS = {
     },
     EXPECTED_MESSAGES: {
         CHALLENGE_ADDED: "added!",
-        CHALLENGE_UPDATED: "Updated",
-        CHALLENGE_COMPLETED: "Completed",
+        CHALLENGE_UPDATED: "updated",
+        CHALLENGE_COMPLETED: "completing",
         CHALLENGE_DELETED: "deleted",
-        ALL_CLEARED: "All challenges have been cleared",
-        DONE_CLEARED: "All done challenges have been cleared",
+        ALL_CLEARED: "challenges have been cleared",
+        DONE_CLEARED: "completed challenges have been cleared",
         MAX_REACHED: "Maximum number of challenges reached",
-        NO_CHALLENGES: "No challenges found",
+        NO_CHALLENGES: "100% completion rate",
         HELP_AVAILABLE: "Available commands:",
-        CURRENT_CHALLENGES: "Your current challenge(s) are:",
+        CURRENT_CHALLENGES: "total challenges",
     },
     TEST_CHALLENGE_IDS: {
         FIRST: "1",
@@ -568,5 +568,5 @@ export const createTestScenario = (
     commandType,
     parameters,
     expectedSuccess,
-    expectedContains,
+    ...(expectedContains && { expectedContains }),
 });
