@@ -62,8 +62,9 @@
   white-space: nowrap;
   text-overflow: ellipsis;
   margin-top: -6px;
-  max-width: 90%;
-  width: fit-content;
+  max-width: 100%;
+  width: 100%;
+  text-align: center;
   color: var(--username-color);
   font-size: var(--username-font-size);
   font-weight: var(--username-font-weight, normal);
