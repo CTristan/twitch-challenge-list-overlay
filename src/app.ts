@@ -77,6 +77,20 @@ function createChallengeTextElement(challenge: Challenge): HTMLElement {
         textContainer.appendChild(progressElement);
     }
 
+    // Add timer display if timer exists and is active
+    if (challenge.timer && challenge.timer.isActive) {
+        const timerElement = document.createElement("div");
+        timerElement.classList.add("challenge-timer");
+        timerElement.dataset["challengeId"] = challenge.id;
+
+        // Create timer content with time and status
+        const timeRemaining = challenge.timer.getFormattedTime();
+        const statusEmoji = challenge.timer.getStatusDisplay();
+        timerElement.textContent = `Timer: ${timeRemaining} ${statusEmoji}`;
+
+        textContainer.appendChild(timerElement);
+    }
+
     return textContainer;
 }
 
@@ -90,6 +104,7 @@ export default class App {
     #configManager: ConfigManager;
     challengeList: ChallengeList;
     #commandHandler: CommandHandler;
+    #timerUpdateInterval: number | null = null;
 
     /**
      * @constructor
@@ -266,6 +281,9 @@ export default class App {
         secondaryContainer.appendChild(secondaryClone);
 
         animateScroll();
+
+        // Start timer updates if there are active timers
+        this.startTimerUpdates();
     }
 
     /**
@@ -517,6 +535,11 @@ export default class App {
 
         this.updateChallengeCount();
         animateScroll();
+
+        // Start timer updates if the new challenge has an active timer
+        if (challenge.timer && challenge.timer.isActive) {
+            this.startTimerUpdates();
+        }
     }
 
     /**
@@ -562,6 +585,9 @@ export default class App {
                 );
             }
         }
+
+        // Restart timer updates to handle any timer changes
+        this.startTimerUpdates();
     }
 
     /**
@@ -585,6 +611,9 @@ export default class App {
             }
         }
         this.updateChallengeCount();
+
+        // Update timer displays since completion stops timers
+        this.updateTimerDisplays();
     }
 
     /**
@@ -609,6 +638,102 @@ export default class App {
             }
         }
         this.updateChallengeCount();
+
+        // Update timer displays since deletion may remove active timers
+        this.updateTimerDisplays();
+    }
+
+    /**
+     * Start the timer update system to refresh countdown displays
+     */
+    startTimerUpdates(): void {
+        // Stop any existing interval
+        this.stopTimerUpdates();
+
+        // Check if there are any active timers
+        const hasActiveTimers = this.challengeList.challenges.some(
+            (challenge) => challenge.timer && challenge.timer.isActive
+        );
+
+        if (hasActiveTimers) {
+            this.#timerUpdateInterval = window.setInterval(() => {
+                this.updateTimerDisplays();
+            }, 1000);
+        }
+    }
+
+    /**
+     * Stop the timer update system
+     */
+    stopTimerUpdates(): void {
+        if (this.#timerUpdateInterval !== null) {
+            clearInterval(this.#timerUpdateInterval);
+            this.#timerUpdateInterval = null;
+        }
+    }
+
+    /**
+     * Update all timer displays in the DOM
+     */
+    updateTimerDisplays(): void {
+        const timerElements = document.querySelectorAll(".challenge-timer");
+        let hasActiveTimers = false;
+
+        timerElements.forEach((element) => {
+            const challengeId = element.getAttribute("data-challenge-id");
+            if (!challengeId) return;
+
+            const challenge = this.challengeList.challenges.find(
+                (c) => c.id === challengeId
+            );
+            if (!challenge || !challenge.timer) return;
+
+            if (challenge.timer.isActive) {
+                hasActiveTimers = true;
+
+                // Update timer display
+                const timeRemaining = challenge.timer.getFormattedTime();
+                const statusEmoji = challenge.timer.getStatusDisplay();
+                element.textContent = `Timer: ${timeRemaining} ${statusEmoji}`;
+
+                // Update CSS classes based on timer status
+                element.classList.remove("warning", "critical", "expired");
+
+                if (challenge.timer.isExpired()) {
+                    element.classList.add("expired");
+                    // Don't stop the timer immediately - let it show expired state
+                    // The timer will be stopped when the challenge is completed/failed
+                } else {
+                    const remaining = challenge.timer.getRemainingTime();
+                    if (remaining <= 30) {
+                        element.classList.add("critical");
+                    } else if (remaining <= 120) {
+                        element.classList.add("warning");
+                    }
+                }
+            } else {
+                // Timer is no longer active, remove the element
+                element.remove();
+            }
+        });
+
+        // Stop updates if no active timers remain
+        if (!hasActiveTimers) {
+            this.stopTimerUpdates();
+        }
+    }
+
+    /**
+     * Handle timer expiration for a challenge
+     * @param challenge - The challenge whose timer expired
+     */
+    handleTimerExpiration(challenge: Challenge): void {
+        // Log the expiration but don't stop the timer immediately
+        // This allows the expired state to be displayed
+        if (challenge.timer && challenge.timer.isExpired()) {
+            console.log(`Timer expired for challenge: ${challenge.title}`);
+            // Timer will be stopped when challenge is completed/failed
+        }
     }
 }
 

@@ -40,6 +40,14 @@
   --challenge-done-font-style: italic;
   --challenge-done-text-decoration: line-through;
 
+  /* Challenge Timer */
+  --challenge-timer-font-size: 1.6rem;
+  --challenge-timer-font-weight: 500;
+  --challenge-timer-color: #ffffff;
+  --challenge-timer-warning-color: #ffd700;
+  --challenge-timer-critical-color: #ff6b6b;
+  --challenge-timer-expired-color: #ff4757;
+
   /* Challenge Checkbox */
   --challenge-checkbox-size: calc(
     (

@@ -158,6 +158,28 @@
   margin-top: 1px;
 }
 
+.challenge-timer {
+  font-size: var(--challenge-timer-font-size);
+  font-weight: var(--challenge-timer-font-weight);
+  color: var(--challenge-timer-color);
+  white-space: nowrap;
+  line-height: 1.1;
+  margin-top: 2px;
+  opacity: 0.9;
+}
+
+.challenge-timer.warning {
+  color: var(--challenge-timer-warning-color);
+}
+
+.challenge-timer.critical {
+  color: var(--challenge-timer-critical-color);
+}
+
+.challenge-timer.expired {
+  color: var(--challenge-timer-expired-color);
+}
+
 .challenge.done .challenge-text {
   color: var(--challenge-done-font-color, #aaaaaa);
   font-style: var(--challenge-done-font-style, italic);

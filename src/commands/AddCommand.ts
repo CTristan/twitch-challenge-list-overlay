@@ -1,5 +1,6 @@
 import Challenge from "../classes/Challenge";
 import { ResponseFormatter } from "../utils/ResponseFormatter";
+import Timer from "../utils/Timer";
 import { ValidationUtils } from "../utils/ValidationUtils";
 import { BaseCommand } from "./Command";
 
@@ -179,7 +180,6 @@ export class AddCommand extends BaseCommand {
         try {
             // Validate timer format by attempting to parse it
             // Timer class will throw if format is invalid
-            const Timer = require("../utils/Timer").default;
             Timer.parseDuration(timer);
             return timer;
         } catch (error) {
