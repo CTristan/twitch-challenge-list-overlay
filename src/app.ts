@@ -502,40 +502,11 @@ export default class App {
 
         challengeElement.appendChild(textElement);
 
+        // Clone the fully-styled challenge element for the secondary container
+        // cloneNode(true) creates a deep copy with all attributes, styles, and child elements
         const cloneChallengeElement = challengeElement.cloneNode(
             true
         ) as HTMLElement;
-        // Ensure the cloned element also has the background color, text color, and checkbox colors
-        if (backgroundColor) {
-            cloneChallengeElement.style.backgroundColor = backgroundColor;
-        }
-        if (textColor) {
-            const clonedTextElement = cloneChallengeElement.querySelector(
-                ".challenge-text"
-            ) as HTMLElement;
-            if (clonedTextElement) {
-                clonedTextElement.style.color = textColor;
-            }
-
-            // Apply checkbox colors to the cloned checkbox as well
-            const clonedCheckbox = cloneChallengeElement.querySelector(
-                ".challenge-checkbox"
-            ) as HTMLElement;
-            if (clonedCheckbox) {
-                clonedCheckbox.style.setProperty(
-                    "--challenge-checkbox-border-color",
-                    textColor
-                );
-                clonedCheckbox.style.setProperty(
-                    "--challenge-checkbox-checked-border-color",
-                    textColor
-                );
-                clonedCheckbox.style.setProperty(
-                    "--challenge-checkbox-checkmark-color",
-                    textColor
-                );
-            }
-        }
 
         const primaryChallengesList =
             primaryContainer.querySelector(".card .challenges");
