@@ -1,6 +1,5 @@
 import Challenge from "../classes/Challenge";
 import { ResponseFormatter } from "../utils/ResponseFormatter";
-import Timer from "../utils/Timer";
 import { ValidationUtils } from "../utils/ValidationUtils";
 import { BaseCommand } from "./Command";
 
@@ -175,25 +174,12 @@ export class AddCommand extends BaseCommand {
     /**
      * Extract timer from parsed command
      * @param parsed - Parsed command data
-     * @returns Timer value or undefined if not specified/invalid
+     * @returns Timer value or undefined if not specified
+     * @note Timer format validation is handled by CommandParser - this method trusts that validation
      */
     private extractTimer(parsed: ParsedCommand): string | undefined {
         const { timer } = parsed.parameters;
-
-        if (!timer) {
-            return undefined;
-        }
-
-        try {
-            // Validate timer format by attempting to parse it
-            // Timer class will throw if format is invalid
-            Timer.parseDuration(timer);
-            return timer;
-        } catch (error) {
-            // Return undefined if timer validation fails
-            // The error will be caught by the main execute method
-            return undefined;
-        }
+        return timer || undefined;
     }
 
     /**
