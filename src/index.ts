@@ -113,13 +113,15 @@ window.addEventListener("load", () => {
 
     client.on("command", (data: CommandData) => {
         const { user, command, message, flags, extra } = data;
+
         const response = app.chatHandler(user, command, message, flags, extra);
+
         if (!response.error) {
             client.say(response.message, extra.messageId);
         } else {
             // error logs also are added to OBS logs
             if (response.message) {
-                console.error(`Command error: ${response.message}`);
+                console.error(`[CommandHandler] Error: ${response.message}`);
             }
             // Note: Silent ignores (empty error messages) are not logged here to avoid spam
         }
@@ -135,4 +137,12 @@ window.addEventListener("load", () => {
 
     client.connect();
     if (testMode) loadTestUsers(client);
+
+    // Expose components globally for debugging
+    (window as any).challengeBot = {
+        app,
+        client,
+        configManager,
+        version: "1.0.0",
+    };
 });

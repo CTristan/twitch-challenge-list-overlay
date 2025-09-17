@@ -72,10 +72,60 @@ export default class TwitchChat extends EventEmitter {
         this.url = url;
         this.username = username.toLowerCase();
         this.channel = `#${channel.toLowerCase()}`;
-        this.authToken = authToken.includes("oauth:")
-            ? authToken
-            : `oauth:${authToken}`;
+        this.authToken = this.validateAndFormatOAuthToken(authToken);
         this.WebSocketService = WebSocketService;
+    }
+
+    /**
+     * Validates and formats the OAuth token with defensive programming
+     * @param {string} token - The OAuth token from configuration
+     * @returns {string} - Properly formatted OAuth token with "oauth:" prefix
+     * @private
+     */
+    private validateAndFormatOAuthToken(token: string): string {
+        // Handle null, undefined, or non-string token
+        if (
+            token === null ||
+            token === undefined ||
+            typeof token !== "string"
+        ) {
+            console.error(
+                "[TwitchChat] Invalid OAuth token: Token is null, undefined, or not a string"
+            );
+            throw new Error(
+                "OAuth token is required and must be a valid string"
+            );
+        }
+
+        // Trim whitespace
+        const trimmedToken = token.trim();
+
+        // Check if token is empty after trimming
+        if (trimmedToken.length === 0) {
+            console.error("[TwitchChat] Invalid OAuth token: Token is empty");
+            throw new Error("OAuth token cannot be empty");
+        }
+
+        // Check if token already has the "oauth:" prefix (case-sensitive)
+        if (trimmedToken.startsWith("oauth:")) {
+            // Validate that there's content after the prefix
+            const tokenContent = trimmedToken.slice(6); // Remove "oauth:" prefix
+            if (tokenContent.length === 0) {
+                console.error(
+                    '[TwitchChat] Invalid OAuth token: Token has "oauth:" prefix but no content'
+                );
+                throw new Error(
+                    'OAuth token must contain content after "oauth:" prefix'
+                );
+            }
+
+            return trimmedToken;
+        }
+
+        // Auto-correct: Add "oauth:" prefix if missing
+        const correctedToken = `oauth:${trimmedToken}`;
+
+        return correctedToken;
     }
 
     /**
@@ -199,7 +249,12 @@ export default class TwitchChat extends EventEmitter {
                 .trim();
             this.#ws.send(fullMessage);
         } else {
-            console.error("Connection is not open");
+            console.error(
+                `[TwitchChat] Cannot send message - WebSocket state: ${
+                    this.#ws?.readyState || "undefined"
+                }`
+            );
+            console.error(`[TwitchChat] Message was: ${message}`);
         }
     }
 
