@@ -246,6 +246,7 @@ export default class ChallengeList {
         this.challenges = [];
         this.challengesCompleted = 0;
         this.totalChallenges = 0;
+
         this.#commitToLocalStorage();
     }
 

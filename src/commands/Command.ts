@@ -1,7 +1,11 @@
 import Challenge from "../classes/Challenge";
 import ChallengeList from "../classes/ChallengeList";
 import ConfigManager from "../classes/ConfigManager";
-import IDManager from "../utils/IDManager";
+import {
+    getChallengeByPosition,
+    getChallengeWithIndex,
+    isValidUserPosition,
+} from "../utils/PositionUtils";
 
 /**
  * Base interface for all command implementations
@@ -23,12 +27,10 @@ export interface Command {
 export abstract class BaseCommand implements Command {
     protected challengeList: ChallengeList;
     protected configManager: ConfigManager;
-    protected idManager: IDManager;
 
     constructor(challengeList: ChallengeList, configManager: ConfigManager) {
         this.challengeList = challengeList;
         this.configManager = configManager;
-        this.idManager = IDManager.getInstance();
     }
 
     /**
@@ -37,48 +39,59 @@ export abstract class BaseCommand implements Command {
     abstract execute(parsed: ParsedCommand, username: string): CommandResponse;
 
     /**
-     * Find challenge by short ID
-     * @param shortId - Short ID to search for
+     * Find challenge by position ID
+     * @param positionId - Position-based ID to search for
      * @returns Challenge if found, null otherwise
      */
-    protected findChallengeByShortId(shortId: string): Challenge | null {
-        return (
-            this.challengeList.challenges.find((c) => c.shortId === shortId) ||
-            null
+    protected findChallengeByPositionId(positionId: string): Challenge | null {
+        return getChallengeByPosition(
+            this.challengeList.challenges,
+            positionId
         );
     }
 
     /**
-     * Find challenges by multiple short IDs
-     * @param shortIds - Array of short IDs to search for
+     * Find challenge and index by position ID
+     * @param positionId - Position-based ID to search for
+     * @returns Object with challenge and index if found, null otherwise
+     */
+    protected findChallengeWithIndexByPositionId(
+        positionId: string
+    ): { challenge: Challenge; index: number } | null {
+        return getChallengeWithIndex(this.challengeList.challenges, positionId);
+    }
+
+    /**
+     * Find challenges by multiple position IDs
+     * @param positionIds - Array of position IDs to search for
      * @returns Array of found challenges
      */
-    protected findChallengesByShortIds(shortIds: string[]): Challenge[] {
-        return shortIds
-            .map((id) => this.findChallengeByShortId(id))
+    protected findChallengesByPositionIds(positionIds: string[]): Challenge[] {
+        return positionIds
+            .map((id) => this.findChallengeByPositionId(id))
             .filter((challenge): challenge is Challenge => challenge !== null);
     }
 
     /**
      * Parse comma-separated target IDs
-     * @param targetId - Target ID string (e.g., "1,3,5" or "A7")
-     * @returns Array of short IDs
+     * @param targetId - Target ID string (e.g., "1,3,5" or "2")
+     * @returns Array of position IDs
      */
     protected parseTargetIds(targetId: string): string[] {
         if (!targetId) return [];
 
         return targetId
             .split(",")
-            .map((id) => id.trim().toUpperCase())
-            .filter((id) => id.length > 0);
+            .map((id) => id.trim())
+            .filter((id) => id.length > 0 && isValidUserPosition(id));
     }
 
     /**
      * Validate that target IDs exist
-     * @param shortIds - Array of short IDs to validate
+     * @param positionIds - Array of position IDs to validate
      * @returns Validation result with found and missing IDs
      */
-    protected validateTargetIds(shortIds: string[]): {
+    protected validateTargetIds(positionIds: string[]): {
         found: Challenge[];
         missing: string[];
         isValid: boolean;
@@ -86,8 +99,8 @@ export abstract class BaseCommand implements Command {
         const found: Challenge[] = [];
         const missing: string[] = [];
 
-        shortIds.forEach((id) => {
-            const challenge = this.findChallengeByShortId(id);
+        positionIds.forEach((id) => {
+            const challenge = this.findChallengeByPositionId(id);
             if (challenge) {
                 found.push(challenge);
             } else {
@@ -97,6 +110,39 @@ export abstract class BaseCommand implements Command {
 
         return {
             found,
+            missing,
+            isValid: missing.length === 0,
+        };
+    }
+
+    /**
+     * Validate multiple target IDs and return found/missing challenges with indices
+     * @param positionIds - Array of position IDs to validate
+     * @returns Validation result with found challenges, indices, and missing IDs
+     */
+    protected validateTargetIdsWithIndices(positionIds: string[]): {
+        found: Challenge[];
+        indices: number[];
+        missing: string[];
+        isValid: boolean;
+    } {
+        const found: Challenge[] = [];
+        const indices: number[] = [];
+        const missing: string[] = [];
+
+        positionIds.forEach((id) => {
+            const result = this.findChallengeWithIndexByPositionId(id);
+            if (result) {
+                found.push(result.challenge);
+                indices.push(result.index);
+            } else {
+                missing.push(id);
+            }
+        });
+
+        return {
+            found,
+            indices,
             missing,
             isValid: missing.length === 0,
         };
@@ -165,10 +211,15 @@ export abstract class BaseCommand implements Command {
     protected handleMultipleTargets(
         targetId: string,
         operation: string
-    ): { challenges: Challenge[]; response?: CommandResponse } {
+    ): {
+        challenges: Challenge[];
+        indices: number[];
+        response?: CommandResponse;
+    } {
         if (!targetId) {
             return {
                 challenges: [],
+                indices: [],
                 response: this.createErrorResponse(
                     `Target ID required for ${operation} command`
                 ),
@@ -179,35 +230,41 @@ export abstract class BaseCommand implements Command {
         if (shortIds.length === 0) {
             return {
                 challenges: [],
+                indices: [],
                 response: this.createErrorResponse(
                     `Invalid target ID format: ${targetId}`
                 ),
             };
         }
 
-        const validation = this.validateTargetIds(shortIds);
+        const validation = this.validateTargetIdsWithIndices(shortIds);
         if (!validation.isValid) {
             return {
                 challenges: [],
+                indices: [],
                 response: this.createErrorResponse(
                     `Challenge(s) not found: ${validation.missing.join(", ")}`
                 ),
             };
         }
 
-        return { challenges: validation.found };
+        return { challenges: validation.found, indices: validation.indices };
     }
 
     /**
      * Handle single target ID with validation
      * @param targetId - Target ID string
      * @param operation - Operation name for error messages
-     * @returns Challenge and validation result
+     * @returns Challenge, index, and validation result
      */
     protected handleSingleTarget(
         targetId: string,
         operation: string
-    ): { challenge: Challenge | null; response?: CommandResponse } {
+    ): {
+        challenge: Challenge | null;
+        index?: number;
+        response?: CommandResponse;
+    } {
         if (!targetId) {
             return {
                 challenge: null,
@@ -217,10 +274,8 @@ export abstract class BaseCommand implements Command {
             };
         }
 
-        const challenge = this.findChallengeByShortId(
-            targetId.trim().toUpperCase()
-        );
-        if (!challenge) {
+        const result = this.findChallengeWithIndexByPositionId(targetId.trim());
+        if (!result) {
             return {
                 challenge: null,
                 response: this.createErrorResponse(
@@ -229,6 +284,6 @@ export abstract class BaseCommand implements Command {
             };
         }
 
-        return { challenge };
+        return { challenge: result.challenge, index: result.index };
     }
 }

@@ -3,12 +3,12 @@ import { ResponseFormatter } from "../utils/ResponseFormatter";
 import { BaseCommand } from "./Command";
 
 /**
- * Command to mark challenges as failed
- * Handles: !ch fail 1 or !ch fail 1,3,5
+ * Command to revert completed challenges back to active status
+ * Handles: !ch undone 1 or !ch undone 1,3,5
  */
-export class FailCommand extends BaseCommand {
+export class UndoneCommand extends BaseCommand {
     /**
-     * Execute the fail command
+     * Execute the undone command
      * @param parsed - Parsed command data
      * @param _username - Username of the command sender
      * @returns Command response
@@ -17,21 +17,21 @@ export class FailCommand extends BaseCommand {
         try {
             // Handle multiple target IDs
             const { challenges, indices, response } =
-                this.handleMultipleTargets(parsed.targetId || "", "fail");
+                this.handleMultipleTargets(parsed.targetId || "", "undone");
             if (response) {
                 return response;
             }
 
             if (challenges.length === 0) {
                 return this.createErrorResponse(
-                    "No valid challenges found to mark as failed"
+                    "No valid challenges found to revert"
                 );
             }
 
-            // Mark challenges as failed and track indices
-            const failedChallenges: Challenge[] = [];
-            const failedIndices: number[] = [];
-            const alreadyFailedIndices: number[] = [];
+            // Revert challenges from completed to active status and track indices
+            const revertedChallenges: Challenge[] = [];
+            const revertedIndices: number[] = [];
+            const alreadyActiveIndices: number[] = [];
 
             challenges.forEach((challenge, i) => {
                 // Ensure the index exists (challenges and indices should be parallel arrays)
@@ -42,37 +42,38 @@ export class FailCommand extends BaseCommand {
                     );
                 }
 
-                if (!challenge.isFailed()) {
-                    challenge.setFailureStatus(true);
+                if (challenge.isComplete()) {
+                    challenge.setCompletionStatus(false);
 
-                    // Stop timer if running
-                    if (challenge.timer && challenge.timer.isActive) {
-                        challenge.timer.stop();
+                    // Restart timer if it exists and was stopped due to completion
+                    if (challenge.timer && !challenge.timer.isActive) {
+                        // Restart the timer (it was stopped when challenge was completed)
+                        challenge.timer.start();
                     }
 
-                    failedChallenges.push(challenge);
-                    failedIndices.push(challengeIndex);
+                    revertedChallenges.push(challenge);
+                    revertedIndices.push(challengeIndex);
                 } else {
-                    alreadyFailedIndices.push(challengeIndex);
+                    alreadyActiveIndices.push(challengeIndex);
                 }
             });
 
-            // Check if any challenges were actually marked as failed
-            if (failedChallenges.length === 0) {
-                const alreadyFailed = alreadyFailedIndices
+            // Check if any challenges were actually reverted
+            if (revertedChallenges.length === 0) {
+                const alreadyActive = alreadyActiveIndices
                     .map((index) => `#${index + 1}`)
                     .join(", ");
                 return this.createErrorResponse(
-                    `Challenge(s) ${alreadyFailed} already marked as failed`
+                    `Challenge(s) ${alreadyActive} already active`
                 );
             }
 
             // Changes are automatically saved to localStorage
 
             // Format response
-            const responseMessage = ResponseFormatter.formatFailResponse(
-                failedChallenges,
-                failedIndices,
+            const responseMessage = ResponseFormatter.formatUndoneResponse(
+                revertedChallenges,
+                revertedIndices,
                 {
                     includeEmoji: true,
                     includeShortId: true,
@@ -81,14 +82,14 @@ export class FailCommand extends BaseCommand {
 
             return this.createSuccessResponse(
                 responseMessage,
-                "fail",
-                failedIndices.join(",")
+                "undone",
+                revertedIndices.join(",")
             );
         } catch (error: unknown) {
             return this.createErrorResponse(
                 ResponseFormatter.formatError(
                     error,
-                    "marking challenges as failed"
+                    "reverting challenges to active status"
                 )
             );
         }

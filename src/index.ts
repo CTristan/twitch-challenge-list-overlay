@@ -108,8 +108,8 @@ window.addEventListener("load", () => {
     const app = new App(storeName);
     app.render();
 
-    // Initialize admin panel functionality
-    new AdminPanel();
+    // Initialize admin panel functionality with App instance for interactive features
+    new AdminPanel(app);
 
     client.on("command", (data: CommandData) => {
         const { user, command, message, flags, extra } = data;

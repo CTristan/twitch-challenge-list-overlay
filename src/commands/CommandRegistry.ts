@@ -16,6 +16,7 @@ import { IncrementCommand } from "./IncrementCommand";
 import { ListCommand } from "./ListCommand";
 import { SetCommand } from "./SetCommand";
 import { ShowCommand } from "./ShowCommand";
+import { UndoneCommand } from "./UndoneCommand";
 
 /**
  * Registry for managing command implementations
@@ -46,6 +47,10 @@ export class CommandRegistry {
             this.configManager
         );
         const doneCommand = new DoneCommand(
+            this.challengeList,
+            this.configManager
+        );
+        const undoneCommand = new UndoneCommand(
             this.challengeList,
             this.configManager
         );
@@ -98,6 +103,7 @@ export class CommandRegistry {
         this.commands.set(CommandType.ADD, addCommand);
         this.commands.set(CommandType.EDIT, editCommand);
         this.commands.set(CommandType.DONE, doneCommand);
+        this.commands.set(CommandType.UNDONE, undoneCommand);
         this.commands.set(CommandType.DELETE, deleteCommand);
         this.commands.set(CommandType.FAIL, failCommand);
         this.commands.set(CommandType.INCREMENT, incrementCommand);

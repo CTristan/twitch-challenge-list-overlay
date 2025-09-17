@@ -1,4 +1,5 @@
 import type Challenge from "../classes/Challenge";
+import { formatDisplayPosition } from "../utils/PositionUtils";
 import { ResponseFormatter } from "../utils/ResponseFormatter";
 import { BaseCommand } from "./Command";
 
@@ -16,7 +17,7 @@ export class ShowCommand extends BaseCommand {
     execute(parsed: ParsedCommand, _username: string): CommandResponse {
         try {
             // Handle single target ID for show
-            const { challenge, response } = this.handleSingleTarget(
+            const { challenge, index, response } = this.handleSingleTarget(
                 parsed.targetId || "",
                 "show"
             );
@@ -24,17 +25,20 @@ export class ShowCommand extends BaseCommand {
                 return response;
             }
 
-            if (!challenge) {
+            if (!challenge || index === undefined) {
                 return this.createErrorResponse("Challenge not found");
             }
 
             // Format detailed challenge information
-            const responseMessage = this.formatChallengeDetails(challenge);
+            const responseMessage = this.formatChallengeDetails(
+                challenge,
+                index
+            );
 
             return this.createSuccessResponse(
                 responseMessage,
                 "show",
-                challenge.shortId
+                index.toString()
             );
         } catch (error: unknown) {
             return this.createErrorResponse(
@@ -49,13 +53,17 @@ export class ShowCommand extends BaseCommand {
     /**
      * Format detailed challenge information
      * @param challenge - Challenge to format
+     * @param index - Array index of the challenge
      * @returns Formatted challenge details
      */
-    private formatChallengeDetails(challenge: Challenge): string {
+    private formatChallengeDetails(
+        challenge: Challenge,
+        index: number
+    ): string {
         const parts: string[] = [];
 
         // Challenge ID and title
-        parts.push(`[#${challenge.shortId}] ${challenge.title}`);
+        parts.push(`[#${formatDisplayPosition(index)}] ${challenge.title}`);
 
         // Description if present
         if (challenge.description && challenge.description.trim()) {

@@ -1,7 +1,7 @@
 import { expect } from "vitest";
 import App from "../../src/app";
 import ChallengeList from "../../src/classes/ChallengeList";
-import { resetIDManager } from "./chatHandlerTestUtils";
+import { ensureTestIsolation } from "./chatHandlerTestUtils";
 
 // ============================================================================
 // TYPE DEFINITIONS
@@ -82,8 +82,8 @@ export const createTestApp = (
     // Set up DOM structure
     setupChallengeTestDOM();
 
-    // Reset IDManager singleton for test isolation
-    resetIDManager();
+    // Ensure test isolation
+    ensureTestIsolation();
 
     // Create fresh app instance
     const app = new App(storeName);

@@ -8,7 +8,6 @@ import {
     executeCommand,
     expectSilentIgnore,
     expectSuccessResponse,
-    resetIDManager,
     type ChatResponse,
     type TestUser,
 } from "./chatHandlerTestUtils";
@@ -62,7 +61,7 @@ function setupTestDOM(): void {
 function createTestApp(): { app: App; challengeList: ChallengeList } {
     localStorage.clear();
     setupTestDOM();
-    resetIDManager();
+    // Note: PositionManager is stateless, no reset needed
 
     const app = new App("TestStore");
     const challengeList = app.challengeList;

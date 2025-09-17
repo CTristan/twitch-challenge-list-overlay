@@ -15,10 +15,8 @@ export class DeleteCommand extends BaseCommand {
     execute(parsed: ParsedCommand, _username: string): CommandResponse {
         try {
             // Handle multiple target IDs
-            const { challenges, response } = this.handleMultipleTargets(
-                parsed.targetId || "",
-                "delete"
-            );
+            const { challenges, indices, response } =
+                this.handleMultipleTargets(parsed.targetId || "", "delete");
             if (response) {
                 return response;
             }
@@ -30,22 +28,24 @@ export class DeleteCommand extends BaseCommand {
             }
 
             // Store challenge info before deletion for response
-            const challengesToDelete = challenges.map((c) => ({
-                shortId: c.shortId,
-                title: c.title,
-            }));
-
-            // Delete challenges by short ID
-            const deletedChallenges = challenges.filter((challenge) => {
-                const index = this.challengeList.challenges.findIndex(
-                    (c) => c.shortId === challenge.shortId
-                );
-                if (index !== -1) {
-                    this.challengeList.deleteChallenges([index]);
-                    return true;
+            const challengesToDelete = challenges.map((c, i) => {
+                const index = indices[i];
+                if (index === undefined) {
+                    throw new Error(
+                        `Missing index for challenge at position ${i}`
+                    );
                 }
-                return false;
+                return {
+                    challenge: c,
+                    index: index,
+                };
             });
+
+            // Delete challenges by indices (sort in descending order to avoid index shifting)
+            const sortedIndices = [...indices].sort((a, b) => b - a);
+            this.challengeList.deleteChallenges(sortedIndices);
+
+            const deletedChallenges = challenges;
 
             // Check if any challenges were actually deleted
             if (deletedChallenges.length === 0) {
@@ -56,10 +56,8 @@ export class DeleteCommand extends BaseCommand {
 
             // Format response using the stored challenge info
             const responseMessage = ResponseFormatter.formatDeleteResponse(
-                challengesToDelete.map(
-                    (info) =>
-                        ({ shortId: info.shortId, title: info.title } as any)
-                ),
+                challengesToDelete.map((info) => info.challenge),
+                challengesToDelete.map((info) => info.index),
                 {
                     includeShortId: true,
                 }
@@ -68,7 +66,7 @@ export class DeleteCommand extends BaseCommand {
             return this.createSuccessResponse(
                 responseMessage,
                 "delete",
-                challengesToDelete.map((c) => c.shortId).join(",")
+                challengesToDelete.map((info) => info.index).join(",")
             );
         } catch (error: unknown) {
             return this.createErrorResponse(

@@ -1,4 +1,5 @@
 import Challenge from "../classes/Challenge";
+import { formatDisplayPosition } from "./PositionUtils";
 
 /**
  * Response formatting options
@@ -21,11 +22,13 @@ export class ResponseFormatter {
     /**
      * Format a success response for adding a challenge
      * @param challenge - The added challenge
+     * @param index - Array index of the challenge for display position
      * @param options - Formatting options
      * @returns Formatted response message
      */
     static formatAddResponse(
         challenge: Challenge,
+        index: number,
         options: ResponseOptions = {}
     ): string {
         const {
@@ -39,7 +42,7 @@ export class ResponseFormatter {
 
         // Add challenge ID if requested
         if (includeShortId) {
-            response += `[#${challenge.shortId}] `;
+            response += `[#${formatDisplayPosition(index)}] `;
         }
 
         // Add title
@@ -68,11 +71,13 @@ export class ResponseFormatter {
     /**
      * Format a success response for completing challenges
      * @param challenges - The completed challenges
+     * @param indices - Array indices of the challenges for display positions
      * @param options - Formatting options
      * @returns Formatted response message
      */
     static formatCompleteResponse(
         challenges: Challenge[],
+        indices: number[],
         options: ResponseOptions = {}
     ): string {
         const { includeEmoji = true, includeShortId = true } = options;
@@ -83,12 +88,14 @@ export class ResponseFormatter {
 
         if (challenges.length === 1) {
             const challenge = challenges[0];
-            if (!challenge) return "Error: Challenge not found";
+            const index = indices[0];
+            if (!challenge || index === undefined)
+                return "Error: Challenge not found";
 
             let response = "Good job on completing ";
 
             if (includeShortId) {
-                response += `challenge #${challenge.shortId}`;
+                response += `challenge #${formatDisplayPosition(index)}`;
             } else {
                 response += `"${challenge.title}"`;
             }
@@ -102,9 +109,17 @@ export class ResponseFormatter {
         }
 
         // Multiple challenges
-        const challengeIds = challenges.map((c) =>
-            includeShortId ? `#${c.shortId}` : `"${c.title}"`
-        );
+        const challengeIds = challenges.map((c, i) => {
+            const index = indices[i];
+            if (index === undefined) {
+                throw new Error(
+                    `Index mismatch: challenge at position ${i} has no corresponding index`
+                );
+            }
+            return includeShortId
+                ? `#${formatDisplayPosition(index)}`
+                : `"${c.title}"`;
+        });
         let response = `Good job on completing challenges ${challengeIds.join(
             ", "
         )}`;
@@ -120,11 +135,13 @@ export class ResponseFormatter {
     /**
      * Format a success response for editing a challenge
      * @param challenge - The edited challenge
+     * @param index - Array index of the challenge for display position
      * @param options - Formatting options
      * @returns Formatted response message
      */
     static formatEditResponse(
         challenge: Challenge,
+        index: number,
         options: ResponseOptions = {}
     ): string {
         const { includeShortId = true } = options;
@@ -132,7 +149,7 @@ export class ResponseFormatter {
         let response = "Challenge ";
 
         if (includeShortId) {
-            response += `#${challenge.shortId}`;
+            response += `#${formatDisplayPosition(index)}`;
         } else {
             response += `"${challenge.title}"`;
         }
@@ -144,11 +161,13 @@ export class ResponseFormatter {
     /**
      * Format a success response for deleting challenges
      * @param challenges - The deleted challenges
+     * @param indices - Array indices of the challenges for display positions
      * @param options - Formatting options
      * @returns Formatted response message
      */
     static formatDeleteResponse(
         challenges: Challenge[],
+        indices: number[],
         options: ResponseOptions = {}
     ): string {
         const { includeShortId = true } = options;
@@ -159,12 +178,14 @@ export class ResponseFormatter {
 
         if (challenges.length === 1) {
             const challenge = challenges[0];
-            if (!challenge) return "Error: Challenge not found";
+            const index = indices[0];
+            if (!challenge || index === undefined)
+                return "Error: Challenge not found";
 
             let response = "Challenge ";
 
             if (includeShortId) {
-                response += `#${challenge.shortId}`;
+                response += `#${formatDisplayPosition(index)}`;
             } else {
                 response += `"${challenge.title}"`;
             }
@@ -174,20 +195,30 @@ export class ResponseFormatter {
         }
 
         // Multiple challenges
-        const challengeIds = challenges.map((c) =>
-            includeShortId ? `#${c.shortId}` : `"${c.title}"`
-        );
+        const challengeIds = challenges.map((c, i) => {
+            const index = indices[i];
+            if (index === undefined) {
+                throw new Error(
+                    `Index mismatch: challenge at position ${i} has no corresponding index`
+                );
+            }
+            return includeShortId
+                ? `#${formatDisplayPosition(index)}`
+                : `"${c.title}"`;
+        });
         return `Challenges ${challengeIds.join(", ")} have been deleted!`;
     }
 
     /**
      * Format a response for failing challenges
      * @param challenges - The failed challenges
+     * @param indices - Array indices of the challenges for display positions
      * @param options - Formatting options
      * @returns Formatted response message
      */
     static formatFailResponse(
         challenges: Challenge[],
+        indices: number[],
         options: ResponseOptions = {}
     ): string {
         const { includeEmoji = true, includeShortId = true } = options;
@@ -198,12 +229,14 @@ export class ResponseFormatter {
 
         if (challenges.length === 1) {
             const challenge = challenges[0];
-            if (!challenge) return "Error: Challenge not found";
+            const index = indices[0];
+            if (!challenge || index === undefined)
+                return "Error: Challenge not found";
 
             let response = "Challenge ";
 
             if (includeShortId) {
-                response += `#${challenge.shortId}`;
+                response += `#${formatDisplayPosition(index)}`;
             } else {
                 response += `"${challenge.title}"`;
             }
@@ -218,9 +251,17 @@ export class ResponseFormatter {
         }
 
         // Multiple challenges
-        const challengeIds = challenges.map((c) =>
-            includeShortId ? `#${c.shortId}` : `"${c.title}"`
-        );
+        const challengeIds = challenges.map((c, i) => {
+            const index = indices[i];
+            if (index === undefined) {
+                throw new Error(
+                    `Index mismatch: challenge at position ${i} has no corresponding index`
+                );
+            }
+            return includeShortId
+                ? `#${formatDisplayPosition(index)}`
+                : `"${c.title}"`;
+        });
         let response = `Challenges ${challengeIds.join(", ")} marked as failed`;
 
         if (includeEmoji) {
@@ -231,14 +272,82 @@ export class ResponseFormatter {
     }
 
     /**
+     * Format a success response for reverting completed challenges back to active status
+     * @param challenges - The reverted challenges
+     * @param indices - Array indices of the challenges for display positions
+     * @param options - Formatting options
+     * @returns Formatted response message
+     */
+    static formatUndoneResponse(
+        challenges: Challenge[],
+        indices: number[],
+        options: ResponseOptions = {}
+    ): string {
+        const { includeEmoji = true, includeShortId = true } = options;
+
+        if (challenges.length === 0) {
+            return "No challenges were reverted.";
+        }
+
+        if (challenges.length === 1) {
+            const challenge = challenges[0];
+            const index = indices[0];
+            if (!challenge || index === undefined)
+                return "Error: Challenge not found";
+
+            let response = "Challenge ";
+
+            if (includeShortId) {
+                response += `#${formatDisplayPosition(index)}`;
+            } else {
+                response += `"${challenge.title}"`;
+            }
+
+            response += " reverted to active status";
+
+            if (includeEmoji) {
+                response += " 🔄";
+            }
+
+            response += "!";
+            return response;
+        }
+
+        // Multiple challenges
+        const challengeIds = challenges.map((c, i) => {
+            const index = indices[i];
+            if (index === undefined) {
+                throw new Error(
+                    `Index mismatch: challenge at position ${i} has no corresponding index`
+                );
+            }
+            return includeShortId
+                ? `#${formatDisplayPosition(index)}`
+                : `"${c.title}"`;
+        });
+        let response = `Challenges ${challengeIds.join(
+            ", "
+        )} reverted to active status`;
+
+        if (includeEmoji) {
+            response += " 🔄";
+        }
+
+        response += "!";
+        return response;
+    }
+
+    /**
      * Format a response for progress updates
      * @param challenge - The updated challenge
+     * @param index - Array index of the challenge for display position
      * @param oldProgress - Previous progress value
      * @param options - Formatting options
      * @returns Formatted response message
      */
     static formatProgressResponse(
         challenge: Challenge,
+        index: number,
         oldProgress: number,
         options: ResponseOptions = {}
     ): string {
@@ -247,7 +356,7 @@ export class ResponseFormatter {
         let response = "Challenge ";
 
         if (includeShortId) {
-            response += `#${challenge.shortId}`;
+            response += `#${formatDisplayPosition(index)}`;
         } else {
             response += `"${challenge.title}"`;
         }
@@ -290,11 +399,11 @@ export class ResponseFormatter {
             return "No challenges found.";
         }
 
-        const formattedChallenges = challenges.map((challenge) => {
+        const formattedChallenges = challenges.map((challenge, index) => {
             let item = "";
 
             if (includeShortId) {
-                item += `#${challenge.shortId} `;
+                item += `#${formatDisplayPosition(index)} `;
             }
 
             item += challenge.title;
@@ -376,7 +485,7 @@ export class ResponseFormatter {
      */
     static formatHelp(commands: string[] = []): string {
         if (commands.length === 0) {
-            return "Available commands: !ch add, !ch edit, !ch done, !ch delete, !ch list, !ch check, !ch clearall, !ch cleardone, !ch help";
+            return "Available commands: !ch add, !ch edit, !ch done, !ch undone, !ch delete, !ch list, !ch check, !ch clearall, !ch cleardone, !ch help";
         }
 
         return `Available commands: ${commands.join(", ")}`;

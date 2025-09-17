@@ -16,7 +16,7 @@ export class EditCommand extends BaseCommand {
     execute(parsed: ParsedCommand, _username: string): CommandResponse {
         try {
             // Validate target ID
-            const { challenge, response } = this.handleSingleTarget(
+            const { challenge, index, response } = this.handleSingleTarget(
                 parsed.targetId || "",
                 "edit"
             );
@@ -24,7 +24,7 @@ export class EditCommand extends BaseCommand {
                 return response;
             }
 
-            if (!challenge) {
+            if (!challenge || index === undefined) {
                 return this.createErrorResponse("Challenge not found");
             }
 
@@ -111,6 +111,7 @@ export class EditCommand extends BaseCommand {
             // Format response
             const responseMessage = ResponseFormatter.formatEditResponse(
                 challenge,
+                index,
                 {
                     includeShortId: true,
                 }
@@ -119,7 +120,7 @@ export class EditCommand extends BaseCommand {
             return this.createSuccessResponse(
                 responseMessage,
                 "edit",
-                challenge.shortId
+                index.toString()
             );
         } catch (error: unknown) {
             return this.createErrorResponse(

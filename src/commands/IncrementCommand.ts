@@ -15,7 +15,7 @@ export class IncrementCommand extends BaseCommand {
     execute(parsed: ParsedCommand, _username: string): CommandResponse {
         try {
             // Handle single target ID for increment
-            const { challenge, response } = this.handleSingleTarget(
+            const { challenge, index, response } = this.handleSingleTarget(
                 parsed.targetId || "",
                 "increment"
             );
@@ -23,7 +23,7 @@ export class IncrementCommand extends BaseCommand {
                 return response;
             }
 
-            if (!challenge) {
+            if (!challenge || index === undefined) {
                 return this.createErrorResponse(
                     "Challenge not found for increment"
                 );
@@ -43,6 +43,7 @@ export class IncrementCommand extends BaseCommand {
             // Format response
             const responseMessage = ResponseFormatter.formatProgressResponse(
                 challenge,
+                index,
                 oldProgress,
                 {
                     includeShortId: true,
@@ -53,7 +54,7 @@ export class IncrementCommand extends BaseCommand {
             return this.createSuccessResponse(
                 responseMessage,
                 "increment",
-                challenge.shortId
+                index.toString()
             );
         } catch (error: unknown) {
             return this.createErrorResponse(

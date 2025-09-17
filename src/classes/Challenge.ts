@@ -1,11 +1,10 @@
-import IDManager from "../utils/IDManager";
 import Timer from "../utils/Timer";
 import { ValidationUtils } from "../utils/ValidationUtils";
 
 /**
  * @class Challenge
  * Enhanced challenge class supporting title, description, progress tracking,
- * timer functionality, and short IDs for the robust command system.
+ * and timer functionality for the robust command system.
  */
 export default class Challenge {
     title: string;
@@ -16,7 +15,6 @@ export default class Challenge {
     completionStatus: boolean;
     failureStatus: boolean;
     id: string;
-    shortId: string;
     createdAt: number;
 
     /**
@@ -50,9 +48,8 @@ export default class Challenge {
         this.failureStatus = false;
         this.createdAt = Date.now();
 
-        // Generate IDs
+        // Generate internal ID for storage (keep timestamp-based for uniqueness)
         this.id = this.#assignId();
-        this.shortId = IDManager.getInstance().getShortId(this.id);
 
         // Set up timer if provided
         if (timer) {

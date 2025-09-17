@@ -16,7 +16,7 @@ export class SetCommand extends BaseCommand {
     execute(parsed: ParsedCommand, _username: string): CommandResponse {
         try {
             // Handle single target ID for set
-            const { challenge, response } = this.handleSingleTarget(
+            const { challenge, index, response } = this.handleSingleTarget(
                 parsed.targetId || "",
                 "set"
             );
@@ -24,7 +24,7 @@ export class SetCommand extends BaseCommand {
                 return response;
             }
 
-            if (!challenge) {
+            if (!challenge || index === undefined) {
                 return this.createErrorResponse(
                     "Challenge not found for set progress"
                 );
@@ -63,6 +63,7 @@ export class SetCommand extends BaseCommand {
                 const responseMessage =
                     ResponseFormatter.formatProgressResponse(
                         challenge,
+                        index,
                         oldProgress,
                         {
                             includeShortId: true,
@@ -73,7 +74,7 @@ export class SetCommand extends BaseCommand {
                 return this.createSuccessResponse(
                     responseMessage,
                     "set",
-                    challenge.shortId
+                    index.toString()
                 );
             } catch (validationError: unknown) {
                 return this.createErrorResponse(

@@ -1,7 +1,6 @@
 import { expect, vi } from "vitest";
 import App from "../../src/app";
 import { type CommandTypeValue } from "../../src/types/CommandTypes";
-import IDManager from "../../src/utils/IDManager";
 
 // ============================================================================
 // TYPE DEFINITIONS
@@ -159,8 +158,8 @@ export const createChatUser = (
  * @returns Mocked App instance ready for testing
  */
 export const createMockApp = (storeName: string = "TestStore"): App => {
-    // Clear localStorage to avoid conflicts with existing data
-    localStorage.clear();
+    // Ensure test isolation
+    ensureTestIsolation();
 
     const app = new App(storeName);
 
@@ -176,14 +175,15 @@ export const createMockApp = (storeName: string = "TestStore"): App => {
 };
 
 /**
- * Resets IDManager singleton instance for test isolation
- * This ensures each test gets a fresh IDManager with consistent IDs
+ * Ensures test isolation by clearing challenge list
+ * Since PositionManager is stateless, we only need to clear the challenge list
+ * to ensure consistent position-based IDs (1, 2, 3, etc.) across tests
  */
-export const resetIDManager = (): void => {
-    // Reset singleton instance (using type assertion as this is test-only code)
-    (IDManager as any).instance = null;
-    // Get fresh instance and reset its state
-    IDManager.getInstance().reset();
+export const ensureTestIsolation = (): void => {
+    // Clear localStorage to avoid conflicts with existing data
+    localStorage.clear();
+    // Note: PositionManager is stateless and calculates IDs from array position,
+    // so no additional reset is needed beyond clearing the challenge list
 };
 
 // ============================================================================
@@ -197,13 +197,13 @@ export const resetIDManager = (): void => {
 export const setupTestEnvironment = (app: App): void => {
     const challengeList = app.challengeList;
 
-    // Clear challenges first
+    // Clear challenges first to ensure clean state
     challengeList.clearChallengeList();
 
-    // Reset IDManager singleton to ensure consistent IDs across tests
-    resetIDManager();
+    // Ensure test isolation (clear localStorage)
+    ensureTestIsolation();
 
-    // Add challenges after IDManager reset so they get fresh mappings
+    // Add challenges - they will automatically get position-based IDs (1, 2, 3, etc.)
     challengeList.addChallenges(DEFAULT_TEST_CHALLENGES);
     challengeList.completeChallenges(1); // Complete challenge2
 };
@@ -346,8 +346,6 @@ export const runCommandTestCase = (
         expectSuccessResponse(response, testCase.expectedMessageContains);
     }
 };
-
-
 
 /**
  * Adds challenges up to the specified limit for testing

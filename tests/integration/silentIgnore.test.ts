@@ -5,10 +5,10 @@ import {
     createChatUser,
     createMockApp,
     createModUser,
+    ensureTestIsolation,
     executeCommand,
     expectSilentIgnore,
     expectSuccessResponse,
-    resetIDManager,
     type TestUser,
 } from "../utils/chatHandlerTestUtils";
 
@@ -19,8 +19,8 @@ describe("Silent Ignore Integration", () => {
     let regularUser: TestUser;
 
     beforeEach(() => {
-        // Reset IDManager for consistent test results
-        resetIDManager();
+        // Ensure test isolation
+        ensureTestIsolation();
 
         // Create fresh app instance for each test
         app = createMockApp("SilentIgnoreTestStore");

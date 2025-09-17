@@ -3,7 +3,7 @@ import App from "../../src/app";
 import Challenge from "../../src/classes/Challenge";
 import ChallengeList from "../../src/classes/ChallengeList";
 import ConfigManager from "../../src/classes/ConfigManager";
-import { resetIDManager } from "../utils/chatHandlerTestUtils";
+import { ensureTestIsolation } from "../utils/chatHandlerTestUtils";
 import { setupChallengeTestDOM } from "../utils/domTestUtils";
 
 describe("Challenge Progress Display", () => {
@@ -12,8 +12,8 @@ describe("Challenge Progress Display", () => {
     let configManager: ConfigManager;
 
     beforeEach(() => {
-        // Reset IDManager singleton for test isolation
-        resetIDManager();
+        // Ensure test isolation
+        ensureTestIsolation();
 
         // Setup DOM
         setupChallengeTestDOM();

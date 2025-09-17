@@ -3,7 +3,6 @@ import TwitchChat from "../../src/twitch/TwitchChat";
 
 describe("TwitchChat OAuth Token Validation", () => {
     let mockWebSocket: any;
-    let consoleLogSpy: any;
     let consoleWarnSpy: any;
     let consoleErrorSpy: any;
 
@@ -20,7 +19,6 @@ describe("TwitchChat OAuth Token Validation", () => {
         }));
 
         // Spy on console methods
-        consoleLogSpy = vi.spyOn(console, "log").mockImplementation(() => {});
         consoleWarnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
         consoleErrorSpy = vi
             .spyOn(console, "error")

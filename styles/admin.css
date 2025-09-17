@@ -383,6 +383,23 @@
   margin-right: 8px;
 }
 
+/* Interactive Checkbox Styles for Admin Mode */
+.challenge-checkbox.admin-interactive {
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: 2px solid rgba(74, 144, 226, 0.3);
+}
+
+.challenge-checkbox.admin-interactive:hover {
+  border-color: #4a90e2;
+  transform: scale(1.05);
+  box-shadow: 0 2px 4px rgba(74, 144, 226, 0.3);
+}
+
+.challenge-checkbox.admin-interactive:active {
+  transform: scale(0.95);
+}
+
 .status-indicator.success {
   background-color: #28a745;
 }

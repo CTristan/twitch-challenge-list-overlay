@@ -11,66 +11,71 @@
  */
 export const CommandType = {
     // Challenge management commands
-    ADD: 'add',
-    EDIT: 'edit',
-    DONE: 'done',
-    FAIL: 'fail',
-    DELETE: 'delete',
-    
+    ADD: "add",
+    EDIT: "edit",
+    DONE: "done",
+    UNDONE: "undone",
+    FAIL: "fail",
+    DELETE: "delete",
+
     // Progress commands
-    INCREMENT: '+',
-    DECREMENT: '-',
-    SET: 'set',
-    
+    INCREMENT: "+",
+    DECREMENT: "-",
+    SET: "set",
+
     // Information commands
-    LIST: 'list',
-    SHOW: 'show',
-    CHECK: 'check',
-    HELP: 'help',
-    
+    LIST: "list",
+    SHOW: "show",
+    CHECK: "check",
+    HELP: "help",
+
     // Admin commands
-    CLEAR_ALL: 'clearall',
-    CLEAR_DONE: 'cleardone',
+    CLEAR_ALL: "clearall",
+    CLEAR_DONE: "cleardone",
 } as const;
 
 /**
  * Type for command type values
  */
-export type CommandTypeValue = typeof CommandType[keyof typeof CommandType];
+export type CommandTypeValue = (typeof CommandType)[keyof typeof CommandType];
 
 /**
  * Command aliases mapping - maps alternative command strings to canonical command types
  */
 export const CommandAliases: Record<string, CommandTypeValue> = {
     // Primary command names
-    'add': CommandType.ADD,
-    'edit': CommandType.EDIT,
-    'done': CommandType.DONE,
-    'fail': CommandType.FAIL,
-    'delete': CommandType.DELETE,
-    '+': CommandType.INCREMENT,
-    '-': CommandType.DECREMENT,
-    'set': CommandType.SET,
-    'list': CommandType.LIST,
-    'show': CommandType.SHOW,
-    'check': CommandType.CHECK,
-    'help': CommandType.HELP,
-    'clearall': CommandType.CLEAR_ALL,
-    'cleardone': CommandType.CLEAR_DONE,
-    
+    add: CommandType.ADD,
+    edit: CommandType.EDIT,
+    done: CommandType.DONE,
+    undone: CommandType.UNDONE,
+    fail: CommandType.FAIL,
+    delete: CommandType.DELETE,
+    "+": CommandType.INCREMENT,
+    "-": CommandType.DECREMENT,
+    set: CommandType.SET,
+    list: CommandType.LIST,
+    show: CommandType.SHOW,
+    check: CommandType.CHECK,
+    help: CommandType.HELP,
+    clearall: CommandType.CLEAR_ALL,
+    cleardone: CommandType.CLEAR_DONE,
+
     // Alternative aliases
-    'del': CommandType.DELETE,
-    'remove': CommandType.DELETE,
-    'complete': CommandType.DONE,
-    'finish': CommandType.DONE,
-    'inc': CommandType.INCREMENT,
-    'dec': CommandType.DECREMENT,
-    'clearlist': CommandType.CLEAR_ALL,
-    'clear': CommandType.CLEAR_ALL,
-    'ls': CommandType.LIST,
-    'status': CommandType.CHECK,
-    'info': CommandType.SHOW,
-    'display': CommandType.SHOW,
+    del: CommandType.DELETE,
+    remove: CommandType.DELETE,
+    complete: CommandType.DONE,
+    finish: CommandType.DONE,
+    revert: CommandType.UNDONE,
+    uncomplete: CommandType.UNDONE,
+    undo: CommandType.UNDONE,
+    inc: CommandType.INCREMENT,
+    dec: CommandType.DECREMENT,
+    clearlist: CommandType.CLEAR_ALL,
+    clear: CommandType.CLEAR_ALL,
+    ls: CommandType.LIST,
+    status: CommandType.CHECK,
+    info: CommandType.SHOW,
+    display: CommandType.SHOW,
 };
 
 /**
@@ -109,6 +114,7 @@ export function getCommandAliases(commandType: CommandTypeValue): string[] {
 export const TARGET_ID_COMMANDS: Set<CommandTypeValue> = new Set([
     CommandType.EDIT,
     CommandType.DONE,
+    CommandType.UNDONE,
     CommandType.FAIL,
     CommandType.DELETE,
     CommandType.INCREMENT,

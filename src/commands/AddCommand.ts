@@ -69,18 +69,25 @@ export class AddCommand extends BaseCommand {
             // Add to list
             this.challengeList.addChallengeObjects(challenge);
 
+            // Get the index of the newly added challenge (last in array)
+            const challengeIndex = this.challengeList.challenges.length - 1;
+
             // Format response
-            const response = ResponseFormatter.formatAddResponse(challenge, {
-                includeEmoji: true,
-                includeProgress: true,
-                includeTimer: true,
-                includeShortId: true,
-            });
+            const response = ResponseFormatter.formatAddResponse(
+                challenge,
+                challengeIndex,
+                {
+                    includeEmoji: true,
+                    includeProgress: true,
+                    includeTimer: true,
+                    includeShortId: true,
+                }
+            );
 
             return this.createSuccessResponse(
                 response,
                 "add",
-                challenge.shortId
+                challengeIndex.toString()
             );
         } catch (error: unknown) {
             return this.createErrorResponse(

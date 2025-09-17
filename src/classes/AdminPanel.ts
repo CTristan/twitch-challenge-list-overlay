@@ -1,3 +1,4 @@
+import type App from "../app";
 import { notifyConfigurationSaved } from "../utils/windowRefresh";
 import ConfigExporter from "./ConfigExporter";
 import ConfigManager from "./ConfigManager";
@@ -14,12 +15,15 @@ import ConfigManager from "./ConfigManager";
 export default class AdminPanel {
     #configManager: ConfigManager;
     #configExporter: ConfigExporter | null = null;
+    #app: App | null = null;
 
     /**
      * @constructor
+     * @param app - Optional App instance for enabling interactive features
      */
-    constructor() {
+    constructor(app?: App) {
         this.#configManager = ConfigManager.getInstance();
+        this.#app = app || null;
         this.initialize();
     }
 
@@ -37,6 +41,11 @@ export default class AdminPanel {
         this.setupConfigurationUI();
         this.setupExportControls();
         this.setupImportControls();
+
+        // Enable interactive checkbox functionality if App instance is available
+        if (this.#app) {
+            this.#app.enableAdminCheckboxInteraction();
+        }
 
         // Listen for hash changes to reinitialize if needed
         window.addEventListener("hashchange", () => {

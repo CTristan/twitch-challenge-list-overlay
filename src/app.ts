@@ -284,6 +284,9 @@ export default class App {
 
         // Start timer updates if there are active timers
         this.startTimerUpdates();
+
+        // Enable checkbox interaction for admin mode
+        this.enableAdminCheckboxInteraction();
     }
 
     /**
@@ -332,21 +335,28 @@ export default class App {
 
                 // Handle DOM updates for commands
                 if (!response.error) {
-                    if (response.challengeId) {
-                        const challenge = this.challengeList.challenges.find(
-                            (c) => c.shortId === response.challengeId
-                        );
-                        if (challenge) {
-                            if (response.action === "add") {
-                                this.addChallengeToDOM(challenge);
-                            } else if (response.action === "edit") {
-                                this.editChallengeFromDOM(challenge);
-                            } else if (response.action === "complete") {
-                                this.completeChallengeFromDOM(challenge.id);
-                            } else if (response.action === "delete") {
-                                this.deleteChallengeFromDOM(challenge.id);
+                    if (response.challengeId !== undefined) {
+                        // Handle multiple indices (comma-separated) or single index
+                        const indices = response.challengeId
+                            .toString()
+                            .split(",")
+                            .map((id) => parseInt(id, 10));
+
+                        indices.forEach((index) => {
+                            const challenge =
+                                this.challengeList.challenges[index];
+                            if (challenge) {
+                                if (response.action === "add") {
+                                    this.addChallengeToDOM(challenge);
+                                } else if (response.action === "edit") {
+                                    this.editChallengeFromDOM(challenge);
+                                } else if (response.action === "complete") {
+                                    this.completeChallengeFromDOM(challenge.id);
+                                } else if (response.action === "delete") {
+                                    this.deleteChallengeFromDOM(challenge.id);
+                                }
                             }
-                        }
+                        });
                     } else if (response.action === "clearAll") {
                         this.clearListFromDOM();
                     } else if (response.action === "clearDone") {
@@ -540,6 +550,9 @@ export default class App {
         if (challenge.timer && challenge.timer.isActive) {
             this.startTimerUpdates();
         }
+
+        // Enable checkbox interaction for admin mode
+        this.enableAdminCheckboxInteraction();
     }
 
     /**
@@ -640,6 +653,133 @@ export default class App {
         this.updateChallengeCount();
 
         // Update timer displays since deletion may remove active timers
+        this.updateTimerDisplays();
+    }
+
+    /**
+     * Enable interactive checkbox functionality for admin mode
+     * Adds click event listeners to all challenge checkboxes
+     * @returns {void}
+     */
+    enableAdminCheckboxInteraction(): void {
+        // Only enable in admin mode
+        if (window.location.hash !== "#admin") {
+            return;
+        }
+
+        // Add click listeners to all existing checkboxes
+        const checkboxes = document.querySelectorAll(".challenge-checkbox");
+        checkboxes.forEach((checkbox) => {
+            // Remove any existing listeners to prevent duplicates
+            checkbox.removeEventListener("click", this.handleCheckboxClick);
+
+            // Add the click listener
+            checkbox.addEventListener(
+                "click",
+                this.handleCheckboxClick.bind(this)
+            );
+
+            // Add visual indication that checkboxes are clickable in admin mode
+            checkbox.classList.add("admin-interactive");
+        });
+    }
+
+    /**
+     * Handle checkbox click events to toggle challenge completion status
+     * @param {Event} event - The click event
+     * @returns {void}
+     */
+    private handleCheckboxClick = (event: Event): void => {
+        // Only handle clicks in admin mode
+        if (window.location.hash !== "#admin") {
+            return;
+        }
+
+        const checkbox = event.target as HTMLElement;
+        const challengeElement = checkbox.closest(".challenge") as HTMLElement;
+
+        if (!challengeElement) {
+            console.error("Could not find challenge element for checkbox");
+            return;
+        }
+
+        const challengeId = challengeElement.dataset["challengeId"];
+        if (!challengeId) {
+            console.error("Could not find challenge ID for checkbox");
+            return;
+        }
+
+        // Find the challenge object
+        const challenge = this.challengeList.challenges.find(
+            (c) => c.id === challengeId
+        );
+        if (!challenge) {
+            console.error(`Challenge with ID ${challengeId} not found`);
+            return;
+        }
+
+        // Toggle the completion status
+        const wasComplete = challenge.isComplete();
+
+        try {
+            if (wasComplete) {
+                // Revert to active status
+                challenge.setCompletionStatus(false);
+
+                // Restart timer if it exists and has remaining time
+                if (
+                    challenge.timer &&
+                    !challenge.timer.isActive &&
+                    challenge.timer.getRemainingTime() > 0
+                ) {
+                    challenge.timer.start();
+                }
+
+                // Update DOM to reflect active status
+                this.revertChallengeFromDOM(challengeId);
+            } else {
+                // Mark as complete
+                challenge.setCompletionStatus(true);
+
+                // Stop timer if running
+                if (challenge.timer && challenge.timer.isActive) {
+                    challenge.timer.stop();
+                }
+
+                // Update DOM to reflect completed status
+                this.completeChallengeFromDOM(challengeId);
+            }
+
+            // Changes are automatically saved to localStorage via the challenge list
+            this.challengeList.challenges = [...this.challengeList.challenges]; // Trigger save
+        } catch (error) {
+            console.error("Error toggling challenge completion:", error);
+        }
+    };
+
+    /**
+     * Revert a completed challenge back to active status in the DOM
+     * @param {string} challengeId
+     * @returns {void}
+     */
+    revertChallengeFromDOM(challengeId: string): void {
+        const challengeElements = document.querySelectorAll(
+            `[data-challenge-id="${challengeId}"]`
+        );
+        for (const challengeElement of challengeElements) {
+            challengeElement.classList.remove("done");
+
+            // Update checkbox to unchecked state
+            const checkbox = challengeElement.querySelector(
+                ".challenge-checkbox"
+            );
+            if (checkbox) {
+                checkbox.classList.remove("checked");
+            }
+        }
+        this.updateChallengeCount();
+
+        // Update timer displays since reversion may restart timers
         this.updateTimerDisplays();
     }
 

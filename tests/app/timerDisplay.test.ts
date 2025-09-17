@@ -2,15 +2,14 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import App from "../../src/app";
 import Challenge from "../../src/classes/Challenge";
 import ChallengeList from "../../src/classes/ChallengeList";
-import IDManager from "../../src/utils/IDManager";
 
 describe("Timer Display in Challenge Rows", () => {
     let app: App;
     let challengeList: ChallengeList;
 
     beforeEach(() => {
-        // Reset IDManager singleton for test isolation
-        (IDManager as any).instance = null;
+        // Clear localStorage for test isolation
+        localStorage.clear();
 
         // Reset DOM
         document.body.innerHTML = `

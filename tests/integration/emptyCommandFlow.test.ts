@@ -5,9 +5,9 @@ import {
     createChatUser,
     createMockApp,
     createModUser,
+    ensureTestIsolation,
     executeCommand,
     expectSilentIgnore,
-    resetIDManager,
     type TestUser,
 } from "../utils/chatHandlerTestUtils";
 
@@ -18,8 +18,8 @@ describe("Empty Command Flow Integration", () => {
     let regularUser: TestUser;
 
     beforeEach(() => {
-        // Reset IDManager for consistent test results
-        resetIDManager();
+        // Ensure test isolation
+        ensureTestIsolation();
 
         // Create fresh app instance for each test
         app = createMockApp("EmptyCommandFlowTestStore");

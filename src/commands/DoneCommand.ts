@@ -1,3 +1,4 @@
+import type Challenge from "../classes/Challenge";
 import { ResponseFormatter } from "../utils/ResponseFormatter";
 import { BaseCommand } from "./Command";
 
@@ -15,10 +16,8 @@ export class DoneCommand extends BaseCommand {
     execute(parsed: ParsedCommand, _username: string): CommandResponse {
         try {
             // Handle multiple target IDs
-            const { challenges, response } = this.handleMultipleTargets(
-                parsed.targetId || "",
-                "done"
-            );
+            const { challenges, indices, response } =
+                this.handleMultipleTargets(parsed.targetId || "", "done");
             if (response) {
                 return response;
             }
@@ -29,8 +28,18 @@ export class DoneCommand extends BaseCommand {
                 );
             }
 
-            // Mark challenges as completed
-            const completedChallenges = challenges.filter((challenge) => {
+            // Mark challenges as completed and track indices
+            const completedChallenges: Challenge[] = [];
+            const completedIndices: number[] = [];
+            const alreadyCompletedIndices: number[] = [];
+
+            challenges.forEach((challenge, i) => {
+                const index = indices[i];
+                if (index === undefined) {
+                    // This should never happen if handleMultipleTargets works correctly
+                    throw new Error(`Index ${i} not found in indices array`);
+                }
+
                 if (!challenge.isComplete()) {
                     challenge.setCompletionStatus(true);
 
@@ -39,15 +48,17 @@ export class DoneCommand extends BaseCommand {
                         challenge.timer.stop();
                     }
 
-                    return true;
+                    completedChallenges.push(challenge);
+                    completedIndices.push(index);
+                } else {
+                    alreadyCompletedIndices.push(index);
                 }
-                return false;
             });
 
             // Check if any challenges were actually completed
             if (completedChallenges.length === 0) {
-                const alreadyCompleted = challenges
-                    .map((c) => `#${c.shortId}`)
+                const alreadyCompleted = alreadyCompletedIndices
+                    .map((index) => `#${index + 1}`)
                     .join(", ");
                 return this.createErrorResponse(
                     `Challenge(s) ${alreadyCompleted} already completed`
@@ -59,6 +70,7 @@ export class DoneCommand extends BaseCommand {
             // Format response
             const responseMessage = ResponseFormatter.formatCompleteResponse(
                 completedChallenges,
+                completedIndices,
                 {
                     includeEmoji: true,
                     includeShortId: true,
@@ -68,7 +80,7 @@ export class DoneCommand extends BaseCommand {
             return this.createSuccessResponse(
                 responseMessage,
                 "done",
-                completedChallenges.map((c) => c.shortId).join(",")
+                completedIndices.join(",")
             );
         } catch (error: unknown) {
             return this.createErrorResponse(
