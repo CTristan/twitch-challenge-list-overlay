@@ -51,11 +51,7 @@ export class DecrementCommand extends BaseCommand {
                 }
             );
 
-            return this.createSuccessResponse(
-                responseMessage,
-                "decrement",
-                index.toString()
-            );
+            return this.createSuccessResponse(responseMessage, "decrement");
         } catch (error: unknown) {
             return this.createErrorResponse(
                 ResponseFormatter.formatError(

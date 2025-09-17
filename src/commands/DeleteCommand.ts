@@ -63,11 +63,7 @@ export class DeleteCommand extends BaseCommand {
                 }
             );
 
-            return this.createSuccessResponse(
-                responseMessage,
-                "delete",
-                challengesToDelete.map((info) => info.index).join(",")
-            );
+            return this.createSuccessResponse(responseMessage, "delete");
         } catch (error: unknown) {
             return this.createErrorResponse(
                 ResponseFormatter.formatError(error, "deleting challenges")

@@ -80,11 +80,7 @@ export class UndoneCommand extends BaseCommand {
                 }
             );
 
-            return this.createSuccessResponse(
-                responseMessage,
-                "undone",
-                revertedIndices.join(",")
-            );
+            return this.createSuccessResponse(responseMessage, "undone");
         } catch (error: unknown) {
             return this.createErrorResponse(
                 ResponseFormatter.formatError(

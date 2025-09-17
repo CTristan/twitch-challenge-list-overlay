@@ -4,6 +4,7 @@ import ChallengeList from "./classes/ChallengeList";
 import ConfigManager from "./classes/ConfigManager";
 import { loadStyles } from "./styleLoader";
 import CommandHandler from "./utils/CommandHandler";
+import UIUpdateHandler from "./utils/UIUpdateHandler";
 
 // Commands and responses are loaded from ConfigManager
 
@@ -104,6 +105,7 @@ export default class App {
     #configManager: ConfigManager;
     challengeList: ChallengeList;
     #commandHandler: CommandHandler;
+    #uiUpdateHandler: UIUpdateHandler;
     #timerUpdateInterval: number | null = null;
 
     /**
@@ -117,6 +119,7 @@ export default class App {
             this.challengeList,
             this.#configManager
         );
+        this.#uiUpdateHandler = new UIUpdateHandler(this.challengeList);
         loadStyles(this.#configManager.getAll());
     }
 
@@ -133,7 +136,7 @@ export default class App {
      * @returns {void}
      */
     render(): void {
-        this.renderChallengeList();
+        this.#uiUpdateHandler.renderChallengeList();
     }
 
     /**
@@ -302,43 +305,8 @@ export default class App {
                     flags
                 );
 
-                // Handle DOM updates for commands
-                if (!response.error) {
-                    if (response.challengeId !== undefined) {
-                        // Handle multiple indices (comma-separated) or single index
-                        const indices = response.challengeId
-                            .toString()
-                            .split(",")
-                            .map((id) => parseInt(id, 10));
-
-                        indices.forEach((index) => {
-                            const challenge =
-                                this.challengeList.challenges[index];
-                            if (challenge) {
-                                if (response.action === "add") {
-                                    this.addChallengeToDOM(challenge);
-                                } else if (response.action === "edit") {
-                                    this.editChallengeFromDOM(challenge);
-                                } else if (response.action === "complete") {
-                                    this.completeChallengeFromDOM(challenge.id);
-                                } else if (response.action === "delete") {
-                                    this.deleteChallengeFromDOM(challenge.id);
-                                }
-                            }
-                        });
-                    } else if (response.action === "clearAll") {
-                        this.clearListFromDOM();
-                    } else if (response.action === "clearDone") {
-                        // Clear done challenges from DOM - need to get the cleared challenge IDs
-                        const doneChallenges =
-                            this.challengeList.challenges.filter((c) =>
-                                c.isComplete()
-                            );
-                        doneChallenges.forEach((challenge) => {
-                            this.deleteChallengeFromDOM(challenge.id);
-                        });
-                    }
-                }
+                // Handle UI updates for commands
+                this.#uiUpdateHandler.handleCommandResult(response);
 
                 return {
                     error: response.error,

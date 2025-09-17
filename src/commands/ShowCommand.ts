@@ -35,11 +35,7 @@ export class ShowCommand extends BaseCommand {
                 index
             );
 
-            return this.createSuccessResponse(
-                responseMessage,
-                "show",
-                index.toString()
-            );
+            return this.createSuccessResponse(responseMessage, "show");
         } catch (error: unknown) {
             return this.createErrorResponse(
                 ResponseFormatter.formatError(

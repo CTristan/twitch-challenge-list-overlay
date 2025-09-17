@@ -51,11 +51,7 @@ export class IncrementCommand extends BaseCommand {
                 }
             );
 
-            return this.createSuccessResponse(
-                responseMessage,
-                "increment",
-                index.toString()
-            );
+            return this.createSuccessResponse(responseMessage, "increment");
         } catch (error: unknown) {
             return this.createErrorResponse(
                 ResponseFormatter.formatError(

@@ -77,10 +77,19 @@ export class DoneCommand extends BaseCommand {
                 }
             );
 
-            return this.createSuccessResponse(
+            // Create UI update data
+            const uiUpdate: UIUpdateData = {
+                action: "complete" as UIUpdateAction,
+                challengeIndices: completedIndices,
+                challenges: completedChallenges,
+                updateTimers: true,
+                updateCount: true,
+            };
+
+            return this.createSuccessResponseWithUIUpdate(
                 responseMessage,
-                "done",
-                completedIndices.join(",")
+                uiUpdate,
+                "complete"
             );
         } catch (error: unknown) {
             return this.createErrorResponse(

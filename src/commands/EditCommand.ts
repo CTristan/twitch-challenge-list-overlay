@@ -117,11 +117,7 @@ export class EditCommand extends BaseCommand {
                 }
             );
 
-            return this.createSuccessResponse(
-                responseMessage,
-                "edit",
-                index.toString()
-            );
+            return this.createSuccessResponse(responseMessage, "edit");
         } catch (error: unknown) {
             return this.createErrorResponse(
                 ResponseFormatter.formatError(error, "editing challenge")

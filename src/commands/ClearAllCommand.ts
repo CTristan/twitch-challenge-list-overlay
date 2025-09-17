@@ -34,7 +34,18 @@ export class ClearAllCommand extends BaseCommand {
                 challengeCount
             );
 
-            return this.createSuccessResponse(responseMessage, "clearall");
+            // Create UI update data
+            const uiUpdate: UIUpdateData = {
+                action: "clearAll" as UIUpdateAction,
+                updateTimers: true,
+                updateCount: true,
+            };
+
+            return this.createSuccessResponseWithUIUpdate(
+                responseMessage,
+                uiUpdate,
+                "clearAll"
+            );
         } catch (error: unknown) {
             return this.createErrorResponse(
                 ResponseFormatter.formatError(error, "clearing all challenges")

@@ -83,10 +83,19 @@ export class AddCommand extends BaseCommand {
                 }
             );
 
-            return this.createSuccessResponse(
+            // Create UI update data
+            const uiUpdate: UIUpdateData = {
+                action: "add" as UIUpdateAction,
+                challengeIndices: [challengeIndex],
+                challenges: [challenge],
+                updateTimers: true,
+                updateCount: true,
+            };
+
+            return this.createSuccessResponseWithUIUpdate(
                 response,
-                "add",
-                challengeIndex.toString()
+                uiUpdate,
+                "add"
             );
         } catch (error: unknown) {
             return this.createErrorResponse(

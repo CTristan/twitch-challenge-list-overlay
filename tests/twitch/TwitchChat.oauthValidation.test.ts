@@ -35,13 +35,13 @@ describe("TwitchChat OAuth Token Validation", () => {
                 "wss://irc-ws.chat.twitch.tv:443",
                 {
                     username: "testuser",
-                    authToken: "oauth:abc123def456",
+                    authToken: "oauth:example_token_123",
                     channel: "testchannel",
                 },
                 mockWebSocket
             );
 
-            expect(client.authToken).toBe("oauth:abc123def456");
+            expect(client.authToken).toBe("oauth:example_token_123");
             expect(consoleWarnSpy).not.toHaveBeenCalled();
         });
 
@@ -50,18 +50,18 @@ describe("TwitchChat OAuth Token Validation", () => {
                 "wss://irc-ws.chat.twitch.tv:443",
                 {
                     username: "testuser",
-                    authToken: "abc123def456",
+                    authToken: "example_token_123",
                     channel: "testchannel",
                 },
                 mockWebSocket
             );
 
-            expect(client.authToken).toBe("oauth:abc123def456");
+            expect(client.authToken).toBe("oauth:example_token_123");
             expect(consoleWarnSpy).toHaveBeenCalledWith(
                 '[TwitchChat] OAuth token format auto-corrected: Added missing "oauth:" prefix'
             );
             expect(consoleWarnSpy).toHaveBeenCalledWith(
-                '[TwitchChat] Original: "abc123def4..." → Corrected: "oauth:abc123def4..."'
+                '[TwitchChat] Original: "example_to..." → Corrected: "oauth:example_to..."'
             );
         });
 
@@ -70,13 +70,13 @@ describe("TwitchChat OAuth Token Validation", () => {
                 "wss://irc-ws.chat.twitch.tv:443",
                 {
                     username: "testuser",
-                    authToken: "  oauth:abc123def456  ",
+                    authToken: "  oauth:example_token_123  ",
                     channel: "testchannel",
                 },
                 mockWebSocket
             );
 
-            expect(client.authToken).toBe("oauth:abc123def456");
+            expect(client.authToken).toBe("oauth:example_token_123");
         });
 
         it("should auto-correct token with whitespace and missing prefix", () => {
@@ -84,13 +84,13 @@ describe("TwitchChat OAuth Token Validation", () => {
                 "wss://irc-ws.chat.twitch.tv:443",
                 {
                     username: "testuser",
-                    authToken: "  abc123def456  ",
+                    authToken: "  example_token_123  ",
                     channel: "testchannel",
                 },
                 mockWebSocket
             );
 
-            expect(client.authToken).toBe("oauth:abc123def456");
+            expect(client.authToken).toBe("oauth:example_token_123");
             expect(consoleWarnSpy).toHaveBeenCalledWith(
                 '[TwitchChat] OAuth token format auto-corrected: Added missing "oauth:" prefix'
             );
@@ -203,14 +203,14 @@ describe("TwitchChat OAuth Token Validation", () => {
                 "wss://irc-ws.chat.twitch.tv:443",
                 {
                     username: "testuser",
-                    authToken: "jn32lkfmx3p4vdc549wrkby8igma5k",
+                    authToken: "anonymized_token_example_30chars",
                     channel: "testchannel",
                 },
                 mockWebSocket
             );
 
             expect(client.authToken).toBe(
-                "oauth:jn32lkfmx3p4vdc549wrkby8igma5k"
+                "oauth:anonymized_token_example_30chars"
             );
             expect(consoleWarnSpy).toHaveBeenCalledWith(
                 '[TwitchChat] OAuth token format auto-corrected: Added missing "oauth:" prefix'
@@ -222,14 +222,14 @@ describe("TwitchChat OAuth Token Validation", () => {
                 "wss://irc-ws.chat.twitch.tv:443",
                 {
                     username: "testuser",
-                    authToken: "oauth:jn32lkfmx3p4vdc549wrkby8igma5k",
+                    authToken: "oauth:anonymized_token_example_30chars",
                     channel: "testchannel",
                 },
                 mockWebSocket
             );
 
             expect(client.authToken).toBe(
-                "oauth:jn32lkfmx3p4vdc549wrkby8igma5k"
+                "oauth:anonymized_token_example_30chars"
             );
             expect(consoleWarnSpy).not.toHaveBeenCalled();
         });
@@ -240,14 +240,14 @@ describe("TwitchChat OAuth Token Validation", () => {
                 "wss://irc-ws.chat.twitch.tv:443",
                 {
                     username: "testuser",
-                    authToken: "OAuth:jn32lkfmx3p4vdc549wrkby8igma5k",
+                    authToken: "OAuth:anonymized_token_example_30chars",
                     channel: "testchannel",
                 },
                 mockWebSocket
             );
 
             expect(client.authToken).toBe(
-                "oauth:OAuth:jn32lkfmx3p4vdc549wrkby8igma5k"
+                "oauth:OAuth:anonymized_token_example_30chars"
             );
             expect(consoleWarnSpy).toHaveBeenCalledWith(
                 '[TwitchChat] OAuth token format auto-corrected: Added missing "oauth:" prefix'

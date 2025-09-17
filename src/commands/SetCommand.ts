@@ -71,11 +71,7 @@ export class SetCommand extends BaseCommand {
                         }
                     );
 
-                return this.createSuccessResponse(
-                    responseMessage,
-                    "set",
-                    index.toString()
-                );
+                return this.createSuccessResponse(responseMessage, "set");
             } catch (validationError: unknown) {
                 return this.createErrorResponse(
                     ResponseFormatter.formatError(

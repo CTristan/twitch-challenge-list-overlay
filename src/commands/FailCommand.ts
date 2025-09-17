@@ -79,11 +79,7 @@ export class FailCommand extends BaseCommand {
                 }
             );
 
-            return this.createSuccessResponse(
-                responseMessage,
-                "fail",
-                failedIndices.join(",")
-            );
+            return this.createSuccessResponse(responseMessage, "fail");
         } catch (error: unknown) {
             return this.createErrorResponse(
                 ResponseFormatter.formatError(

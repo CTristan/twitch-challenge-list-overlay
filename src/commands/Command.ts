@@ -186,19 +186,36 @@ export abstract class BaseCommand implements Command {
      * Create a success response
      * @param message - Success message
      * @param action - Action identifier
-     * @param challengeId - Optional challenge ID
      * @returns Success response
      */
     protected createSuccessResponse(
         message: string,
-        action: string,
-        challengeId?: string
+        action: string
     ): CommandResponse {
         return {
             message,
             error: false,
             action,
-            ...(challengeId && { challengeId }),
+        };
+    }
+
+    /**
+     * Create a success response with UI update data
+     * @param message - Success message
+     * @param uiUpdate - UI update data
+     * @param action - Optional action for backward compatibility
+     * @returns Success response with UI update data
+     */
+    protected createSuccessResponseWithUIUpdate(
+        message: string,
+        uiUpdate: UIUpdateData,
+        action?: string
+    ): CommandResponse {
+        return {
+            message,
+            error: false,
+            uiUpdate,
+            ...(action && { action }),
         };
     }
 
