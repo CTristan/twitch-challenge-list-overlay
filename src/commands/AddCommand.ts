@@ -24,12 +24,18 @@ export class AddCommand extends BaseCommand {
                 );
             }
 
+            // Check if no arguments provided - show usage message
+            if (
+                !parsed.rawParameters &&
+                Object.keys(parsed.parameters).length === 0
+            ) {
+                return this.createErrorResponse(this.getUsageMessage());
+            }
+
             // Extract and validate title
             const challengeTitle = this.extractTitle(parsed);
             if (!challengeTitle) {
-                return this.createErrorResponse(
-                    'Title is required. Usage: !ch add title="Challenge name" or !ch add Challenge name'
-                );
+                return this.createErrorResponse(this.getUsageMessage());
             }
 
             // Extract optional parameters
@@ -181,5 +187,32 @@ export class AddCommand extends BaseCommand {
             // The error will be caught by the main execute method
             return undefined;
         }
+    }
+
+    /**
+     * Get comprehensive usage message for the add command
+     * @returns Detailed usage instructions with parameter descriptions
+     */
+    private getUsageMessage(): string {
+        const usageLines = [
+            "Usage: !ch add [parameters]",
+            "",
+            "Two syntax options:",
+            "1. Simple: !ch add Challenge Name",
+            '2. Advanced: !ch add title="Challenge Name" desc="Description" amount=5 timer=10m',
+            "",
+            "Available parameters:",
+            '• title="..." (or t="...") - Challenge title (required)',
+            '• desc="..." (or d="...") - Challenge description (optional)',
+            "• amount=N (or a=N) - Target amount/quantity (optional, default: 1)",
+            "• timer=Xm (or tm=Xm) - Timer duration in minutes (optional)",
+            "",
+            "Examples:",
+            "• !ch add Beat the boss",
+            '• !ch add title="Collect 100 coins" amount=100',
+            '• !ch add t="Speed run" desc="Complete in under 5 minutes" timer=5m',
+        ];
+
+        return usageLines.join(" • ");
     }
 }

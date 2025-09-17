@@ -136,4 +136,45 @@ describe("CommandHandler - Empty Command Behavior", () => {
             expect(emptyResponse.message).toBe(helpResponse.message);
         });
     });
+
+    describe("Add Command Usage Message", () => {
+        it("should show usage message when moderator types '!ch add' with no arguments", () => {
+            const response = executeCommand(app, modUser, "ch", "add");
+
+            expect(response.error).toBe(true);
+            expect(response.message).toContain("Usage: !ch add [parameters]");
+            expect(response.message).toContain("Two syntax options:");
+            expect(response.message).toContain(
+                "Simple: !ch add Challenge Name"
+            );
+            expect(response.message).toContain("Advanced: !ch add title=");
+            expect(response.message).toContain("Available parameters:");
+            expect(response.message).toContain("title=");
+            expect(response.message).toContain("desc=");
+            expect(response.message).toContain("amount=");
+            expect(response.message).toContain("timer=");
+            expect(response.message).toContain("Examples:");
+        });
+
+        it("should show usage message when broadcaster types '!ch add' with no arguments", () => {
+            const response = executeCommand(app, adminUser, "ch", "add");
+
+            expect(response.error).toBe(true);
+            expect(response.message).toContain("Usage: !ch add [parameters]");
+            expect(response.message).toContain("Available parameters:");
+        });
+
+        it("should show usage message when '!ch add' has only whitespace", () => {
+            const response = executeCommand(app, modUser, "ch", "add   ");
+
+            expect(response.error).toBe(true);
+            expect(response.message).toContain("Usage: !ch add [parameters]");
+        });
+
+        it("should silently ignore when regular user types '!ch add' with no arguments", () => {
+            const response = executeCommand(app, regularUser, "ch", "add");
+
+            expectSilentIgnore(response);
+        });
+    });
 });
