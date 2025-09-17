@@ -189,63 +189,29 @@ export default class App {
                     listItem.classList.add("challenge");
                     listItem.dataset["challengeId"] = `${challenge.id}`;
 
-                    // Apply row background color if configured
-                    const backgroundColor = getRowBackgroundColor(
+                    // Apply row colors using shared helper
+                    const textColor = applyChallengeRowColors(
+                        listItem,
                         index,
-                        rowColors
+                        rowColors,
+                        rowTextColors
                     );
-                    if (backgroundColor) {
-                        listItem.style.backgroundColor = backgroundColor;
-                    }
-
-                    // Apply row text color if configured
-                    const textColor = getRowTextColor(index, rowTextColors);
 
                     // Create checkbox element
                     const checkbox = createChallengeCheckbox(
                         challenge.isComplete()
                     );
 
-                    // Apply checkbox colors to match text color if configured
-                    if (textColor) {
-                        checkbox.style.setProperty(
-                            "--challenge-checkbox-border-color",
-                            textColor
-                        );
-                        checkbox.style.setProperty(
-                            "--challenge-checkbox-checked-border-color",
-                            textColor
-                        );
-                        checkbox.style.setProperty(
-                            "--challenge-checkbox-checkmark-color",
-                            textColor
-                        );
-                    }
+                    // Apply checkbox styling using shared helper
+                    decorateChallengeCheckbox(checkbox, textColor);
 
                     listItem.appendChild(checkbox);
 
                     // Create text element for challenge title and description
                     const textElement = createChallengeTextElement(challenge);
 
-                    // Apply text color to the text element if configured
-                    if (textColor) {
-                        textElement.style.color = textColor;
-                        // Also apply to child elements
-                        const titleElement = textElement.querySelector(
-                            ".challenge-title"
-                        ) as HTMLElement;
-                        const descriptionElement = textElement.querySelector(
-                            ".challenge-description"
-                        ) as HTMLElement;
-                        const progressElement = textElement.querySelector(
-                            ".challenge-amount"
-                        ) as HTMLElement;
-                        if (titleElement) titleElement.style.color = textColor;
-                        if (descriptionElement)
-                            descriptionElement.style.color = textColor;
-                        if (progressElement)
-                            progressElement.style.color = textColor;
-                    }
+                    // Apply text colors using shared helper
+                    applyChallengeTextColors(textElement, textColor);
 
                     listItem.appendChild(textElement);
 
@@ -447,58 +413,30 @@ export default class App {
         const rowTextColors =
             this.#configManager.get("challengeRowTextColors") || [];
 
-        // Apply row background color if configured
         // Calculate the row index based on current challenge count (newly added challenge is at the end)
         const rowIndex = this.challengeList.challenges.length - 1;
-        const backgroundColor = getRowBackgroundColor(rowIndex, rowColors);
-        if (backgroundColor) {
-            challengeElement.style.backgroundColor = backgroundColor;
-        }
 
-        // Apply row text color if configured
-        const textColor = getRowTextColor(rowIndex, rowTextColors);
+        // Apply row colors using shared helper
+        const textColor = applyChallengeRowColors(
+            challengeElement,
+            rowIndex,
+            rowColors,
+            rowTextColors
+        );
 
         // Create checkbox element (new challenges are not completed by default)
         const checkbox = createChallengeCheckbox(false);
 
-        // Apply checkbox colors to match text color if configured
-        if (textColor) {
-            checkbox.style.setProperty(
-                "--challenge-checkbox-border-color",
-                textColor
-            );
-            checkbox.style.setProperty(
-                "--challenge-checkbox-checked-border-color",
-                textColor
-            );
-            checkbox.style.setProperty(
-                "--challenge-checkbox-checkmark-color",
-                textColor
-            );
-        }
+        // Apply checkbox styling using shared helper
+        decorateChallengeCheckbox(checkbox, textColor);
 
         challengeElement.appendChild(checkbox);
 
         // Create text element for challenge title and description
         const textElement = createChallengeTextElement(challenge);
 
-        // Apply text color to the text element if configured
-        if (textColor) {
-            textElement.style.color = textColor;
-            // Also apply to child elements
-            const titleElement = textElement.querySelector(
-                ".challenge-title"
-            ) as HTMLElement;
-            const descriptionElement = textElement.querySelector(
-                ".challenge-description"
-            ) as HTMLElement;
-            const progressElement = textElement.querySelector(
-                ".challenge-amount"
-            ) as HTMLElement;
-            if (titleElement) titleElement.style.color = textColor;
-            if (descriptionElement) descriptionElement.style.color = textColor;
-            if (progressElement) progressElement.style.color = textColor;
-        }
+        // Apply text colors using shared helper
+        applyChallengeTextColors(textElement, textColor);
 
         challengeElement.appendChild(textElement);
 
@@ -908,4 +846,81 @@ function createChallengeCheckbox(isChecked: boolean = false): HTMLDivElement {
         checkbox.classList.add("checked");
     }
     return checkbox;
+}
+
+/**
+ * Apply row colors (background and text) to a challenge list item
+ * @param listItem - The challenge list item element
+ * @param rowIndex - The index of the row (0-based)
+ * @param rowColors - Array of background color values to cycle through
+ * @param rowTextColors - Array of text color values to cycle through
+ * @returns The text color string or null if no text colors configured
+ */
+function applyChallengeRowColors(
+    listItem: HTMLElement,
+    rowIndex: number,
+    rowColors: string[],
+    rowTextColors: string[]
+): string | null {
+    // Apply row background color if configured
+    const backgroundColor = getRowBackgroundColor(rowIndex, rowColors);
+    if (backgroundColor) {
+        listItem.style.backgroundColor = backgroundColor;
+    }
+
+    // Get row text color if configured
+    const textColor = getRowTextColor(rowIndex, rowTextColors);
+    return textColor;
+}
+
+/**
+ * Apply color styling to a challenge checkbox element
+ * @param checkbox - The checkbox element to style
+ * @param textColor - The text color to apply, or null if no color configured
+ */
+function decorateChallengeCheckbox(
+    checkbox: HTMLElement,
+    textColor: string | null
+): void {
+    if (textColor) {
+        checkbox.style.setProperty(
+            "--challenge-checkbox-border-color",
+            textColor
+        );
+        checkbox.style.setProperty(
+            "--challenge-checkbox-checked-border-color",
+            textColor
+        );
+        checkbox.style.setProperty(
+            "--challenge-checkbox-checkmark-color",
+            textColor
+        );
+    }
+}
+
+/**
+ * Apply text color styling to a challenge text element and its children
+ * @param textElement - The text element containing challenge content
+ * @param textColor - The text color to apply, or null if no color configured
+ */
+function applyChallengeTextColors(
+    textElement: HTMLElement,
+    textColor: string | null
+): void {
+    if (textColor) {
+        textElement.style.color = textColor;
+        // Also apply to child elements
+        const titleElement = textElement.querySelector(
+            ".challenge-title"
+        ) as HTMLElement;
+        const descriptionElement = textElement.querySelector(
+            ".challenge-description"
+        ) as HTMLElement;
+        const progressElement = textElement.querySelector(
+            ".challenge-amount"
+        ) as HTMLElement;
+        if (titleElement) titleElement.style.color = textColor;
+        if (descriptionElement) descriptionElement.style.color = textColor;
+        if (progressElement) progressElement.style.color = textColor;
+    }
 }
