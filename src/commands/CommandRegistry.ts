@@ -1,6 +1,10 @@
 import ChallengeList from "../classes/ChallengeList";
 import ConfigManager from "../classes/ConfigManager";
-import { CommandType, normalizeCommand } from "../types/CommandTypes";
+import {
+    CommandType,
+    normalizeCommand,
+    type CommandTypeValue,
+} from "../types/CommandTypes";
 import { AddCommand } from "./AddCommand";
 import { CheckCommand } from "./CheckCommand";
 import { ClearAllCommand } from "./ClearAllCommand";
@@ -19,6 +23,40 @@ import { ShowCommand } from "./ShowCommand";
 import { UndoneCommand } from "./UndoneCommand";
 
 /**
+ * Configuration interface for command registration
+ * Maps command types to their corresponding class constructors
+ */
+interface CommandConfig {
+    type: CommandTypeValue;
+    constructor: new (
+        challengeList: ChallengeList,
+        configManager: ConfigManager
+    ) => Command;
+}
+
+/**
+ * Command configuration array - data-driven command registration
+ * To add a new command: import the class and add an entry to this array
+ */
+const COMMAND_CONFIGURATIONS: CommandConfig[] = [
+    { type: CommandType.ADD, constructor: AddCommand },
+    { type: CommandType.EDIT, constructor: EditCommand },
+    { type: CommandType.DONE, constructor: DoneCommand },
+    { type: CommandType.UNDONE, constructor: UndoneCommand },
+    { type: CommandType.DELETE, constructor: DeleteCommand },
+    { type: CommandType.FAIL, constructor: FailCommand },
+    { type: CommandType.INCREMENT, constructor: IncrementCommand },
+    { type: CommandType.DECREMENT, constructor: DecrementCommand },
+    { type: CommandType.SET, constructor: SetCommand },
+    { type: CommandType.LIST, constructor: ListCommand },
+    { type: CommandType.SHOW, constructor: ShowCommand },
+    { type: CommandType.CHECK, constructor: CheckCommand },
+    { type: CommandType.HELP, constructor: HelpCommand },
+    { type: CommandType.CLEAR_ALL, constructor: ClearAllCommand },
+    { type: CommandType.CLEAR_DONE, constructor: ClearDoneCommand },
+];
+
+/**
  * Registry for managing command implementations
  * Provides centralized command routing and instantiation
  */
@@ -34,87 +72,17 @@ export class CommandRegistry {
     }
 
     /**
-     * Initialize all command implementations
+     * Initialize all command implementations using data-driven approach
+     * Commands are automatically instantiated and registered based on COMMAND_CONFIGURATIONS
      */
     private initializeCommands(): void {
-        // Create command instances
-        const addCommand = new AddCommand(
-            this.challengeList,
-            this.configManager
-        );
-        const editCommand = new EditCommand(
-            this.challengeList,
-            this.configManager
-        );
-        const doneCommand = new DoneCommand(
-            this.challengeList,
-            this.configManager
-        );
-        const undoneCommand = new UndoneCommand(
-            this.challengeList,
-            this.configManager
-        );
-        const deleteCommand = new DeleteCommand(
-            this.challengeList,
-            this.configManager
-        );
-        const failCommand = new FailCommand(
-            this.challengeList,
-            this.configManager
-        );
-        const incrementCommand = new IncrementCommand(
-            this.challengeList,
-            this.configManager
-        );
-        const decrementCommand = new DecrementCommand(
-            this.challengeList,
-            this.configManager
-        );
-        const setCommand = new SetCommand(
-            this.challengeList,
-            this.configManager
-        );
-        const listCommand = new ListCommand(
-            this.challengeList,
-            this.configManager
-        );
-        const showCommand = new ShowCommand(
-            this.challengeList,
-            this.configManager
-        );
-        const checkCommand = new CheckCommand(
-            this.challengeList,
-            this.configManager
-        );
-        const helpCommand = new HelpCommand(
-            this.challengeList,
-            this.configManager
-        );
-        const clearAllCommand = new ClearAllCommand(
-            this.challengeList,
-            this.configManager
-        );
-        const clearDoneCommand = new ClearDoneCommand(
-            this.challengeList,
-            this.configManager
-        );
-
-        // Register commands by their canonical types
-        this.commands.set(CommandType.ADD, addCommand);
-        this.commands.set(CommandType.EDIT, editCommand);
-        this.commands.set(CommandType.DONE, doneCommand);
-        this.commands.set(CommandType.UNDONE, undoneCommand);
-        this.commands.set(CommandType.DELETE, deleteCommand);
-        this.commands.set(CommandType.FAIL, failCommand);
-        this.commands.set(CommandType.INCREMENT, incrementCommand);
-        this.commands.set(CommandType.DECREMENT, decrementCommand);
-        this.commands.set(CommandType.SET, setCommand);
-        this.commands.set(CommandType.LIST, listCommand);
-        this.commands.set(CommandType.SHOW, showCommand);
-        this.commands.set(CommandType.CHECK, checkCommand);
-        this.commands.set(CommandType.HELP, helpCommand);
-        this.commands.set(CommandType.CLEAR_ALL, clearAllCommand);
-        this.commands.set(CommandType.CLEAR_DONE, clearDoneCommand);
+        COMMAND_CONFIGURATIONS.forEach((config) => {
+            const commandInstance = new config.constructor(
+                this.challengeList,
+                this.configManager
+            );
+            this.commands.set(config.type, commandInstance);
+        });
     }
 
     /**
