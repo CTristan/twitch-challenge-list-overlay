@@ -176,6 +176,12 @@ export default class App {
             // Create DocumentFragment for batch DOM operations to reduce reflows
             const fragment = document.createDocumentFragment();
 
+            // Cache color arrays outside the loop to avoid repeated ConfigManager calls
+            const rowColors =
+                this.#configManager.get("challengeRowColors") || [];
+            const rowTextColors =
+                this.#configManager.get("challengeRowTextColors") || [];
+
             this.challengeList
                 .getAllChallenges()
                 .forEach((challenge, index) => {
@@ -186,17 +192,14 @@ export default class App {
                     // Apply row background color if configured
                     const backgroundColor = getRowBackgroundColor(
                         index,
-                        this.#configManager.get("challengeRowColors") || []
+                        rowColors
                     );
                     if (backgroundColor) {
                         listItem.style.backgroundColor = backgroundColor;
                     }
 
                     // Apply row text color if configured
-                    const textColor = getRowTextColor(
-                        index,
-                        this.#configManager.get("challengeRowTextColors") || []
-                    );
+                    const textColor = getRowTextColor(index, rowTextColors);
 
                     // Create checkbox element
                     const checkbox = createChallengeCheckbox(
@@ -439,22 +442,21 @@ export default class App {
         challengeElement.classList.add("challenge");
         challengeElement.dataset["challengeId"] = `${challenge.id}`;
 
+        // Cache color arrays to avoid repeated ConfigManager calls
+        const rowColors = this.#configManager.get("challengeRowColors") || [];
+        const rowTextColors =
+            this.#configManager.get("challengeRowTextColors") || [];
+
         // Apply row background color if configured
         // Calculate the row index based on current challenge count (newly added challenge is at the end)
         const rowIndex = this.challengeList.challenges.length - 1;
-        const backgroundColor = getRowBackgroundColor(
-            rowIndex,
-            this.#configManager.get("challengeRowColors") || []
-        );
+        const backgroundColor = getRowBackgroundColor(rowIndex, rowColors);
         if (backgroundColor) {
             challengeElement.style.backgroundColor = backgroundColor;
         }
 
         // Apply row text color if configured
-        const textColor = getRowTextColor(
-            rowIndex,
-            this.#configManager.get("challengeRowTextColors") || []
-        );
+        const textColor = getRowTextColor(rowIndex, rowTextColors);
 
         // Create checkbox element (new challenges are not completed by default)
         const checkbox = createChallengeCheckbox(false);
