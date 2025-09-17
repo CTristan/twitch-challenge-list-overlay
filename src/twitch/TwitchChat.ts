@@ -125,6 +125,16 @@ export default class TwitchChat extends EventEmitter {
         // Auto-correct: Add "oauth:" prefix if missing
         const correctedToken = `oauth:${trimmedToken}`;
 
+        console.warn(
+            '[TwitchChat] OAuth token format auto-corrected: Added missing "oauth:" prefix'
+        );
+        console.warn(
+            `[TwitchChat] Original: "${trimmedToken.substring(
+                0,
+                10
+            )}..." → Corrected: "${correctedToken.substring(0, 16)}..."`
+        );
+
         return correctedToken;
     }
 

@@ -69,6 +69,14 @@ function createChallengeTextElement(challenge: Challenge): HTMLElement {
         textContainer.appendChild(descriptionElement);
     }
 
+    // Add progress if it's greater than 1
+    if (challenge.amount > 1) {
+        const progressElement = document.createElement("div");
+        progressElement.classList.add("challenge-amount");
+        progressElement.textContent = `Progress: ${challenge.progress}/${challenge.amount}`;
+        textContainer.appendChild(progressElement);
+    }
+
     return textContainer;
 }
 
@@ -211,9 +219,14 @@ export default class App {
                         const descriptionElement = textElement.querySelector(
                             ".challenge-description"
                         ) as HTMLElement;
+                        const progressElement = textElement.querySelector(
+                            ".challenge-amount"
+                        ) as HTMLElement;
                         if (titleElement) titleElement.style.color = textColor;
                         if (descriptionElement)
                             descriptionElement.style.color = textColor;
+                        if (progressElement)
+                            progressElement.style.color = textColor;
                     }
 
                     listItem.appendChild(textElement);
@@ -445,8 +458,12 @@ export default class App {
             const descriptionElement = textElement.querySelector(
                 ".challenge-description"
             ) as HTMLElement;
+            const progressElement = textElement.querySelector(
+                ".challenge-amount"
+            ) as HTMLElement;
             if (titleElement) titleElement.style.color = textColor;
             if (descriptionElement) descriptionElement.style.color = textColor;
+            if (progressElement) progressElement.style.color = textColor;
         }
 
         challengeElement.appendChild(textElement);
@@ -529,9 +546,14 @@ export default class App {
                     const descriptionElement = newTextElement.querySelector(
                         ".challenge-description"
                     ) as HTMLElement;
+                    const progressElement = newTextElement.querySelector(
+                        ".challenge-amount"
+                    ) as HTMLElement;
                     if (titleElement) titleElement.style.color = existingColor;
                     if (descriptionElement)
                         descriptionElement.style.color = existingColor;
+                    if (progressElement)
+                        progressElement.style.color = existingColor;
                 }
 
                 textElement.parentNode?.replaceChild(

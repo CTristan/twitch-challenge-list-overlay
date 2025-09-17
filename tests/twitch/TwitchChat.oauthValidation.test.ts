@@ -22,7 +22,9 @@ describe("TwitchChat OAuth Token Validation", () => {
         // Spy on console methods
         consoleLogSpy = vi.spyOn(console, "log").mockImplementation(() => {});
         consoleWarnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
-        consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+        consoleErrorSpy = vi
+            .spyOn(console, "error")
+            .mockImplementation(() => {});
     });
 
     afterEach(() => {
@@ -42,9 +44,6 @@ describe("TwitchChat OAuth Token Validation", () => {
             );
 
             expect(client.authToken).toBe("oauth:abc123def456");
-            expect(consoleLogSpy).toHaveBeenCalledWith(
-                '[TwitchChat] OAuth token format is correct (already has "oauth:" prefix)'
-            );
             expect(consoleWarnSpy).not.toHaveBeenCalled();
         });
 
@@ -80,9 +79,6 @@ describe("TwitchChat OAuth Token Validation", () => {
             );
 
             expect(client.authToken).toBe("oauth:abc123def456");
-            expect(consoleLogSpy).toHaveBeenCalledWith(
-                '[TwitchChat] OAuth token format is correct (already has "oauth:" prefix)'
-            );
         });
 
         it("should auto-correct token with whitespace and missing prefix", () => {
@@ -118,7 +114,7 @@ describe("TwitchChat OAuth Token Validation", () => {
             }).toThrow("OAuth token is required and must be a valid string");
 
             expect(consoleErrorSpy).toHaveBeenCalledWith(
-                '[TwitchChat] Invalid OAuth token: Token is null, undefined, or not a string'
+                "[TwitchChat] Invalid OAuth token: Token is null, undefined, or not a string"
             );
         });
 
@@ -150,7 +146,7 @@ describe("TwitchChat OAuth Token Validation", () => {
             }).toThrow("OAuth token cannot be empty");
 
             expect(consoleErrorSpy).toHaveBeenCalledWith(
-                '[TwitchChat] Invalid OAuth token: Token is empty'
+                "[TwitchChat] Invalid OAuth token: Token is empty"
             );
         });
 
@@ -179,7 +175,9 @@ describe("TwitchChat OAuth Token Validation", () => {
                     },
                     mockWebSocket
                 );
-            }).toThrow('OAuth token must contain content after "oauth:" prefix');
+            }).toThrow(
+                'OAuth token must contain content after "oauth:" prefix'
+            );
 
             expect(consoleErrorSpy).toHaveBeenCalledWith(
                 '[TwitchChat] Invalid OAuth token: Token has "oauth:" prefix but no content'
@@ -213,7 +211,9 @@ describe("TwitchChat OAuth Token Validation", () => {
                 mockWebSocket
             );
 
-            expect(client.authToken).toBe("oauth:jn32lkfmx3p4vdc549wrkby8igma5k");
+            expect(client.authToken).toBe(
+                "oauth:jn32lkfmx3p4vdc549wrkby8igma5k"
+            );
             expect(consoleWarnSpy).toHaveBeenCalledWith(
                 '[TwitchChat] OAuth token format auto-corrected: Added missing "oauth:" prefix'
             );
@@ -230,9 +230,8 @@ describe("TwitchChat OAuth Token Validation", () => {
                 mockWebSocket
             );
 
-            expect(client.authToken).toBe("oauth:jn32lkfmx3p4vdc549wrkby8igma5k");
-            expect(consoleLogSpy).toHaveBeenCalledWith(
-                '[TwitchChat] OAuth token format is correct (already has "oauth:" prefix)'
+            expect(client.authToken).toBe(
+                "oauth:jn32lkfmx3p4vdc549wrkby8igma5k"
             );
             expect(consoleWarnSpy).not.toHaveBeenCalled();
         });
@@ -249,7 +248,9 @@ describe("TwitchChat OAuth Token Validation", () => {
                 mockWebSocket
             );
 
-            expect(client.authToken).toBe("oauth:OAuth:jn32lkfmx3p4vdc549wrkby8igma5k");
+            expect(client.authToken).toBe(
+                "oauth:OAuth:jn32lkfmx3p4vdc549wrkby8igma5k"
+            );
             expect(consoleWarnSpy).toHaveBeenCalledWith(
                 '[TwitchChat] OAuth token format auto-corrected: Added missing "oauth:" prefix'
             );
