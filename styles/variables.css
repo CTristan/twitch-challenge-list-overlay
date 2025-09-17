@@ -41,8 +41,15 @@
   --challenge-done-text-decoration: line-through;
 
   /* Challenge Checkbox */
-  --challenge-checkbox-size: 2.5rem;
-  --challenge-checkbox-checkmark-size: 2.75rem;
+  --challenge-checkbox-size: calc(
+    (
+        var(--challenge-font-size, 2rem) * 1.2 +
+          var(--challenge-description-font-size, 1.7rem) * 2.2
+      ) * 2 / 3
+  );
+  --challenge-checkbox-checkmark-size: calc(
+    var(--challenge-checkbox-size) * 1.1
+  );
   --challenge-checkbox-margin-right: 1rem;
   --challenge-checkbox-border-width: 0.25rem;
   --challenge-checkbox-border-color: #ffffff;
