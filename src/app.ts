@@ -814,13 +814,20 @@ export default class App {
         const timerElements = document.querySelectorAll(".challenge-timer");
         let hasActiveTimers = false;
 
+        // Create a challenge lookup map for O(1) access instead of O(n) find operations
+        // This reduces overall complexity from O(n²) to O(n)
+        const challengeMap = new Map(
+            this.challengeList.challenges.map((challenge) => [
+                challenge.id,
+                challenge,
+            ])
+        );
+
         timerElements.forEach((element) => {
             const challengeId = element.getAttribute("data-challenge-id");
             if (!challengeId) return;
 
-            const challenge = this.challengeList.challenges.find(
-                (c) => c.id === challengeId
-            );
+            const challenge = challengeMap.get(challengeId);
             if (!challenge || !challenge.timer) return;
 
             if (challenge.timer.isActive) {
