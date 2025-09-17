@@ -56,6 +56,11 @@ export default class ChallengeList {
                     Challenge.fromSerializedData(serializedChallenge);
                 this.totalChallenges++;
 
+                // Count completed challenges during loading
+                if (challenge.isComplete()) {
+                    this.challengesCompleted++;
+                }
+
                 challengeList.push(challenge);
             });
         } else {

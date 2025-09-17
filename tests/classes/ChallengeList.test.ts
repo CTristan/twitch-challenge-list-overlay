@@ -44,6 +44,57 @@ describe("ChallengeList", () => {
             );
             expect(challenge.completionStatus).toEqual(false);
         });
+
+        it("should correctly restore completed challenge counts from localStorage", () => {
+            // Set up localStorage with mixed completed/incomplete challenges
+            localStorage.setItem(
+                "challengeList",
+                JSON.stringify([
+                    {
+                        title: "Challenge 1",
+                        description: "Completed challenge",
+                        amount: 1,
+                        progress: 1,
+                        completionStatus: true,
+                        failureStatus: false,
+                        createdAt: Date.now(),
+                    },
+                    {
+                        title: "Challenge 2",
+                        description: "Incomplete challenge",
+                        amount: 1,
+                        progress: 0,
+                        completionStatus: false,
+                        failureStatus: false,
+                        createdAt: Date.now(),
+                    },
+                    {
+                        title: "Challenge 3",
+                        description: "Another completed challenge",
+                        amount: 1,
+                        progress: 1,
+                        completionStatus: true,
+                        failureStatus: false,
+                        createdAt: Date.now(),
+                    },
+                ])
+            );
+
+            // Create new ChallengeList instance to trigger loading from localStorage
+            challengeList = new ChallengeList();
+
+            // Verify challenges were loaded correctly
+            expect(challengeList.challenges).toHaveLength(3);
+            expect(challengeList.totalChallenges).toEqual(3);
+
+            // This should pass but currently fails due to the bug
+            expect(challengeList.challengesCompleted).toEqual(2);
+
+            // Verify individual challenge states
+            expect(challengeList.challenges[0]?.isComplete()).toBe(true);
+            expect(challengeList.challenges[1]?.isComplete()).toBe(false);
+            expect(challengeList.challenges[2]?.isComplete()).toBe(true);
+        });
     });
 
     describe("getAllChallenges", () => {
