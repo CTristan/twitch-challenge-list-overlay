@@ -390,6 +390,7 @@ export default class App {
     }
 
     clearListFromDOM() {
+        // Clear the entire containers and then re-render to ensure proper header structure
         const primaryContainer = document.querySelector(
             ".challenge-container.primary"
         );
@@ -402,6 +403,9 @@ export default class App {
         if (secondaryContainer) {
             secondaryContainer.innerHTML = "";
         }
+
+        // Re-render the challenge list to ensure headers are displayed even when empty
+        this.renderChallengeList();
     }
 
     /**
@@ -639,16 +643,7 @@ export default class App {
             `[data-challenge-id="${challengeId}"]`
         );
         for (const challengeElement of challengeElements) {
-            const parent = challengeElement.parentElement;
-            if (parent && parent.children.length === 1) {
-                // remove the challenge card if there is only one challenge
-                const grandParent = parent.parentElement;
-                if (grandParent) {
-                    grandParent.remove();
-                }
-            } else {
-                challengeElement.remove();
-            }
+            challengeElement.remove();
         }
         this.updateChallengeCount();
 
