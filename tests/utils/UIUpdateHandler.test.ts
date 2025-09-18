@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import Challenge from "../../src/classes/Challenge";
 import ChallengeList from "../../src/classes/ChallengeList";
+import ChallengeRenderer from "../../src/utils/ChallengeRenderer";
 import UIUpdateHandler from "../../src/utils/UIUpdateHandler";
 import { ensureTestIsolation } from "./chatHandlerTestUtils";
 
@@ -105,12 +106,11 @@ describe("UIUpdateHandler", () => {
         });
     });
 
-    describe("createChallengeTextElement", () => {
+    describe("ChallengeRenderer integration", () => {
         it("should create proper DOM structure for challenge with title only", () => {
             const challenge = new Challenge("Test Title");
-            const textElement = (
-                uiUpdateHandler as any
-            ).createChallengeTextElement(challenge);
+            const textElement =
+                ChallengeRenderer.createChallengeTextElement(challenge);
 
             expect(textElement.classList.contains("challenge-text")).toBe(true);
 
@@ -132,9 +132,8 @@ describe("UIUpdateHandler", () => {
             const challenge = new Challenge("Test Title", {
                 description: "Test Description",
             });
-            const textElement = (
-                uiUpdateHandler as any
-            ).createChallengeTextElement(challenge);
+            const textElement =
+                ChallengeRenderer.createChallengeTextElement(challenge);
 
             expect(textElement.classList.contains("challenge-text")).toBe(true);
 
@@ -158,9 +157,8 @@ describe("UIUpdateHandler", () => {
                 description: "Test Description",
                 amount: 5,
             });
-            const textElement = (
-                uiUpdateHandler as any
-            ).createChallengeTextElement(challenge);
+            const textElement =
+                ChallengeRenderer.createChallengeTextElement(challenge);
 
             expect(textElement.classList.contains("challenge-text")).toBe(true);
 

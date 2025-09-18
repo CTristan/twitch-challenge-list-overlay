@@ -3,6 +3,7 @@ import Challenge from "./classes/Challenge";
 import ChallengeList from "./classes/ChallengeList";
 import ConfigManager from "./classes/ConfigManager";
 import { loadStyles } from "./styleLoader";
+import ChallengeRenderer from "./utils/ChallengeRenderer";
 import CommandHandler from "./utils/CommandHandler";
 import TimerDisplayUtils from "./utils/TimerDisplayUtils";
 import UIUpdateHandler from "./utils/UIUpdateHandler";
@@ -42,53 +43,6 @@ function getRowBackgroundColor(
  */
 function getRowTextColor(rowIndex: number, colors: string[]): string | null {
     return getCyclicArrayValue(rowIndex, colors);
-}
-
-/**
- * Create DOM structure for challenge text with title and description on separate lines
- * @param challenge - The challenge object
- * @returns DOM element containing the formatted challenge text
- */
-function createChallengeTextElement(challenge: Challenge): HTMLElement {
-    const textContainer = document.createElement("div");
-    textContainer.classList.add("challenge-text");
-
-    // Create title element
-    const titleElement = document.createElement("div");
-    titleElement.classList.add("challenge-title");
-    titleElement.textContent = challenge.title;
-    textContainer.appendChild(titleElement);
-
-    // Add description if it's different from title and not empty
-    if (
-        challenge.title !== challenge.description &&
-        challenge.description &&
-        challenge.description.trim() !== ""
-    ) {
-        const descriptionElement = document.createElement("div");
-        descriptionElement.classList.add("challenge-description");
-        descriptionElement.textContent = challenge.description;
-        textContainer.appendChild(descriptionElement);
-    }
-
-    // Add progress if it's greater than 1
-    if (challenge.amount > 1) {
-        const progressElement = document.createElement("div");
-        progressElement.classList.add("challenge-amount");
-        progressElement.textContent = `Progress: ${challenge.progress}/${challenge.amount}`;
-        textContainer.appendChild(progressElement);
-    }
-
-    // Add timer display if timer exists and is active
-    if (challenge.timer && challenge.timer.isActive) {
-        const timerElement = TimerDisplayUtils.createTimerElement(
-            challenge.timer,
-            challenge.id
-        );
-        textContainer.appendChild(timerElement);
-    }
-
-    return textContainer;
 }
 
 /**
@@ -200,7 +154,7 @@ export default class App {
                     );
 
                     // Create checkbox element
-                    const checkbox = createChallengeCheckbox(
+                    const checkbox = ChallengeRenderer.createChallengeCheckbox(
                         challenge.isComplete()
                     );
 
@@ -210,12 +164,23 @@ export default class App {
                     listItem.appendChild(checkbox);
 
                     // Create text element for challenge title and description
-                    const textElement = createChallengeTextElement(challenge);
+                    const textElement =
+                        ChallengeRenderer.createChallengeTextElement(challenge);
 
                     // Apply text colors using shared helper
                     applyChallengeTextColors(textElement, textColor);
 
                     listItem.appendChild(textElement);
+
+                    // Add timer display if timer exists and is active (as sibling to text)
+                    if (challenge.timer && challenge.timer.isActive) {
+                        const timerElement =
+                            TimerDisplayUtils.createTimerElement(
+                                challenge.timer,
+                                challenge.id
+                            );
+                        listItem.appendChild(timerElement);
+                    }
 
                     if (challenge.isComplete()) {
                         listItem.classList.add("done");
@@ -392,7 +357,7 @@ export default class App {
         );
 
         // Create checkbox element (new challenges are not completed by default)
-        const checkbox = createChallengeCheckbox(false);
+        const checkbox = ChallengeRenderer.createChallengeCheckbox(false);
 
         // Apply checkbox styling using shared helper
         decorateChallengeCheckbox(checkbox, textColor);
@@ -400,12 +365,22 @@ export default class App {
         challengeElement.appendChild(checkbox);
 
         // Create text element for challenge title and description
-        const textElement = createChallengeTextElement(challenge);
+        const textElement =
+            ChallengeRenderer.createChallengeTextElement(challenge);
 
         // Apply text colors using shared helper
         applyChallengeTextColors(textElement, textColor);
 
         challengeElement.appendChild(textElement);
+
+        // Add timer display if timer exists and is active (as sibling to text)
+        if (challenge.timer && challenge.timer.isActive) {
+            const timerElement = TimerDisplayUtils.createTimerElement(
+                challenge.timer,
+                challenge.id
+            );
+            challengeElement.appendChild(timerElement);
+        }
 
         // Clone the fully-styled challenge element for the secondary container
         // cloneNode(true) creates a deep copy with all attributes, styles, and child elements
@@ -452,7 +427,8 @@ export default class App {
             ) as HTMLElement;
             if (textElement) {
                 // Replace the entire text element with new structure
-                const newTextElement = createChallengeTextElement(challenge);
+                const newTextElement =
+                    ChallengeRenderer.createChallengeTextElement(challenge);
 
                 // Preserve any existing color styling
                 const existingColor = textElement.style.color;
@@ -478,6 +454,22 @@ export default class App {
                     newTextElement,
                     textElement
                 );
+
+                // Handle timer display - remove existing timer and add new one if needed
+                const existingTimer =
+                    challengeElement.querySelector(".challenge-timer");
+                if (existingTimer) {
+                    existingTimer.remove();
+                }
+
+                // Add timer display if timer exists and is active (as sibling to text)
+                if (challenge.timer && challenge.timer.isActive) {
+                    const timerElement = TimerDisplayUtils.createTimerElement(
+                        challenge.timer,
+                        challenge.id
+                    );
+                    challengeElement.appendChild(timerElement);
+                }
             }
         }
 
@@ -740,20 +732,6 @@ function createChallengeCard(
     list.classList.add("challenges");
     cardEl.appendChild(list);
     return cardEl;
-}
-
-/**
- * Create a checkbox element for a challenge
- * @param {boolean} isChecked - Whether the checkbox should be checked
- * @returns {HTMLDivElement} The checkbox element
- */
-function createChallengeCheckbox(isChecked: boolean = false): HTMLDivElement {
-    const checkbox = document.createElement("div");
-    checkbox.classList.add("challenge-checkbox");
-    if (isChecked) {
-        checkbox.classList.add("checked");
-    }
-    return checkbox;
 }
 
 /**

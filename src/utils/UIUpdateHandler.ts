@@ -1,6 +1,7 @@
 import { animateScroll } from "../animations/animateScroll";
 import Challenge from "../classes/Challenge";
 import ChallengeList from "../classes/ChallengeList";
+import ChallengeRenderer from "./ChallengeRenderer";
 import Timer from "./Timer";
 import TimerDisplayUtils from "./TimerDisplayUtils";
 
@@ -260,7 +261,7 @@ export default class UIUpdateHandler {
             if (textElement) {
                 // Replace the entire text element with new structure
                 const newTextElement =
-                    this.createChallengeTextElement(challenge);
+                    ChallengeRenderer.createChallengeTextElement(challenge);
 
                 // Preserve any existing color styling
                 const existingColor = textElement.style.color;
@@ -424,15 +425,15 @@ export default class UIUpdateHandler {
         }`;
         challengeElement.dataset["challengeId"] = challenge.id;
 
-        // Create checkbox for admin mode
-        const checkbox = document.createElement("div");
-        checkbox.className = `challenge-checkbox ${
-            challenge.isComplete() ? "checked" : ""
-        }`;
+        // Create checkbox for admin mode using shared renderer
+        const checkbox = ChallengeRenderer.createChallengeCheckbox(
+            challenge.isComplete()
+        );
         checkbox.addEventListener("click", this.handleCheckboxClick);
 
-        // Create challenge text using the same structure as the original App
-        const textElement = this.createChallengeTextElement(challenge);
+        // Create challenge text using shared renderer
+        const textElement =
+            ChallengeRenderer.createChallengeTextElement(challenge);
 
         challengeElement.appendChild(checkbox);
         challengeElement.appendChild(textElement);
@@ -447,44 +448,6 @@ export default class UIUpdateHandler {
         }
 
         return challengeElement;
-    }
-
-    /**
-     * Create DOM structure for challenge text with title and description on separate lines
-     * @param challenge - The challenge object
-     * @returns DOM element containing the formatted challenge text
-     */
-    private createChallengeTextElement(challenge: Challenge): HTMLElement {
-        const textContainer = document.createElement("div");
-        textContainer.classList.add("challenge-text");
-
-        // Create title element
-        const titleElement = document.createElement("div");
-        titleElement.classList.add("challenge-title");
-        titleElement.textContent = challenge.title;
-        textContainer.appendChild(titleElement);
-
-        // Add description if it's different from title and not empty
-        if (
-            challenge.title !== challenge.description &&
-            challenge.description &&
-            challenge.description.trim() !== ""
-        ) {
-            const descriptionElement = document.createElement("div");
-            descriptionElement.classList.add("challenge-description");
-            descriptionElement.textContent = challenge.description;
-            textContainer.appendChild(descriptionElement);
-        }
-
-        // Add progress if it's greater than 1
-        if (challenge.amount > 1) {
-            const progressElement = document.createElement("div");
-            progressElement.classList.add("challenge-amount");
-            progressElement.textContent = `Progress: ${challenge.progress}/${challenge.amount}`;
-            textContainer.appendChild(progressElement);
-        }
-
-        return textContainer;
     }
 
     /**
