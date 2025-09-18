@@ -290,6 +290,21 @@ export default class ChallengeList {
     }
 
     /**
+     * Recalculate counters and persist to storage
+     * This method should be used whenever challenge completion status is changed
+     * outside of the standard ChallengeList methods (e.g., admin checkbox toggles)
+     */
+    updateChallenge(): void {
+        // Recalculate challengesCompleted by counting all completed challenges
+        this.challengesCompleted = this.challenges.filter((c) =>
+            c.isComplete()
+        ).length;
+
+        // Persist changes to localStorage
+        this.#commitToLocalStorage();
+    }
+
+    /**
      * Adjust the challenge count when challenges are removed
      * @param removedChallenges - The challenges that were removed
      */

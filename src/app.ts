@@ -108,6 +108,9 @@ export default class App {
     #uiUpdateHandler: UIUpdateHandler;
     #timerUpdateInterval: number | null = null;
 
+    // Track challenges being processed
+    private processingCheckboxClicks = new Set<string>();
+
     /**
      * @constructor
      * @param {string} storeName - The store name
@@ -151,7 +154,7 @@ export default class App {
         const cardHeaders = document.querySelectorAll(".card .username");
         cardHeaders.forEach((header) => {
             if (header instanceof HTMLElement) {
-                header.innerText = `Challenges ${completedCount}/${totalCount}`;
+                header.textContent = `Challenges ${completedCount}/${totalCount}`;
             }
         });
     }
@@ -564,6 +567,9 @@ export default class App {
      * @returns {void}
      */
     private handleCheckboxClick = (event: Event): void => {
+        // Prevent event from bubbling to avoid duplicate processing
+        event.stopPropagation();
+
         // Only handle clicks in admin mode
         if (window.location.hash !== "#admin") {
             return;
@@ -583,12 +589,21 @@ export default class App {
             return;
         }
 
+        // Prevent duplicate processing of the same challenge
+        if (this.processingCheckboxClicks.has(challengeId)) {
+            return;
+        }
+
+        // Mark this challenge as being processed
+        this.processingCheckboxClicks.add(challengeId);
+
         // Find the challenge object
         const challenge = this.challengeList.challenges.find(
             (c) => c.id === challengeId
         );
         if (!challenge) {
             console.error(`Challenge with ID ${challengeId} not found`);
+            this.processingCheckboxClicks.delete(challengeId); // Clean up
             return;
         }
 
@@ -608,9 +623,6 @@ export default class App {
                 ) {
                     challenge.timer.start();
                 }
-
-                // Update DOM to reflect active status
-                this.revertChallengeFromDOM(challengeId);
             } else {
                 // Mark as complete
                 challenge.setCompletionStatus(true);
@@ -619,15 +631,22 @@ export default class App {
                 if (challenge.timer && challenge.timer.isActive) {
                     challenge.timer.stop();
                 }
-
-                // Update DOM to reflect completed status
-                this.completeChallengeFromDOM(challengeId);
             }
 
-            // Changes are automatically saved to localStorage via the challenge list
-            this.challengeList.challenges = [...this.challengeList.challenges]; // Trigger save
+            // Update the challenge and recalculate counters, then persist to storage
+            this.challengeList.updateChallenge();
+
+            // Update DOM to reflect the new status (after counters are updated)
+            if (wasComplete) {
+                this.revertChallengeFromDOM(challengeId);
+            } else {
+                this.completeChallengeFromDOM(challengeId);
+            }
         } catch (error) {
             console.error("Error toggling challenge completion:", error);
+        } finally {
+            // Clean up processing flag
+            this.processingCheckboxClicks.delete(challengeId);
         }
     };
 

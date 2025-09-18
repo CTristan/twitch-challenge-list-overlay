@@ -572,8 +572,8 @@ export default class UIUpdateHandler {
                 this.completeChallengeFromDOM(challengeId);
             }
 
-            // Save changes
-            this.challengeList.challenges = [...this.challengeList.challenges];
+            // Update the challenge and recalculate counters, then persist to storage
+            this.challengeList.updateChallenge();
         } catch (error) {
             console.error("Error toggling challenge completion:", error);
         }
