@@ -140,4 +140,89 @@ describe("UIUpdateHandler Performance", () => {
             vi.useRealTimers();
         });
     });
+
+    describe("Timer Interval Optimization", () => {
+        it("should not create interval when no active timers exist", () => {
+            // Create challenge without timer
+            const challenge = new Challenge("No Timer Challenge");
+            challengeList.addChallengeObjects(challenge);
+
+            // Spy on setInterval to verify it's not called
+            const setIntervalSpy = vi.spyOn(window, "setInterval");
+
+            // Call startTimerUpdates
+            uiUpdateHandler.startTimerUpdates();
+
+            // Verify setInterval was not called since no active timers
+            expect(setIntervalSpy).not.toHaveBeenCalled();
+
+            setIntervalSpy.mockRestore();
+        });
+
+        it("should create interval only when active timers exist", () => {
+            // Create challenge with active timer
+            const challenge = new Challenge("Timer Challenge", {
+                timer: "30s",
+            });
+            challenge.startTimer();
+            challengeList.addChallengeObjects(challenge);
+
+            // Spy on setInterval to verify it's called
+            const setIntervalSpy = vi.spyOn(window, "setInterval");
+
+            // Call startTimerUpdates
+            uiUpdateHandler.startTimerUpdates();
+
+            // Verify setInterval was called since active timer exists
+            expect(setIntervalSpy).toHaveBeenCalledWith(
+                expect.any(Function),
+                1000
+            );
+
+            setIntervalSpy.mockRestore();
+        });
+
+        it("should stop interval when no active timers remain", () => {
+            // Create challenge with timer
+            const challenge = new Challenge("Timer Challenge", {
+                timer: "30s",
+            });
+            challenge.startTimer();
+            challengeList.addChallengeObjects(challenge);
+
+            // Start timer updates
+            uiUpdateHandler.startTimerUpdates();
+
+            // Verify interval is running
+            expect(uiUpdateHandler["timerUpdateInterval"]).not.toBeNull();
+
+            // Stop the timer (making it inactive)
+            challenge.stopTimer();
+
+            // Call updateTimerDisplays which should detect no active timers and stop interval
+            uiUpdateHandler.updateTimerDisplays();
+
+            // Verify interval was stopped
+            expect(uiUpdateHandler["timerUpdateInterval"]).toBeNull();
+        });
+
+        it("should restart interval when new active timer is added", () => {
+            // Start with no timers
+            uiUpdateHandler.startTimerUpdates();
+            expect(uiUpdateHandler["timerUpdateInterval"]).toBeNull();
+
+            // Add challenge with active timer
+            const challenge = new Challenge("New Timer Challenge", {
+                timer: "60s",
+            });
+            challenge.startTimer();
+            challengeList.addChallengeObjects(challenge);
+
+            // Call startTimerUpdates again (simulating what happens when new timer is added)
+            uiUpdateHandler.startTimerUpdates();
+
+            // Verify interval is now running
+            expect(uiUpdateHandler["timerUpdateInterval"]).not.toBeNull();
+        });
+    });
 });

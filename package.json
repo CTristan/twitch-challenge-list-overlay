@@ -13,7 +13,7 @@
     "build": "vite build",
     "build:watch": "vite build --watch",
     "test": "vitest run",
-    "test:coverage": "vitest --coverage",
+    "test:coverage": "vitest run --coverage",
     "release": "standard-version",
     "release:minor": "standard-version --release-as minor",
     "type-check": "tsc --noEmit",

@@ -603,10 +603,17 @@ export default class UIUpdateHandler {
             clearInterval(this.timerUpdateInterval);
         }
 
-        // Start new interval for timer updates
-        this.timerUpdateInterval = window.setInterval(() => {
-            this.updateTimerDisplays();
-        }, 1000);
+        // Check if there are any active timers before creating interval
+        const hasActiveTimers = this.challengeList.challenges.some(
+            (challenge) => challenge.timer && challenge.timer.isActive
+        );
+
+        // Only start interval if there are active timers
+        if (hasActiveTimers) {
+            this.timerUpdateInterval = window.setInterval(() => {
+                this.updateTimerDisplays();
+            }, 1000);
+        }
     }
 
     /**
@@ -614,6 +621,7 @@ export default class UIUpdateHandler {
      */
     updateTimerDisplays(): void {
         const timerElements = document.querySelectorAll(".challenge-timer");
+        let hasActiveTimers = false;
 
         // Create a challenge lookup map for quick access
         const challengeMap = new Map(
@@ -635,11 +643,23 @@ export default class UIUpdateHandler {
             const challenge = challengeMap.get(challengeId);
             if (!challenge || !challenge.timer) return;
 
-            this.updateTimerElement(
-                timerElement as HTMLElement,
-                challenge.timer
-            );
+            // Check if this timer is active
+            if (challenge.timer.isActive) {
+                hasActiveTimers = true;
+                this.updateTimerElement(
+                    timerElement as HTMLElement,
+                    challenge.timer
+                );
+            } else {
+                // Timer is no longer active, remove the element
+                timerElement.remove();
+            }
         });
+
+        // Stop updates if no active timers remain
+        if (!hasActiveTimers) {
+            this.stopTimerUpdates();
+        }
     }
 
     /**
