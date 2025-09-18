@@ -11,38 +11,15 @@ import UIUpdateHandler from "./utils/UIUpdateHandler";
 // Commands and responses are loaded from ConfigManager
 
 /**
- * Get a value from an array by cycling through it based on an index
- * @param index - The index to use for cycling (0-based)
- * @param values - Array of values to cycle through
- * @returns The value at the cycled index or null if no values configured
+ * Get a value from an array by rotating through it based on an index
+ * @param index - The index to use for rotating (0-based)
+ * @param values - Array of values to rotate through
+ * @returns The value at the rotated index or null if no values configured
  */
-function getCyclicArrayValue<T>(index: number, values: T[]): T | null {
+function getRotatingArrayValue<T>(index: number, values: T[]): T | null {
     if (!values || values.length === 0) return null;
     const value = values[index % values.length];
     return value !== undefined ? value : null;
-}
-
-/**
- * Get the background color for a challenge row based on its index and configured colors
- * @param rowIndex - The index of the row (0-based)
- * @param colors - Array of color values to cycle through
- * @returns The background color string or null if no colors configured
- */
-function getRowBackgroundColor(
-    rowIndex: number,
-    colors: string[]
-): string | null {
-    return getCyclicArrayValue(rowIndex, colors);
-}
-
-/**
- * Get the text color for a challenge row based on its index and configured colors
- * @param rowIndex - The index of the row (0-based)
- * @param colors - Array of color values to cycle through
- * @returns The text color string or null if no colors configured
- */
-function getRowTextColor(rowIndex: number, colors: string[]): string | null {
-    return getCyclicArrayValue(rowIndex, colors);
 }
 
 /**
@@ -738,8 +715,8 @@ function createChallengeCard(
  * Apply row colors (background and text) to a challenge list item
  * @param listItem - The challenge list item element
  * @param rowIndex - The index of the row (0-based)
- * @param rowColors - Array of background color values to cycle through
- * @param rowTextColors - Array of text color values to cycle through
+ * @param rowColors - Array of background color values to rotate through
+ * @param rowTextColors - Array of text color values to rotate through
  * @returns The text color string or null if no text colors configured
  */
 function applyChallengeRowColors(
@@ -749,13 +726,13 @@ function applyChallengeRowColors(
     rowTextColors: string[]
 ): string | null {
     // Apply row background color if configured
-    const backgroundColor = getRowBackgroundColor(rowIndex, rowColors);
+    const backgroundColor = getRotatingArrayValue(rowIndex, rowColors);
     if (backgroundColor) {
         listItem.style.backgroundColor = backgroundColor;
     }
 
     // Get row text color if configured
-    const textColor = getRowTextColor(rowIndex, rowTextColors);
+    const textColor = getRotatingArrayValue(rowIndex, rowTextColors);
     return textColor;
 }
 

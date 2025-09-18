@@ -441,7 +441,7 @@ export default class AdminPanel {
             return defaultConfig;
         }
 
-        // Multiple colors cycle through the tiers
+        // Multiple colors rotate through the tiers
         const tiers = ["primary", "secondary", "tertiary"] as const;
 
         backgroundColors.forEach((backgroundColor, index) => {

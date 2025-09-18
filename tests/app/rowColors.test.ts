@@ -90,7 +90,7 @@ describe("Challenge Row Colors", () => {
     });
 
     describe("Three colors configured", () => {
-        it("should cycle through three colors", () => {
+        it("should rotate through three colors", () => {
             configManager.set("challengeRowColors", [
                 "#ff0000",
                 "#00ff00",
@@ -418,7 +418,7 @@ describe("Challenge Checkbox Color Inheritance", () => {
                 ".challenge-checkbox"
             );
 
-            // Third challenge should have red color (cycling back to first color)
+            // Third challenge should have red color (rotating back to first color)
             const thirdCheckbox = checkboxElements[2] as HTMLElement;
             expect(
                 thirdCheckbox.style.getPropertyValue(
