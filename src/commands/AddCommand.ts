@@ -29,7 +29,7 @@ export class AddCommand extends BaseCommand {
                 !parsed.rawParameters &&
                 Object.keys(parsed.parameters).length === 0
             ) {
-                return this.createErrorResponse(this.getUsageMessage());
+                return this.createSuccessResponse(this.getUsageMessage(), "help");
             }
 
             // Extract and validate title

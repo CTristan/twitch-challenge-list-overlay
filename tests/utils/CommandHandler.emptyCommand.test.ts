@@ -141,7 +141,7 @@ describe("CommandHandler - Empty Command Behavior", () => {
         it("should show usage message when moderator types '!ch add' with no arguments", () => {
             const response = executeCommand(app, modUser, "ch", "add");
 
-            expect(response.error).toBe(true);
+            expect(response.error).toBe(false);
             expect(response.message).toContain("Usage: !ch add [parameters]");
             expect(response.message).toContain("Two syntax options:");
             expect(response.message).toContain(
@@ -159,7 +159,7 @@ describe("CommandHandler - Empty Command Behavior", () => {
         it("should show usage message when broadcaster types '!ch add' with no arguments", () => {
             const response = executeCommand(app, adminUser, "ch", "add");
 
-            expect(response.error).toBe(true);
+            expect(response.error).toBe(false);
             expect(response.message).toContain("Usage: !ch add [parameters]");
             expect(response.message).toContain("Available parameters:");
         });
@@ -167,7 +167,7 @@ describe("CommandHandler - Empty Command Behavior", () => {
         it("should show usage message when '!ch add' has only whitespace", () => {
             const response = executeCommand(app, modUser, "ch", "add   ");
 
-            expect(response.error).toBe(true);
+            expect(response.error).toBe(false);
             expect(response.message).toContain("Usage: !ch add [parameters]");
         });
 
