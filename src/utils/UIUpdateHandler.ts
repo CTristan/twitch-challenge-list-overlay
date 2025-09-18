@@ -2,6 +2,7 @@ import { animateScroll } from "../animations/animateScroll";
 import Challenge from "../classes/Challenge";
 import ChallengeList from "../classes/ChallengeList";
 import Timer from "./Timer";
+import TimerDisplayUtils from "./TimerDisplayUtils";
 
 /**
  * @class UIUpdateHandler
@@ -300,7 +301,8 @@ export default class UIUpdateHandler {
             } else if (challenge.timer && !timerElement) {
                 // Add timer element if challenge now has timer
                 const newTimerElement = this.createTimerElement(
-                    challenge.timer
+                    challenge.timer,
+                    challenge.id
                 );
                 challengeElement.appendChild(newTimerElement);
             }
@@ -437,7 +439,10 @@ export default class UIUpdateHandler {
 
         // Add timer element if challenge has timer
         if (challenge.timer) {
-            const timerElement = this.createTimerElement(challenge.timer);
+            const timerElement = this.createTimerElement(
+                challenge.timer,
+                challenge.id
+            );
             challengeElement.appendChild(timerElement);
         }
 
@@ -483,43 +488,22 @@ export default class UIUpdateHandler {
     }
 
     /**
-     * Create a timer DOM element
+     * Create a timer DOM element using shared utilities
      * @param timer - Timer instance
+     * @param challengeId - Challenge ID for element identification
      * @returns HTMLElement representing the timer
      */
-    private createTimerElement(timer: Timer): HTMLElement {
-        const timerElement = document.createElement("div");
-        timerElement.className = "challenge-timer";
-        this.updateTimerElement(timerElement, timer);
-        return timerElement;
+    private createTimerElement(timer: Timer, challengeId: string): HTMLElement {
+        return TimerDisplayUtils.createTimerElement(timer, challengeId);
     }
 
     /**
-     * Update a timer DOM element
+     * Update a timer DOM element using shared utilities
      * @param timerElement - Timer DOM element to update
      * @param timer - Timer instance
      */
     private updateTimerElement(timerElement: HTMLElement, timer: Timer): void {
-        const timeLeft = timer.getRemainingTime();
-        const formattedTime = timer.getFormattedTime(timeLeft);
-
-        // Determine timer state for styling
-        let timerClass = "challenge-timer";
-        let emoji = "⏱️";
-
-        if (timeLeft <= 0) {
-            timerClass += " expired";
-            emoji = "⏰";
-        } else if (timeLeft <= 30) {
-            timerClass += " critical";
-            emoji = "🔴";
-        } else if (timeLeft <= 120) {
-            timerClass += " warning";
-            emoji = "🟡";
-        }
-
-        timerElement.className = timerClass;
-        timerElement.textContent = `Timer: ${formattedTime} ${emoji}`;
+        TimerDisplayUtils.updateTimerElement(timerElement, timer);
     }
 
     /**
@@ -599,9 +583,9 @@ export default class UIUpdateHandler {
             clearInterval(this.timerUpdateInterval);
         }
 
-        // Check if there are any active timers before creating interval
-        const hasActiveTimers = this.challengeList.challenges.some(
-            (challenge) => challenge.timer && challenge.timer.isActive
+        // Check if there are any active timers using shared utility
+        const hasActiveTimers = TimerDisplayUtils.hasActiveTimers(
+            this.challengeList
         );
 
         // Only start interval if there are active timers
@@ -613,44 +597,13 @@ export default class UIUpdateHandler {
     }
 
     /**
-     * Update all timer displays
+     * Update all timer displays using shared utilities
      */
     updateTimerDisplays(): void {
-        const timerElements = document.querySelectorAll(".challenge-timer");
-        let hasActiveTimers = false;
-
-        // Create a challenge lookup map for quick access
-        const challengeMap = new Map(
-            this.challengeList.challenges.map((challenge) => [
-                challenge.id,
-                challenge,
-            ])
+        // Use shared utility for consistent timer display updates
+        const hasActiveTimers = TimerDisplayUtils.updateAllTimerDisplays(
+            this.challengeList
         );
-
-        timerElements.forEach((timerElement) => {
-            const challengeElement = timerElement.closest(
-                ".challenge"
-            ) as HTMLElement;
-            if (!challengeElement) return;
-
-            const challengeId = challengeElement.dataset["challengeId"];
-            if (!challengeId) return;
-
-            const challenge = challengeMap.get(challengeId);
-            if (!challenge || !challenge.timer) return;
-
-            // Check if this timer is active
-            if (challenge.timer.isActive) {
-                hasActiveTimers = true;
-                this.updateTimerElement(
-                    timerElement as HTMLElement,
-                    challenge.timer
-                );
-            } else {
-                // Timer is no longer active, remove the element
-                timerElement.remove();
-            }
-        });
 
         // Stop updates if no active timers remain
         if (!hasActiveTimers) {

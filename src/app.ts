@@ -4,6 +4,7 @@ import ChallengeList from "./classes/ChallengeList";
 import ConfigManager from "./classes/ConfigManager";
 import { loadStyles } from "./styleLoader";
 import CommandHandler from "./utils/CommandHandler";
+import TimerDisplayUtils from "./utils/TimerDisplayUtils";
 import UIUpdateHandler from "./utils/UIUpdateHandler";
 
 // Commands and responses are loaded from ConfigManager
@@ -80,15 +81,10 @@ function createChallengeTextElement(challenge: Challenge): HTMLElement {
 
     // Add timer display if timer exists and is active
     if (challenge.timer && challenge.timer.isActive) {
-        const timerElement = document.createElement("div");
-        timerElement.classList.add("challenge-timer");
-        timerElement.dataset["challengeId"] = challenge.id;
-
-        // Create timer content with time and status
-        const timeRemaining = challenge.timer.getFormattedTime();
-        const statusEmoji = challenge.timer.getStatusDisplay();
-        timerElement.textContent = `Timer: ${timeRemaining} ${statusEmoji}`;
-
+        const timerElement = TimerDisplayUtils.createTimerElement(
+            challenge.timer,
+            challenge.id
+        );
         textContainer.appendChild(timerElement);
     }
 
@@ -680,9 +676,9 @@ export default class App {
         // Stop any existing interval
         this.stopTimerUpdates();
 
-        // Check if there are any active timers
-        const hasActiveTimers = this.challengeList.challenges.some(
-            (challenge) => challenge.timer && challenge.timer.isActive
+        // Check if there are any active timers using shared utility
+        const hasActiveTimers = TimerDisplayUtils.hasActiveTimers(
+            this.challengeList
         );
 
         if (hasActiveTimers) {
@@ -703,56 +699,13 @@ export default class App {
     }
 
     /**
-     * Update all timer displays in the DOM
+     * Update all timer displays in the DOM using shared utilities
      */
     updateTimerDisplays(): void {
-        const timerElements = document.querySelectorAll(".challenge-timer");
-        let hasActiveTimers = false;
-
-        // Create a challenge lookup map for O(1) access instead of O(n) find operations
-        // This reduces overall complexity from O(n²) to O(n)
-        const challengeMap = new Map(
-            this.challengeList.challenges.map((challenge) => [
-                challenge.id,
-                challenge,
-            ])
+        // Use shared utility for consistent timer display updates
+        const hasActiveTimers = TimerDisplayUtils.updateAllTimerDisplays(
+            this.challengeList
         );
-
-        timerElements.forEach((element) => {
-            const challengeId = element.getAttribute("data-challenge-id");
-            if (!challengeId) return;
-
-            const challenge = challengeMap.get(challengeId);
-            if (!challenge || !challenge.timer) return;
-
-            if (challenge.timer.isActive) {
-                hasActiveTimers = true;
-
-                // Update timer display
-                const timeRemaining = challenge.timer.getFormattedTime();
-                const statusEmoji = challenge.timer.getStatusDisplay();
-                element.textContent = `Timer: ${timeRemaining} ${statusEmoji}`;
-
-                // Update CSS classes based on timer status
-                element.classList.remove("warning", "critical", "expired");
-
-                if (challenge.timer.isExpired()) {
-                    element.classList.add("expired");
-                    // Don't stop the timer immediately - let it show expired state
-                    // The timer will be stopped when the challenge is completed/failed
-                } else {
-                    const remaining = challenge.timer.getRemainingTime();
-                    if (remaining <= 30) {
-                        element.classList.add("critical");
-                    } else if (remaining <= 120) {
-                        element.classList.add("warning");
-                    }
-                }
-            } else {
-                // Timer is no longer active, remove the element
-                element.remove();
-            }
-        });
 
         // Stop updates if no active timers remain
         if (!hasActiveTimers) {
