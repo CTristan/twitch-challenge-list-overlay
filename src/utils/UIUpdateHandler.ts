@@ -15,6 +15,29 @@ export default class UIUpdateHandler {
     private timerUpdateInterval: number | null = null;
 
     /**
+     * Map of action strings to their corresponding handler functions
+     * This replaces the switch statement for better maintainability
+     */
+    private readonly actionHandlers: Record<
+        string,
+        (challengeIndices?: number[], challenges?: Challenge[]) => void
+    > = {
+        add: (challengeIndices, challenges) =>
+            this.handleAddUpdate(challengeIndices, challenges),
+        edit: (challengeIndices, challenges) =>
+            this.handleEditUpdate(challengeIndices, challenges),
+        complete: (challengeIndices, challenges) =>
+            this.handleCompleteUpdate(challengeIndices, challenges),
+        revert: (challengeIndices, challenges) =>
+            this.handleRevertUpdate(challengeIndices, challenges),
+        delete: (challengeIndices, challenges) =>
+            this.handleDeleteUpdate(challengeIndices, challenges),
+        clearAll: () => this.handleClearAllUpdate(),
+        clearDone: () => this.handleClearDoneUpdate(),
+        refresh: () => this.handleRefreshUpdate(),
+    };
+
+    /**
      * @constructor
      * @param challengeList - The challenge list instance
      */
@@ -40,31 +63,15 @@ export default class UIUpdateHandler {
             updateCount,
         } = response.uiUpdate;
 
-        switch (action) {
-            case "add":
-                this.handleAddUpdate(challengeIndices, challenges);
-                break;
-            case "edit":
-                this.handleEditUpdate(challengeIndices, challenges);
-                break;
-            case "complete":
-                this.handleCompleteUpdate(challengeIndices, challenges);
-                break;
-            case "revert":
-                this.handleRevertUpdate(challengeIndices, challenges);
-                break;
-            case "delete":
-                this.handleDeleteUpdate(challengeIndices, challenges);
-                break;
-            case "clearAll":
-                this.handleClearAllUpdate();
-                break;
-            case "clearDone":
-                this.handleClearDoneUpdate();
-                break;
-            case "refresh":
-                this.handleRefreshUpdate();
-                break;
+        // Use lookup map to find and execute the appropriate handler
+        const handler = this.actionHandlers[action];
+        if (handler) {
+            handler(challengeIndices, challenges);
+        } else {
+            // Graceful fallback for undefined actions
+            console.warn(
+                `UIUpdateHandler: Unknown action "${action}" - ignoring update`
+            );
         }
 
         // Handle optional updates
