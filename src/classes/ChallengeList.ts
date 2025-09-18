@@ -223,10 +223,11 @@ export default class ChallengeList {
         const validIndices = indexArray.filter((i) =>
             this.#validChallengeIndex(i)
         );
+        const validIndexSet = new Set(validIndices);
         const deletedChallenges: Challenge[] = [];
 
         this.challenges = this.challenges.filter((challenge, i) => {
-            if (validIndices.includes(i)) {
+            if (validIndexSet.has(i)) {
                 deletedChallenges.push(challenge);
                 return false;
             }
