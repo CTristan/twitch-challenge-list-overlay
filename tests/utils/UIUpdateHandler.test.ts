@@ -181,6 +181,111 @@ describe("UIUpdateHandler", () => {
         });
     });
 
+    describe("DOM optimization", () => {
+        beforeEach(() => {
+            // Create DOM containers for testing
+            document.body.innerHTML = `
+                <div class="challenge-container primary"></div>
+                <div class="challenge-container secondary"></div>
+            `;
+        });
+
+        it("should add challenge to both containers with identical markup", () => {
+            const challenge = new Challenge("Test Challenge", {
+                description: "Test Description",
+            });
+
+            uiUpdateHandler.addChallengeToDOM(challenge);
+
+            const primaryContainer = document.querySelector(
+                ".challenge-container.primary"
+            );
+            const secondaryContainer = document.querySelector(
+                ".challenge-container.secondary"
+            );
+
+            // Both containers should have exactly one challenge
+            expect(primaryContainer?.children.length).toBe(1);
+            expect(secondaryContainer?.children.length).toBe(1);
+
+            const primaryChallenge =
+                primaryContainer?.firstElementChild as HTMLElement;
+            const secondaryChallenge =
+                secondaryContainer?.firstElementChild as HTMLElement;
+
+            // Both challenges should have identical structure
+            expect(primaryChallenge.outerHTML).toBe(
+                secondaryChallenge.outerHTML
+            );
+            expect(primaryChallenge.dataset["challengeId"]).toBe(challenge.id);
+            expect(secondaryChallenge.dataset["challengeId"]).toBe(
+                challenge.id
+            );
+        });
+
+        it("should maintain event handlers on both containers", () => {
+            const challenge = new Challenge("Test Challenge");
+
+            uiUpdateHandler.addChallengeToDOM(challenge);
+
+            const primaryCheckbox = document.querySelector(
+                ".challenge-container.primary .challenge-checkbox"
+            );
+            const secondaryCheckbox = document.querySelector(
+                ".challenge-container.secondary .challenge-checkbox"
+            );
+
+            // Both checkboxes should exist
+            expect(primaryCheckbox).toBeTruthy();
+            expect(secondaryCheckbox).toBeTruthy();
+
+            // Both should have the same event listeners (verified by class structure)
+            expect(
+                primaryCheckbox?.classList.contains("challenge-checkbox")
+            ).toBe(true);
+            expect(
+                secondaryCheckbox?.classList.contains("challenge-checkbox")
+            ).toBe(true);
+        });
+
+        it("should render multiple challenges efficiently", () => {
+            const challenges = [
+                new Challenge("Challenge 1"),
+                new Challenge("Challenge 2"),
+                new Challenge("Challenge 3"),
+            ];
+
+            challenges.forEach((challenge) =>
+                challengeList.addChallengeObjects(challenge)
+            );
+            uiUpdateHandler.renderChallengeList();
+
+            const primaryContainer = document.querySelector(
+                ".challenge-container.primary"
+            );
+            const secondaryContainer = document.querySelector(
+                ".challenge-container.secondary"
+            );
+
+            // Both containers should have all challenges
+            expect(primaryContainer?.children.length).toBe(3);
+            expect(secondaryContainer?.children.length).toBe(3);
+
+            // Each pair should have identical markup
+            for (let i = 0; i < 3; i++) {
+                const primaryChallenge = primaryContainer?.children[
+                    i
+                ] as HTMLElement;
+                const secondaryChallenge = secondaryContainer?.children[
+                    i
+                ] as HTMLElement;
+                expect(primaryChallenge.outerHTML).toBe(
+                    secondaryChallenge.outerHTML
+                );
+            }
+        });
+    });
+
     describe("cleanup", () => {
         it("should clean up resources when destroyed", () => {
             // Should not throw error

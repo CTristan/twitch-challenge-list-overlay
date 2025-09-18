@@ -235,10 +235,9 @@ export default class UIUpdateHandler {
         const challengeElement = this.createChallengeElement(challenge);
 
         // Add to both containers for dual-window architecture
-        const primaryClone = challengeElement.cloneNode(true) as HTMLElement;
+        // Optimization: Use original element for primary, clone only once for secondary
+        primaryContainer.appendChild(challengeElement);
         const secondaryClone = challengeElement.cloneNode(true) as HTMLElement;
-
-        primaryContainer.appendChild(primaryClone);
         secondaryContainer.appendChild(secondaryClone);
 
         // Animate scroll to new challenge
@@ -399,14 +398,11 @@ export default class UIUpdateHandler {
         this.challengeList.challenges.forEach((challenge) => {
             const challengeElement = this.createChallengeElement(challenge);
 
-            const primaryClone = challengeElement.cloneNode(
-                true
-            ) as HTMLElement;
+            // Use original element for primary, clone only once for secondary
+            primaryContainer.appendChild(challengeElement);
             const secondaryClone = challengeElement.cloneNode(
                 true
             ) as HTMLElement;
-
-            primaryContainer.appendChild(primaryClone);
             secondaryContainer.appendChild(secondaryClone);
         });
 
