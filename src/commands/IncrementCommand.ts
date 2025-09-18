@@ -35,10 +35,17 @@ export class IncrementCommand extends BaseCommand {
             // Store old progress for response
             const oldProgress = challenge.progress;
 
-            // Increment progress
-            challenge.incrementProgress(incrementAmount);
-
-            // Changes are automatically saved to localStorage
+            // Changes are automatically saved to localStorage and counters updated
+            const updatedChallenge =
+                this.challengeList.incrementChallengeProgress(
+                    challenge.id,
+                    incrementAmount
+                );
+            if (!updatedChallenge) {
+                return this.createErrorResponse(
+                    "Failed to increment challenge progress"
+                );
+            }
 
             // Format response
             const responseMessage = ResponseFormatter.formatProgressResponse(

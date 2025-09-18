@@ -31,8 +31,7 @@ describe("Challenge Progress Display", () => {
                 description: "Collect various items",
                 amount: 5,
             });
-            challengeList.challenges.push(challenge);
-            challengeList.totalChallenges++;
+            challengeList.addChallengeForTesting(challenge);
 
             app.renderChallengeList();
 
@@ -53,8 +52,7 @@ describe("Challenge Progress Display", () => {
                 description: "Complete this once",
                 amount: 1,
             });
-            challengeList.challenges.push(challenge);
-            challengeList.totalChallenges++;
+            challengeList.addChallengeForTesting(challenge);
 
             app.renderChallengeList();
 
@@ -68,8 +66,7 @@ describe("Challenge Progress Display", () => {
                 description: "This should not show progress either",
                 amount: 1,
             });
-            challengeList.challenges.push(challenge);
-            challengeList.totalChallenges++;
+            challengeList.addChallengeForTesting(challenge);
 
             app.renderChallengeList();
 
@@ -80,8 +77,7 @@ describe("Challenge Progress Display", () => {
 
         it("should display progress for title-only challenges when amount > 1", () => {
             const challenge = new Challenge("Repeat Task", { amount: 3 });
-            challengeList.challenges.push(challenge);
-            challengeList.totalChallenges++;
+            challengeList.addChallengeForTesting(challenge);
 
             app.renderChallengeList();
 
@@ -112,8 +108,7 @@ describe("Challenge Progress Display", () => {
                 description: "Do this multiple times",
                 amount: 10,
             });
-            challengeList.challenges.push(challenge);
-            challengeList.totalChallenges++;
+            challengeList.addChallengeForTesting(challenge);
 
             app.renderChallengeList();
 
@@ -162,8 +157,7 @@ describe("Challenge Progress Display", () => {
                 description: "With progress styling",
                 amount: 7,
             });
-            challengeList.challenges.push(challenge);
-            challengeList.totalChallenges++;
+            challengeList.addChallengeForTesting(challenge);
 
             app.renderChallengeList();
 
@@ -186,8 +180,7 @@ describe("Challenge Progress Display", () => {
                 description: "With colored progress",
                 amount: 4,
             });
-            challengeList.challenges.push(challenge);
-            challengeList.totalChallenges++;
+            challengeList.addChallengeForTesting(challenge);
 
             app.renderChallengeList();
 
@@ -207,8 +200,7 @@ describe("Challenge Progress Display", () => {
                 description: "Original description",
                 amount: 2,
             });
-            challengeList.challenges.push(challenge);
-            challengeList.totalChallenges++;
+            challengeList.addChallengeForTesting(challenge);
 
             app.renderChallengeList();
 
@@ -235,8 +227,7 @@ describe("Challenge Progress Display", () => {
                 description: "Added dynamically",
                 amount: 8,
             });
-            challengeList.challenges.push(challenge);
-            challengeList.totalChallenges++;
+            challengeList.addChallengeForTesting(challenge);
 
             app.addChallengeToDOM(challenge);
 
@@ -254,8 +245,7 @@ describe("Challenge Progress Display", () => {
                 description: "Will be edited",
                 amount: 3,
             });
-            challengeList.challenges.push(challenge);
-            challengeList.totalChallenges++;
+            challengeList.addChallengeForTesting(challenge);
 
             app.renderChallengeList();
 
@@ -282,8 +272,7 @@ describe("Challenge Progress Display", () => {
                 description: "Progress will be removed",
                 amount: 5,
             });
-            challengeList.challenges.push(challenge);
-            challengeList.totalChallenges++;
+            challengeList.addChallengeForTesting(challenge);
 
             app.renderChallengeList();
 
@@ -308,8 +297,7 @@ describe("Challenge Progress Display", () => {
                 description: "Will be completed",
                 amount: 3,
             });
-            challengeList.challenges.push(challenge);
-            challengeList.totalChallenges++;
+            challengeList.addChallengeForTesting(challenge);
 
             // Complete the challenge
             challenge.setCompletionStatus(true);
@@ -337,8 +325,7 @@ describe("Challenge Progress Display", () => {
                 description: "Progress will be updated",
                 amount: 10,
             });
-            challengeList.challenges.push(challenge);
-            challengeList.totalChallenges++;
+            challengeList.addChallengeForTesting(challenge);
 
             app.renderChallengeList();
 

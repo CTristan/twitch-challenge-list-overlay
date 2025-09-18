@@ -22,9 +22,9 @@ interface SerializedChallenge {
  */
 export default class ChallengeList {
     #localStoreName: string;
+    #challengesCompleted: number;
+    #totalChallenges: number;
     challenges: Challenge[];
-    public challengesCompleted: number;
-    public totalChallenges: number;
 
     /**
      * @constructor
@@ -32,9 +32,25 @@ export default class ChallengeList {
      */
     constructor(localStoreName: string = "challengeList") {
         this.#localStoreName = localStoreName;
-        this.challengesCompleted = 0;
-        this.totalChallenges = 0;
+        this.#challengesCompleted = 0;
+        this.#totalChallenges = 0;
         this.challenges = this.#loadChallengeListFromLocalStorage();
+    }
+
+    /**
+     * Get the number of completed challenges
+     * @returns The number of completed challenges
+     */
+    get challengesCompleted(): number {
+        return this.#challengesCompleted;
+    }
+
+    /**
+     * Get the total number of challenges
+     * @returns The total number of challenges
+     */
+    get totalChallenges(): number {
+        return this.#totalChallenges;
     }
 
     /**
@@ -54,11 +70,11 @@ export default class ChallengeList {
             result.data.forEach((serializedChallenge) => {
                 const challenge =
                     Challenge.fromSerializedData(serializedChallenge);
-                this.totalChallenges++;
+                this.#totalChallenges++;
 
                 // Count completed challenges during loading
                 if (challenge.isComplete()) {
-                    this.challengesCompleted++;
+                    this.#challengesCompleted++;
                 }
 
                 challengeList.push(challenge);
@@ -123,7 +139,7 @@ export default class ChallengeList {
             const challenge = new Challenge(challengeTitle);
             this.challenges.push(challenge);
             addedChallenges.push(challenge);
-            this.totalChallenges++;
+            this.#totalChallenges++;
         });
 
         this.#commitToLocalStorage();
@@ -147,7 +163,7 @@ export default class ChallengeList {
         challenges.forEach((challenge) => {
             this.challenges.push(challenge);
             addedChallenges.push(challenge);
-            this.totalChallenges++;
+            this.#totalChallenges++;
         });
 
         this.#commitToLocalStorage();
@@ -188,7 +204,7 @@ export default class ChallengeList {
             const challenge = this.getChallenge(index);
             if (challenge && !challenge.isComplete()) {
                 challenge.setCompletionStatus(true);
-                this.challengesCompleted++;
+                this.#challengesCompleted++;
                 completedChallenges.push(challenge);
             }
         });
@@ -249,8 +265,8 @@ export default class ChallengeList {
      */
     clearChallengeList(): void {
         this.challenges = [];
-        this.challengesCompleted = 0;
-        this.totalChallenges = 0;
+        this.#challengesCompleted = 0;
+        this.#totalChallenges = 0;
 
         this.#commitToLocalStorage();
     }
@@ -290,18 +306,131 @@ export default class ChallengeList {
     }
 
     /**
-     * Recalculate counters and persist to storage
-     * This method should be used whenever challenge completion status is changed
-     * outside of the standard ChallengeList methods (e.g., admin checkbox toggles)
+     * Toggle the completion status of a challenge by ID
+     * Handles timer start/stop logic and automatically updates counters and persists
+     * @param challengeId - The ID of the challenge to toggle
+     * @returns The toggled challenge or null if not found
      */
-    updateChallenge(): void {
-        // Recalculate challengesCompleted by counting all completed challenges
-        this.challengesCompleted = this.challenges.filter((c) =>
-            c.isComplete()
-        ).length;
+    toggleChallengeCompletion(challengeId: string): Challenge | null {
+        const challenge = this.challenges.find((c) => c.id === challengeId);
+        if (!challenge) {
+            return null;
+        }
 
-        // Persist changes to localStorage
+        const wasComplete = challenge.isComplete();
+
+        if (wasComplete) {
+            // Revert to active status
+            challenge.setCompletionStatus(false);
+            this.#challengesCompleted--;
+
+            // Restart timer if it exists and has remaining time
+            if (
+                challenge.timer &&
+                !challenge.timer.isActive &&
+                challenge.timer.getRemainingTime() > 0
+            ) {
+                challenge.timer.start();
+            }
+        } else {
+            // Mark as complete
+            challenge.setCompletionStatus(true);
+            this.#challengesCompleted++;
+
+            // Stop timer if running
+            if (challenge.timer && challenge.timer.isActive) {
+                challenge.timer.stop();
+            }
+        }
+
         this.#commitToLocalStorage();
+        return challenge;
+    }
+
+    /**
+     * Increment the progress of a challenge by ID
+     * @param challengeId - The ID of the challenge
+     * @param amount - The amount to increment (default: 1)
+     * @returns The updated challenge or null if not found
+     */
+    incrementChallengeProgress(
+        challengeId: string,
+        amount: number = 1
+    ): Challenge | null {
+        const challenge = this.challenges.find((c) => c.id === challengeId);
+        if (!challenge) {
+            return null;
+        }
+
+        const wasComplete = challenge.isComplete();
+        challenge.incrementProgress(amount);
+        const isNowComplete = challenge.isComplete();
+
+        // Update counter if completion status changed
+        if (!wasComplete && isNowComplete) {
+            this.#challengesCompleted++;
+        }
+
+        this.#commitToLocalStorage();
+        return challenge;
+    }
+
+    /**
+     * Decrement the progress of a challenge by ID
+     * @param challengeId - The ID of the challenge
+     * @param amount - The amount to decrement (default: 1)
+     * @returns The updated challenge or null if not found
+     */
+    decrementChallengeProgress(
+        challengeId: string,
+        amount: number = 1
+    ): Challenge | null {
+        const challenge = this.challenges.find((c) => c.id === challengeId);
+        if (!challenge) {
+            return null;
+        }
+
+        const wasComplete = challenge.isComplete();
+        challenge.decrementProgress(amount);
+        const isNowComplete = challenge.isComplete();
+
+        // Update counter if completion status changed
+        if (wasComplete && !isNowComplete) {
+            this.#challengesCompleted--;
+        }
+
+        this.#commitToLocalStorage();
+        return challenge;
+    }
+
+    /**
+     * Set the progress of a challenge by ID
+     * @param challengeId - The ID of the challenge
+     * @param progress - The new progress value
+     * @returns The updated challenge or null if not found
+     */
+    setChallengeProgress(
+        challengeId: string,
+        progress: number
+    ): Challenge | null {
+        const challenge = this.challenges.find((c) => c.id === challengeId);
+        if (!challenge) {
+            return null;
+        }
+
+        const wasComplete = challenge.isComplete();
+        challenge.setProgress(progress);
+        const isNowComplete = challenge.isComplete();
+
+        // Update counter if completion status changed
+        if (wasComplete && !isNowComplete) {
+            this.#challengesCompleted--;
+        } else if (!wasComplete && isNowComplete) {
+            this.#challengesCompleted++;
+        }
+
+        this.#commitToLocalStorage();
+        return challenge;
     }
 
     /**
@@ -311,9 +440,23 @@ export default class ChallengeList {
     #decreaseChallengeCount(removedChallenges: Challenge[]): void {
         removedChallenges.forEach((challenge) => {
             if (challenge.isComplete()) {
-                this.challengesCompleted--;
+                this.#challengesCompleted--;
             }
-            this.totalChallenges--;
+            this.#totalChallenges--;
         });
+    }
+
+    /**
+     * Add a challenge directly to the list for testing purposes
+     * This bypasses normal validation and directly manipulates internal state
+     * @param challenge - The challenge to add
+     * @internal This method is intended for testing only
+     */
+    addChallengeForTesting(challenge: Challenge): void {
+        this.challenges.push(challenge);
+        this.#totalChallenges++;
+        if (challenge.isComplete()) {
+            this.#challengesCompleted++;
+        }
     }
 }

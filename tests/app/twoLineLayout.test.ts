@@ -24,8 +24,7 @@ describe("Two-Line Challenge Layout", () => {
                 description: "Test description",
                 amount: 1,
             });
-            challengeList.challenges.push(challenge);
-            challengeList.totalChallenges++;
+            challengeList.addChallengeForTesting(challenge);
 
             app.renderChallengeList();
 
@@ -60,8 +59,7 @@ describe("Two-Line Challenge Layout", () => {
 
         it("should create single-line structure for title-only challenges", () => {
             const challenge = new Challenge("Title Only Challenge");
-            challengeList.challenges.push(challenge);
-            challengeList.totalChallenges++;
+            challengeList.addChallengeForTesting(challenge);
 
             app.renderChallengeList();
 
@@ -89,8 +87,7 @@ describe("Two-Line Challenge Layout", () => {
 
             // Manually set description to empty to test edge case
             challenge.description = "";
-            challengeList.challenges.push(challenge);
-            challengeList.totalChallenges++;
+            challengeList.addChallengeForTesting(challenge);
 
             app.renderChallengeList();
 
@@ -116,8 +113,7 @@ describe("Two-Line Challenge Layout", () => {
                 description: "Styled description",
                 amount: 1,
             });
-            challengeList.challenges.push(challenge);
-            challengeList.totalChallenges++;
+            challengeList.addChallengeForTesting(challenge);
 
             app.renderChallengeList();
 
@@ -151,8 +147,7 @@ describe("Two-Line Challenge Layout", () => {
                 description: "Description",
                 amount: 1,
             });
-            challengeList.challenges.push(challenge);
-            challengeList.totalChallenges++;
+            challengeList.addChallengeForTesting(challenge);
 
             app.renderChallengeList();
 
@@ -185,9 +180,7 @@ describe("Two-Line Challenge Layout", () => {
                 amount: 1,
             });
             challenge.setCompletionStatus(true);
-            challengeList.challenges.push(challenge);
-            challengeList.totalChallenges++;
-            challengeList.challengesCompleted++;
+            challengeList.addChallengeForTesting(challenge);
 
             app.renderChallengeList();
 
@@ -218,8 +211,7 @@ describe("Two-Line Challenge Layout", () => {
                 description: "Original description",
                 amount: 1,
             });
-            challengeList.challenges.push(challenge);
-            challengeList.totalChallenges++;
+            challengeList.addChallengeForTesting(challenge);
 
             app.renderChallengeList();
 
@@ -247,8 +239,7 @@ describe("Two-Line Challenge Layout", () => {
                 description: "New description",
                 amount: 1,
             });
-            challengeList.challenges.push(challenge);
-            challengeList.totalChallenges++;
+            challengeList.addChallengeForTesting(challenge);
 
             app.addChallengeToDOM(challenge);
 
@@ -276,8 +267,7 @@ describe("Two-Line Challenge Layout", () => {
                 description: "Colored description",
                 amount: 1,
             });
-            challengeList.challenges.push(challenge);
-            challengeList.totalChallenges++;
+            challengeList.addChallengeForTesting(challenge);
 
             app.renderChallengeList();
 

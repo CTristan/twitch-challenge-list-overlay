@@ -54,10 +54,17 @@ export class SetCommand extends BaseCommand {
                 // Store old progress for response
                 const oldProgress = challenge.progress;
 
-                // Set new progress
-                challenge.setProgress(validatedProgress);
-
-                // Changes are automatically saved to localStorage
+                // Changes are automatically saved to localStorage and counters updated
+                const updatedChallenge =
+                    this.challengeList.setChallengeProgress(
+                        challenge.id,
+                        validatedProgress
+                    );
+                if (!updatedChallenge) {
+                    return this.createErrorResponse(
+                        "Failed to set challenge progress"
+                    );
+                }
 
                 // Format response
                 const responseMessage =

@@ -35,10 +35,17 @@ export class DecrementCommand extends BaseCommand {
             // Store old progress for response
             const oldProgress = challenge.progress;
 
-            // Decrement progress
-            challenge.decrementProgress(decrementAmount);
-
-            // Changes are automatically saved to localStorage
+            // Changes are automatically saved to localStorage and counters updated
+            const updatedChallenge =
+                this.challengeList.decrementChallengeProgress(
+                    challenge.id,
+                    decrementAmount
+                );
+            if (!updatedChallenge) {
+                return this.createErrorResponse(
+                    "Failed to decrement challenge progress"
+                );
+            }
 
             // Format response
             const responseMessage = ResponseFormatter.formatProgressResponse(

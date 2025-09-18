@@ -590,50 +590,21 @@ export default class App {
         // Mark this challenge as being processed
         this.processingCheckboxClicks.add(challengeId);
 
-        // Find the challenge object
-        const challenge = this.challengeList.challenges.find(
-            (c) => c.id === challengeId
-        );
+        // Toggle the challenge completion using the encapsulated method
+        const challenge =
+            this.challengeList.toggleChallengeCompletion(challengeId);
         if (!challenge) {
             console.error(`Challenge with ID ${challengeId} not found`);
             this.processingCheckboxClicks.delete(challengeId); // Clean up
             return;
         }
 
-        // Toggle the completion status
-        const wasComplete = challenge.isComplete();
-
         try {
-            if (wasComplete) {
-                // Revert to active status
-                challenge.setCompletionStatus(false);
-
-                // Restart timer if it exists and has remaining time
-                if (
-                    challenge.timer &&
-                    !challenge.timer.isActive &&
-                    challenge.timer.getRemainingTime() > 0
-                ) {
-                    challenge.timer.start();
-                }
-            } else {
-                // Mark as complete
-                challenge.setCompletionStatus(true);
-
-                // Stop timer if running
-                if (challenge.timer && challenge.timer.isActive) {
-                    challenge.timer.stop();
-                }
-            }
-
-            // Update the challenge and recalculate counters, then persist to storage
-            this.challengeList.updateChallenge();
-
-            // Update DOM to reflect the new status (after counters are updated)
-            if (wasComplete) {
-                this.revertChallengeFromDOM(challengeId);
-            } else {
+            // Update DOM to reflect the new status
+            if (challenge.isComplete()) {
                 this.completeChallengeFromDOM(challengeId);
+            } else {
+                this.revertChallengeFromDOM(challengeId);
             }
         } catch (error) {
             console.error("Error toggling challenge completion:", error);

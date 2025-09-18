@@ -530,30 +530,21 @@ export default class UIUpdateHandler {
             return;
         }
 
-        // Find the challenge object
-        const challenge = this.challengeList.challenges.find(
-            (c) => c.id === challengeId
-        );
-        if (!challenge) {
-            console.error("Could not find challenge with ID:", challengeId);
-            return;
-        }
-
         try {
-            // Toggle completion status
-            if (challenge.isComplete()) {
-                challenge.setCompletionStatus(false);
-                this.revertChallengeFromDOM(challengeId);
-            } else {
-                challenge.setCompletionStatus(true);
-                if (challenge.timer && challenge.timer.isActive) {
-                    challenge.timer.stop();
-                }
-                this.completeChallengeFromDOM(challengeId);
+            // Toggle the challenge completion using the encapsulated method
+            const challenge =
+                this.challengeList.toggleChallengeCompletion(challengeId);
+            if (!challenge) {
+                console.error("Could not find challenge with ID:", challengeId);
+                return;
             }
 
-            // Update the challenge and recalculate counters, then persist to storage
-            this.challengeList.updateChallenge();
+            // Update DOM to reflect the new status
+            if (challenge.isComplete()) {
+                this.completeChallengeFromDOM(challengeId);
+            } else {
+                this.revertChallengeFromDOM(challengeId);
+            }
         } catch (error) {
             console.error("Error toggling challenge completion:", error);
         }
