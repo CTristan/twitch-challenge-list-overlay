@@ -615,6 +615,14 @@ export default class UIUpdateHandler {
     updateTimerDisplays(): void {
         const timerElements = document.querySelectorAll(".challenge-timer");
 
+        // Create a challenge lookup map for quick access
+        const challengeMap = new Map(
+            this.challengeList.challenges.map((challenge) => [
+                challenge.id,
+                challenge,
+            ])
+        );
+
         timerElements.forEach((timerElement) => {
             const challengeElement = timerElement.closest(
                 ".challenge"
@@ -624,9 +632,7 @@ export default class UIUpdateHandler {
             const challengeId = challengeElement.dataset["challengeId"];
             if (!challengeId) return;
 
-            const challenge = this.challengeList.challenges.find(
-                (c) => c.id === challengeId
-            );
+            const challenge = challengeMap.get(challengeId);
             if (!challenge || !challenge.timer) return;
 
             this.updateTimerElement(
