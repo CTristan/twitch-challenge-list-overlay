@@ -550,11 +550,8 @@ export default class App {
             // Remove any existing listeners to prevent duplicates
             checkbox.removeEventListener("click", this.handleCheckboxClick);
 
-            // Add the click listener
-            checkbox.addEventListener(
-                "click",
-                this.handleCheckboxClick.bind(this)
-            );
+            // Add the click listener (using same reference for proper cleanup)
+            checkbox.addEventListener("click", this.handleCheckboxClick);
 
             // Add visual indication that checkboxes are clickable in admin mode
             checkbox.classList.add("admin-interactive");
