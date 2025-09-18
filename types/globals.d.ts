@@ -200,6 +200,8 @@ interface ChallengeTimer {
     isActive: boolean;
     /** Whether timer is paused */
     isPaused: boolean;
+    /** Timestamp when timer was paused (0 if not paused) */
+    pausedTime: number;
 }
 
 /**

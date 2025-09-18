@@ -9,18 +9,18 @@ import Timer from "../../src/utils/Timer";
  * Standard test durations for consistent testing
  */
 const TEST_DURATIONS = {
-    SHORT: 60,      // 1 minute
-    MEDIUM: 300,    // 5 minutes
-    LONG: 3600,     // 1 hour
+    SHORT: 60, // 1 minute
+    MEDIUM: 300, // 5 minutes
+    LONG: 3600, // 1 hour
 } as const;
 
 /**
  * Time advancement values in milliseconds
  */
 const TIME_ADVANCES = {
-    SHORT: 30000,   // 30 seconds
-    MEDIUM: 60000,  // 1 minute
-    LONG: 120000,   // 2 minutes
+    SHORT: 30000, // 30 seconds
+    MEDIUM: 60000, // 1 minute
+    LONG: 120000, // 2 minutes
     EXPIRE: 310000, // 5+ minutes (to expire 5-minute timer)
 } as const;
 
@@ -173,7 +173,9 @@ describe("Timer", () => {
             it.each(ERROR_TEST_CASES)(
                 "should throw error for %s (%s)",
                 (input, expectedError) => {
-                    expect(() => Timer.parseDuration(input)).toThrow(expectedError);
+                    expect(() => Timer.parseDuration(input)).toThrow(
+                        expectedError
+                    );
                 }
             );
         });
@@ -203,7 +205,9 @@ describe("Timer", () => {
 
                 assertTimerState(timer, { isActive: true, isPaused: false });
                 expect(timer.startTime).toBe(startTime);
-                expect(timer.endTime).toBe(startTime + TEST_DURATIONS.MEDIUM * 1000);
+                expect(timer.endTime).toBe(
+                    startTime + TEST_DURATIONS.MEDIUM * 1000
+                );
             });
 
             it("should calculate remaining time correctly", () => {
@@ -256,7 +260,9 @@ describe("Timer", () => {
             it.each(TIME_FORMAT_TEST_CASES)(
                 "should format %d seconds as '%s'",
                 (seconds, expectedFormat) => {
-                    expect(timer.getFormattedTime(seconds)).toBe(expectedFormat);
+                    expect(timer.getFormattedTime(seconds)).toBe(
+                        expectedFormat
+                    );
                 }
             );
         });
@@ -315,6 +321,39 @@ describe("Timer", () => {
                 isActive: originalTimer.isActive,
                 isPaused: originalTimer.isPaused,
             });
+        });
+
+        it("should preserve paused timer state correctly after serialization", () => {
+            const originalTimer = createTestTimer(300); // 5 minutes
+            originalTimer.start();
+
+            // Advance 60 seconds, then pause
+            vi.advanceTimersByTime(60000);
+            originalTimer.pause();
+
+            // Verify the timer is paused and has correct remaining time
+            expect(originalTimer.isPaused).toBe(true);
+            const expectedRemaining = 240; // 300 - 60 = 240 seconds
+            expect(originalTimer.getRemainingTime()).toBe(expectedRemaining);
+
+            // Serialize and deserialize
+            const data = originalTimer.toData();
+            const deserializedTimer = Timer.fromData(data);
+
+            // Verify the deserialized timer maintains correct paused state
+            assertTimerState(deserializedTimer, {
+                isActive: true,
+                isPaused: true,
+            });
+
+            // This is the critical test - paused timer should have correct remaining time
+            // Without the fix, this will fail because pausedTime is not serialized
+            expect(deserializedTimer.getRemainingTime()).toBe(
+                expectedRemaining
+            );
+
+            // Verify the remaining time is reasonable (not a huge number)
+            expect(deserializedTimer.getRemainingTime()).toBeLessThan(1000);
         });
     });
 });

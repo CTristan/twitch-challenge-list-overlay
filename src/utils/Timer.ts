@@ -263,6 +263,7 @@ export default class Timer {
         timer.endTime = data.endTime;
         timer.isActive = data.isActive;
         timer.isPaused = data.isPaused;
+        timer.pausedTime = data.pausedTime || 0;
         return timer;
     }
 
@@ -277,6 +278,7 @@ export default class Timer {
             endTime: this.endTime,
             isActive: this.isActive,
             isPaused: this.isPaused,
+            pausedTime: this.pausedTime,
         };
     }
 }
