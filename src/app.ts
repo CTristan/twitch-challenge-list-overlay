@@ -265,22 +265,9 @@ export default class App {
     }
 
     clearListFromDOM() {
-        // Clear the entire containers and then re-render to ensure proper header structure
-        const primaryContainer = document.querySelector(
-            ".challenge-container.primary"
-        );
-        const secondaryContainer = document.querySelector(
-            ".challenge-container.secondary"
-        );
-        if (primaryContainer) {
-            primaryContainer.innerHTML = "";
-        }
-        if (secondaryContainer) {
-            secondaryContainer.innerHTML = "";
-        }
-
-        // Re-render the challenge list to ensure headers are displayed even when empty
-        this.renderChallengeList();
+        // Use UIUpdateHandler for consistent rendering instead of App's own renderChallengeList
+        // This ensures all rendering goes through the same path and prevents duplicate headers
+        this.#uiUpdateHandler.renderChallengeList();
     }
 
     /**
