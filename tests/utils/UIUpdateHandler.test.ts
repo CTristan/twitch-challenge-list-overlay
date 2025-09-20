@@ -11,6 +11,25 @@ describe("UIUpdateHandler", () => {
 
     beforeEach(() => {
         ensureTestIsolation();
+
+        // Set up DOM structure directly to ensure it's correct
+        document.body.innerHTML = `
+            <div class="challenge-wrapper">
+                <div class="challenge-container primary">
+                    <div class="card">
+                        <div class="username">Challenges 0/0</div>
+                        <ol class="challenges"></ol>
+                    </div>
+                </div>
+                <div class="challenge-container secondary">
+                    <div class="card">
+                        <div class="username">Challenges 0/0</div>
+                        <ol class="challenges"></ol>
+                    </div>
+                </div>
+            </div>
+        `;
+
         challengeList = new ChallengeList("test-store");
         uiUpdateHandler = new UIUpdateHandler(challengeList);
     });
@@ -193,23 +212,28 @@ describe("UIUpdateHandler", () => {
                 description: "Test Description",
             });
 
+            // First render the challenge list to set up the card structure
+            // This is how it works in the real application
+            uiUpdateHandler.renderChallengeList();
+
+            // Then add the individual challenge
             uiUpdateHandler.addChallengeToDOM(challenge);
 
-            const primaryContainer = document.querySelector(
-                ".challenge-container.primary"
+            const primaryChallengesList = document.querySelector(
+                ".challenge-container.primary .card .challenges"
             );
-            const secondaryContainer = document.querySelector(
-                ".challenge-container.secondary"
+            const secondaryChallengesList = document.querySelector(
+                ".challenge-container.secondary .card .challenges"
             );
 
-            // Both containers should have exactly one challenge
-            expect(primaryContainer?.children.length).toBe(1);
-            expect(secondaryContainer?.children.length).toBe(1);
+            // Both ordered lists should have exactly one challenge
+            expect(primaryChallengesList?.children.length).toBe(1);
+            expect(secondaryChallengesList?.children.length).toBe(1);
 
             const primaryChallenge =
-                primaryContainer?.firstElementChild as HTMLElement;
+                primaryChallengesList?.firstElementChild as HTMLElement;
             const secondaryChallenge =
-                secondaryContainer?.firstElementChild as HTMLElement;
+                secondaryChallengesList?.firstElementChild as HTMLElement;
 
             // Both challenges should have identical structure
             expect(primaryChallenge.outerHTML).toBe(
@@ -224,6 +248,10 @@ describe("UIUpdateHandler", () => {
         it("should maintain event handlers on both containers", () => {
             const challenge = new Challenge("Test Challenge");
 
+            // First render the challenge list to set up the card structure
+            uiUpdateHandler.renderChallengeList();
+
+            // Then add the individual challenge
             uiUpdateHandler.addChallengeToDOM(challenge);
 
             const primaryCheckbox = document.querySelector(
@@ -258,23 +286,23 @@ describe("UIUpdateHandler", () => {
             );
             uiUpdateHandler.renderChallengeList();
 
-            const primaryContainer = document.querySelector(
-                ".challenge-container.primary"
+            const primaryChallengesList = document.querySelector(
+                ".challenge-container.primary .card .challenges"
             );
-            const secondaryContainer = document.querySelector(
-                ".challenge-container.secondary"
+            const secondaryChallengesList = document.querySelector(
+                ".challenge-container.secondary .card .challenges"
             );
 
-            // Both containers should have all challenges
-            expect(primaryContainer?.children.length).toBe(3);
-            expect(secondaryContainer?.children.length).toBe(3);
+            // Both ordered lists should have all challenges
+            expect(primaryChallengesList?.children.length).toBe(3);
+            expect(secondaryChallengesList?.children.length).toBe(3);
 
             // Each pair should have identical markup
             for (let i = 0; i < 3; i++) {
-                const primaryChallenge = primaryContainer?.children[
+                const primaryChallenge = primaryChallengesList?.children[
                     i
                 ] as HTMLElement;
-                const secondaryChallenge = secondaryContainer?.children[
+                const secondaryChallenge = secondaryChallengesList?.children[
                     i
                 ] as HTMLElement;
                 expect(primaryChallenge.outerHTML).toBe(

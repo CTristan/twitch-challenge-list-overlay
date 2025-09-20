@@ -50,8 +50,20 @@ const TEST_CHALLENGE_DATA = {
  */
 function setupTestDOM(): void {
     document.body.innerHTML = `
-        <div class="challenge-container primary"></div>
-        <div class="challenge-container secondary"></div>
+        <div class="challenge-wrapper">
+            <div class="challenge-container primary">
+                <div class="card">
+                    <div class="username">Challenges 0/0</div>
+                    <ol class="challenges"></ol>
+                </div>
+            </div>
+            <div class="challenge-container secondary">
+                <div class="card">
+                    <div class="username">Challenges 0/0</div>
+                    <ol class="challenges"></ol>
+                </div>
+            </div>
+        </div>
     `;
 }
 

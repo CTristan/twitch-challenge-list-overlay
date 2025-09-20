@@ -5,6 +5,8 @@ import ConfigManager from "./classes/ConfigManager";
 import { loadStyles } from "./styleLoader";
 import ChallengeRenderer from "./utils/ChallengeRenderer";
 import CommandHandler from "./utils/CommandHandler";
+import DOMHelper from "./utils/DOMHelper";
+import TimerController from "./utils/TimerController";
 import TimerDisplayUtils from "./utils/TimerDisplayUtils";
 import UIUpdateHandler from "./utils/UIUpdateHandler";
 
@@ -33,7 +35,7 @@ export default class App {
     challengeList: ChallengeList;
     #commandHandler: CommandHandler;
     #uiUpdateHandler: UIUpdateHandler;
-    #timerUpdateInterval: number | null = null;
+    #timerController: TimerController;
 
     // Track challenges being processed
     private processingCheckboxClicks = new Set<string>();
@@ -50,6 +52,7 @@ export default class App {
             this.#configManager
         );
         this.#uiUpdateHandler = new UIUpdateHandler(this.challengeList);
+        this.#timerController = new TimerController(this.challengeList);
         loadStyles(this.#configManager.getAll());
     }
 
@@ -74,16 +77,11 @@ export default class App {
      * @returns {void}
      */
     updateChallengeCount(): void {
-        const completedCount = this.challengeList.challengesCompleted;
-        const totalCount = this.challengeList.totalChallenges;
-
-        // Update all card headers with the current count
-        const cardHeaders = document.querySelectorAll(".card .username");
-        cardHeaders.forEach((header) => {
-            if (header instanceof HTMLElement) {
-                header.textContent = `Challenges ${completedCount}/${totalCount}`;
-            }
-        });
+        // Use shared helper with efficient getters from ChallengeList
+        DOMHelper.updateChallengeCount(
+            this.challengeList.challengesCompleted,
+            this.challengeList.totalChallenges
+        );
     }
 
     /**
@@ -118,9 +116,9 @@ export default class App {
             this.challengeList
                 .getAllChallenges()
                 .forEach((challenge, index) => {
-                    const listItem = document.createElement("li");
-                    listItem.classList.add("challenge");
-                    listItem.dataset["challengeId"] = `${challenge.id}`;
+                    // Use ChallengeRenderer for consistent element creation
+                    const listItem =
+                        ChallengeRenderer.createChallengeElement(challenge);
 
                     // Apply row colors using shared helper
                     const textColor = applyChallengeRowColors(
@@ -130,24 +128,21 @@ export default class App {
                         rowTextColors
                     );
 
-                    // Create checkbox element
-                    const checkbox = ChallengeRenderer.createChallengeCheckbox(
-                        challenge.isComplete()
-                    );
+                    // Apply styling to the checkbox and text elements
+                    const checkbox = listItem.querySelector(
+                        ".challenge-checkbox"
+                    ) as HTMLElement;
+                    const textElement = listItem.querySelector(
+                        ".challenge-text"
+                    ) as HTMLElement;
 
-                    // Apply checkbox styling using shared helper
-                    decorateChallengeCheckbox(checkbox, textColor);
+                    if (checkbox) {
+                        decorateChallengeCheckbox(checkbox, textColor);
+                    }
 
-                    listItem.appendChild(checkbox);
-
-                    // Create text element for challenge title and description
-                    const textElement =
-                        ChallengeRenderer.createChallengeTextElement(challenge);
-
-                    // Apply text colors using shared helper
-                    applyChallengeTextColors(textElement, textColor);
-
-                    listItem.appendChild(textElement);
+                    if (textElement) {
+                        applyChallengeTextColors(textElement, textColor);
+                    }
 
                     // Add timer display if timer exists and is active (as sibling to text)
                     if (challenge.timer && challenge.timer.isActive) {
@@ -159,9 +154,6 @@ export default class App {
                         listItem.appendChild(timerElement);
                     }
 
-                    if (challenge.isComplete()) {
-                        listItem.classList.add("done");
-                    }
                     // Append to fragment instead of directly to DOM
                     fragment.appendChild(listItem);
                 });
@@ -236,9 +228,9 @@ export default class App {
     ): { error: boolean; message: string } {
         command = `!${command.toLowerCase()}`;
 
-        try {
-            // All commands now use the unified "!ch" prefix system
-            if (command === "!ch" || command.startsWith("!ch ")) {
+        // Use simple guard instead of exception for control flow
+        if (command === "!ch" || command.startsWith("!ch ")) {
+            try {
                 const response = this.#commandHandler.handleCommand(
                     username,
                     command.slice(1), // Remove ! prefix
@@ -253,18 +245,23 @@ export default class App {
                     error: response.error,
                     message: response.message,
                 };
+            } catch (error) {
+                return respondMessage(
+                    this.#configManager.get("responses.invalidCommand"),
+                    username,
+                    error instanceof Error ? error.message : String(error),
+                    true
+                );
             }
-
-            // If we get here, it's not a !ch command, which means it's an invalid command
-            throw new Error("command not found");
-        } catch (error) {
-            return respondMessage(
-                this.#configManager.get("responses.invalidCommand"),
-                username,
-                error instanceof Error ? error.message : String(error),
-                true
-            );
         }
+
+        // Direct call for invalid commands instead of throwing and catching
+        return respondMessage(
+            this.#configManager.get("responses.invalidCommand"),
+            username,
+            "command not found",
+            true
+        );
     }
 
     clearListFromDOM() {
@@ -460,23 +457,8 @@ export default class App {
      * @returns {void}
      */
     completeChallengeFromDOM(challengeId: string): void {
-        const challengeElements = document.querySelectorAll(
-            `[data-challenge-id="${challengeId}"]`
-        );
-        for (const challengeElement of challengeElements) {
-            challengeElement.classList.add("done");
-
-            // Update checkbox to checked state
-            const checkbox = challengeElement.querySelector(
-                ".challenge-checkbox"
-            );
-            if (checkbox) {
-                checkbox.classList.add("checked");
-            }
-        }
+        DOMHelper.completeChallengeFromDOM(challengeId);
         this.updateChallengeCount();
-
-        // Update timer displays since completion stops timers
         this.updateTimerDisplays();
     }
 
@@ -486,21 +468,14 @@ export default class App {
      * @returns {void}
      */
     deleteChallengeFromDOM(challengeId: string): void {
-        const challengeElements = document.querySelectorAll(
-            `[data-challenge-id="${challengeId}"]`
-        );
-        for (const challengeElement of challengeElements) {
-            challengeElement.remove();
-        }
+        DOMHelper.deleteChallengeFromDOM(challengeId);
         this.updateChallengeCount();
-
-        // Update timer displays since deletion may remove active timers
         this.updateTimerDisplays();
     }
 
     /**
      * Enable interactive checkbox functionality for admin mode
-     * Adds click event listeners to all challenge checkboxes
+     * Uses event delegation for efficient checkbox handling
      * @returns {void}
      */
     enableAdminCheckboxInteraction(): void {
@@ -509,16 +484,26 @@ export default class App {
             return;
         }
 
-        // Add click listeners to all existing checkboxes
+        // Use event delegation on containers instead of individual checkboxes
+        // This avoids re-querying and re-attaching listeners for every checkbox
+        const containers = document.querySelectorAll(".challenge-container");
+        containers.forEach((container) => {
+            // Remove any existing delegated listeners to prevent duplicates
+            container.removeEventListener(
+                "click",
+                this.handleDelegatedCheckboxClick
+            );
+
+            // Add single delegated listener per container
+            container.addEventListener(
+                "click",
+                this.handleDelegatedCheckboxClick
+            );
+        });
+
+        // Add visual indication that checkboxes are clickable in admin mode
         const checkboxes = document.querySelectorAll(".challenge-checkbox");
         checkboxes.forEach((checkbox) => {
-            // Remove any existing listeners to prevent duplicates
-            checkbox.removeEventListener("click", this.handleCheckboxClick);
-
-            // Add the click listener (using same reference for proper cleanup)
-            checkbox.addEventListener("click", this.handleCheckboxClick);
-
-            // Add visual indication that checkboxes are clickable in admin mode
             checkbox.classList.add("admin-interactive");
         });
     }
@@ -584,28 +569,29 @@ export default class App {
     };
 
     /**
+     * Handle delegated checkbox click events using event delegation
+     * @param {Event} event - The click event
+     * @returns {void}
+     */
+    private handleDelegatedCheckboxClick = (event: Event): void => {
+        // Only handle clicks on checkboxes
+        const target = event.target as HTMLElement;
+        if (!target.classList.contains("challenge-checkbox")) {
+            return;
+        }
+
+        // Delegate to the existing checkbox handler
+        this.handleCheckboxClick(event);
+    };
+
+    /**
      * Revert a completed challenge back to active status in the DOM
      * @param {string} challengeId
      * @returns {void}
      */
     revertChallengeFromDOM(challengeId: string): void {
-        const challengeElements = document.querySelectorAll(
-            `[data-challenge-id="${challengeId}"]`
-        );
-        for (const challengeElement of challengeElements) {
-            challengeElement.classList.remove("done");
-
-            // Update checkbox to unchecked state
-            const checkbox = challengeElement.querySelector(
-                ".challenge-checkbox"
-            );
-            if (checkbox) {
-                checkbox.classList.remove("checked");
-            }
-        }
+        DOMHelper.revertChallengeFromDOM(challengeId);
         this.updateChallengeCount();
-
-        // Update timer displays since reversion may restart timers
         this.updateTimerDisplays();
     }
 
@@ -613,44 +599,21 @@ export default class App {
      * Start the timer update system to refresh countdown displays
      */
     startTimerUpdates(): void {
-        // Stop any existing interval
-        this.stopTimerUpdates();
-
-        // Check if there are any active timers using shared utility
-        const hasActiveTimers = TimerDisplayUtils.hasActiveTimers(
-            this.challengeList
-        );
-
-        if (hasActiveTimers) {
-            this.#timerUpdateInterval = window.setInterval(() => {
-                this.updateTimerDisplays();
-            }, 1000);
-        }
+        this.#timerController.startTimerUpdates();
     }
 
     /**
      * Stop the timer update system
      */
     stopTimerUpdates(): void {
-        if (this.#timerUpdateInterval !== null) {
-            clearInterval(this.#timerUpdateInterval);
-            this.#timerUpdateInterval = null;
-        }
+        this.#timerController.stopTimerUpdates();
     }
 
     /**
      * Update all timer displays in the DOM using shared utilities
      */
     updateTimerDisplays(): void {
-        // Use shared utility for consistent timer display updates
-        const hasActiveTimers = TimerDisplayUtils.updateAllTimerDisplays(
-            this.challengeList
-        );
-
-        // Stop updates if no active timers remain
-        if (!hasActiveTimers) {
-            this.stopTimerUpdates();
-        }
+        this.#timerController.updateTimerDisplays();
     }
 
     /**

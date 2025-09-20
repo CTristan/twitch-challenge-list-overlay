@@ -9,29 +9,25 @@ let isScrolling = false;
  * @returns {void}
  */
 export function animateScroll(): void {
+    // Collect all required DOM elements upfront
     const wrapper = document.querySelector(".challenge-wrapper");
-    if (!wrapper) {
-        console.warn("Challenge wrapper element not found");
+    const containerPrimary = document.querySelector(".challenge-container.primary");
+    const containerSecondary = document.querySelector(".challenge-container.secondary") as HTMLElement;
+
+    // Handle missing elements case once
+    if (!wrapper || !containerPrimary || !containerSecondary) {
+        const missingElements = [];
+        if (!wrapper) missingElements.push("challenge wrapper");
+        if (!containerPrimary) missingElements.push("primary challenge container");
+        if (!containerSecondary) missingElements.push("secondary challenge container");
+
+        console.warn(`Required elements not found: ${missingElements.join(", ")}`);
         return;
     }
+
+    // Now we can safely use the elements
     const wrapperHeight = wrapper.clientHeight;
-
-    const containerPrimary = document.querySelector(
-        ".challenge-container.primary"
-    );
-    if (!containerPrimary) {
-        console.warn("Primary challenge container element not found");
-        return;
-    }
     const containerHeight = containerPrimary.scrollHeight;
-
-    const containerSecondary = document.querySelector(
-        ".challenge-container.secondary"
-    ) as HTMLElement;
-    if (!containerSecondary) {
-        console.warn("Secondary challenge container element not found");
-        return;
-    }
 
     if (containerHeight > wrapperHeight && !isScrolling) {
         containerSecondary.style.display = "block";

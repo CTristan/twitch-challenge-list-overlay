@@ -13,16 +13,31 @@ describe("UIUpdateHandler DOM Optimization", () => {
         challengeList = new ChallengeList("test-store");
         uiUpdateHandler = new UIUpdateHandler(challengeList);
 
-        // Create DOM containers for testing
+        // Create DOM containers with proper card structure for testing
         document.body.innerHTML = `
-            <div class="challenge-container primary"></div>
-            <div class="challenge-container secondary"></div>
+            <div class="challenge-wrapper">
+                <div class="challenge-container primary">
+                    <div class="card">
+                        <div class="username">Challenges 0/0</div>
+                        <ol class="challenges"></ol>
+                    </div>
+                </div>
+                <div class="challenge-container secondary">
+                    <div class="card">
+                        <div class="username">Challenges 0/0</div>
+                        <ol class="challenges"></ol>
+                    </div>
+                </div>
+            </div>
         `;
     });
 
     describe("DOM cloning optimization", () => {
         it("should verify that addChallengeToDOM creates exactly 2 DOM elements (not 3)", () => {
             const challenge = new Challenge("Test Challenge");
+
+            // First render the challenge list to set up the card structure
+            uiUpdateHandler.renderChallengeList();
 
             // Spy on cloneNode to count how many times it's called
             const cloneNodeSpy = vi.spyOn(Element.prototype, "cloneNode");
@@ -54,8 +69,8 @@ describe("UIUpdateHandler DOM Optimization", () => {
             uiUpdateHandler.renderChallengeList();
 
             // Should only clone once per challenge (3 challenges = 3 clones)
-            // Each original element goes to primary container without cloning
-            expect(cloneNodeSpy).toHaveBeenCalledTimes(3);
+            // Plus one additional clone for the card structure = 4 total
+            expect(cloneNodeSpy).toHaveBeenCalledTimes(4);
 
             cloneNodeSpy.mockRestore();
         });
@@ -65,19 +80,16 @@ describe("UIUpdateHandler DOM Optimization", () => {
                 description: "Test Description",
             });
 
+            // First render the challenge list to set up the card structure
+            uiUpdateHandler.renderChallengeList();
             uiUpdateHandler.addChallengeToDOM(challenge);
 
-            const primaryContainer = document.querySelector(
-                ".challenge-container.primary"
-            );
-            const secondaryContainer = document.querySelector(
-                ".challenge-container.secondary"
-            );
-
-            const primaryChallenge =
-                primaryContainer?.firstElementChild as HTMLElement;
-            const secondaryChallenge =
-                secondaryContainer?.firstElementChild as HTMLElement;
+            const primaryChallenge = document.querySelector(
+                ".challenge-container.primary .challenges li"
+            ) as HTMLElement;
+            const secondaryChallenge = document.querySelector(
+                ".challenge-container.secondary .challenges li"
+            ) as HTMLElement;
 
             // Both should have identical structure
             expect(primaryChallenge.outerHTML).toBe(
@@ -92,6 +104,8 @@ describe("UIUpdateHandler DOM Optimization", () => {
         it("should maintain event handlers on both original and cloned elements", () => {
             const challenge = new Challenge("Test Challenge");
 
+            // First render the challenge list to set up the card structure
+            uiUpdateHandler.renderChallengeList();
             uiUpdateHandler.addChallengeToDOM(challenge);
 
             const primaryCheckbox = document.querySelector(
@@ -130,8 +144,8 @@ describe("UIUpdateHandler DOM Optimization", () => {
             const endTime = performance.now();
 
             // Should only clone once per challenge (100 challenges = 100 clones)
-            // Without optimization, it would be 200 clones (2 per challenge)
-            expect(cloneNodeSpy).toHaveBeenCalledTimes(100);
+            // Plus one additional clone for the card structure = 101 total
+            expect(cloneNodeSpy).toHaveBeenCalledTimes(101);
 
             // Performance should be reasonable (less than 100ms for 100 challenges)
             const duration = endTime - startTime;
@@ -145,11 +159,14 @@ describe("UIUpdateHandler DOM Optimization", () => {
         it("should confirm that original element is used directly in primary container", () => {
             const challenge = new Challenge("Test Challenge");
 
-            // Spy on appendChild to see what gets appended
-            const primaryContainer = document.querySelector(
-                ".challenge-container.primary"
+            // First render the challenge list to set up the card structure
+            uiUpdateHandler.renderChallengeList();
+
+            // Spy on appendChild to see what gets appended to the ordered list
+            const primaryOrderedList = document.querySelector(
+                ".challenge-container.primary .challenges"
             );
-            const appendChildSpy = vi.spyOn(primaryContainer!, "appendChild");
+            const appendChildSpy = vi.spyOn(primaryOrderedList!, "appendChild");
 
             uiUpdateHandler.addChallengeToDOM(challenge);
 
@@ -166,11 +183,17 @@ describe("UIUpdateHandler DOM Optimization", () => {
         it("should confirm that cloned element is used in secondary container", () => {
             const challenge = new Challenge("Test Challenge");
 
-            // Spy on appendChild for secondary container
-            const secondaryContainer = document.querySelector(
-                ".challenge-container.secondary"
+            // First render the challenge list to set up the card structure
+            uiUpdateHandler.renderChallengeList();
+
+            // Spy on appendChild for secondary ordered list
+            const secondaryOrderedList = document.querySelector(
+                ".challenge-container.secondary .challenges"
             );
-            const appendChildSpy = vi.spyOn(secondaryContainer!, "appendChild");
+            const appendChildSpy = vi.spyOn(
+                secondaryOrderedList!,
+                "appendChild"
+            );
 
             uiUpdateHandler.addChallengeToDOM(challenge);
 

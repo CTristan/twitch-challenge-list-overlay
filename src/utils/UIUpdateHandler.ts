@@ -2,7 +2,9 @@ import { animateScroll } from "../animations/animateScroll";
 import Challenge from "../classes/Challenge";
 import ChallengeList from "../classes/ChallengeList";
 import ChallengeRenderer from "./ChallengeRenderer";
+import DOMHelper from "./DOMHelper";
 import Timer from "./Timer";
+import TimerController from "./TimerController";
 import TimerDisplayUtils from "./TimerDisplayUtils";
 
 /**
@@ -12,7 +14,7 @@ import TimerDisplayUtils from "./TimerDisplayUtils";
  */
 export default class UIUpdateHandler {
     private challengeList: ChallengeList;
-    private timerUpdateInterval: number | null = null;
+    private timerController: TimerController;
 
     /**
      * Map of action strings to their corresponding handler functions
@@ -43,6 +45,7 @@ export default class UIUpdateHandler {
      */
     constructor(challengeList: ChallengeList) {
         this.challengeList = challengeList;
+        this.timerController = new TimerController(challengeList);
     }
 
     /**
@@ -76,7 +79,7 @@ export default class UIUpdateHandler {
 
         // Handle optional updates
         if (updateTimers) {
-            this.updateTimerDisplays();
+            this.timerController.updateTimerDisplays();
         }
         if (updateCount) {
             this.updateChallengeCount();
@@ -98,7 +101,7 @@ export default class UIUpdateHandler {
             this.addChallengeToDOM(challenge);
         });
         this.updateChallengeCount();
-        this.startTimerUpdates();
+        this.timerController.startTimerUpdates();
     }
 
     /**
@@ -115,7 +118,7 @@ export default class UIUpdateHandler {
         challenges.forEach((challenge) => {
             this.editChallengeFromDOM(challenge);
         });
-        this.startTimerUpdates();
+        this.timerController.startTimerUpdates();
     }
 
     /**
@@ -130,10 +133,10 @@ export default class UIUpdateHandler {
         if (!challenges) return;
 
         challenges.forEach((challenge) => {
-            this.completeChallengeFromDOM(challenge.id);
+            DOMHelper.completeChallengeFromDOM(challenge.id);
         });
         this.updateChallengeCount();
-        this.updateTimerDisplays();
+        this.timerController.updateTimerDisplays();
     }
 
     /**
@@ -148,10 +151,10 @@ export default class UIUpdateHandler {
         if (!challenges) return;
 
         challenges.forEach((challenge) => {
-            this.revertChallengeFromDOM(challenge.id);
+            DOMHelper.revertChallengeFromDOM(challenge.id);
         });
         this.updateChallengeCount();
-        this.updateTimerDisplays();
+        this.timerController.updateTimerDisplays();
     }
 
     /**
@@ -166,10 +169,10 @@ export default class UIUpdateHandler {
         if (!challenges) return;
 
         challenges.forEach((challenge) => {
-            this.deleteChallengeFromDOM(challenge.id);
+            DOMHelper.deleteChallengeFromDOM(challenge.id);
         });
         this.updateChallengeCount();
-        this.updateTimerDisplays();
+        this.timerController.updateTimerDisplays();
     }
 
     /**
@@ -187,10 +190,10 @@ export default class UIUpdateHandler {
             c.isComplete()
         );
         doneChallenges.forEach((challenge) => {
-            this.deleteChallengeFromDOM(challenge.id);
+            DOMHelper.deleteChallengeFromDOM(challenge.id);
         });
         this.updateChallengeCount();
-        this.updateTimerDisplays();
+        this.timerController.updateTimerDisplays();
     }
 
     /**
@@ -221,7 +224,7 @@ export default class UIUpdateHandler {
 
         this.renderChallengeList();
         this.updateChallengeCount();
-        this.updateTimerDisplays();
+        this.timerController.updateTimerDisplays();
     }
 
     /**
@@ -241,13 +244,26 @@ export default class UIUpdateHandler {
             return;
         }
 
+        // Find the ordered lists within the challenge cards
+        const primaryChallengesList =
+            primaryContainer.querySelector(".card .challenges");
+        const secondaryChallengesList =
+            secondaryContainer.querySelector(".card .challenges");
+
+        if (!primaryChallengesList || !secondaryChallengesList) {
+            console.error(
+                "Challenge ordered lists not found - ensure cards are properly initialized"
+            );
+            return;
+        }
+
         const challengeElement = this.createChallengeElement(challenge);
 
-        // Add to both containers for dual-window architecture
+        // Add to both ordered lists for dual-window architecture
         // Optimization: Use original element for primary, clone only once for secondary
-        primaryContainer.appendChild(challengeElement);
+        primaryChallengesList.appendChild(challengeElement);
         const secondaryClone = challengeElement.cloneNode(true) as HTMLElement;
-        secondaryContainer.appendChild(secondaryClone);
+        secondaryChallengesList.appendChild(secondaryClone);
 
         // Animate scroll to new challenge
         animateScroll();
@@ -317,71 +333,7 @@ export default class UIUpdateHandler {
         }
 
         // Restart timer updates to handle any timer changes
-        this.startTimerUpdates();
-    }
-
-    /**
-     * Complete the challenge in the DOM
-     * @param challengeId - ID of challenge to complete
-     */
-    completeChallengeFromDOM(challengeId: string): void {
-        const challengeElements = document.querySelectorAll(
-            `[data-challenge-id="${challengeId}"]`
-        );
-
-        for (const challengeElement of challengeElements) {
-            challengeElement.classList.add("done");
-
-            // Update checkbox to checked state
-            const checkbox = challengeElement.querySelector(
-                ".challenge-checkbox"
-            );
-            if (checkbox) {
-                checkbox.classList.add("checked");
-            }
-        }
-        this.updateChallengeCount();
-        this.updateTimerDisplays();
-    }
-
-    /**
-     * Delete the challenge in the DOM
-     * @param challengeId - ID of challenge to delete
-     */
-    deleteChallengeFromDOM(challengeId: string): void {
-        const challengeElements = document.querySelectorAll(
-            `[data-challenge-id="${challengeId}"]`
-        );
-
-        for (const challengeElement of challengeElements) {
-            challengeElement.remove();
-        }
-        this.updateChallengeCount();
-        this.updateTimerDisplays();
-    }
-
-    /**
-     * Revert a completed challenge back to active status in the DOM
-     * @param challengeId - ID of challenge to revert
-     */
-    revertChallengeFromDOM(challengeId: string): void {
-        const challengeElements = document.querySelectorAll(
-            `[data-challenge-id="${challengeId}"]`
-        );
-
-        for (const challengeElement of challengeElements) {
-            challengeElement.classList.remove("done");
-
-            // Update checkbox to unchecked state
-            const checkbox = challengeElement.querySelector(
-                ".challenge-checkbox"
-            );
-            if (checkbox) {
-                checkbox.classList.remove("checked");
-            }
-        }
-        this.updateChallengeCount();
-        this.updateTimerDisplays();
+        this.timerController.startTimerUpdates();
     }
 
     /**
@@ -404,46 +356,63 @@ export default class UIUpdateHandler {
         primaryContainer.innerHTML = "";
         secondaryContainer.innerHTML = "";
 
+        // Create challenge cards with proper header structure
+        const primaryCard = DOMHelper.createChallengeCard(
+            this.challengeList.challengesCompleted,
+            this.challengeList.totalChallenges
+        );
+        const secondaryCard = primaryCard.cloneNode(true) as HTMLElement;
+
+        // Append cards to containers
+        primaryContainer.appendChild(primaryCard);
+        secondaryContainer.appendChild(secondaryCard);
+
+        // Get the ordered lists from the cards
+        const primaryList = primaryCard.querySelector("ol.challenges");
+        const secondaryList = secondaryCard.querySelector("ol.challenges");
+
+        if (!primaryList || !secondaryList) {
+            console.error("Challenge ordered lists not found in created cards");
+            return;
+        }
+
+        // Use DocumentFragment for efficient batch DOM operations
+        const primaryFragment = document.createDocumentFragment();
+        const secondaryFragment = document.createDocumentFragment();
+
         // Render all challenges
         this.challengeList.challenges.forEach((challenge) => {
             const challengeElement = this.createChallengeElement(challenge);
-
-            // Use original element for primary, clone only once for secondary
-            primaryContainer.appendChild(challengeElement);
             const secondaryClone = challengeElement.cloneNode(
                 true
             ) as HTMLElement;
-            secondaryContainer.appendChild(secondaryClone);
+
+            primaryFragment.appendChild(challengeElement);
+            secondaryFragment.appendChild(secondaryClone);
         });
 
+        // Single DOM append operations to reduce reflows
+        primaryList.appendChild(primaryFragment);
+        secondaryList.appendChild(secondaryFragment);
+
         this.updateChallengeCount();
-        this.startTimerUpdates();
+        this.timerController.startTimerUpdates();
     }
 
     /**
-     * Create a challenge DOM element
+     * Create a challenge DOM element using shared renderer
      * @param challenge - Challenge to create element for
      * @returns HTMLElement representing the challenge
      */
     private createChallengeElement(challenge: Challenge): HTMLElement {
-        const challengeElement = document.createElement("li");
-        challengeElement.className = `challenge ${
-            challenge.isComplete() ? "done" : ""
-        }`;
-        challengeElement.dataset["challengeId"] = challenge.id;
-
-        // Create checkbox for admin mode using shared renderer
-        const checkbox = ChallengeRenderer.createChallengeCheckbox(
-            challenge.isComplete()
+        // Use shared renderer with event handling support
+        const challengeElement = ChallengeRenderer.createChallengeElement(
+            challenge,
+            {
+                includeEventListeners: true,
+                eventHandler: this.handleCheckboxClick,
+            }
         );
-        checkbox.addEventListener("click", this.handleCheckboxClick);
-
-        // Create challenge text using shared renderer
-        const textElement =
-            ChallengeRenderer.createChallengeTextElement(challenge);
-
-        challengeElement.appendChild(checkbox);
-        challengeElement.appendChild(textElement);
 
         // Add timer element if challenge has timer
         if (challenge.timer) {
@@ -511,10 +480,14 @@ export default class UIUpdateHandler {
 
             // Update DOM to reflect the new status
             if (challenge.isComplete()) {
-                this.completeChallengeFromDOM(challengeId);
+                DOMHelper.completeChallengeFromDOM(challengeId);
             } else {
-                this.revertChallengeFromDOM(challengeId);
+                DOMHelper.revertChallengeFromDOM(challengeId);
             }
+
+            // Update count and timers
+            this.updateChallengeCount();
+            this.timerController.updateTimerDisplays();
         } catch (error) {
             console.error("Error toggling challenge completion:", error);
         }
@@ -524,68 +497,49 @@ export default class UIUpdateHandler {
      * Update the challenge count display
      */
     updateChallengeCount(): void {
-        const totalChallenges = this.challengeList.challenges.length;
-        const completedChallenges = this.challengeList.challenges.filter((c) =>
-            c.isComplete()
-        ).length;
-
-        const countElements = document.querySelectorAll(".challenge-count");
-        countElements.forEach((element) => {
-            element.textContent = `${completedChallenges}/${totalChallenges}`;
-        });
-    }
-
-    /**
-     * Start timer updates for real-time countdown display
-     */
-    startTimerUpdates(): void {
-        // Clear existing interval
-        if (this.timerUpdateInterval) {
-            clearInterval(this.timerUpdateInterval);
-        }
-
-        // Check if there are any active timers using shared utility
-        const hasActiveTimers = TimerDisplayUtils.hasActiveTimers(
-            this.challengeList
+        // Use shared helper with efficient getters from ChallengeList
+        DOMHelper.updateChallengeCount(
+            this.challengeList.challengesCompleted,
+            this.challengeList.totalChallenges
         );
-
-        // Only start interval if there are active timers
-        if (hasActiveTimers) {
-            this.timerUpdateInterval = window.setInterval(() => {
-                this.updateTimerDisplays();
-            }, 1000);
-        }
     }
 
     /**
-     * Update all timer displays using shared utilities
+     * Update timer displays - delegates to TimerController
+     * @public method for testing and external access
      */
     updateTimerDisplays(): void {
-        // Use shared utility for consistent timer display updates
-        const hasActiveTimers = TimerDisplayUtils.updateAllTimerDisplays(
-            this.challengeList
-        );
-
-        // Stop updates if no active timers remain
-        if (!hasActiveTimers) {
-            this.stopTimerUpdates();
-        }
+        this.timerController.updateTimerDisplays();
     }
 
     /**
-     * Stop timer updates
+     * Start timer updates - delegates to TimerController
+     * @public method for testing and external access
+     */
+    startTimerUpdates(): void {
+        this.timerController.startTimerUpdates();
+    }
+
+    /**
+     * Stop timer updates - delegates to TimerController
+     * @public method for testing and external access
      */
     stopTimerUpdates(): void {
-        if (this.timerUpdateInterval) {
-            clearInterval(this.timerUpdateInterval);
-            this.timerUpdateInterval = null;
-        }
+        this.timerController.stopTimerUpdates();
+    }
+
+    /**
+     * Get timer update interval status - delegates to TimerController
+     * @public method for testing access
+     */
+    get timerUpdateInterval(): number | null {
+        return this.timerController.getTimerUpdateInterval();
     }
 
     /**
      * Clean up resources
      */
     destroy(): void {
-        this.stopTimerUpdates();
+        this.timerController.destroy();
     }
 }
