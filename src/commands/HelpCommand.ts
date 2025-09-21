@@ -57,24 +57,8 @@ export class HelpCommand extends BaseCommand {
      * @returns General help message
      */
     private getGeneralHelp(): string {
-        const commands = [
-            '!ch add title="..." - Add new challenge',
-            '!ch edit 1 title="..." - Edit challenge',
-            "!ch done 1,2,3 - Complete challenges",
-            "!ch fail 1 - Mark challenge as failed",
-            "!ch delete 1,2 - Delete challenges",
-            "!ch + 1 [amount] - Increment progress",
-            "!ch - 1 [amount] - Decrement progress",
-            "!ch set 1 5 - Set specific progress",
-            "!ch list [all|done|incomplete] - List challenges",
-            "!ch show 1 - Show challenge details",
-            "!ch check - Show challenge statistics",
-            "!ch clearall - Clear all challenges",
-            "!ch cleardone - Clear completed challenges",
-            "!ch help [command] - Show help",
-        ];
-
-        return `Available commands: ${commands.join(" • ")}`;
+        // Use ResponseFormatter.formatHelp() for consistent help formatting
+        return ResponseFormatter.formatHelp();
     }
 
     /**
