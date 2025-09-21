@@ -301,13 +301,14 @@ export const expectSilentIgnore = (response: ChatResponse): void => {
 };
 
 /**
- * Asserts that a command response indicates an invalid command error
+ * Asserts that a command response indicates an invalid command
  * @param response - Chat response to check
  */
 export const expectInvalidCommandError = (response: ChatResponse): void => {
-    expect(response.error).toBe(true);
-    expect(response.message).toContain("Invalid command: command not found");
-    expect(response.message).toContain("Try !help");
+    expect(response.error).toBe(false); // Help response is not an error
+    expect(response.message).toContain("Available commands:");
+    expect(response.message).toContain("!ch add");
+    expect(response.message).toContain("!ch help");
 };
 
 // ============================================================================

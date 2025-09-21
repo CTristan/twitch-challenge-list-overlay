@@ -3,6 +3,7 @@ import ConfigManager from "../classes/ConfigManager";
 import { CommandRegistry } from "../commands/CommandRegistry";
 import { normalizeCommand } from "../types/CommandTypes";
 import CommandParser from "./CommandParser";
+import { ResponseFormatter } from "./ResponseFormatter";
 
 /**
  * @class CommandHandler
@@ -75,9 +76,10 @@ export default class CommandHandler {
             // Normalize the command using the type system
             const commandType = normalizeCommand(parsed.command);
             if (!commandType) {
+                // Return help response for unknown commands instead of error message
                 return {
-                    message: `Unknown command: ${parsed.command}. Try !ch help`,
-                    error: true,
+                    message: ResponseFormatter.formatHelp(),
+                    error: false,
                 };
             }
 

@@ -17,7 +17,7 @@ import {
     TEST_CONSTANTS,
     testCommandLimit,
     testCommandPermissions,
-    testMultipleTargetCommand
+    testMultipleTargetCommand,
 } from "../utils/chatHandlerTestUtils";
 
 // ============================================================================
@@ -50,17 +50,42 @@ describe("App.chatHandler", () => {
     });
 
     describe("Command Validation", () => {
-        it("should error if the command is empty", () => {
-            const response = executeCommand(app, SHARED_USERS.regular, "", "");
-            expectInvalidCommandError(response);
-        });
-
-        it("should error if the command is not found", () => {
+        it("should silently ignore empty ch commands from regular users", () => {
             const response = executeCommand(
                 app,
                 SHARED_USERS.regular,
-                "invalidCommand",
+                "ch",
                 ""
+            );
+            expectSilentIgnore(response);
+        });
+
+        it("should silently ignore invalid ch commands from regular users", () => {
+            const response = executeCommand(
+                app,
+                SHARED_USERS.regular,
+                "ch",
+                "invalidCommand"
+            );
+            expectSilentIgnore(response);
+        });
+
+        it("should return help for invalid commands from moderators", () => {
+            const response = executeCommand(
+                app,
+                SHARED_USERS.moderator,
+                "ch",
+                "invalidCommand"
+            );
+            expectInvalidCommandError(response);
+        });
+
+        it("should return help for invalid commands from broadcasters", () => {
+            const response = executeCommand(
+                app,
+                SHARED_USERS.admin,
+                "ch",
+                "addd"
             );
             expectInvalidCommandError(response);
         });

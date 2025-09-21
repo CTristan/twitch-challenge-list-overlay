@@ -5,6 +5,7 @@ import {
     normalizeCommand,
     type CommandTypeValue,
 } from "../types/CommandTypes";
+import { ResponseFormatter } from "../utils/ResponseFormatter";
 import { AddCommand } from "./AddCommand";
 import { CheckCommand } from "./CheckCommand";
 import { ClearAllCommand } from "./ClearAllCommand";
@@ -130,9 +131,10 @@ export class CommandRegistry {
         const command = this.getCommand(parsed.command);
 
         if (!command) {
+            // Return help response for unknown commands instead of error message
             return {
-                message: `Unknown command: ${parsed.command}. Use !ch help for available commands.`,
-                error: true,
+                message: ResponseFormatter.formatHelp(),
+                error: false,
             };
         }
 
