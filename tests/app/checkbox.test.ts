@@ -33,7 +33,7 @@ describe("Challenge Checkbox Functionality", () => {
 
             // Check that checkbox elements are created
             const checkboxes = document.querySelectorAll(".challenge-checkbox");
-            expect(checkboxes).toHaveLength(2); // Primary and secondary containers
+            expect(checkboxes).toHaveLength(1); // Single container
 
             // Check that checkboxes are not checked initially
             checkboxes.forEach((checkbox) => {
@@ -51,7 +51,7 @@ describe("Challenge Checkbox Functionality", () => {
 
             // Check that checkbox elements are created
             const checkboxes = document.querySelectorAll(".challenge-checkbox");
-            expect(checkboxes).toHaveLength(2); // Primary and secondary containers
+            expect(checkboxes).toHaveLength(1); // Single container
 
             // Check that checkboxes are not checked initially
             checkboxes.forEach((checkbox) => {
@@ -64,7 +64,7 @@ describe("Challenge Checkbox Functionality", () => {
             app.renderChallengeList();
 
             const textElements = document.querySelectorAll(".challenge-text");
-            expect(textElements).toHaveLength(2); // Primary and secondary containers
+            expect(textElements).toHaveLength(1); // Single container
 
             textElements.forEach((textElement) => {
                 expect(textElement.textContent).toBe("Test challenge text");
@@ -152,19 +152,19 @@ describe("Challenge Checkbox Functionality", () => {
             // Check that the challenge element has the done class
             const challengeElements =
                 document.querySelectorAll(".challenge.done");
-            expect(challengeElements).toHaveLength(2);
+            expect(challengeElements).toHaveLength(1);
 
             // Check that text elements exist within done challenges
             const textElements = document.querySelectorAll(
                 ".challenge.done .challenge-text"
             );
-            expect(textElements).toHaveLength(2);
+            expect(textElements).toHaveLength(1);
 
             // Verify that checkboxes exist but are separate from text styling
             const checkboxes = document.querySelectorAll(
                 ".challenge.done .challenge-checkbox"
             );
-            expect(checkboxes).toHaveLength(2);
+            expect(checkboxes).toHaveLength(1);
 
             // The CSS selector ".challenge.done .challenge-text" should target only text
             // This test verifies the DOM structure supports the CSS fix

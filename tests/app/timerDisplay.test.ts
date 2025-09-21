@@ -45,7 +45,7 @@ describe("Timer Display in Challenge Rows", () => {
 
             // Check that timer elements are created
             const timerElements = document.querySelectorAll(".challenge-timer");
-            expect(timerElements).toHaveLength(2); // Primary and secondary containers
+            expect(timerElements).toHaveLength(1); // Single container
 
             // Check timer content
             timerElements.forEach((timerElement) => {
@@ -189,7 +189,7 @@ describe("Timer Display in Challenge Rows", () => {
 
             // Check that timer elements are created
             const timerElements = document.querySelectorAll(".challenge-timer");
-            expect(timerElements).toHaveLength(2); // Primary and secondary containers
+            expect(timerElements).toHaveLength(1); // Single container
         });
 
         it("should update timer display when editing challenges", () => {
@@ -211,7 +211,7 @@ describe("Timer Display in Challenge Rows", () => {
 
             // Check that timer is still displayed
             const timerElements = document.querySelectorAll(".challenge-timer");
-            expect(timerElements).toHaveLength(2);
+            expect(timerElements).toHaveLength(1);
         });
 
         it("should remove timer display when challenge is completed", () => {

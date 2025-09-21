@@ -18,28 +18,20 @@ describe("deleteChallengeFromDOM Header Preservation", () => {
             app.renderChallengeList();
 
             // Verify initial state - header and challenge should exist
-            const initialPrimaryCards = document.querySelectorAll(
-                ".challenge-container.primary .card"
-            );
-            const initialSecondaryCards = document.querySelectorAll(
-                ".challenge-container.secondary .card"
+            const initialCards = document.querySelectorAll(
+                ".challenge-container .card"
             );
             const initialChallenges = document.querySelectorAll(".challenge");
 
-            expect(initialPrimaryCards.length).toBe(1);
-            expect(initialSecondaryCards.length).toBe(1);
-            expect(initialChallenges.length).toBe(2); // Primary + secondary
+            expect(initialCards.length).toBe(1);
+            expect(initialChallenges.length).toBe(1); // Single container
 
             // Verify headers exist (skip text content check for now)
-            const initialPrimaryHeaders = document.querySelectorAll(
-                ".challenge-container.primary .card .username"
-            );
-            const initialSecondaryHeaders = document.querySelectorAll(
-                ".challenge-container.secondary .card .username"
+            const initialHeaders = document.querySelectorAll(
+                ".challenge-container .card .username"
             );
 
-            expect(initialPrimaryHeaders.length).toBe(1);
-            expect(initialSecondaryHeaders.length).toBe(1);
+            expect(initialHeaders.length).toBe(1);
 
             // Get the challenge ID to delete
             const challengeId = app.challengeList.challenges[0]?.id;
@@ -50,44 +42,29 @@ describe("deleteChallengeFromDOM Header Preservation", () => {
 
             // After deleting the last challenge, only the challenge element should be removed
             // The card container and header should remain visible
-            const afterDeletePrimaryCards = document.querySelectorAll(
-                ".challenge-container.primary .card"
-            );
-            const afterDeleteSecondaryCards = document.querySelectorAll(
-                ".challenge-container.secondary .card"
+            const afterDeleteCards = document.querySelectorAll(
+                ".challenge-container .card"
             );
             const afterDeleteChallenges =
                 document.querySelectorAll(".challenge");
 
             // Expected behavior: Cards should still exist (length = 1) but be empty
-            console.log(
-                "Primary cards after delete:",
-                afterDeletePrimaryCards.length
-            );
-            console.log(
-                "Secondary cards after delete:",
-                afterDeleteSecondaryCards.length
-            );
+            console.log("Cards after delete:", afterDeleteCards.length);
             console.log(
                 "Challenges after delete:",
                 afterDeleteChallenges.length
             );
 
             // These should pass with the fix
-            expect(afterDeletePrimaryCards.length).toBe(1); // Cards remain
-            expect(afterDeleteSecondaryCards.length).toBe(1); // Cards remain
+            expect(afterDeleteCards.length).toBe(1); // Cards remain
             expect(afterDeleteChallenges.length).toBe(0); // This is correct - no challenges should remain
 
             // Headers should exist
-            const afterDeletePrimaryHeaders = document.querySelectorAll(
-                ".challenge-container.primary .card .username"
-            );
-            const afterDeleteSecondaryHeaders = document.querySelectorAll(
-                ".challenge-container.secondary .card .username"
+            const afterDeleteHeaders = document.querySelectorAll(
+                ".challenge-container .card .username"
             );
 
-            expect(afterDeletePrimaryHeaders.length).toBe(1); // Headers remain
-            expect(afterDeleteSecondaryHeaders.length).toBe(1); // Headers remain
+            expect(afterDeleteHeaders.length).toBe(1); // Headers remain
         });
 
         it("should work correctly when deleting non-last challenges", () => {
@@ -101,7 +78,7 @@ describe("deleteChallengeFromDOM Header Preservation", () => {
 
             // Verify initial state
             const initialChallenges = document.querySelectorAll(".challenge");
-            expect(initialChallenges.length).toBe(6); // 3 challenges × 2 containers
+            expect(initialChallenges.length).toBe(3); // 3 challenges in single container
 
             // Delete the first challenge (not the last one)
             const firstChallengeId = app.challengeList.challenges[0]?.id;
@@ -110,29 +87,21 @@ describe("deleteChallengeFromDOM Header Preservation", () => {
             app.deleteChallengeFromDOM(firstChallengeId!);
 
             // This should work correctly - cards should remain, only the challenge element removed
-            const afterDeletePrimaryCards = document.querySelectorAll(
-                ".challenge-container.primary .card"
-            );
-            const afterDeleteSecondaryCards = document.querySelectorAll(
-                ".challenge-container.secondary .card"
+            const afterDeleteCards = document.querySelectorAll(
+                ".challenge-container .card"
             );
             const afterDeleteChallenges =
                 document.querySelectorAll(".challenge");
 
-            expect(afterDeletePrimaryCards.length).toBe(1); // Cards should remain
-            expect(afterDeleteSecondaryCards.length).toBe(1); // Cards should remain
-            expect(afterDeleteChallenges.length).toBe(4); // 2 challenges × 2 containers
+            expect(afterDeleteCards.length).toBe(1); // Cards should remain
+            expect(afterDeleteChallenges.length).toBe(2); // 2 challenges remaining
 
             // Headers should still exist
-            const afterDeletePrimaryHeaders = document.querySelectorAll(
-                ".challenge-container.primary .card .username"
-            );
-            const afterDeleteSecondaryHeaders = document.querySelectorAll(
-                ".challenge-container.secondary .card .username"
+            const afterDeleteHeaders = document.querySelectorAll(
+                ".challenge-container .card .username"
             );
 
-            expect(afterDeletePrimaryHeaders.length).toBe(1);
-            expect(afterDeleteSecondaryHeaders.length).toBe(1);
+            expect(afterDeleteHeaders.length).toBe(1);
         });
 
         it("should preserve header when using clearListFromDOM (clearAll command)", () => {
@@ -146,36 +115,28 @@ describe("deleteChallengeFromDOM Header Preservation", () => {
 
             // Verify initial state
             const initialChallenges = document.querySelectorAll(".challenge");
-            expect(initialChallenges.length).toBe(6); // 3 challenges × 2 containers
+            expect(initialChallenges.length).toBe(3); // 3 challenges in single container
 
             // Simulate the clearAll command: first clear the data, then clear the DOM
             app.challengeList.clearChallengeList(); // Clear the data first
             app.clearListFromDOM(); // Then clear and re-render the DOM
 
             // After clearing, cards and headers should still exist
-            const afterClearPrimaryCards = document.querySelectorAll(
-                ".challenge-container.primary .card"
-            );
-            const afterClearSecondaryCards = document.querySelectorAll(
-                ".challenge-container.secondary .card"
+            const afterClearCards = document.querySelectorAll(
+                ".challenge-container .card"
             );
             const afterClearChallenges =
                 document.querySelectorAll(".challenge");
 
-            expect(afterClearPrimaryCards.length).toBe(1); // Cards should remain
-            expect(afterClearSecondaryCards.length).toBe(1); // Cards should remain
+            expect(afterClearCards.length).toBe(1); // Cards should remain
             expect(afterClearChallenges.length).toBe(0); // No challenges should remain
 
             // Headers should still exist
-            const afterClearPrimaryHeaders = document.querySelectorAll(
-                ".challenge-container.primary .card .username"
-            );
-            const afterClearSecondaryHeaders = document.querySelectorAll(
-                ".challenge-container.secondary .card .username"
+            const afterClearHeaders = document.querySelectorAll(
+                ".challenge-container .card .username"
             );
 
-            expect(afterClearPrimaryHeaders.length).toBe(1);
-            expect(afterClearSecondaryHeaders.length).toBe(1);
+            expect(afterClearHeaders.length).toBe(1);
         });
     });
 });

@@ -207,19 +207,13 @@ export default class UIUpdateHandler {
      * Clear the entire challenge list from DOM
      */
     clearListFromDOM(): void {
-        // Clear the entire containers and then re-render to ensure proper header structure
-        const primaryContainer = document.querySelector(
-            ".challenge-container.primary"
-        );
-        const secondaryContainer = document.querySelector(
-            ".challenge-container.secondary"
+        // Clear the entire container and then re-render to ensure proper header structure
+        const challengeContainer = document.querySelector(
+            ".challenge-container"
         );
 
-        if (primaryContainer) {
-            primaryContainer.innerHTML = "";
-        }
-        if (secondaryContainer) {
-            secondaryContainer.innerHTML = "";
+        if (challengeContainer) {
+            challengeContainer.innerHTML = "";
         }
 
         this.renderChallengeList();
@@ -232,38 +226,30 @@ export default class UIUpdateHandler {
      * @param challenge - Challenge to add
      */
     addChallengeToDOM(challenge: Challenge): void {
-        const primaryContainer = document.querySelector(
-            ".challenge-container.primary"
-        );
-        const secondaryContainer = document.querySelector(
-            ".challenge-container.secondary"
+        const challengeContainer = document.querySelector(
+            ".challenge-container"
         );
 
-        if (!primaryContainer || !secondaryContainer) {
-            console.error("Challenge containers not found");
+        if (!challengeContainer) {
+            console.error("Challenge container not found");
             return;
         }
 
-        // Find the ordered lists within the challenge cards
-        const primaryChallengesList =
-            primaryContainer.querySelector(".card .challenges");
-        const secondaryChallengesList =
-            secondaryContainer.querySelector(".card .challenges");
+        // Find the ordered list within the challenge card
+        const challengesList =
+            challengeContainer.querySelector(".card .challenges");
 
-        if (!primaryChallengesList || !secondaryChallengesList) {
+        if (!challengesList) {
             console.error(
-                "Challenge ordered lists not found - ensure cards are properly initialized"
+                "Challenge ordered list not found - ensure card is properly initialized"
             );
             return;
         }
 
         const challengeElement = this.createChallengeElement(challenge);
 
-        // Add to both ordered lists for dual-window architecture
-        // Optimization: Use original element for primary, clone only once for secondary
-        primaryChallengesList.appendChild(challengeElement);
-        const secondaryClone = challengeElement.cloneNode(true) as HTMLElement;
-        secondaryChallengesList.appendChild(secondaryClone);
+        // Add to the single challenge list
+        challengesList.appendChild(challengeElement);
 
         // Animate scroll to new challenge
         animateScroll();
@@ -340,60 +326,46 @@ export default class UIUpdateHandler {
      * Render the complete challenge list to the DOM
      */
     renderChallengeList(): void {
-        const primaryContainer = document.querySelector(
-            ".challenge-container.primary"
-        );
-        const secondaryContainer = document.querySelector(
-            ".challenge-container.secondary"
+        const challengeContainer = document.querySelector(
+            ".challenge-container"
         );
 
-        if (!primaryContainer || !secondaryContainer) {
-            console.error("Challenge containers not found");
+        if (!challengeContainer) {
+            console.error("Challenge container not found");
             return;
         }
 
         // Clear existing content
-        primaryContainer.innerHTML = "";
-        secondaryContainer.innerHTML = "";
+        challengeContainer.innerHTML = "";
 
-        // Create challenge cards with proper header structure
-        const primaryCard = DOMHelper.createChallengeCard(
+        // Create challenge card with proper header structure
+        const challengeCard = DOMHelper.createChallengeCard(
             this.challengeList.challengesCompleted,
             this.challengeList.totalChallenges
         );
-        const secondaryCard = primaryCard.cloneNode(true) as HTMLElement;
 
-        // Append cards to containers
-        primaryContainer.appendChild(primaryCard);
-        secondaryContainer.appendChild(secondaryCard);
+        // Append card to container
+        challengeContainer.appendChild(challengeCard);
 
-        // Get the ordered lists from the cards
-        const primaryList = primaryCard.querySelector("ol.challenges");
-        const secondaryList = secondaryCard.querySelector("ol.challenges");
+        // Get the ordered list from the card
+        const challengeList = challengeCard.querySelector("ol.challenges");
 
-        if (!primaryList || !secondaryList) {
-            console.error("Challenge ordered lists not found in created cards");
+        if (!challengeList) {
+            console.error("Challenge ordered list not found in created card");
             return;
         }
 
         // Use DocumentFragment for efficient batch DOM operations
-        const primaryFragment = document.createDocumentFragment();
-        const secondaryFragment = document.createDocumentFragment();
+        const fragment = document.createDocumentFragment();
 
         // Render all challenges
         this.challengeList.challenges.forEach((challenge) => {
             const challengeElement = this.createChallengeElement(challenge);
-            const secondaryClone = challengeElement.cloneNode(
-                true
-            ) as HTMLElement;
-
-            primaryFragment.appendChild(challengeElement);
-            secondaryFragment.appendChild(secondaryClone);
+            fragment.appendChild(challengeElement);
         });
 
-        // Single DOM append operations to reduce reflows
-        primaryList.appendChild(primaryFragment);
-        secondaryList.appendChild(secondaryFragment);
+        // Single DOM append operation to reduce reflows
+        challengeList.appendChild(fragment);
 
         this.updateChallengeCount();
         this.timerController.startTimerUpdates();

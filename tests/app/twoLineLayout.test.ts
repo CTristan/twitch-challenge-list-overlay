@@ -29,7 +29,7 @@ describe("Two-Line Challenge Layout", () => {
             app.renderChallengeList();
 
             const textElements = document.querySelectorAll(".challenge-text");
-            expect(textElements).toHaveLength(2); // Primary and secondary containers
+            expect(textElements).toHaveLength(1); // Single container
 
             textElements.forEach((textElement) => {
                 // Should be a div container

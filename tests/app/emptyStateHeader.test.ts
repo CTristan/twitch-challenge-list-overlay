@@ -27,41 +27,28 @@ describe("Empty State Header Visibility", () => {
             app.renderChallengeList();
 
             // Check that cards are created (this is the main fix - cards should exist even when empty)
-            const primaryCards = document.querySelectorAll(
-                ".challenge-container.primary .card"
-            );
-            const secondaryCards = document.querySelectorAll(
-                ".challenge-container.secondary .card"
+            const cards = document.querySelectorAll(
+                ".challenge-container .card"
             );
 
-            expect(primaryCards.length).toBe(1);
-            expect(secondaryCards.length).toBe(1);
+            expect(cards.length).toBe(1);
 
-            // Check that the header elements exist in both containers
-            const primaryHeaders = document.querySelectorAll(
-                ".challenge-container.primary .card .username"
-            );
-            const secondaryHeaders = document.querySelectorAll(
-                ".challenge-container.secondary .card .username"
+            // Check that the header elements exist in the container
+            const headers = document.querySelectorAll(
+                ".challenge-container .card .username"
             );
 
-            expect(primaryHeaders.length).toBe(1);
-            expect(secondaryHeaders.length).toBe(1);
+            expect(headers.length).toBe(1);
 
             // Check that challenge lists exist but are empty
-            const primaryLists = document.querySelectorAll(
-                ".challenge-container.primary .card ol.challenges"
-            );
-            const secondaryLists = document.querySelectorAll(
-                ".challenge-container.secondary .card ol.challenges"
+            const challengeLists = document.querySelectorAll(
+                ".challenge-container .card ol.challenges"
             );
 
-            expect(primaryLists.length).toBe(1);
-            expect(secondaryLists.length).toBe(1);
+            expect(challengeLists.length).toBe(1);
 
             // Lists should be empty (no challenge items)
-            expect(primaryLists[0]?.children.length).toBe(0);
-            expect(secondaryLists[0]?.children.length).toBe(0);
+            expect(challengeLists[0]?.children.length).toBe(0);
         });
 
         it("should render header after clearing all challenges", () => {
@@ -79,26 +66,18 @@ describe("Empty State Header Visibility", () => {
             app.renderChallengeList();
 
             // Check that the header cards still exist after clearing
-            const primaryCards = document.querySelectorAll(
-                ".challenge-container.primary .card"
-            );
-            const secondaryCards = document.querySelectorAll(
-                ".challenge-container.secondary .card"
+            const cards = document.querySelectorAll(
+                ".challenge-container .card"
             );
 
-            expect(primaryCards.length).toBe(1);
-            expect(secondaryCards.length).toBe(1);
+            expect(cards.length).toBe(1);
 
             // Check that the header elements exist
-            const primaryHeaders = document.querySelectorAll(
-                ".challenge-container.primary .card .username"
-            );
-            const secondaryHeaders = document.querySelectorAll(
-                ".challenge-container.secondary .card .username"
+            const headers = document.querySelectorAll(
+                ".challenge-container .card .username"
             );
 
-            expect(primaryHeaders.length).toBe(1);
-            expect(secondaryHeaders.length).toBe(1);
+            expect(headers.length).toBe(1);
 
             // Verify no challenge items are present
             expect(document.querySelectorAll(".challenge").length).toBe(0);
@@ -115,26 +94,18 @@ describe("Empty State Header Visibility", () => {
             app.renderChallengeList();
 
             // Check that the header cards still exist
-            const primaryCards = document.querySelectorAll(
-                ".challenge-container.primary .card"
-            );
-            const secondaryCards = document.querySelectorAll(
-                ".challenge-container.secondary .card"
+            const cards = document.querySelectorAll(
+                ".challenge-container .card"
             );
 
-            expect(primaryCards.length).toBe(1);
-            expect(secondaryCards.length).toBe(1);
+            expect(cards.length).toBe(1);
 
             // Check that the header elements exist
-            const primaryHeaders = document.querySelectorAll(
-                ".challenge-container.primary .card .username"
-            );
-            const secondaryHeaders = document.querySelectorAll(
-                ".challenge-container.secondary .card .username"
+            const headers = document.querySelectorAll(
+                ".challenge-container .card .username"
             );
 
-            expect(primaryHeaders.length).toBe(1);
-            expect(secondaryHeaders.length).toBe(1);
+            expect(headers.length).toBe(1);
         });
 
         it("should maintain header visibility when transitioning from empty to populated", () => {
@@ -142,23 +113,19 @@ describe("Empty State Header Visibility", () => {
             app.renderChallengeList();
 
             // Verify header exists in empty state
-            let primaryCards = document.querySelectorAll(
-                ".challenge-container.primary .card"
-            );
-            expect(primaryCards.length).toBe(1);
+            let cards = document.querySelectorAll(".challenge-container .card");
+            expect(cards.length).toBe(1);
 
             // Add a challenge
             app.challengeList.addChallenges(["New Challenge"]);
             app.renderChallengeList();
 
             // Verify header still exists
-            primaryCards = document.querySelectorAll(
-                ".challenge-container.primary .card"
-            );
-            expect(primaryCards.length).toBe(1);
+            cards = document.querySelectorAll(".challenge-container .card");
+            expect(cards.length).toBe(1);
 
             // Verify challenge item is present
-            expect(document.querySelectorAll(".challenge").length).toBe(2); // Primary + secondary containers
+            expect(document.querySelectorAll(".challenge").length).toBe(1); // Single container
         });
     });
 
@@ -167,18 +134,14 @@ describe("Empty State Header Visibility", () => {
             // Test empty state structure
             app.renderChallengeList();
 
-            const emptyPrimaryCards = document.querySelectorAll(
-                ".challenge-container.primary .card"
-            );
-            const emptySecondaryCards = document.querySelectorAll(
-                ".challenge-container.secondary .card"
+            const emptyCards = document.querySelectorAll(
+                ".challenge-container .card"
             );
 
-            expect(emptyPrimaryCards.length).toBe(1);
-            expect(emptySecondaryCards.length).toBe(1);
+            expect(emptyCards.length).toBe(1);
 
             // Each card should have a header and an empty list
-            emptyPrimaryCards.forEach((card) => {
+            emptyCards.forEach((card) => {
                 expect(card.querySelector(".username")).toBeTruthy();
                 expect(card.querySelector("ol.challenges")).toBeTruthy();
             });
@@ -187,18 +150,14 @@ describe("Empty State Header Visibility", () => {
             app.challengeList.addChallenges(["Challenge 1"]);
             app.renderChallengeList();
 
-            const populatedPrimaryCards = document.querySelectorAll(
-                ".challenge-container.primary .card"
-            );
-            const populatedSecondaryCards = document.querySelectorAll(
-                ".challenge-container.secondary .card"
+            const populatedCards = document.querySelectorAll(
+                ".challenge-container .card"
             );
 
-            expect(populatedPrimaryCards.length).toBe(1);
-            expect(populatedSecondaryCards.length).toBe(1);
+            expect(populatedCards.length).toBe(1);
 
             // Structure should be the same, just with content in the list
-            populatedPrimaryCards.forEach((card) => {
+            populatedCards.forEach((card) => {
                 expect(card.querySelector(".username")).toBeTruthy();
                 expect(card.querySelector("ol.challenges")).toBeTruthy();
             });

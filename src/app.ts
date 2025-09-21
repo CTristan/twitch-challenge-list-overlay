@@ -162,28 +162,17 @@ export default class App {
             list.appendChild(fragment);
         }
 
-        // Always append the card to containers, even if the list is empty
+        // Always append the card to container, even if the list is empty
         // This ensures the header is always visible
-        const primaryContainer = document.querySelector(
-            ".challenge-container.primary"
+        const challengeContainer = document.querySelector(
+            ".challenge-container"
         );
-        if (!primaryContainer) {
-            console.error("Primary challenge container not found");
+        if (!challengeContainer) {
+            console.error("Challenge container not found");
             return;
         }
-        primaryContainer.innerHTML = "";
-        primaryContainer.appendChild(cardEl);
-
-        const secondaryClone = cardEl.cloneNode(true);
-        const secondaryContainer = document.querySelector(
-            ".challenge-container.secondary"
-        );
-        if (!secondaryContainer) {
-            console.error("Secondary challenge container not found");
-            return;
-        }
-        secondaryContainer.innerHTML = "";
-        secondaryContainer.appendChild(secondaryClone);
+        challengeContainer.innerHTML = "";
+        challengeContainer.appendChild(cardEl);
 
         animateScroll();
 
@@ -276,14 +265,11 @@ export default class App {
      * @returns {void}
      */
     addChallengeToDOM(challenge: Challenge): void {
-        const primaryContainer = document.querySelector(
-            ".challenge-container.primary"
-        );
-        const secondaryContainer = document.querySelector(
-            ".challenge-container.secondary"
+        const challengeContainer = document.querySelector(
+            ".challenge-container"
         );
 
-        if (!primaryContainer || !secondaryContainer) return;
+        if (!challengeContainer) return;
 
         const challengeCardEls = document.querySelectorAll(".card");
 
@@ -292,9 +278,7 @@ export default class App {
                 this.challengeList.challengesCompleted,
                 this.challengeList.totalChallenges
             );
-            const clonedChallengeCard = challengeCard.cloneNode(true);
-            primaryContainer.appendChild(challengeCard);
-            secondaryContainer.appendChild(clonedChallengeCard);
+            challengeContainer.appendChild(challengeCard);
         }
 
         const challengeElement = document.createElement("li");
@@ -343,22 +327,11 @@ export default class App {
             challengeElement.appendChild(timerElement);
         }
 
-        // Clone the fully-styled challenge element for the secondary container
-        // cloneNode(true) creates a deep copy with all attributes, styles, and child elements
-        const cloneChallengeElement = challengeElement.cloneNode(
-            true
-        ) as HTMLElement;
+        const challengesList =
+            challengeContainer.querySelector(".card .challenges");
 
-        const primaryChallengesList =
-            primaryContainer.querySelector(".card .challenges");
-        const secondaryChallengesList =
-            secondaryContainer.querySelector(".card .challenges");
-
-        if (primaryChallengesList) {
-            primaryChallengesList.appendChild(challengeElement);
-        }
-        if (secondaryChallengesList) {
-            secondaryChallengesList.appendChild(cloneChallengeElement);
+        if (challengesList) {
+            challengesList.appendChild(challengeElement);
         }
 
         this.updateChallengeCount();

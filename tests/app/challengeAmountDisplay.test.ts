@@ -37,7 +37,7 @@ describe("Challenge Progress Display", () => {
 
             const progressElements =
                 document.querySelectorAll(".challenge-amount");
-            expect(progressElements).toHaveLength(2); // Primary and secondary containers
+            expect(progressElements).toHaveLength(1); // Single container
 
             progressElements.forEach((progressElement) => {
                 expect(progressElement.textContent).toBe("Progress: 0/5");

@@ -219,33 +219,22 @@ describe("UIUpdateHandler", () => {
             // Then add the individual challenge
             uiUpdateHandler.addChallengeToDOM(challenge);
 
-            const primaryChallengesList = document.querySelector(
-                ".challenge-container.primary .card .challenges"
-            );
-            const secondaryChallengesList = document.querySelector(
-                ".challenge-container.secondary .card .challenges"
+            const challengesList = document.querySelector(
+                ".challenge-container .card .challenges"
             );
 
-            // Both ordered lists should have exactly one challenge
-            expect(primaryChallengesList?.children.length).toBe(1);
-            expect(secondaryChallengesList?.children.length).toBe(1);
+            // The ordered list should have exactly one challenge
+            expect(challengesList?.children.length).toBe(1);
 
-            const primaryChallenge =
-                primaryChallengesList?.firstElementChild as HTMLElement;
-            const secondaryChallenge =
-                secondaryChallengesList?.firstElementChild as HTMLElement;
+            const challengeElement =
+                challengesList?.firstElementChild as HTMLElement;
 
-            // Both challenges should have identical structure
-            expect(primaryChallenge.outerHTML).toBe(
-                secondaryChallenge.outerHTML
-            );
-            expect(primaryChallenge.dataset["challengeId"]).toBe(challenge.id);
-            expect(secondaryChallenge.dataset["challengeId"]).toBe(
-                challenge.id
-            );
+            // Challenge should have proper structure
+            expect(challengeElement).toBeTruthy();
+            expect(challengeElement.dataset["challengeId"]).toBe(challenge.id);
         });
 
-        it("should maintain event handlers on both containers", () => {
+        it("should maintain event handlers on container", () => {
             const challenge = new Challenge("Test Challenge");
 
             // First render the challenge list to set up the card structure
@@ -254,24 +243,17 @@ describe("UIUpdateHandler", () => {
             // Then add the individual challenge
             uiUpdateHandler.addChallengeToDOM(challenge);
 
-            const primaryCheckbox = document.querySelector(
-                ".challenge-container.primary .challenge-checkbox"
-            );
-            const secondaryCheckbox = document.querySelector(
-                ".challenge-container.secondary .challenge-checkbox"
+            const checkbox = document.querySelector(
+                ".challenge-container .challenge-checkbox"
             );
 
-            // Both checkboxes should exist
-            expect(primaryCheckbox).toBeTruthy();
-            expect(secondaryCheckbox).toBeTruthy();
+            // Checkbox should exist
+            expect(checkbox).toBeTruthy();
 
-            // Both should have the same event listeners (verified by class structure)
-            expect(
-                primaryCheckbox?.classList.contains("challenge-checkbox")
-            ).toBe(true);
-            expect(
-                secondaryCheckbox?.classList.contains("challenge-checkbox")
-            ).toBe(true);
+            // Should have proper class structure
+            expect(checkbox?.classList.contains("challenge-checkbox")).toBe(
+                true
+            );
         });
 
         it("should render multiple challenges efficiently", () => {
@@ -286,28 +268,18 @@ describe("UIUpdateHandler", () => {
             );
             uiUpdateHandler.renderChallengeList();
 
-            const primaryChallengesList = document.querySelector(
-                ".challenge-container.primary .card .challenges"
-            );
-            const secondaryChallengesList = document.querySelector(
-                ".challenge-container.secondary .card .challenges"
+            const challengesList = document.querySelector(
+                ".challenge-container .card .challenges"
             );
 
-            // Both ordered lists should have all challenges
-            expect(primaryChallengesList?.children.length).toBe(3);
-            expect(secondaryChallengesList?.children.length).toBe(3);
+            // The ordered list should have all challenges
+            expect(challengesList?.children.length).toBe(3);
 
-            // Each pair should have identical markup
+            // Each challenge should have proper structure
             for (let i = 0; i < 3; i++) {
-                const primaryChallenge = primaryChallengesList?.children[
-                    i
-                ] as HTMLElement;
-                const secondaryChallenge = secondaryChallengesList?.children[
-                    i
-                ] as HTMLElement;
-                expect(primaryChallenge.outerHTML).toBe(
-                    secondaryChallenge.outerHTML
-                );
+                const challenge = challengesList?.children[i] as HTMLElement;
+                expect(challenge).toBeTruthy();
+                expect(challenge.classList.contains("challenge")).toBe(true);
             }
         });
     });

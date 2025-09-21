@@ -450,7 +450,7 @@ describe("Challenge Checkbox Color Inheritance", () => {
             const checkboxElements = document.querySelectorAll(
                 ".challenge-checkbox"
             );
-            expect(checkboxElements).toHaveLength(2); // Primary and secondary containers
+            expect(checkboxElements).toHaveLength(1); // Single container
 
             // Both checkboxes should have the same red color
             checkboxElements.forEach((element) => {
@@ -488,7 +488,7 @@ describe("Challenge Checkbox Color Inheritance", () => {
             const checkboxElements = document.querySelectorAll(
                 ".challenge-checkbox.checked"
             );
-            expect(checkboxElements).toHaveLength(2); // Primary and secondary containers
+            expect(checkboxElements).toHaveLength(1); // Single container
 
             // Completed checkboxes should still have the custom colors
             checkboxElements.forEach((element) => {

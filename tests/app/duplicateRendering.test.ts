@@ -8,12 +8,11 @@ describe("Duplicate Rendering Issue", () => {
     beforeEach(() => {
         ensureTestIsolation();
 
-        // Set up DOM containers as they exist in index.html
+        // Set up DOM container as it exists in index.html (single container architecture)
         document.body.innerHTML = `
             <main id="app">
                 <div class="challenge-wrapper">
-                    <div class="challenge-container primary"></div>
-                    <div class="challenge-container secondary"></div>
+                    <div class="challenge-container"></div>
                 </div>
             </main>
         `;
@@ -32,56 +31,35 @@ describe("Duplicate Rendering Issue", () => {
             // Step 1: Initial render using UIUpdateHandler
             app.render();
 
-            // Verify initial state - should have exactly 1 card in each container
-            const initialPrimaryCards = document.querySelectorAll(
-                ".challenge-container.primary .card"
+            // Verify initial state - should have exactly 1 card in the single container
+            const initialCards = document.querySelectorAll(
+                ".challenge-container .card"
             );
-            const initialSecondaryCards = document.querySelectorAll(
-                ".challenge-container.secondary .card"
-            );
-            const initialPrimaryHeaders = document.querySelectorAll(
-                ".challenge-container.primary .card .username"
-            );
-            const initialSecondaryHeaders = document.querySelectorAll(
-                ".challenge-container.secondary .card .username"
+            const initialHeaders = document.querySelectorAll(
+                ".challenge-container .card .username"
             );
 
-            expect(initialPrimaryCards.length).toBe(1);
-            expect(initialSecondaryCards.length).toBe(1);
-            expect(initialPrimaryHeaders.length).toBe(1);
-            expect(initialSecondaryHeaders.length).toBe(1);
+            expect(initialCards.length).toBe(1);
+            expect(initialHeaders.length).toBe(1);
 
             // Step 2: Call clearListFromDOM which previously triggered duplicate rendering
-            // Now uses UIUpdateHandler consistently, preventing the duplication issue
+            // Now uses single container architecture, preventing the duplication issue
             app.clearListFromDOM();
 
             // Check for duplication - should pass after the fix
-            const afterClearPrimaryCards = document.querySelectorAll(
-                ".challenge-container.primary .card"
+            const afterClearCards = document.querySelectorAll(
+                ".challenge-container .card"
             );
-            const afterClearSecondaryCards = document.querySelectorAll(
-                ".challenge-container.secondary .card"
-            );
-            const afterClearPrimaryHeaders = document.querySelectorAll(
-                ".challenge-container.primary .card .username"
-            );
-            const afterClearSecondaryHeaders = document.querySelectorAll(
-                ".challenge-container.secondary .card .username"
+            const afterClearHeaders = document.querySelectorAll(
+                ".challenge-container .card .username"
             );
 
-            // These assertions should pass after the fix - only 1 card and 1 header per container
-            expect(afterClearPrimaryCards.length).toBe(1);
-            expect(afterClearSecondaryCards.length).toBe(1);
-            expect(afterClearPrimaryHeaders.length).toBe(1);
-            expect(afterClearSecondaryHeaders.length).toBe(1);
+            // These assertions should pass after the fix - only 1 card and 1 header total
+            expect(afterClearCards.length).toBe(1);
+            expect(afterClearHeaders.length).toBe(1);
 
             // Verify header content is correct
-            expect(afterClearPrimaryHeaders[0]?.textContent).toBe(
-                "Challenges 0/2"
-            );
-            expect(afterClearSecondaryHeaders[0]?.textContent).toBe(
-                "Challenges 0/2"
-            );
+            expect(afterClearHeaders[0]?.textContent).toBe("Challenges 0/2");
         });
 
         it("should not create duplicates when render() is called multiple times", () => {
@@ -97,24 +75,16 @@ describe("Duplicate Rendering Issue", () => {
             app.render();
             app.render();
 
-            // Should still only have 1 card per container
-            const primaryCards = document.querySelectorAll(
-                ".challenge-container.primary .card"
+            // Should still only have 1 card total
+            const cards = document.querySelectorAll(
+                ".challenge-container .card"
             );
-            const secondaryCards = document.querySelectorAll(
-                ".challenge-container.secondary .card"
-            );
-            const primaryHeaders = document.querySelectorAll(
-                ".challenge-container.primary .card .username"
-            );
-            const secondaryHeaders = document.querySelectorAll(
-                ".challenge-container.secondary .card .username"
+            const headers = document.querySelectorAll(
+                ".challenge-container .card .username"
             );
 
-            expect(primaryCards.length).toBe(1);
-            expect(secondaryCards.length).toBe(1);
-            expect(primaryHeaders.length).toBe(1);
-            expect(secondaryHeaders.length).toBe(1);
+            expect(cards.length).toBe(1);
+            expect(headers.length).toBe(1);
         });
 
         it("should maintain single card structure when adding challenges after clearListFromDOM", () => {
@@ -129,20 +99,16 @@ describe("Duplicate Rendering Issue", () => {
                 app.challengeList.addChallenges("New Challenge");
             app.addChallengeToDOM(newChallenges[0]!);
 
-            // Should still have only 1 card per container
-            const primaryCards = document.querySelectorAll(
-                ".challenge-container.primary .card"
-            );
-            const secondaryCards = document.querySelectorAll(
-                ".challenge-container.secondary .card"
+            // Should still have only 1 card total
+            const cards = document.querySelectorAll(
+                ".challenge-container .card"
             );
 
-            expect(primaryCards.length).toBe(1);
-            expect(secondaryCards.length).toBe(1);
+            expect(cards.length).toBe(1);
 
             // Verify the challenge was added correctly
             const challenges = document.querySelectorAll(".challenge");
-            expect(challenges.length).toBe(2); // 1 challenge × 2 containers
+            expect(challenges.length).toBe(1); // 1 challenge in single container
         });
 
         it("should handle empty challenge list without duplication", () => {
@@ -153,27 +119,18 @@ describe("Duplicate Rendering Issue", () => {
             app.clearListFromDOM();
 
             // Verify single card structure with empty list
-            const primaryCards = document.querySelectorAll(
-                ".challenge-container.primary .card"
+            const cards = document.querySelectorAll(
+                ".challenge-container .card"
             );
-            const secondaryCards = document.querySelectorAll(
-                ".challenge-container.secondary .card"
-            );
-            const primaryHeaders = document.querySelectorAll(
-                ".challenge-container.primary .card .username"
-            );
-            const secondaryHeaders = document.querySelectorAll(
-                ".challenge-container.secondary .card .username"
+            const headers = document.querySelectorAll(
+                ".challenge-container .card .username"
             );
 
-            expect(primaryCards.length).toBe(1);
-            expect(secondaryCards.length).toBe(1);
-            expect(primaryHeaders.length).toBe(1);
-            expect(secondaryHeaders.length).toBe(1);
+            expect(cards.length).toBe(1);
+            expect(headers.length).toBe(1);
 
             // Verify header shows 0/0 for empty list
-            expect(primaryHeaders[0]?.textContent).toBe("Challenges 0/0");
-            expect(secondaryHeaders[0]?.textContent).toBe("Challenges 0/0");
+            expect(headers[0]?.textContent).toBe("Challenges 0/0");
         });
     });
 });

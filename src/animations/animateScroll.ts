@@ -1,7 +1,5 @@
 /** @type {Animation} */
-let primaryAnimation: Animation;
-/** @type {Animation} */
-let secondaryAnimation: Animation;
+let scrollAnimation: Animation;
 let isScrolling = false;
 
 /**
@@ -11,26 +9,27 @@ let isScrolling = false;
 export function animateScroll(): void {
     // Collect all required DOM elements upfront
     const wrapper = document.querySelector(".challenge-wrapper");
-    const containerPrimary = document.querySelector(".challenge-container.primary");
-    const containerSecondary = document.querySelector(".challenge-container.secondary") as HTMLElement;
+    const challengeContainer = document.querySelector(
+        ".challenge-container"
+    ) as HTMLElement;
 
     // Handle missing elements case once
-    if (!wrapper || !containerPrimary || !containerSecondary) {
+    if (!wrapper || !challengeContainer) {
         const missingElements = [];
         if (!wrapper) missingElements.push("challenge wrapper");
-        if (!containerPrimary) missingElements.push("primary challenge container");
-        if (!containerSecondary) missingElements.push("secondary challenge container");
+        if (!challengeContainer) missingElements.push("challenge container");
 
-        console.warn(`Required elements not found: ${missingElements.join(", ")}`);
+        console.warn(
+            `Required elements not found: ${missingElements.join(", ")}`
+        );
         return;
     }
 
     // Now we can safely use the elements
     const wrapperHeight = wrapper.clientHeight;
-    const containerHeight = containerPrimary.scrollHeight;
+    const containerHeight = challengeContainer.scrollHeight;
 
     if (containerHeight > wrapperHeight && !isScrolling) {
-        containerSecondary.style.display = "block";
         const scrollSpeed = 20; // Hardcoded default scroll speed
         let parsedSpeed = scrollSpeed;
 
@@ -47,46 +46,34 @@ export function animateScroll(): void {
             easing: "linear",
         };
 
-        let primaryKeyFrames = [
+        let keyFrames = [
             { transform: "translateY(0)" },
             { transform: `translateY(-${adjustedHight}px)` },
         ];
-        let secondaryKeyFrames = [
-            { transform: "translateY(0)" },
-            { transform: `translateY(-${adjustedHight}px)` },
-        ];
-        // store and apply animations
-        primaryAnimation = containerPrimary.animate(
-            primaryKeyFrames,
-            animationOptions
-        );
-        secondaryAnimation = containerSecondary.animate(
-            secondaryKeyFrames,
+        // store and apply animation
+        scrollAnimation = challengeContainer.animate(
+            keyFrames,
             animationOptions
         );
 
         isScrolling = true;
         addAnimationListeners();
     } else if (containerHeight <= wrapperHeight) {
-        containerSecondary.style.display = "none";
         cancelAnimation();
     }
 }
 
 function cancelAnimation() {
-    if (primaryAnimation) {
-        primaryAnimation.cancel();
-    }
-    if (secondaryAnimation) {
-        secondaryAnimation.cancel();
+    if (scrollAnimation) {
+        scrollAnimation.cancel();
     }
     isScrolling = false;
 }
 
 function addAnimationListeners() {
-    if (primaryAnimation) {
-        primaryAnimation.addEventListener("finish", animationFinished);
-        primaryAnimation.addEventListener("cancel", animationFinished);
+    if (scrollAnimation) {
+        scrollAnimation.addEventListener("finish", animationFinished);
+        scrollAnimation.addEventListener("cancel", animationFinished);
     }
 }
 
