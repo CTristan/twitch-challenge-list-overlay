@@ -84,10 +84,11 @@ export class IncrementCommand extends BaseCommand {
         }
 
         // Check raw parameters for a number (e.g., "!ch + 1 5")
+        // Note: targetId is already extracted by CommandParser, so rawParameters contains just the amount
         if (parsed.rawParameters) {
             const parts = parsed.rawParameters.trim().split(/\s+/);
-            if (parts.length > 1 && parts[1]) {
-                const amount = parseInt(parts[1], 10);
+            if (parts.length > 0 && parts[0]) {
+                const amount = parseInt(parts[0], 10);
                 if (!isNaN(amount) && amount > 0) {
                     return amount;
                 }
