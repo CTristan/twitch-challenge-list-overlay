@@ -126,6 +126,71 @@ describe("ChallengeList", () => {
         });
     });
 
+    describe("getChallengeById", () => {
+        it("should return challenge by ID", () => {
+            const addedChallenges =
+                challengeList.addChallenges("Test Challenge");
+            const challenge = addedChallenges[0];
+            if (!challenge) throw new Error("Challenge not found");
+
+            const foundChallenge = challengeList.getChallengeById(challenge.id);
+            expect(foundChallenge).toBe(challenge);
+            expect(foundChallenge?.title).toEqual("Test Challenge");
+        });
+
+        it("should return undefined for non-existent ID", () => {
+            const foundChallenge =
+                challengeList.getChallengeById("non-existent-id");
+            expect(foundChallenge).toBeUndefined();
+        });
+
+        it("should return correct challenge when multiple challenges exist", () => {
+            const addedChallenges = challengeList.addChallenges([
+                "Challenge 1",
+                "Challenge 2",
+                "Challenge 3",
+            ]);
+
+            // Test each challenge can be found by ID
+            addedChallenges.forEach((challenge) => {
+                const foundChallenge = challengeList.getChallengeById(
+                    challenge.id
+                );
+                expect(foundChallenge).toBe(challenge);
+                expect(foundChallenge?.title).toEqual(challenge.title);
+            });
+        });
+
+        it("should provide O(1) lookup performance", () => {
+            // Add many challenges
+            const challengeCount = 1000;
+            const challenges: Challenge[] = [];
+            for (let i = 0; i < challengeCount; i++) {
+                const addedChallenges = challengeList.addChallenges(
+                    `Challenge ${i}`
+                );
+                challenges.push(addedChallenges[0]!);
+            }
+
+            // Pick a random challenge to lookup
+            const targetChallenge =
+                challenges[Math.floor(Math.random() * challengeCount)]!;
+
+            // Measure lookup time
+            const startTime = performance.now();
+            const foundChallenge = challengeList.getChallengeById(
+                targetChallenge.id
+            );
+            const endTime = performance.now();
+
+            const lookupTime = endTime - startTime;
+
+            // Should be very fast (O(1) lookup)
+            expect(lookupTime).toBeLessThan(1); // 1ms should be generous for O(1) lookup
+            expect(foundChallenge).toBe(targetChallenge);
+        });
+    });
+
     describe("addChallenges", () => {
         it("should add a single challenge", () => {
             const challenges = challengeList.addChallenges("Challenge 1");

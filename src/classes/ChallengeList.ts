@@ -128,6 +128,15 @@ export default class ChallengeList {
     }
 
     /**
+     * Get challenge by ID using the internal challenge map for O(1) lookup
+     * @param id - The ID of the challenge
+     * @returns The challenge with the specified ID or undefined if not found
+     */
+    getChallengeById(id: string): Challenge | undefined {
+        return this.#challengeMap.get(id);
+    }
+
+    /**
      * Add challenges to the list
      * @param challengeTitles - The challenge titles to add
      * @returns The added challenges

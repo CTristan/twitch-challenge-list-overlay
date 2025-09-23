@@ -54,7 +54,7 @@ export class TimerDisplayUtils {
 
     /**
      * Update all timer displays in the DOM using optimized challenge lookup
-     * Eliminates O(n²) complexity by using Map for O(1) challenge access
+     * Uses ChallengeList's internal challenge map for quick access
      * @param challengeList - ChallengeList instance containing challenges
      * @returns boolean indicating if any active timers remain
      */
@@ -62,20 +62,12 @@ export class TimerDisplayUtils {
         const timerElements = document.querySelectorAll(".challenge-timer");
         let hasActiveTimers = false;
 
-        // Create challenge lookup map for O(1) access instead of O(n) find operations
-        // This reduces overall complexity from O(n²) to O(n)
-        const challengeMap = new Map(
-            challengeList.challenges.map((challenge) => [
-                challenge.id,
-                challenge,
-            ])
-        );
-
         timerElements.forEach((element) => {
             const challengeId = element.getAttribute("data-challenge-id");
             if (!challengeId) return;
 
-            const challenge = challengeMap.get(challengeId);
+            // Use ChallengeList's lookup instead of creating a new Map
+            const challenge = challengeList.getChallengeById(challengeId);
             if (!challenge || !challenge.timer) return;
 
             if (challenge.timer.isActive) {
