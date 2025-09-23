@@ -16,6 +16,11 @@ export default class AdminPanel {
     #configManager: ConfigManager;
     #configExporter: ConfigExporter | null = null;
     #app: App | null = null;
+    #abortController: AbortController | null = null;
+    #eventListeners: Map<
+        string,
+        { element: Element; event: string; handler: EventListener }
+    > = new Map();
 
     /**
      * @constructor
@@ -37,22 +42,65 @@ export default class AdminPanel {
             return;
         }
 
+        // Clean up existing listeners before setting up new ones
+        this.cleanup();
+
         this.setupBasicControls();
         this.setupConfigurationUI();
         this.setupExportControls();
         this.setupImportControls();
+        this.setupHashChangeListener();
 
         // Enable interactive checkbox functionality if App instance is available
         if (this.#app) {
             this.#app.enableAdminCheckboxInteraction();
         }
+    }
 
-        // Listen for hash changes to reinitialize if needed
-        window.addEventListener("hashchange", () => {
-            if (window.location.hash === "#admin") {
-                this.initialize();
-            }
+    /**
+     * Clean up all event listeners to prevent memory leaks
+     * @returns {void}
+     */
+    private cleanup(): void {
+        // Abort the hashchange listener if it exists
+        if (this.#abortController) {
+            this.#abortController.abort();
+            this.#abortController = null;
+        }
+
+        // Remove all tracked event listeners
+        this.#eventListeners.forEach(({ element, event, handler }) => {
+            element.removeEventListener(event, handler);
         });
+        this.#eventListeners.clear();
+    }
+
+    /**
+     * Setup hash change listener with proper cleanup support
+     * @returns {void}
+     */
+    private setupHashChangeListener(): void {
+        // Create new AbortController for this listener
+        this.#abortController = new AbortController();
+
+        // Add hashchange listener with abort signal
+        window.addEventListener(
+            "hashchange",
+            () => {
+                if (window.location.hash === "#admin") {
+                    this.initialize();
+                }
+            },
+            { signal: this.#abortController.signal }
+        );
+    }
+
+    /**
+     * Destroy the AdminPanel instance and clean up all resources
+     * @returns {void}
+     */
+    destroy(): void {
+        this.cleanup();
     }
 
     /**
@@ -62,9 +110,13 @@ export default class AdminPanel {
     private setupBasicControls(): void {
         const clearButton = document.getElementById("clear-localstorage-btn");
         if (clearButton) {
-            clearButton.addEventListener("click", () =>
-                this.clearLocalStorage()
-            );
+            const handler = () => this.clearLocalStorage();
+            clearButton.addEventListener("click", handler);
+            this.#eventListeners.set("clear-localstorage-btn", {
+                element: clearButton,
+                event: "click",
+                handler,
+            });
         }
     }
 
@@ -87,9 +139,13 @@ export default class AdminPanel {
         const exportJsonBtn = document.getElementById("export-json-btn");
 
         if (exportJsonBtn) {
-            exportJsonBtn.addEventListener("click", () =>
-                this.exportConfiguration("json")
-            );
+            const handler = () => this.exportConfiguration("json");
+            exportJsonBtn.addEventListener("click", handler);
+            this.#eventListeners.set("export-json-btn", {
+                element: exportJsonBtn,
+                event: "click",
+                handler,
+            });
         }
     }
 
@@ -105,15 +161,27 @@ export default class AdminPanel {
 
         // Handle import button click - trigger file picker
         if (importConfigBtn && importFileInput) {
-            importConfigBtn.addEventListener("click", () => {
+            const clickHandler = () => {
                 importFileInput.click();
+            };
+            importConfigBtn.addEventListener("click", clickHandler);
+            this.#eventListeners.set("import-config-btn", {
+                element: importConfigBtn,
+                event: "click",
+                handler: clickHandler,
             });
 
             // Handle file selection
-            importFileInput.addEventListener("change", () => {
+            const changeHandler = () => {
                 if (importFileInput.files?.length) {
                     this.importFromFile(importFileInput);
                 }
+            };
+            importFileInput.addEventListener("change", changeHandler);
+            this.#eventListeners.set("import-file-input", {
+                element: importFileInput,
+                event: "change",
+                handler: changeHandler,
             });
         }
     }
@@ -324,11 +392,23 @@ export default class AdminPanel {
         const resetBtn = document.getElementById("reset-config-btn");
 
         if (saveBtn) {
-            saveBtn.addEventListener("click", () => this.saveConfiguration());
+            const saveHandler = () => this.saveConfiguration();
+            saveBtn.addEventListener("click", saveHandler);
+            this.#eventListeners.set("save-config-btn", {
+                element: saveBtn,
+                event: "click",
+                handler: saveHandler,
+            });
         }
 
         if (resetBtn) {
-            resetBtn.addEventListener("click", () => this.resetConfiguration());
+            const resetHandler = () => this.resetConfiguration();
+            resetBtn.addEventListener("click", resetHandler);
+            this.#eventListeners.set("reset-config-btn", {
+                element: resetBtn,
+                event: "click",
+                handler: resetHandler,
+            });
         }
 
         // Setup color tier checkbox event listeners
@@ -367,9 +447,15 @@ export default class AdminPanel {
                 // Initial state setup
                 this.updateColorTierState(tier, checkbox.checked);
 
-                // Add change event listener
-                checkbox.addEventListener("change", () => {
+                // Add change event listener with proper tracking
+                const changeHandler = () => {
                     this.updateColorTierState(tier, checkbox.checked);
+                };
+                checkbox.addEventListener("change", changeHandler);
+                this.#eventListeners.set(`${tier}-color-enabled`, {
+                    element: checkbox,
+                    event: "change",
+                    handler: changeHandler,
                 });
             }
         });
