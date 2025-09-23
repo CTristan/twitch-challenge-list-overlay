@@ -209,7 +209,7 @@ describe("Batched UI Updates Performance", () => {
             ];
 
             // Mark one as complete
-            challenges[0].setCompletionStatus(true);
+            challenges[0]!.setCompletionStatus(true);
 
             challenges.forEach((challenge) =>
                 challengeList.addChallengeObjects(challenge)
