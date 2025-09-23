@@ -16,6 +16,10 @@ export default class UIUpdateHandler {
     private challengeList: ChallengeList;
     private timerController: TimerController;
 
+    // DOM element cache for performance optimization
+    private challengeContainer: HTMLElement | null = null;
+    private challengesList: HTMLElement | null = null;
+
     /**
      * Map of action strings to their corresponding handler functions
      * This replaces the switch statement for better maintainability
@@ -87,7 +91,7 @@ export default class UIUpdateHandler {
     }
 
     /**
-     * Handle add challenge UI updates
+     * Handle add challenge UI updates with batched DOM operations for performance
      * @param _challengeIndices - Array indices of added challenges (unused but kept for interface compatibility)
      * @param challenges - Challenge objects that were added
      */
@@ -95,11 +99,30 @@ export default class UIUpdateHandler {
         _challengeIndices?: number[],
         challenges?: Challenge[]
     ): void {
-        if (!challenges) return;
+        if (!challenges || challenges.length === 0) return;
+
+        const challengesList = this.getCachedChallengesList();
+        if (!challengesList) {
+            console.error(
+                "Challenge list container not found - cannot add challenges"
+            );
+            return;
+        }
+
+        // Use DocumentFragment for efficient batch DOM operations
+        const fragment = document.createDocumentFragment();
 
         challenges.forEach((challenge) => {
-            this.addChallengeToDOM(challenge);
+            const challengeElement = this.createChallengeElement(challenge);
+            fragment.appendChild(challengeElement);
         });
+
+        // Single DOM append operation to reduce reflows
+        challengesList.appendChild(fragment);
+
+        // Single scroll animation at the end
+        animateScroll();
+
         this.updateChallengeCount();
         this.timerController.startTimerUpdates();
     }
@@ -222,22 +245,11 @@ export default class UIUpdateHandler {
     }
 
     /**
-     * Add the challenge to the DOM
+     * Add the challenge to the DOM (legacy method - prefer batched handleAddUpdate)
      * @param challenge - Challenge to add
      */
     addChallengeToDOM(challenge: Challenge): void {
-        const challengeContainer = document.querySelector(
-            ".challenge-container"
-        );
-
-        if (!challengeContainer) {
-            console.error("Challenge container not found");
-            return;
-        }
-
-        // Find the ordered list within the challenge card
-        const challengesList =
-            challengeContainer.querySelector(".card .challenges");
+        const challengesList = this.getCachedChallengesList();
 
         if (!challengesList) {
             console.error(
@@ -323,12 +335,49 @@ export default class UIUpdateHandler {
     }
 
     /**
+     * Get cached challenge container element, querying DOM if not cached
+     * @returns Challenge container element or null if not found
+     */
+    private getCachedChallengeContainer(): HTMLElement | null {
+        if (!this.challengeContainer) {
+            this.challengeContainer = document.querySelector(
+                ".challenge-container"
+            );
+        }
+        return this.challengeContainer;
+    }
+
+    /**
+     * Get cached challenges list element, querying DOM if not cached
+     * @returns Challenges list element or null if not found
+     */
+    private getCachedChallengesList(): HTMLElement | null {
+        if (!this.challengesList) {
+            const container = this.getCachedChallengeContainer();
+            if (container) {
+                this.challengesList =
+                    container.querySelector(".card .challenges");
+            }
+        }
+        return this.challengesList;
+    }
+
+    /**
+     * Invalidate DOM element cache (called when card structure is rebuilt)
+     */
+    private invalidateCache(): void {
+        this.challengeContainer = null;
+        this.challengesList = null;
+    }
+
+    /**
      * Render the complete challenge list to the DOM
      */
     renderChallengeList(): void {
-        const challengeContainer = document.querySelector(
-            ".challenge-container"
-        );
+        // Invalidate cache since we're rebuilding the card structure
+        this.invalidateCache();
+
+        const challengeContainer = this.getCachedChallengeContainer();
 
         if (!challengeContainer) {
             console.error("Challenge container not found");
@@ -346,6 +395,9 @@ export default class UIUpdateHandler {
 
         // Append card to container
         challengeContainer.appendChild(challengeCard);
+
+        // Invalidate cache again since DOM structure changed
+        this.invalidateCache();
 
         // Get the ordered list from the card
         const challengeList = challengeCard.querySelector("ol.challenges");
