@@ -19,7 +19,8 @@ export class ListCommand extends BaseCommand {
             const filterType = this.parseFilterType(parsed);
 
             // Get challenges based on filter
-            const challenges = this.getFilteredChallenges(filterType);
+            const { challenges, indices } =
+                this.getFilteredChallenges(filterType);
 
             // Format response
             let responseMessage: string;
@@ -39,7 +40,8 @@ export class ListCommand extends BaseCommand {
                         includeTimer: true,
                         includeShortId: true,
                         maxLength: 350, // Leave room for prefix
-                    }
+                    },
+                    indices // Pass original indices for correct position numbering
                 );
                 responseMessage = `${prefix}: ${challengeList}`;
             }
@@ -91,23 +93,50 @@ export class ListCommand extends BaseCommand {
     /**
      * Get challenges based on filter type
      * @param filterType - Type of filter to apply
-     * @returns Filtered challenges
+     * @returns Object containing filtered challenges and their original indices
      */
-    private getFilteredChallenges(
-        filterType: "all" | "done" | "incomplete"
-    ): Challenge[] {
+    private getFilteredChallenges(filterType: "all" | "done" | "incomplete"): {
+        challenges: Challenge[];
+        indices: number[];
+    } {
         const allChallenges = this.challengeList.challenges;
+        const challenges: Challenge[] = [];
+        const indices: number[] = [];
 
         switch (filterType) {
             case "all":
-                return allChallenges;
+                allChallenges.forEach((challenge, index) => {
+                    challenges.push(challenge);
+                    indices.push(index);
+                });
+                break;
             case "done":
-                return allChallenges.filter((c) => c.isComplete());
+                allChallenges.forEach((challenge, index) => {
+                    if (challenge.isComplete()) {
+                        challenges.push(challenge);
+                        indices.push(index);
+                    }
+                });
+                break;
             case "incomplete":
-                return allChallenges.filter((c) => !c.isComplete());
+                allChallenges.forEach((challenge, index) => {
+                    if (!challenge.isComplete()) {
+                        challenges.push(challenge);
+                        indices.push(index);
+                    }
+                });
+                break;
             default:
-                return allChallenges.filter((c) => !c.isComplete());
+                allChallenges.forEach((challenge, index) => {
+                    if (!challenge.isComplete()) {
+                        challenges.push(challenge);
+                        indices.push(index);
+                    }
+                });
+                break;
         }
+
+        return { challenges, indices };
     }
 
     /**

@@ -381,11 +381,13 @@ export class ResponseFormatter {
      * Format a list of challenges for display
      * @param challenges - Challenges to format
      * @param options - Formatting options
+     * @param indices - Optional array of original indices for position numbering
      * @returns Formatted challenge list
      */
     static formatChallengeList(
         challenges: Challenge[],
-        options: ResponseOptions = {}
+        options: ResponseOptions = {},
+        indices?: number[]
     ): string {
         const {
             includeEmoji = true,
@@ -403,7 +405,14 @@ export class ResponseFormatter {
             let item = "";
 
             if (includeShortId) {
-                item += `#${formatDisplayPosition(index)} `;
+                // Use original index if provided, otherwise fall back to sequential numbering
+                const displayIndex = indices ? indices[index] : index;
+                if (displayIndex === undefined) {
+                    throw new Error(
+                        `Index mismatch: challenge at position ${index} has no corresponding original index`
+                    );
+                }
+                item += `#${formatDisplayPosition(displayIndex)} `;
             }
 
             item += challenge.title;
