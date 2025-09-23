@@ -308,4 +308,330 @@ describe("ChallengeList", () => {
             expect(challengeList.challenges).toHaveLength(1);
         });
     });
+
+    describe("ID-based challenge operations (performance optimization)", () => {
+        let challenge1: Challenge;
+        let challenge2: Challenge;
+
+        beforeEach(() => {
+            // Add challenges and get their IDs for testing
+            const addedChallenges = challengeList.addChallenges([
+                "Challenge 1",
+                "Challenge 2",
+            ]);
+            challenge1 = addedChallenges[0]!;
+            challenge2 = addedChallenges[1]!;
+        });
+
+        describe("toggleChallengeCompletion", () => {
+            it("should toggle challenge completion using map lookup", () => {
+                // Initially incomplete
+                expect(challenge1.isComplete()).toBe(false);
+                expect(challengeList.challengesCompleted).toBe(0);
+
+                // Toggle to complete
+                const result1 = challengeList.toggleChallengeCompletion(
+                    challenge1.id
+                );
+                expect(result1).toBe(challenge1);
+                expect(challenge1.isComplete()).toBe(true);
+                expect(challengeList.challengesCompleted).toBe(1);
+
+                // Toggle back to incomplete
+                const result2 = challengeList.toggleChallengeCompletion(
+                    challenge1.id
+                );
+                expect(result2).toBe(challenge1);
+                expect(challenge1.isComplete()).toBe(false);
+                expect(challengeList.challengesCompleted).toBe(0);
+            });
+
+            it("should return null for non-existent challenge ID", () => {
+                const result =
+                    challengeList.toggleChallengeCompletion("non-existent-id");
+                expect(result).toBeNull();
+            });
+
+            it("should handle timer start/stop during toggle", () => {
+                // Add a challenge with timer
+                const timerChallenge = new Challenge("Timer Challenge", {
+                    timer: 30,
+                });
+                challengeList.addChallengeObjects(timerChallenge);
+                timerChallenge.startTimer();
+
+                expect(timerChallenge.timer?.isActive).toBe(true);
+
+                // Complete challenge should stop timer
+                challengeList.toggleChallengeCompletion(timerChallenge.id);
+                expect(timerChallenge.isComplete()).toBe(true);
+                expect(timerChallenge.timer?.isActive).toBe(false);
+
+                // Uncomplete challenge should restart timer if time remaining
+                challengeList.toggleChallengeCompletion(timerChallenge.id);
+                expect(timerChallenge.isComplete()).toBe(false);
+                // Note: Timer restart logic depends on remaining time > 0 and timer not being expired
+                // This test verifies the toggle functionality works with map lookup
+                expect(timerChallenge.timer).toBeDefined();
+            });
+        });
+
+        describe("incrementChallengeProgress", () => {
+            it("should increment challenge progress using map lookup", () => {
+                expect(challenge1.progress).toBe(0);
+                expect(challengeList.challengesCompleted).toBe(0);
+
+                // Increment progress
+                const result = challengeList.incrementChallengeProgress(
+                    challenge1.id,
+                    1
+                );
+                expect(result).toBe(challenge1);
+                expect(challenge1.progress).toBe(1);
+                expect(challenge1.isComplete()).toBe(true);
+                expect(challengeList.challengesCompleted).toBe(1);
+            });
+
+            it("should increment by custom amount", () => {
+                // Create challenge with amount > 1
+                const multiChallenge = new Challenge("Multi Challenge", {
+                    amount: 5,
+                });
+                challengeList.addChallengeObjects(multiChallenge);
+
+                challengeList.incrementChallengeProgress(multiChallenge.id, 3);
+                expect(multiChallenge.progress).toBe(3);
+                expect(multiChallenge.isComplete()).toBe(false);
+
+                challengeList.incrementChallengeProgress(multiChallenge.id, 2);
+                expect(multiChallenge.progress).toBe(5);
+                expect(multiChallenge.isComplete()).toBe(true);
+            });
+
+            it("should return null for non-existent challenge ID", () => {
+                const result =
+                    challengeList.incrementChallengeProgress("non-existent-id");
+                expect(result).toBeNull();
+            });
+        });
+
+        describe("decrementChallengeProgress", () => {
+            it("should decrement challenge progress using map lookup", () => {
+                // First complete the challenge properly
+                challengeList.incrementChallengeProgress(challenge1.id, 1);
+                expect(challenge1.isComplete()).toBe(true);
+                expect(challengeList.challengesCompleted).toBe(1);
+
+                // Decrement progress
+                const result = challengeList.decrementChallengeProgress(
+                    challenge1.id,
+                    1
+                );
+                expect(result).toBe(challenge1);
+                expect(challenge1.progress).toBe(0);
+                expect(challenge1.isComplete()).toBe(false);
+                expect(challengeList.challengesCompleted).toBe(0);
+            });
+
+            it("should decrement by custom amount", () => {
+                // Create challenge with higher amount and progress
+                const multiChallenge = new Challenge("Multi Challenge", {
+                    amount: 5,
+                });
+                challengeList.addChallengeObjects(multiChallenge);
+                multiChallenge.setProgress(5);
+
+                challengeList.decrementChallengeProgress(multiChallenge.id, 2);
+                expect(multiChallenge.progress).toBe(3);
+                expect(multiChallenge.isComplete()).toBe(false);
+            });
+
+            it("should return null for non-existent challenge ID", () => {
+                const result =
+                    challengeList.decrementChallengeProgress("non-existent-id");
+                expect(result).toBeNull();
+            });
+        });
+
+        describe("setChallengeProgress", () => {
+            it("should set challenge progress using map lookup", () => {
+                expect(challenge1.progress).toBe(0);
+                expect(challengeList.challengesCompleted).toBe(0);
+
+                // Set progress to complete
+                const result = challengeList.setChallengeProgress(
+                    challenge1.id,
+                    1
+                );
+                expect(result).toBe(challenge1);
+                expect(challenge1.progress).toBe(1);
+                expect(challenge1.isComplete()).toBe(true);
+                expect(challengeList.challengesCompleted).toBe(1);
+
+                // Set progress back to incomplete
+                challengeList.setChallengeProgress(challenge1.id, 0);
+                expect(challenge1.progress).toBe(0);
+                expect(challenge1.isComplete()).toBe(false);
+                expect(challengeList.challengesCompleted).toBe(0);
+            });
+
+            it("should handle completion status changes correctly", () => {
+                // Create challenge with amount > 1
+                const multiChallenge = new Challenge("Multi Challenge", {
+                    amount: 3,
+                });
+                challengeList.addChallengeObjects(multiChallenge);
+
+                // Set to partial progress (incomplete)
+                challengeList.setChallengeProgress(multiChallenge.id, 2);
+                expect(multiChallenge.isComplete()).toBe(false);
+                expect(challengeList.challengesCompleted).toBe(0);
+
+                // Set to complete
+                challengeList.setChallengeProgress(multiChallenge.id, 3);
+                expect(multiChallenge.isComplete()).toBe(true);
+                expect(challengeList.challengesCompleted).toBe(1);
+
+                // Set back to incomplete
+                challengeList.setChallengeProgress(multiChallenge.id, 1);
+                expect(multiChallenge.isComplete()).toBe(false);
+                expect(challengeList.challengesCompleted).toBe(0);
+            });
+
+            it("should return null for non-existent challenge ID", () => {
+                const result = challengeList.setChallengeProgress(
+                    "non-existent-id",
+                    5
+                );
+                expect(result).toBeNull();
+            });
+        });
+
+        describe("map synchronization", () => {
+            it("should maintain map synchronization after challenge deletions", () => {
+                // Verify challenges are in map
+                expect(
+                    challengeList.toggleChallengeCompletion(challenge1.id)
+                ).toBe(challenge1);
+                expect(
+                    challengeList.incrementChallengeProgress(challenge2.id)
+                ).toBe(challenge2);
+
+                // Delete first challenge
+                challengeList.deleteChallenges(0);
+
+                // First challenge should no longer be accessible via map
+                expect(
+                    challengeList.toggleChallengeCompletion(challenge1.id)
+                ).toBeNull();
+
+                // Second challenge should still be accessible (now at index 0)
+                expect(
+                    challengeList.incrementChallengeProgress(challenge2.id)
+                ).toBe(challenge2);
+            });
+
+            it("should maintain map synchronization after clearing all challenges", () => {
+                // Verify challenges are accessible
+                expect(
+                    challengeList.toggleChallengeCompletion(challenge1.id)
+                ).toBe(challenge1);
+                expect(
+                    challengeList.incrementChallengeProgress(challenge2.id)
+                ).toBe(challenge2);
+
+                // Clear all challenges
+                challengeList.clearChallengeList();
+
+                // No challenges should be accessible via map
+                expect(
+                    challengeList.toggleChallengeCompletion(challenge1.id)
+                ).toBeNull();
+                expect(
+                    challengeList.incrementChallengeProgress(challenge2.id)
+                ).toBeNull();
+            });
+
+            it("should maintain map synchronization after clearing done challenges", () => {
+                // Complete first challenge
+                challengeList.toggleChallengeCompletion(challenge1.id);
+                expect(challenge1.isComplete()).toBe(true);
+
+                // Verify both challenges are accessible before clearing
+                expect(
+                    challengeList.toggleChallengeCompletion(challenge1.id)
+                ).toBe(challenge1);
+                // Toggle back to complete for clearing
+                challengeList.toggleChallengeCompletion(challenge1.id);
+                expect(challenge1.isComplete()).toBe(true);
+
+                // Verify challenge2 is accessible but don't complete it
+                expect(
+                    challengeList.setChallengeProgress(challenge2.id, 0)
+                ).toBe(challenge2);
+                expect(challenge2.isComplete()).toBe(false);
+
+                // Clear done challenges
+                challengeList.clearDoneChallenges();
+
+                // Completed challenge should no longer be accessible
+                expect(
+                    challengeList.toggleChallengeCompletion(challenge1.id)
+                ).toBeNull();
+
+                // Incomplete challenge should still be accessible
+                expect(
+                    challengeList.incrementChallengeProgress(challenge2.id)
+                ).toBe(challenge2);
+            });
+
+            it("should maintain map synchronization when loading from localStorage", () => {
+                // Set up localStorage with challenge data
+                const challengeData = [
+                    {
+                        title: "Stored Challenge 1",
+                        description: "Description 1",
+                        amount: 1,
+                        progress: 0,
+                        completionStatus: false,
+                        failureStatus: false,
+                        createdAt: Date.now(),
+                    },
+                    {
+                        title: "Stored Challenge 2",
+                        description: "Description 2",
+                        amount: 1,
+                        progress: 1,
+                        completionStatus: true,
+                        failureStatus: false,
+                        createdAt: Date.now() + 1000,
+                    },
+                ];
+                localStorage.setItem(
+                    "testStorage",
+                    JSON.stringify(challengeData)
+                );
+
+                // Create new ChallengeList to trigger loading
+                const newChallengeList = new ChallengeList("testStorage");
+
+                // Verify challenges were loaded and map is populated
+                expect(newChallengeList.challenges).toHaveLength(2);
+                const loadedChallenge1 = newChallengeList.challenges[0]!;
+                const loadedChallenge2 = newChallengeList.challenges[1]!;
+
+                // Test map lookups work for loaded challenges
+                expect(
+                    newChallengeList.toggleChallengeCompletion(
+                        loadedChallenge1.id
+                    )
+                ).toBe(loadedChallenge1);
+                expect(
+                    newChallengeList.incrementChallengeProgress(
+                        loadedChallenge2.id
+                    )
+                ).toBe(loadedChallenge2);
+            });
+        });
+    });
 });

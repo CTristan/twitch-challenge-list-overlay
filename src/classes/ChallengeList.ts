@@ -24,6 +24,7 @@ export default class ChallengeList {
     #localStoreName: string;
     #challengesCompleted: number;
     #totalChallenges: number;
+    #challengeMap: Map<string, Challenge>;
     challenges: Challenge[];
 
     /**
@@ -34,6 +35,7 @@ export default class ChallengeList {
         this.#localStoreName = localStoreName;
         this.#challengesCompleted = 0;
         this.#totalChallenges = 0;
+        this.#challengeMap = new Map<string, Challenge>();
         this.challenges = this.#loadChallengeListFromLocalStorage();
     }
 
@@ -78,6 +80,8 @@ export default class ChallengeList {
                 }
 
                 challengeList.push(challenge);
+                // Populate the challenge map for O(1) lookups
+                this.#challengeMap.set(challenge.id, challenge);
             });
         } else {
             // Initialize empty storage if no data found
@@ -140,6 +144,8 @@ export default class ChallengeList {
             this.challenges.push(challenge);
             addedChallenges.push(challenge);
             this.#totalChallenges++;
+            // Add to challenge map for O(1) lookups
+            this.#challengeMap.set(challenge.id, challenge);
         });
 
         this.#commitToLocalStorage();
@@ -164,6 +170,8 @@ export default class ChallengeList {
             this.challenges.push(challenge);
             addedChallenges.push(challenge);
             this.#totalChallenges++;
+            // Add to challenge map for O(1) lookups
+            this.#challengeMap.set(challenge.id, challenge);
         });
 
         this.#commitToLocalStorage();
@@ -229,6 +237,8 @@ export default class ChallengeList {
         this.challenges = this.challenges.filter((challenge, i) => {
             if (validIndexSet.has(i)) {
                 deletedChallenges.push(challenge);
+                // Remove from challenge map
+                this.#challengeMap.delete(challenge.id);
                 return false;
             }
             return true;
@@ -268,6 +278,8 @@ export default class ChallengeList {
         this.challenges = [];
         this.#challengesCompleted = 0;
         this.#totalChallenges = 0;
+        // Clear the challenge map
+        this.#challengeMap.clear();
 
         this.#commitToLocalStorage();
     }
@@ -282,6 +294,8 @@ export default class ChallengeList {
         this.challenges = this.challenges.filter((challenge) => {
             if (challenge.isComplete()) {
                 removedChallenges.push(challenge);
+                // Remove from challenge map
+                this.#challengeMap.delete(challenge.id);
                 return false;
             }
             return true;
@@ -313,7 +327,7 @@ export default class ChallengeList {
      * @returns The toggled challenge or null if not found
      */
     toggleChallengeCompletion(challengeId: string): Challenge | null {
-        const challenge = this.challenges.find((c) => c.id === challengeId);
+        const challenge = this.#challengeMap.get(challengeId);
         if (!challenge) {
             return null;
         }
@@ -358,7 +372,7 @@ export default class ChallengeList {
         challengeId: string,
         amount: number = 1
     ): Challenge | null {
-        const challenge = this.challenges.find((c) => c.id === challengeId);
+        const challenge = this.#challengeMap.get(challengeId);
         if (!challenge) {
             return null;
         }
@@ -386,7 +400,7 @@ export default class ChallengeList {
         challengeId: string,
         amount: number = 1
     ): Challenge | null {
-        const challenge = this.challenges.find((c) => c.id === challengeId);
+        const challenge = this.#challengeMap.get(challengeId);
         if (!challenge) {
             return null;
         }
@@ -414,7 +428,7 @@ export default class ChallengeList {
         challengeId: string,
         progress: number
     ): Challenge | null {
-        const challenge = this.challenges.find((c) => c.id === challengeId);
+        const challenge = this.#challengeMap.get(challengeId);
         if (!challenge) {
             return null;
         }
@@ -459,5 +473,7 @@ export default class ChallengeList {
         if (challenge.isComplete()) {
             this.#challengesCompleted++;
         }
+        // Add to challenge map for O(1) lookups
+        this.#challengeMap.set(challenge.id, challenge);
     }
 }
