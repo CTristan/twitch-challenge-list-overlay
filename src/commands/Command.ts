@@ -6,6 +6,16 @@ import {
     getChallengeWithIndex,
     isValidUserPosition,
 } from "../utils/PositionUtils";
+import { ResponseFormatter } from "../utils/ResponseFormatter";
+
+/**
+ * Enum for progress operation types to ensure type safety
+ */
+export enum ProgressOperation {
+    INCREMENT = "increment",
+    DECREMENT = "decrement",
+    SET = "set",
+}
 
 /**
  * Base interface for all command implementations
@@ -302,5 +312,98 @@ export abstract class BaseCommand implements Command {
         }
 
         return { challenge: result.challenge, index: result.index };
+    }
+
+    /**
+     * Execute a progress operation with common pattern: find challenge, capture old progress, update list, format response
+     * @param parsed - Parsed command data
+     * @param operation - Progress operation type
+     * @param parameterParser - Function to parse operation-specific parameters
+     * @param progressMutator - Function to perform the progress update
+     * @param validator - Optional function to validate parsed parameters
+     * @param parameterErrorMessage - Optional custom error message for parameter parsing failures
+     * @returns Command response
+     */
+    protected executeProgressOperation<T>(
+        parsed: ParsedCommand,
+        operation: ProgressOperation,
+        parameterParser: (parsed: ParsedCommand) => T | null,
+        progressMutator: (
+            challenge: Challenge,
+            parsedValue: T
+        ) => Challenge | null,
+        validator?: (parsedValue: T, challenge: Challenge) => void,
+        parameterErrorMessage?: string
+    ): CommandResponse {
+        try {
+            // Handle single target validation
+            const { challenge, index, response } = this.handleSingleTarget(
+                parsed.targetId || "",
+                operation
+            );
+            if (response) {
+                return response;
+            }
+
+            if (!challenge || index === undefined) {
+                return this.createErrorResponse(
+                    `Challenge not found for ${operation}`
+                );
+            }
+
+            // Parse parameters
+            const parsedValue = parameterParser(parsed);
+            if (parsedValue === null) {
+                return this.createErrorResponse(
+                    parameterErrorMessage ||
+                        `Invalid parameters for ${operation} command`
+                );
+            }
+
+            // Validate if validator provided
+            if (validator) {
+                try {
+                    validator(parsedValue, challenge);
+                } catch (validationError: unknown) {
+                    return this.createErrorResponse(
+                        ResponseFormatter.formatError(
+                            validationError,
+                            `validating ${operation} parameters`
+                        )
+                    );
+                }
+            }
+
+            // Store old progress for response
+            const oldProgress = challenge.progress;
+
+            // Apply mutation
+            const updatedChallenge = progressMutator(challenge, parsedValue);
+            if (!updatedChallenge) {
+                return this.createErrorResponse(
+                    `Failed to ${operation} challenge progress`
+                );
+            }
+
+            // Format response
+            const responseMessage = ResponseFormatter.formatProgressResponse(
+                challenge,
+                index,
+                oldProgress,
+                {
+                    includeShortId: true,
+                    includeProgress: true,
+                }
+            );
+
+            return this.createSuccessResponse(responseMessage, operation);
+        } catch (error: unknown) {
+            return this.createErrorResponse(
+                ResponseFormatter.formatError(
+                    error,
+                    `${operation}ing challenge progress`
+                )
+            );
+        }
     }
 }

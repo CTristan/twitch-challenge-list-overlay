@@ -1,5 +1,4 @@
-import { ResponseFormatter } from "../utils/ResponseFormatter";
-import { BaseCommand } from "./Command";
+import { BaseCommand, ProgressOperation } from "./Command";
 
 /**
  * Command to increment challenge progress
@@ -13,60 +12,16 @@ export class IncrementCommand extends BaseCommand {
      * @returns Command response
      */
     execute(parsed: ParsedCommand, _username: string): CommandResponse {
-        try {
-            // Handle single target ID for increment
-            const { challenge, index, response } = this.handleSingleTarget(
-                parsed.targetId || "",
-                "increment"
-            );
-            if (response) {
-                return response;
-            }
-
-            if (!challenge || index === undefined) {
-                return this.createErrorResponse(
-                    "Challenge not found for increment"
-                );
-            }
-
-            // Parse increment amount from parameters or default to 1
-            const incrementAmount = this.parseIncrementAmount(parsed);
-
-            // Store old progress for response
-            const oldProgress = challenge.progress;
-
-            // Changes are automatically saved to localStorage and counters updated
-            const updatedChallenge =
+        return this.executeProgressOperation(
+            parsed,
+            ProgressOperation.INCREMENT,
+            (p) => this.parseIncrementAmount(p),
+            (challenge, amount) =>
                 this.challengeList.incrementChallengeProgress(
                     challenge.id,
-                    incrementAmount
-                );
-            if (!updatedChallenge) {
-                return this.createErrorResponse(
-                    "Failed to increment challenge progress"
-                );
-            }
-
-            // Format response
-            const responseMessage = ResponseFormatter.formatProgressResponse(
-                challenge,
-                index,
-                oldProgress,
-                {
-                    includeShortId: true,
-                    includeProgress: true,
-                }
-            );
-
-            return this.createSuccessResponse(responseMessage, "increment");
-        } catch (error: unknown) {
-            return this.createErrorResponse(
-                ResponseFormatter.formatError(
-                    error,
-                    "incrementing challenge progress"
+                    amount
                 )
-            );
-        }
+        );
     }
 
     /**

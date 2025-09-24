@@ -1,5 +1,4 @@
-import { ResponseFormatter } from "../utils/ResponseFormatter";
-import { BaseCommand } from "./Command";
+import { BaseCommand, ProgressOperation } from "./Command";
 
 /**
  * Command to decrement challenge progress
@@ -13,60 +12,16 @@ export class DecrementCommand extends BaseCommand {
      * @returns Command response
      */
     execute(parsed: ParsedCommand, _username: string): CommandResponse {
-        try {
-            // Handle single target ID for decrement
-            const { challenge, index, response } = this.handleSingleTarget(
-                parsed.targetId || "",
-                "decrement"
-            );
-            if (response) {
-                return response;
-            }
-
-            if (!challenge || index === undefined) {
-                return this.createErrorResponse(
-                    "Challenge not found for decrement"
-                );
-            }
-
-            // Parse decrement amount from parameters or default to 1
-            const decrementAmount = this.parseDecrementAmount(parsed);
-
-            // Store old progress for response
-            const oldProgress = challenge.progress;
-
-            // Changes are automatically saved to localStorage and counters updated
-            const updatedChallenge =
+        return this.executeProgressOperation(
+            parsed,
+            ProgressOperation.DECREMENT,
+            (p) => this.parseDecrementAmount(p),
+            (challenge, amount) =>
                 this.challengeList.decrementChallengeProgress(
                     challenge.id,
-                    decrementAmount
-                );
-            if (!updatedChallenge) {
-                return this.createErrorResponse(
-                    "Failed to decrement challenge progress"
-                );
-            }
-
-            // Format response
-            const responseMessage = ResponseFormatter.formatProgressResponse(
-                challenge,
-                index,
-                oldProgress,
-                {
-                    includeShortId: true,
-                    includeProgress: true,
-                }
-            );
-
-            return this.createSuccessResponse(responseMessage, "decrement");
-        } catch (error: unknown) {
-            return this.createErrorResponse(
-                ResponseFormatter.formatError(
-                    error,
-                    "decrementing challenge progress"
+                    amount
                 )
-            );
-        }
+        );
     }
 
     /**

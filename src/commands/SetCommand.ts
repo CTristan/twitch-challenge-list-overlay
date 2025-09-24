@@ -1,6 +1,5 @@
-import { ResponseFormatter } from "../utils/ResponseFormatter";
 import { ValidationUtils } from "../utils/ValidationUtils";
-import { BaseCommand } from "./Command";
+import { BaseCommand, ProgressOperation } from "./Command";
 
 /**
  * Command to set specific challenge progress
@@ -14,87 +13,22 @@ export class SetCommand extends BaseCommand {
      * @returns Command response
      */
     execute(parsed: ParsedCommand, _username: string): CommandResponse {
-        try {
-            // Handle single target ID for set
-            const { challenge, index, response } = this.handleSingleTarget(
-                parsed.targetId || "",
-                "set"
-            );
-            if (response) {
-                return response;
-            }
-
-            if (!challenge || index === undefined) {
-                return this.createErrorResponse(
-                    "Challenge not found for set progress"
-                );
-            }
-
-            // Parse new progress value
-            const newProgress = this.parseProgressValue(parsed);
-            if (newProgress === null) {
-                return this.createErrorResponse(
-                    "Progress value required. Usage: !ch set 1 5 or !ch set 1 value=5"
-                );
-            }
-
-            // Validate progress value
-            try {
-                const validatedProgress = ValidationUtils.validateNumber(
-                    newProgress,
-                    "Progress value",
-                    {
-                        min: 0,
-                        max: challenge.amount,
-                        integer: true,
-                        required: true,
-                    }
-                );
-
-                // Store old progress for response
-                const oldProgress = challenge.progress;
-
-                // Changes are automatically saved to localStorage and counters updated
-                const updatedChallenge =
-                    this.challengeList.setChallengeProgress(
-                        challenge.id,
-                        validatedProgress
-                    );
-                if (!updatedChallenge) {
-                    return this.createErrorResponse(
-                        "Failed to set challenge progress"
-                    );
-                }
-
-                // Format response
-                const responseMessage =
-                    ResponseFormatter.formatProgressResponse(
-                        challenge,
-                        index,
-                        oldProgress,
-                        {
-                            includeShortId: true,
-                            includeProgress: true,
-                        }
-                    );
-
-                return this.createSuccessResponse(responseMessage, "set");
-            } catch (validationError: unknown) {
-                return this.createErrorResponse(
-                    ResponseFormatter.formatError(
-                        validationError,
-                        "validating progress value"
-                    )
-                );
-            }
-        } catch (error: unknown) {
-            return this.createErrorResponse(
-                ResponseFormatter.formatError(
-                    error,
-                    "setting challenge progress"
-                )
-            );
-        }
+        return this.executeProgressOperation(
+            parsed,
+            ProgressOperation.SET,
+            (p) => this.parseProgressValue(p),
+            (challenge, value) =>
+                this.challengeList.setChallengeProgress(challenge.id, value),
+            (value, challenge) => {
+                ValidationUtils.validateNumber(value, "Progress value", {
+                    min: 0,
+                    max: challenge.amount,
+                    integer: true,
+                    required: true,
+                });
+            },
+            "Progress value required. Usage: !ch set 1 5 or !ch set 1 value=5"
+        );
     }
 
     /**
