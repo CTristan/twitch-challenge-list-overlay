@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import Challenge from "../../src/classes/Challenge";
 import ChallengeList from "../../src/classes/ChallengeList";
+import ConfigManager from "../../src/classes/ConfigManager";
 import UIUpdateHandler from "../../src/utils/UIUpdateHandler";
 
 describe("UIUpdateHandler Performance", () => {
@@ -11,7 +12,8 @@ describe("UIUpdateHandler Performance", () => {
         // Clear localStorage for test isolation
         localStorage.clear();
         challengeList = new ChallengeList();
-        uiUpdateHandler = new UIUpdateHandler(challengeList);
+        const configManager = ConfigManager.getInstance();
+        uiUpdateHandler = new UIUpdateHandler(challengeList, configManager);
 
         // Create DOM containers with proper card structure for testing
         document.body.innerHTML = `

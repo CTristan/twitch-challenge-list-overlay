@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import Challenge from "../../src/classes/Challenge";
 import ChallengeList from "../../src/classes/ChallengeList";
+import ConfigManager from "../../src/classes/ConfigManager";
 import ChallengeRenderer from "../../src/utils/ChallengeRenderer";
 import UIUpdateHandler from "../../src/utils/UIUpdateHandler";
 import { ensureTestIsolation } from "./chatHandlerTestUtils";
@@ -31,7 +32,8 @@ describe("UIUpdateHandler", () => {
         `;
 
         challengeList = new ChallengeList("test-store");
-        uiUpdateHandler = new UIUpdateHandler(challengeList);
+        const configManager = ConfigManager.getInstance();
+        uiUpdateHandler = new UIUpdateHandler(challengeList, configManager);
     });
 
     describe("handleCommandResult", () => {

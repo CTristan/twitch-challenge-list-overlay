@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import App from "../../src/app";
 import Challenge from "../../src/classes/Challenge";
 import ChallengeList from "../../src/classes/ChallengeList";
+import ConfigManager from "../../src/classes/ConfigManager";
 import UIUpdateHandler from "../../src/utils/UIUpdateHandler";
 import { ensureTestIsolation } from "../utils/chatHandlerTestUtils";
 
@@ -20,7 +21,8 @@ describe("Batched UI Updates Performance", () => {
 
         app = new App("testBatchedUIUpdates");
         challengeList = app.challengeList;
-        uiUpdateHandler = new UIUpdateHandler(challengeList);
+        const configManager = ConfigManager.getInstance();
+        uiUpdateHandler = new UIUpdateHandler(challengeList, configManager);
     });
 
     describe("Batched Challenge Addition", () => {

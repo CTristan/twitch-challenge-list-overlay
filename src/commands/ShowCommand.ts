@@ -89,11 +89,11 @@ export class ShowCommand extends BaseCommand {
         }
 
         // Creation time if available
-        if (challenge.id) {
-            const createdTime = new Date(
-                parseInt(challenge.id)
-            ).toLocaleString();
+        if (challenge.createdAt !== undefined && challenge.createdAt !== null) {
+            const createdTime = new Date(challenge.createdAt).toLocaleString();
             parts.push(`Created: ${createdTime}`);
+        } else {
+            parts.push(`Created: Unknown`);
         }
 
         return parts.join(" • ");

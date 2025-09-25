@@ -13,18 +13,6 @@ import UIUpdateHandler from "./utils/UIUpdateHandler";
 // Commands and responses are loaded from ConfigManager
 
 /**
- * Get a value from an array by rotating through it based on an index
- * @param index - The index to use for rotating (0-based)
- * @param values - Array of values to rotate through
- * @returns The value at the rotated index or null if no values configured
- */
-function getRotatingArrayValue<T>(index: number, values: T[]): T | null {
-    if (!values || values.length === 0) return null;
-    const value = values[index % values.length];
-    return value !== undefined ? value : null;
-}
-
-/**
  * @class App
  * @property {ChallengeList} challengeList - The challenge list
  * @method render - Render the challenge list to the DOM
@@ -51,7 +39,10 @@ export default class App {
             this.challengeList,
             this.#configManager
         );
-        this.#uiUpdateHandler = new UIUpdateHandler(this.challengeList);
+        this.#uiUpdateHandler = new UIUpdateHandler(
+            this.challengeList,
+            this.#configManager
+        );
         this.#timerController = new TimerController(this.challengeList);
         loadStyles(this.#configManager.getAll());
     }
@@ -91,7 +82,7 @@ export default class App {
     renderChallengeList(): void {
         // Always create the challenge card with header, even when there are no challenges
         // This ensures the "Challenges" header remains visible in all states (including 0/0)
-        const cardEl = createChallengeCard(
+        const cardEl = DOMHelper.createChallengeCard(
             this.challengeList.challengesCompleted,
             this.challengeList.totalChallenges
         );
@@ -120,8 +111,8 @@ export default class App {
                     const listItem =
                         ChallengeRenderer.createChallengeElement(challenge);
 
-                    // Apply row colors using shared helper
-                    const textColor = applyChallengeRowColors(
+                    // Apply row colors using centralized helper
+                    const textColor = ChallengeRenderer.applyChallengeRowColors(
                         listItem,
                         index,
                         rowColors,
@@ -137,11 +128,17 @@ export default class App {
                     ) as HTMLElement;
 
                     if (checkbox) {
-                        decorateChallengeCheckbox(checkbox, textColor);
+                        ChallengeRenderer.decorateChallengeCheckbox(
+                            checkbox,
+                            textColor
+                        );
                     }
 
                     if (textElement) {
-                        applyChallengeTextColors(textElement, textColor);
+                        ChallengeRenderer.applyChallengeTextColors(
+                            textElement,
+                            textColor
+                        );
                     }
 
                     // Add timer display if timer exists and is active (as sibling to text)
@@ -265,84 +262,10 @@ export default class App {
      * @returns {void}
      */
     addChallengeToDOM(challenge: Challenge): void {
-        const challengeContainer = document.querySelector(
-            ".challenge-container"
-        );
+        // Delegate DOM manipulation to UIUpdateHandler
+        this.#uiUpdateHandler.addChallengeToDOM(challenge);
 
-        if (!challengeContainer) return;
-
-        const challengeCardEls = document.querySelectorAll(".card");
-
-        if (challengeCardEls.length === 0) {
-            const challengeCard = createChallengeCard(
-                this.challengeList.challengesCompleted,
-                this.challengeList.totalChallenges
-            );
-            challengeContainer.appendChild(challengeCard);
-        }
-
-        const challengeElement = document.createElement("li");
-        challengeElement.classList.add("challenge");
-        challengeElement.dataset["challengeId"] = `${challenge.id}`;
-
-        // Cache color arrays to avoid repeated ConfigManager calls
-        const rowColors = this.#configManager.get("challengeRowColors") || [];
-        const rowTextColors =
-            this.#configManager.get("challengeRowTextColors") || [];
-
-        // Calculate the row index based on current challenge count (newly added challenge is at the end)
-        const rowIndex = this.challengeList.challenges.length - 1;
-
-        // Apply row colors using shared helper
-        const textColor = applyChallengeRowColors(
-            challengeElement,
-            rowIndex,
-            rowColors,
-            rowTextColors
-        );
-
-        // Create checkbox element (new challenges are not completed by default)
-        const checkbox = ChallengeRenderer.createChallengeCheckbox(false);
-
-        // Apply checkbox styling using shared helper
-        decorateChallengeCheckbox(checkbox, textColor);
-
-        challengeElement.appendChild(checkbox);
-
-        // Create text element for challenge title and description
-        const textElement =
-            ChallengeRenderer.createChallengeTextElement(challenge);
-
-        // Apply text colors using shared helper
-        applyChallengeTextColors(textElement, textColor);
-
-        challengeElement.appendChild(textElement);
-
-        // Add timer display if timer exists and is active (as sibling to text)
-        if (challenge.timer && challenge.timer.isActive) {
-            const timerElement = TimerDisplayUtils.createTimerElement(
-                challenge.timer,
-                challenge.id
-            );
-            challengeElement.appendChild(timerElement);
-        }
-
-        const challengesList =
-            challengeContainer.querySelector(".card .challenges");
-
-        if (challengesList) {
-            challengesList.appendChild(challengeElement);
-        }
-
-        this.updateChallengeCount();
-        animateScroll();
-
-        // Start timer updates if the new challenge has an active timer
-        if (challenge.timer && challenge.timer.isActive) {
-            this.startTimerUpdates();
-        }
-
-        // Enable checkbox interaction for admin mode
+        // Handle App-specific concerns
         this.enableAdminCheckboxInteraction();
     }
 
@@ -352,63 +275,8 @@ export default class App {
      * @returns {void}
      */
     editChallengeFromDOM(challenge: Challenge): void {
-        /** @type {NodeListOf<HTMLElement>} */
-        const challengeElements: NodeListOf<HTMLElement> =
-            document.querySelectorAll(`[data-challenge-id="${challenge.id}"]`);
-        for (const challengeElement of challengeElements) {
-            const textElement = challengeElement.querySelector(
-                ".challenge-text"
-            ) as HTMLElement;
-            if (textElement) {
-                // Replace the entire text element with new structure
-                const newTextElement =
-                    ChallengeRenderer.createChallengeTextElement(challenge);
-
-                // Preserve any existing color styling
-                const existingColor = textElement.style.color;
-                if (existingColor) {
-                    newTextElement.style.color = existingColor;
-                    const titleElement = newTextElement.querySelector(
-                        ".challenge-title"
-                    ) as HTMLElement;
-                    const descriptionElement = newTextElement.querySelector(
-                        ".challenge-description"
-                    ) as HTMLElement;
-                    const progressElement = newTextElement.querySelector(
-                        ".challenge-amount"
-                    ) as HTMLElement;
-                    if (titleElement) titleElement.style.color = existingColor;
-                    if (descriptionElement)
-                        descriptionElement.style.color = existingColor;
-                    if (progressElement)
-                        progressElement.style.color = existingColor;
-                }
-
-                textElement.parentNode?.replaceChild(
-                    newTextElement,
-                    textElement
-                );
-
-                // Handle timer display - remove existing timer and add new one if needed
-                const existingTimer =
-                    challengeElement.querySelector(".challenge-timer");
-                if (existingTimer) {
-                    existingTimer.remove();
-                }
-
-                // Add timer display if timer exists and is active (as sibling to text)
-                if (challenge.timer && challenge.timer.isActive) {
-                    const timerElement = TimerDisplayUtils.createTimerElement(
-                        challenge.timer,
-                        challenge.id
-                    );
-                    challengeElement.appendChild(timerElement);
-                }
-            }
-        }
-
-        // Restart timer updates to handle any timer changes
-        this.startTimerUpdates();
+        // Delegate DOM manipulation to UIUpdateHandler
+        this.#uiUpdateHandler.editChallengeFromDOM(challenge);
     }
 
     /**
@@ -610,103 +478,4 @@ function respondMessage(
             .replaceAll("{message}", message),
         error,
     };
-}
-
-/**
- * Create a challenge card element for the single challenge list
- * @param {number} completedCount - Number of completed challenges
- * @param {number} totalCount - Total number of challenges
- * @returns {HTMLDivElement}
- */
-function createChallengeCard(
-    completedCount: number = 0,
-    totalCount: number = 0
-): HTMLDivElement {
-    const cardEl = document.createElement("div");
-    cardEl.classList.add("card");
-    const headerDiv = document.createElement("div");
-    headerDiv.classList.add("username");
-    headerDiv.innerText = `Challenges ${completedCount}/${totalCount}`;
-    cardEl.appendChild(headerDiv);
-    const list = document.createElement("ol");
-    list.classList.add("challenges");
-    cardEl.appendChild(list);
-    return cardEl;
-}
-
-/**
- * Apply row colors (background and text) to a challenge list item
- * @param listItem - The challenge list item element
- * @param rowIndex - The index of the row (0-based)
- * @param rowColors - Array of background color values to rotate through
- * @param rowTextColors - Array of text color values to rotate through
- * @returns The text color string or null if no text colors configured
- */
-function applyChallengeRowColors(
-    listItem: HTMLElement,
-    rowIndex: number,
-    rowColors: string[],
-    rowTextColors: string[]
-): string | null {
-    // Apply row background color if configured
-    const backgroundColor = getRotatingArrayValue(rowIndex, rowColors);
-    if (backgroundColor) {
-        listItem.style.backgroundColor = backgroundColor;
-    }
-
-    // Get row text color if configured
-    const textColor = getRotatingArrayValue(rowIndex, rowTextColors);
-    return textColor;
-}
-
-/**
- * Apply color styling to a challenge checkbox element
- * @param checkbox - The checkbox element to style
- * @param textColor - The text color to apply, or null if no color configured
- */
-function decorateChallengeCheckbox(
-    checkbox: HTMLElement,
-    textColor: string | null
-): void {
-    if (textColor) {
-        checkbox.style.setProperty(
-            "--challenge-checkbox-border-color",
-            textColor
-        );
-        checkbox.style.setProperty(
-            "--challenge-checkbox-checked-border-color",
-            textColor
-        );
-        checkbox.style.setProperty(
-            "--challenge-checkbox-checkmark-color",
-            textColor
-        );
-    }
-}
-
-/**
- * Apply text color styling to a challenge text element and its children
- * @param textElement - The text element containing challenge content
- * @param textColor - The text color to apply, or null if no color configured
- */
-function applyChallengeTextColors(
-    textElement: HTMLElement,
-    textColor: string | null
-): void {
-    if (textColor) {
-        textElement.style.color = textColor;
-        // Also apply to child elements
-        const titleElement = textElement.querySelector(
-            ".challenge-title"
-        ) as HTMLElement;
-        const descriptionElement = textElement.querySelector(
-            ".challenge-description"
-        ) as HTMLElement;
-        const progressElement = textElement.querySelector(
-            ".challenge-amount"
-        ) as HTMLElement;
-        if (titleElement) titleElement.style.color = textColor;
-        if (descriptionElement) descriptionElement.style.color = textColor;
-        if (progressElement) progressElement.style.color = textColor;
-    }
 }

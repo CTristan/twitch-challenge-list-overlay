@@ -1,6 +1,7 @@
 import { animateScroll } from "../animations/animateScroll";
 import Challenge from "../classes/Challenge";
 import ChallengeList from "../classes/ChallengeList";
+import ConfigManager from "../classes/ConfigManager";
 import ChallengeRenderer from "./ChallengeRenderer";
 import DOMHelper from "./DOMHelper";
 import Timer from "./Timer";
@@ -14,6 +15,7 @@ import TimerDisplayUtils from "./TimerDisplayUtils";
  */
 export default class UIUpdateHandler {
     private challengeList: ChallengeList;
+    private configManager: ConfigManager;
     private timerController: TimerController;
 
     // DOM element cache for performance optimization
@@ -46,9 +48,11 @@ export default class UIUpdateHandler {
     /**
      * @constructor
      * @param challengeList - The challenge list instance
+     * @param configManager - The configuration manager instance
      */
-    constructor(challengeList: ChallengeList) {
+    constructor(challengeList: ChallengeList, configManager: ConfigManager) {
         this.challengeList = challengeList;
+        this.configManager = configManager;
         this.timerController = new TimerController(challengeList);
     }
 
@@ -112,8 +116,11 @@ export default class UIUpdateHandler {
         // Use DocumentFragment for efficient batch DOM operations
         const fragment = document.createDocumentFragment();
 
-        challenges.forEach((challenge) => {
-            const challengeElement = this.createChallengeElement(challenge);
+        challenges.forEach((challenge, index) => {
+            const challengeElement = this.createChallengeElement(
+                challenge,
+                index
+            );
             fragment.appendChild(challengeElement);
         });
 
@@ -245,12 +252,28 @@ export default class UIUpdateHandler {
     }
 
     /**
-     * Add the challenge to the DOM (legacy method - prefer batched handleAddUpdate)
+     * Add the challenge to the DOM
      * @param challenge - Challenge to add
      */
     addChallengeToDOM(challenge: Challenge): void {
-        const challengesList = this.getCachedChallengesList();
+        const challengeContainer = this.getCachedChallengeContainer();
 
+        if (!challengeContainer) {
+            console.error("Challenge container not found");
+            return;
+        }
+
+        // Create card if none exist (handles initial state)
+        const challengeCardEls = document.querySelectorAll(".card");
+        if (challengeCardEls.length === 0) {
+            const challengeCard = DOMHelper.createChallengeCard(
+                this.challengeList.challengesCompleted,
+                this.challengeList.totalChallenges
+            );
+            challengeContainer.appendChild(challengeCard);
+        }
+
+        const challengesList = this.getCachedChallengesList();
         if (!challengesList) {
             console.error(
                 "Challenge ordered list not found - ensure card is properly initialized"
@@ -258,10 +281,23 @@ export default class UIUpdateHandler {
             return;
         }
 
-        const challengeElement = this.createChallengeElement(challenge);
+        // Calculate row index for newly added challenge (it's at the end of the list)
+        const rowIndex = this.challengeList.challenges.length - 1;
+        const challengeElement = this.createChallengeElement(
+            challenge,
+            rowIndex
+        );
 
         // Add to the single challenge list
         challengesList.appendChild(challengeElement);
+
+        // Update challenge count and timers
+        this.updateChallengeCount();
+
+        // Start timer updates if the new challenge has an active timer
+        if (challenge.timer && challenge.timer.isActive) {
+            this.timerController.startTimerUpdates();
+        }
 
         // Animate scroll to new challenge
         animateScroll();
@@ -308,25 +344,22 @@ export default class UIUpdateHandler {
                     newTextElement,
                     textElement
                 );
-            }
 
-            // Update timer display if challenge has timer
-            const timerElement =
-                challengeElement.querySelector(".challenge-timer");
-            if (challenge.timer && timerElement) {
-                this.updateTimerElement(
-                    timerElement as HTMLElement,
-                    challenge.timer
-                );
-            } else if (!challenge.timer && timerElement) {
-                timerElement.remove();
-            } else if (challenge.timer && !timerElement) {
-                // Add timer element if challenge now has timer
-                const newTimerElement = this.createTimerElement(
-                    challenge.timer,
-                    challenge.id
-                );
-                challengeElement.appendChild(newTimerElement);
+                // Handle timer display - remove existing timer and add new one if needed
+                const existingTimer =
+                    challengeElement.querySelector(".challenge-timer");
+                if (existingTimer) {
+                    existingTimer.remove();
+                }
+
+                // Add timer display if timer exists and is active (as sibling to text)
+                if (challenge.timer && challenge.timer.isActive) {
+                    const timerElement = TimerDisplayUtils.createTimerElement(
+                        challenge.timer,
+                        challenge.id
+                    );
+                    challengeElement.appendChild(timerElement);
+                }
             }
         }
 
@@ -411,8 +444,11 @@ export default class UIUpdateHandler {
         const fragment = document.createDocumentFragment();
 
         // Render all challenges
-        this.challengeList.challenges.forEach((challenge) => {
-            const challengeElement = this.createChallengeElement(challenge);
+        this.challengeList.challenges.forEach((challenge, index) => {
+            const challengeElement = this.createChallengeElement(
+                challenge,
+                index
+            );
             fragment.appendChild(challengeElement);
         });
 
@@ -426,9 +462,13 @@ export default class UIUpdateHandler {
     /**
      * Create a challenge DOM element using shared renderer
      * @param challenge - Challenge to create element for
+     * @param rowIndex - Optional row index for styling (defaults to challenge position in list)
      * @returns HTMLElement representing the challenge
      */
-    private createChallengeElement(challenge: Challenge): HTMLElement {
+    private createChallengeElement(
+        challenge: Challenge,
+        rowIndex?: number
+    ): HTMLElement {
         // Use shared renderer with event handling support
         const challengeElement = ChallengeRenderer.createChallengeElement(
             challenge,
@@ -437,6 +477,9 @@ export default class UIUpdateHandler {
                 eventHandler: this.handleCheckboxClick,
             }
         );
+
+        // Apply styling using centralized helpers
+        this.applyStylingToChallengeElement(challengeElement, rowIndex);
 
         // Add timer element if challenge has timer
         if (challenge.timer) {
@@ -451,6 +494,53 @@ export default class UIUpdateHandler {
     }
 
     /**
+     * Apply styling to a challenge element using centralized styling helpers
+     * @param challengeElement - The challenge element to style
+     * @param rowIndex - Optional row index for styling (defaults to challenge position in list)
+     */
+    private applyStylingToChallengeElement(
+        challengeElement: HTMLElement,
+        rowIndex?: number
+    ): void {
+        // Get color configuration
+        const rowColors = this.configManager.get("challengeRowColors") || [];
+        const rowTextColors =
+            this.configManager.get("challengeRowTextColors") || [];
+
+        // Determine row index if not provided
+        const actualRowIndex =
+            rowIndex !== undefined
+                ? rowIndex
+                : this.challengeList.challenges.findIndex(
+                      (c) => c.id === challengeElement.dataset["challengeId"]
+                  );
+
+        // Apply row colors using centralized helper
+        const textColor = ChallengeRenderer.applyChallengeRowColors(
+            challengeElement,
+            actualRowIndex,
+            rowColors,
+            rowTextColors
+        );
+
+        // Apply styling to checkbox and text elements
+        const checkbox = challengeElement.querySelector(
+            ".challenge-checkbox"
+        ) as HTMLElement;
+        const textElement = challengeElement.querySelector(
+            ".challenge-text"
+        ) as HTMLElement;
+
+        if (checkbox) {
+            ChallengeRenderer.decorateChallengeCheckbox(checkbox, textColor);
+        }
+
+        if (textElement) {
+            ChallengeRenderer.applyChallengeTextColors(textElement, textColor);
+        }
+    }
+
+    /**
      * Create a timer DOM element using shared utilities
      * @param timer - Timer instance
      * @param challengeId - Challenge ID for element identification
@@ -458,15 +548,6 @@ export default class UIUpdateHandler {
      */
     private createTimerElement(timer: Timer, challengeId: string): HTMLElement {
         return TimerDisplayUtils.createTimerElement(timer, challengeId);
-    }
-
-    /**
-     * Update a timer DOM element using shared utilities
-     * @param timerElement - Timer DOM element to update
-     * @param timer - Timer instance
-     */
-    private updateTimerElement(timerElement: HTMLElement, timer: Timer): void {
-        TimerDisplayUtils.updateTimerElement(timerElement, timer);
     }
 
     /**
