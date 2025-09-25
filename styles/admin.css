@@ -463,6 +463,97 @@
   }
 }
 
+/* Collapsible Section Styles */
+.collapsible-section {
+  margin-bottom: 25px;
+  background-color: #404040;
+  border-radius: 6px;
+  border: 1px solid #555555;
+  overflow: hidden;
+}
+
+.collapsible-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 15px 20px;
+  background-color: #4a4a4a;
+  cursor: pointer;
+  user-select: none;
+  transition: background-color 0.2s ease;
+  border-bottom: 1px solid #555555;
+}
+
+.collapsible-header:hover {
+  background-color: #525252;
+}
+
+.collapsible-header:focus {
+  outline: 2px solid #4a90e2;
+  outline-offset: -2px;
+}
+
+.collapsible-title {
+  margin: 0;
+  color: #ffffff;
+  font-size: 16px;
+  font-weight: 600;
+  flex: 1;
+}
+
+.collapsible-icon {
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #cccccc;
+  font-size: 14px;
+  font-weight: bold;
+  transition: transform 0.3s ease, color 0.2s ease;
+  margin-left: 10px;
+}
+
+.collapsible-header:hover .collapsible-icon {
+  color: #ffffff;
+}
+
+.collapsible-section.expanded .collapsible-icon {
+  transform: rotate(180deg);
+}
+
+.collapsible-content {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease-out, padding 0.3s ease-out;
+  padding: 0 20px;
+}
+
+.collapsible-section.expanded .collapsible-content {
+  max-height: 1000px; /* Large enough to accommodate content */
+  padding: 20px;
+  transition: max-height 0.3s ease-in, padding 0.3s ease-in;
+}
+
+.collapsible-content .form-group:last-child {
+  margin-bottom: 0;
+}
+
+/* Accessibility improvements */
+.collapsible-header[aria-expanded="true"] .collapsible-icon::before {
+  content: "▲";
+}
+
+.collapsible-header[aria-expanded="false"] .collapsible-icon::before {
+  content: "▼";
+}
+
+/* Focus management for keyboard navigation */
+.collapsible-header:focus-visible {
+  outline: 2px solid #4a90e2;
+  outline-offset: 2px;
+}
+
 /* Utility Classes for Admin Panel */
 .admin-panel .hidden {
   display: none !important;

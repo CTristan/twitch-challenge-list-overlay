@@ -1,4 +1,5 @@
 import type App from "../app";
+import CollapsibleSection from "../utils/CollapsibleSection";
 import { notifyConfigurationSaved } from "../utils/windowRefresh";
 import ConfigExporter from "./ConfigExporter";
 import ConfigManager from "./ConfigManager";
@@ -21,6 +22,7 @@ export default class AdminPanel {
         string,
         { element: Element; event: string; handler: EventListener }
     > = new Map();
+    #collapsibleSections: Map<string, CollapsibleSection> = new Map();
 
     /**
      * @constructor
@@ -73,6 +75,9 @@ export default class AdminPanel {
             element.removeEventListener(event, handler);
         });
         this.#eventListeners.clear();
+
+        // Clear collapsible sections
+        this.#collapsibleSections.clear();
     }
 
     /**
@@ -187,22 +192,46 @@ export default class AdminPanel {
     }
 
     /**
-     * Create the configuration form HTML
+     * Create the configuration form HTML with collapsible sections
      * @returns {void}
      */
     private createConfigurationForm(): void {
         const adminContent = document.querySelector(".admin-content");
-        if (!adminContent) return;
+        if (!adminContent) {
+            return;
+        }
 
         // Check if form already exists
-        if (document.getElementById("config-form")) return;
+        if (document.getElementById("config-form")) {
+            return;
+        }
 
-        const formHTML = `
-      <div id="config-form" class="config-form">
-        <h3>Configuration Settings</h3>
+        // Create the main form container
+        const formContainer = document.createElement("div");
+        formContainer.id = "config-form";
+        formContainer.className = "config-form";
 
-        <div class="config-section">
-          <h4>Authentication</h4>
+        const title = document.createElement("h3");
+        title.textContent = "Configuration Settings";
+        formContainer.appendChild(title);
+
+        // Create collapsible sections
+        this.createAuthenticationSection(formContainer);
+        this.createBehaviorSection(formContainer);
+        this.createColorSection(formContainer);
+        this.createActionsSection(formContainer);
+        this.createBackupSection(formContainer);
+        this.createDangerZoneSection(formContainer);
+
+        adminContent.appendChild(formContainer);
+    }
+
+    /**
+     * Create the Authentication section
+     * @param container - The parent container element
+     */
+    private createAuthenticationSection(container: HTMLElement): void {
+        const authContent = `
           <div class="form-group">
             <label for="twitch-oauth">Twitch OAuth Token:</label>
             <input type="password" id="twitch-oauth" class="form-input" placeholder="OAuth Token">
@@ -215,14 +244,61 @@ export default class AdminPanel {
             <label for="twitch-channel">Twitch Channel:</label>
             <input type="text" id="twitch-channel" class="form-input" placeholder="Channel">
           </div>
-        </div>
+        `;
 
-        <div class="config-section">
-          <h4>Behavior Settings</h4>
+        try {
+            const authSection = new CollapsibleSection({
+                id: "authentication",
+                title: "Authentication Settings",
+                content: authContent,
+                defaultExpanded: true, // Authentication should be expanded by default
+            });
+
+            this.#collapsibleSections.set("authentication", authSection);
+            const element = authSection.createElement();
+            container.appendChild(element);
+        } catch (error) {
+            console.error("Error creating CollapsibleSection:", error);
+            // Fallback to old HTML structure
+            const fallbackHTML = `
+                <div class="config-section">
+                  <h4>Authentication</h4>
+                  ${authContent}
+                </div>
+            `;
+            container.innerHTML += fallbackHTML;
+        }
+    }
+
+    /**
+     * Create the Behavior Settings section
+     * @param container - The parent container element
+     */
+    private createBehaviorSection(container: HTMLElement): void {
+        const behaviorContent = `
           <div class="form-group">
             <label for="max-challenges">Max Challenges:</label>
             <input type="number" id="max-challenges" class="form-input" min="1" max="50">
           </div>
+        `;
+
+        const behaviorSection = new CollapsibleSection({
+            id: "behavior",
+            title: "Behavior Settings",
+            content: behaviorContent,
+            defaultExpanded: true, // Behavior should be expanded by default
+        });
+
+        this.#collapsibleSections.set("behavior", behaviorSection);
+        container.appendChild(behaviorSection.createElement());
+    }
+
+    /**
+     * Create the Color Configuration section
+     * @param container - The parent container element
+     */
+    private createColorSection(container: HTMLElement): void {
+        const colorContent = `
           <div class="form-group">
             <label>Challenge Row Colors:</label>
 
@@ -280,36 +356,89 @@ export default class AdminPanel {
               </div>
             </div>
           </div>
-        </div>
+        `;
 
-        <div class="config-actions">
-          <button id="save-config-btn" class="admin-button">Save Configuration</button>
-          <button id="reset-config-btn" class="admin-button">Reset to Defaults</button>
-        </div>
+        const colorSection = new CollapsibleSection({
+            id: "colors",
+            title: "Color Configuration",
+            content: colorContent,
+            defaultExpanded: false, // Colors should be collapsed by default
+        });
 
-        <div class="config-transfer-section">
-          <h4>Configuration Backup & Restore</h4>
+        this.#collapsibleSections.set("colors", colorSection);
+        container.appendChild(colorSection.createElement());
+    }
+
+    /**
+     * Create the Actions section
+     * @param container - The parent container element
+     */
+    private createActionsSection(container: HTMLElement): void {
+        const actionsContent = `
+          <div class="config-actions">
+            <button id="save-config-btn" class="admin-button">Save Configuration</button>
+            <button id="reset-config-btn" class="admin-button">Reset to Defaults</button>
+          </div>
+        `;
+
+        const actionsSection = new CollapsibleSection({
+            id: "actions",
+            title: "Configuration Actions",
+            content: actionsContent,
+            defaultExpanded: true, // Actions should be expanded by default
+        });
+
+        this.#collapsibleSections.set("actions", actionsSection);
+        container.appendChild(actionsSection.createElement());
+    }
+
+    /**
+     * Create the Backup & Restore section
+     * @param container - The parent container element
+     */
+    private createBackupSection(container: HTMLElement): void {
+        const backupContent = `
           <div class="transfer-actions">
             <button id="export-json-btn" class="admin-button primary">Backup configuration</button>
             <button id="import-config-btn" class="admin-button primary">Restore configuration</button>
             <input type="file" id="import-file-input" accept=".json" style="display: none;">
           </div>
-        </div>
+        `;
 
-        <!-- Danger Zone Section -->
-        <div class="danger-zone-section">
-          <h4>Danger Zone</h4>
+        const backupSection = new CollapsibleSection({
+            id: "backup",
+            title: "Configuration Backup & Restore",
+            content: backupContent,
+            defaultExpanded: false, // Backup should be collapsed by default
+        });
+
+        this.#collapsibleSections.set("backup", backupSection);
+        container.appendChild(backupSection.createElement());
+    }
+
+    /**
+     * Create the Danger Zone section
+     * @param container - The parent container element
+     */
+    private createDangerZoneSection(container: HTMLElement): void {
+        const dangerContent = `
           <p class="danger-warning">The action below will permanently delete all stored configuration data. This cannot be undone.</p>
           <div class="danger-actions">
             <button id="clear-localstorage-btn" class="admin-button danger">
               Clear LocalStorage
             </button>
           </div>
-        </div>
-      </div>
-    `;
+        `;
 
-        adminContent.insertAdjacentHTML("beforeend", formHTML);
+        const dangerSection = new CollapsibleSection({
+            id: "danger-zone",
+            title: "Danger Zone",
+            content: dangerContent,
+            defaultExpanded: false, // Danger zone should be collapsed by default
+        });
+
+        this.#collapsibleSections.set("danger-zone", dangerSection);
+        container.appendChild(dangerSection.createElement());
     }
 
     /**
