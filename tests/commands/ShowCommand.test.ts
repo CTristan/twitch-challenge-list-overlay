@@ -135,7 +135,8 @@ describe("ShowCommand", () => {
             challengeList.addChallengeObjects(testChallenge);
 
             // Verify the ID is in the expected salted format (not a timestamp)
-            expect(testChallenge.id).toMatch(/^\d{15}$/); // DDHHMMSSMS + 4 digit salt (15 digits total)
+            // Format: DDHHMMSSMS + 4 digit salt (15 digits total)
+            expect(testChallenge.id).toMatch(/^\d{15}$/); // DDHHMMSSMS + 4 digit salt
 
             const result = showCommand.execute(
                 {

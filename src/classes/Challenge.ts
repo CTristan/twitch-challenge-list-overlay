@@ -88,8 +88,8 @@ export default class Challenge {
         const minute = String(now.getMinutes()).padStart(2, "0");
         const second = String(now.getSeconds()).padStart(2, "0");
         const millisecond = String(now.getMilliseconds()).padStart(3, "0");
-        const salt = Math.floor(Math.random() * 10000);
-        // format: DDHHMMSSMS + 4 digit salt
+        const salt = String(Math.floor(Math.random() * 10000)).padStart(4, "0");
+        // format: DDHHMMSSMS + 4 digit salt (15 digits total)
         return `${day}${hour}${minute}${second}${millisecond}${salt}`;
     }
 
