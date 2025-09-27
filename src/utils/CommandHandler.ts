@@ -1,6 +1,7 @@
 import ChallengeList from "../classes/ChallengeList";
 import ConfigManager from "../classes/ConfigManager";
 import { CommandRegistry } from "../commands/CommandRegistry";
+import type { CommandResponse } from "../types/CommandResponse";
 import { normalizeCommand } from "../types/CommandTypes";
 import CommandParser from "./CommandParser";
 import { ResponseFormatter } from "./ResponseFormatter";
@@ -37,7 +38,7 @@ export default class CommandHandler {
         try {
             // Check if this is a ch command (starts with "ch")
             if (!command.toLowerCase().startsWith("ch")) {
-                return { message: "", error: true, action: "not_ch_command" };
+                return { message: "", error: true };
             }
 
             // Parse the command
@@ -50,7 +51,6 @@ export default class CommandHandler {
                 return {
                     message: "", // Empty message for silent ignore
                     error: true, // Mark as error so no response is sent to chat
-                    action: "silent_ignore", // Special action to indicate silent ignore
                 };
             }
 

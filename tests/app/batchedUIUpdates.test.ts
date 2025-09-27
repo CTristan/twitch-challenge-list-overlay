@@ -3,6 +3,8 @@ import App from "../../src/app";
 import Challenge from "../../src/classes/Challenge";
 import ChallengeList from "../../src/classes/ChallengeList";
 import ConfigManager from "../../src/classes/ConfigManager";
+import type { CommandResponse } from "../../src/types/CommandResponse";
+import { UIUpdateAction } from "../../src/types/UIUpdateAction";
 import UIUpdateHandler from "../../src/utils/UIUpdateHandler";
 import { ensureTestIsolation } from "../utils/chatHandlerTestUtils";
 
@@ -53,7 +55,7 @@ describe("Batched UI Updates Performance", () => {
                 message: "Challenges added",
                 error: false,
                 uiUpdate: {
-                    action: "add" as UIUpdateAction,
+                    action: UIUpdateAction.ADD,
                     challengeIndices: [0, 1, 2],
                     challenges: challenges,
                     updateTimers: true,
@@ -93,7 +95,7 @@ describe("Batched UI Updates Performance", () => {
                 message: "Challenge added",
                 error: false,
                 uiUpdate: {
-                    action: "add" as UIUpdateAction,
+                    action: UIUpdateAction.ADD,
                     challengeIndices: [0],
                     challenges: [challenge],
                     updateTimers: true,
@@ -119,7 +121,7 @@ describe("Batched UI Updates Performance", () => {
                 message: "No challenges",
                 error: false,
                 uiUpdate: {
-                    action: "add" as UIUpdateAction,
+                    action: UIUpdateAction.ADD,
                     challengeIndices: [],
                     challenges: [],
                     updateTimers: false,
@@ -166,7 +168,7 @@ describe("Batched UI Updates Performance", () => {
                 message: "Challenges added",
                 error: false,
                 uiUpdate: {
-                    action: "add" as UIUpdateAction,
+                    action: UIUpdateAction.ADD,
                     challengeIndices: [0, 1, 2],
                     challenges: challenges,
                     updateTimers: true,
@@ -221,7 +223,7 @@ describe("Batched UI Updates Performance", () => {
                 message: "Challenges added",
                 error: false,
                 uiUpdate: {
-                    action: "add" as UIUpdateAction,
+                    action: UIUpdateAction.ADD,
                     challengeIndices: [0, 1],
                     challenges: challenges,
                     updateTimers: true,
@@ -272,7 +274,7 @@ describe("Batched UI Updates Performance", () => {
                 message: "Challenges added",
                 error: false,
                 uiUpdate: {
-                    action: "add" as UIUpdateAction,
+                    action: UIUpdateAction.ADD,
                     challengeIndices: [0, 1],
                     challenges: challenges,
                     updateTimers: true,
@@ -306,7 +308,7 @@ describe("Batched UI Updates Performance", () => {
                 message: "Challenge added",
                 error: false,
                 uiUpdate: {
-                    action: "add" as UIUpdateAction,
+                    action: UIUpdateAction.ADD,
                     challengeIndices: [0],
                     challenges: [challenge],
                     updateTimers: true,

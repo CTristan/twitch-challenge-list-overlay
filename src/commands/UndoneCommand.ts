@@ -1,4 +1,8 @@
 import type Challenge from "../classes/Challenge";
+import type { CommandResponse } from "../types/CommandResponse";
+import { ERROR_MESSAGES } from "../types/MessageConstants";
+import { UIUpdateAction } from "../types/UIUpdateAction";
+import type { UIUpdateData } from "../types/UIUpdateData";
 import { ResponseFormatter } from "../utils/ResponseFormatter";
 import { BaseCommand } from "./Command";
 
@@ -24,7 +28,7 @@ export class UndoneCommand extends BaseCommand {
 
             if (challenges.length === 0) {
                 return this.createErrorResponse(
-                    "No valid challenges found to revert"
+                    ERROR_MESSAGES.NO_VALID_CHALLENGES_TO_REVERT
                 );
             }
 
@@ -80,7 +84,19 @@ export class UndoneCommand extends BaseCommand {
                 }
             );
 
-            return this.createSuccessResponse(responseMessage, "undone");
+            // Create UI update data
+            const uiUpdate: UIUpdateData = {
+                action: UIUpdateAction.REVERT,
+                challengeIndices: revertedIndices,
+                challenges: revertedChallenges,
+                updateTimers: true,
+                updateCount: true,
+            };
+
+            return this.createSuccessResponseWithUIUpdate(
+                responseMessage,
+                uiUpdate
+            );
         } catch (error: unknown) {
             return this.createErrorResponse(
                 ResponseFormatter.formatError(

@@ -1,3 +1,6 @@
+import type { CommandResponse } from "../types/CommandResponse";
+import { UIUpdateAction } from "../types/UIUpdateAction";
+import type { UIUpdateData } from "../types/UIUpdateData";
 import { ResponseFormatter } from "../utils/ResponseFormatter";
 import { ValidationUtils } from "../utils/ValidationUtils";
 import { BaseCommand } from "./Command";
@@ -117,7 +120,19 @@ export class EditCommand extends BaseCommand {
                 }
             );
 
-            return this.createSuccessResponse(responseMessage, "edit");
+            // Create UI update data
+            const uiUpdate: UIUpdateData = {
+                action: UIUpdateAction.EDIT,
+                challengeIndices: [index],
+                challenges: [challenge],
+                updateTimers: true,
+                updateCount: true,
+            };
+
+            return this.createSuccessResponseWithUIUpdate(
+                responseMessage,
+                uiUpdate
+            );
         } catch (error: unknown) {
             return this.createErrorResponse(
                 ResponseFormatter.formatError(error, "editing challenge")

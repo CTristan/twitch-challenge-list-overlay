@@ -1,3 +1,4 @@
+import type { CommandResponse } from "../types/CommandResponse";
 import { BaseCommand, ProgressOperation } from "./Command";
 
 /**

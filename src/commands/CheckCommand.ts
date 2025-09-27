@@ -1,3 +1,5 @@
+import type { CommandResponse } from "../types/CommandResponse";
+import { HELP_MESSAGES, LIST_MESSAGES } from "../types/MessageConstants";
 import { ResponseFormatter } from "../utils/ResponseFormatter";
 import { BaseCommand } from "./Command";
 
@@ -20,7 +22,7 @@ export class CheckCommand extends BaseCommand {
             // Format summary response
             const responseMessage = this.formatChallengeStatistics(stats);
 
-            return this.createSuccessResponse(responseMessage, "check");
+            return this.createSuccessResponse(responseMessage);
         } catch (error: unknown) {
             return this.createErrorResponse(
                 ResponseFormatter.formatError(
@@ -88,14 +90,18 @@ export class CheckCommand extends BaseCommand {
         activeTimers: number;
     }): string {
         if (stats.total === 0) {
-            return "No challenges found. Use !ch add to create your first challenge!";
+            return HELP_MESSAGES.NO_CHALLENGES_USE_ADD;
         }
 
         const parts: string[] = [];
 
         // Total challenges
         parts.push(
-            `${stats.total} total challenge${stats.total === 1 ? "" : "s"}`
+            `${stats.total} ${
+                stats.total === 1
+                    ? LIST_MESSAGES.TOTAL_CHALLENGE
+                    : LIST_MESSAGES.TOTAL_CHALLENGES
+            }`
         );
 
         // Status breakdown
@@ -118,8 +124,10 @@ export class CheckCommand extends BaseCommand {
         if (stats.withTimers > 0) {
             if (stats.activeTimers > 0) {
                 parts.push(
-                    `${stats.activeTimers} active timer${
-                        stats.activeTimers === 1 ? "" : "s"
+                    `${stats.activeTimers} ${
+                        stats.activeTimers === 1
+                            ? LIST_MESSAGES.ACTIVE_TIMER
+                            : LIST_MESSAGES.ACTIVE_TIMERS
                     } ⏰`
                 );
             } else {

@@ -2,6 +2,7 @@ import { animateScroll } from "../animations/animateScroll";
 import Challenge from "../classes/Challenge";
 import ChallengeList from "../classes/ChallengeList";
 import ConfigManager from "../classes/ConfigManager";
+import type { CommandResponse } from "../types/CommandResponse";
 import ChallengeRenderer from "./ChallengeRenderer";
 import DOMHelper from "./DOMHelper";
 import Timer from "./Timer";

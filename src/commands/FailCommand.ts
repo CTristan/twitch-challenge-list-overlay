@@ -1,4 +1,5 @@
 import type Challenge from "../classes/Challenge";
+import type { CommandResponse } from "../types/CommandResponse";
 import { ResponseFormatter } from "../utils/ResponseFormatter";
 import { BaseCommand } from "./Command";
 
@@ -79,7 +80,7 @@ export class FailCommand extends BaseCommand {
                 }
             );
 
-            return this.createSuccessResponse(responseMessage, "fail");
+            return this.createSuccessResponse(responseMessage);
         } catch (error: unknown) {
             return this.createErrorResponse(
                 ResponseFormatter.formatError(

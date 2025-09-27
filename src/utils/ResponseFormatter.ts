@@ -1,4 +1,10 @@
 import Challenge from "../classes/Challenge";
+import {
+    ERROR_MESSAGES,
+    HELP_MESSAGES,
+    PERMISSION_MESSAGES,
+    SUCCESS_MESSAGES,
+} from "../types/MessageConstants";
 import { formatDisplayPosition } from "./PositionUtils";
 
 /**
@@ -63,7 +69,7 @@ export class ResponseFormatter {
             response += ` ${challenge.getStatusEmoji()}`;
         }
 
-        response += " added!";
+        response += ` ${SUCCESS_MESSAGES.CHALLENGE_ADDED}`;
 
         return response;
     }
@@ -83,16 +89,16 @@ export class ResponseFormatter {
         const { includeEmoji = true, includeShortId = true } = options;
 
         if (challenges.length === 0) {
-            return "No challenges were completed.";
+            return ERROR_MESSAGES.NO_CHALLENGES_WERE_COMPLETED;
         }
 
         if (challenges.length === 1) {
             const challenge = challenges[0];
             const index = indices[0];
             if (!challenge || index === undefined)
-                return "Error: Challenge not found";
+                return ERROR_MESSAGES.ERROR_CHALLENGE_NOT_FOUND;
 
-            let response = "Good job on completing ";
+            let response = `${SUCCESS_MESSAGES.GOOD_JOB_COMPLETING} `;
 
             if (includeShortId) {
                 response += `challenge #${formatDisplayPosition(index)}`;
@@ -120,9 +126,9 @@ export class ResponseFormatter {
                 ? `#${formatDisplayPosition(index)}`
                 : `"${c.title}"`;
         });
-        let response = `Good job on completing challenges ${challengeIds.join(
-            ", "
-        )}`;
+        let response = `${
+            SUCCESS_MESSAGES.GOOD_JOB_COMPLETING_CHALLENGES
+        } ${challengeIds.join(", ")}`;
 
         if (includeEmoji) {
             response += " ✅";
@@ -154,7 +160,7 @@ export class ResponseFormatter {
             response += `"${challenge.title}"`;
         }
 
-        response += " updated!";
+        response += ` ${SUCCESS_MESSAGES.CHALLENGE_UPDATED}`;
         return response;
     }
 
@@ -173,14 +179,14 @@ export class ResponseFormatter {
         const { includeShortId = true } = options;
 
         if (challenges.length === 0) {
-            return "No challenges were deleted.";
+            return ERROR_MESSAGES.NO_CHALLENGES_WERE_DELETED;
         }
 
         if (challenges.length === 1) {
             const challenge = challenges[0];
             const index = indices[0];
             if (!challenge || index === undefined)
-                return "Error: Challenge not found";
+                return ERROR_MESSAGES.ERROR_CHALLENGE_NOT_FOUND;
 
             let response = "Challenge ";
 
@@ -190,7 +196,7 @@ export class ResponseFormatter {
                 response += `"${challenge.title}"`;
             }
 
-            response += " has been deleted!";
+            response += ` ${SUCCESS_MESSAGES.CHALLENGE_DELETED}`;
             return response;
         }
 
@@ -206,7 +212,9 @@ export class ResponseFormatter {
                 ? `#${formatDisplayPosition(index)}`
                 : `"${c.title}"`;
         });
-        return `Challenges ${challengeIds.join(", ")} have been deleted!`;
+        return `Challenges ${challengeIds.join(", ")} ${
+            SUCCESS_MESSAGES.CHALLENGES_DELETED
+        }`;
     }
 
     /**
@@ -224,14 +232,14 @@ export class ResponseFormatter {
         const { includeEmoji = true, includeShortId = true } = options;
 
         if (challenges.length === 0) {
-            return "No challenges were marked as failed.";
+            return ERROR_MESSAGES.NO_CHALLENGES_WERE_FAILED;
         }
 
         if (challenges.length === 1) {
             const challenge = challenges[0];
             const index = indices[0];
             if (!challenge || index === undefined)
-                return "Error: Challenge not found";
+                return ERROR_MESSAGES.ERROR_CHALLENGE_NOT_FOUND_DETAILED;
 
             let response = "Challenge ";
 
@@ -241,7 +249,7 @@ export class ResponseFormatter {
                 response += `"${challenge.title}"`;
             }
 
-            response += " marked as failed";
+            response += ` ${SUCCESS_MESSAGES.CHALLENGE_MARKED_FAILED}`;
 
             if (includeEmoji) {
                 response += " ❌";
@@ -262,7 +270,9 @@ export class ResponseFormatter {
                 ? `#${formatDisplayPosition(index)}`
                 : `"${c.title}"`;
         });
-        let response = `Challenges ${challengeIds.join(", ")} marked as failed`;
+        let response = `Challenges ${challengeIds.join(", ")} ${
+            SUCCESS_MESSAGES.CHALLENGE_MARKED_FAILED
+        }`;
 
         if (includeEmoji) {
             response += " ❌";
@@ -286,14 +296,14 @@ export class ResponseFormatter {
         const { includeEmoji = true, includeShortId = true } = options;
 
         if (challenges.length === 0) {
-            return "No challenges were reverted.";
+            return ERROR_MESSAGES.NO_CHALLENGES_WERE_REVERTED;
         }
 
         if (challenges.length === 1) {
             const challenge = challenges[0];
             const index = indices[0];
             if (!challenge || index === undefined)
-                return "Error: Challenge not found";
+                return ERROR_MESSAGES.ERROR_CHALLENGE_NOT_FOUND_DETAILED;
 
             let response = "Challenge ";
 
@@ -303,7 +313,7 @@ export class ResponseFormatter {
                 response += `"${challenge.title}"`;
             }
 
-            response += " reverted to active status";
+            response += ` ${SUCCESS_MESSAGES.CHALLENGE_REVERTED}`;
 
             if (includeEmoji) {
                 response += " 🔄";
@@ -325,9 +335,9 @@ export class ResponseFormatter {
                 ? `#${formatDisplayPosition(index)}`
                 : `"${c.title}"`;
         });
-        let response = `Challenges ${challengeIds.join(
-            ", "
-        )} reverted to active status`;
+        let response = `Challenges ${challengeIds.join(", ")} ${
+            SUCCESS_MESSAGES.CHALLENGES_REVERTED
+        }`;
 
         if (includeEmoji) {
             response += " 🔄";
@@ -366,12 +376,12 @@ export class ResponseFormatter {
                 challenge.amount
             } → ${challenge.getProgressString()}`;
         } else {
-            response += " progress updated";
+            response += ` ${SUCCESS_MESSAGES.PROGRESS_UPDATED}`;
         }
 
         // Add completion notice if challenge was completed
         if (challenge.isComplete() && oldProgress < challenge.amount) {
-            response += " ✅ Completed!";
+            response += ` ${SUCCESS_MESSAGES.COMPLETED_INDICATOR}`;
         }
 
         return response;
@@ -398,7 +408,7 @@ export class ResponseFormatter {
         } = options;
 
         if (challenges.length === 0) {
-            return "No challenges found.";
+            return ERROR_MESSAGES.NO_CHALLENGES_FOUND;
         }
 
         const formattedChallenges = challenges.map((challenge, index) => {
@@ -494,7 +504,7 @@ export class ResponseFormatter {
      */
     static formatHelp(commands: string[] = []): string {
         if (commands.length === 0) {
-            return "Available commands: !ch add, !ch edit, !ch done, !ch undone, !ch delete, !ch list, !ch check, !ch clearall, !ch cleardone, !ch help";
+            return HELP_MESSAGES.GENERAL_HELP;
         }
 
         return `Available commands: ${commands.join(", ")}`;
@@ -525,14 +535,20 @@ export class ResponseFormatter {
      */
     static formatValidationError(errors: string[]): string {
         if (errors.length === 0) {
-            return "Invalid command format";
+            return ERROR_MESSAGES.INVALID_COMMAND_FORMAT;
         }
 
         if (errors.length === 1) {
-            return `Invalid command: ${errors[0]}`;
+            return ERROR_MESSAGES.INVALID_COMMAND_SINGLE.replace(
+                "{error}",
+                errors[0] || ""
+            );
         }
 
-        return `Invalid command: ${errors.join(", ")}`;
+        return ERROR_MESSAGES.INVALID_COMMAND_MULTIPLE.replace(
+            "{errors}",
+            errors.join(", ")
+        );
     }
 
     /**
@@ -540,7 +556,7 @@ export class ResponseFormatter {
      * @returns Formatted permission error message
      */
     static formatPermissionError(): string {
-        return "Only moderators and the broadcaster can manage challenges";
+        return PERMISSION_MESSAGES.MODERATOR_ONLY;
     }
 
     /**
@@ -550,7 +566,10 @@ export class ResponseFormatter {
      * @returns Formatted not found message
      */
     static formatNotFoundError(type: string, identifier: string): string {
-        return `${type} ${identifier} not found`;
+        return ERROR_MESSAGES.GENERIC_NOT_FOUND.replace("{type}", type).replace(
+            "{identifier}",
+            identifier
+        );
     }
 
     /**
@@ -559,6 +578,9 @@ export class ResponseFormatter {
      * @returns Formatted limit error message
      */
     static formatLimitError(limit: number): string {
-        return `Maximum number of challenges reached (${limit}). Delete some challenges first.`;
+        return ERROR_MESSAGES.MAXIMUM_CHALLENGES_REACHED.replace(
+            "{limit}",
+            limit.toString()
+        );
     }
 }

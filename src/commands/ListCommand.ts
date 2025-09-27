@@ -1,4 +1,6 @@
 import Challenge from "../classes/Challenge";
+import type { CommandResponse } from "../types/CommandResponse";
+import { ERROR_MESSAGES, LIST_MESSAGES } from "../types/MessageConstants";
 import { ResponseFormatter } from "../utils/ResponseFormatter";
 import { BaseCommand } from "./Command";
 
@@ -46,7 +48,7 @@ export class ListCommand extends BaseCommand {
                 responseMessage = `${prefix}: ${challengeList}`;
             }
 
-            return this.createSuccessResponse(responseMessage, "list");
+            return this.createSuccessResponse(responseMessage);
         } catch (error: unknown) {
             return this.createErrorResponse(
                 ResponseFormatter.formatError(error, "listing challenges")
@@ -147,13 +149,13 @@ export class ListCommand extends BaseCommand {
     private getEmptyMessage(filterType: "all" | "done" | "incomplete"): string {
         switch (filterType) {
             case "all":
-                return "No challenges found";
+                return ERROR_MESSAGES.NO_CHALLENGES_FOUND;
             case "done":
-                return "No completed challenges found";
+                return ERROR_MESSAGES.NO_COMPLETED_CHALLENGES_FOUND;
             case "incomplete":
-                return "No incomplete challenges found";
+                return ERROR_MESSAGES.NO_INCOMPLETE_CHALLENGES_FOUND;
             default:
-                return "No challenges found";
+                return ERROR_MESSAGES.NO_CHALLENGES_FOUND;
         }
     }
 
@@ -167,15 +169,18 @@ export class ListCommand extends BaseCommand {
         filterType: "all" | "done" | "incomplete",
         count: number
     ): string {
-        const countText = count === 1 ? "1 challenge" : `${count} challenges`;
+        const countText =
+            count === 1
+                ? LIST_MESSAGES.ONE_CHALLENGE
+                : `${count} ${LIST_MESSAGES.MULTIPLE_CHALLENGES}`;
 
         switch (filterType) {
             case "all":
-                return `All ${countText}`;
+                return `${LIST_MESSAGES.ALL_CHALLENGES} ${countText}`;
             case "done":
-                return `Completed ${countText}`;
+                return `${LIST_MESSAGES.COMPLETED_CHALLENGES} ${countText}`;
             case "incomplete":
-                return `Incomplete ${countText}`;
+                return `${LIST_MESSAGES.INCOMPLETE_CHALLENGES} ${countText}`;
             default:
                 return `${countText}`;
         }

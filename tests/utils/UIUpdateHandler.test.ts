@@ -2,6 +2,8 @@ import { beforeEach, describe, expect, it } from "vitest";
 import Challenge from "../../src/classes/Challenge";
 import ChallengeList from "../../src/classes/ChallengeList";
 import ConfigManager from "../../src/classes/ConfigManager";
+import type { CommandResponse } from "../../src/types/CommandResponse";
+import { UIUpdateAction } from "../../src/types/UIUpdateAction";
 import ChallengeRenderer from "../../src/utils/ChallengeRenderer";
 import UIUpdateHandler from "../../src/utils/UIUpdateHandler";
 import { ensureTestIsolation } from "./chatHandlerTestUtils";
@@ -47,7 +49,7 @@ describe("UIUpdateHandler", () => {
                 message: "Challenge added",
                 error: false,
                 uiUpdate: {
-                    action: "add" as UIUpdateAction,
+                    action: UIUpdateAction.ADD,
                     challengeIndices: [0],
                     challenges: [challenge],
                     updateTimers: true,
@@ -71,7 +73,7 @@ describe("UIUpdateHandler", () => {
                 message: "Challenge completed",
                 error: false,
                 uiUpdate: {
-                    action: "complete" as UIUpdateAction,
+                    action: UIUpdateAction.COMPLETE,
                     challengeIndices: [0],
                     challenges: [challenge],
                     updateTimers: true,
@@ -90,7 +92,7 @@ describe("UIUpdateHandler", () => {
                 message: "All challenges cleared",
                 error: false,
                 uiUpdate: {
-                    action: "clearAll" as UIUpdateAction,
+                    action: UIUpdateAction.CLEAR_ALL,
                     updateTimers: true,
                     updateCount: true,
                 },

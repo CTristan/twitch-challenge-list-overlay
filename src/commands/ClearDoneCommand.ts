@@ -1,3 +1,7 @@
+import type { CommandResponse } from "../types/CommandResponse";
+import { ERROR_MESSAGES } from "../types/MessageConstants";
+import { UIUpdateAction } from "../types/UIUpdateAction";
+import type { UIUpdateData } from "../types/UIUpdateData";
 import { ResponseFormatter } from "../utils/ResponseFormatter";
 import { BaseCommand } from "./Command";
 
@@ -23,8 +27,7 @@ export class ClearDoneCommand extends BaseCommand {
             // Check if there are any completed challenges to clear
             if (completedCount === 0) {
                 return this.createSuccessResponse(
-                    "No completed challenges to clear",
-                    "cleardone"
+                    ERROR_MESSAGES.NO_COMPLETED_CHALLENGES_TO_CLEAR
                 );
             }
 
@@ -37,7 +40,17 @@ export class ClearDoneCommand extends BaseCommand {
                 completedCount
             );
 
-            return this.createSuccessResponse(responseMessage, "cleardone");
+            // Create UI update data
+            const uiUpdate: UIUpdateData = {
+                action: UIUpdateAction.CLEAR_DONE,
+                updateTimers: true,
+                updateCount: true,
+            };
+
+            return this.createSuccessResponseWithUIUpdate(
+                responseMessage,
+                uiUpdate
+            );
         } catch (error: unknown) {
             return this.createErrorResponse(
                 ResponseFormatter.formatError(

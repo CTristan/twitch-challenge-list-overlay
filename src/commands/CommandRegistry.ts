@@ -1,5 +1,6 @@
 import ChallengeList from "../classes/ChallengeList";
 import ConfigManager from "../classes/ConfigManager";
+import type { CommandResponse } from "../types/CommandResponse";
 import {
     CommandType,
     normalizeCommand,

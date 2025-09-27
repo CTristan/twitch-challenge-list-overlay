@@ -1,3 +1,4 @@
+import type { CommandResponse } from "../types/CommandResponse";
 import { ValidationUtils } from "../utils/ValidationUtils";
 import { BaseCommand, ProgressOperation } from "./Command";
 

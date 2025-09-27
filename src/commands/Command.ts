@@ -1,6 +1,9 @@
 import Challenge from "../classes/Challenge";
 import ChallengeList from "../classes/ChallengeList";
 import ConfigManager from "../classes/ConfigManager";
+import type { CommandResponse } from "../types/CommandResponse";
+import { UIUpdateAction } from "../types/UIUpdateAction";
+import type { UIUpdateData } from "../types/UIUpdateData";
 import {
     getChallengeByPosition,
     getChallengeWithIndex,
@@ -178,34 +181,24 @@ export abstract class BaseCommand implements Command {
     /**
      * Create an error response
      * @param message - Error message
-     * @param action - Optional action identifier
      * @returns Error response
      */
-    protected createErrorResponse(
-        message: string,
-        action?: string
-    ): CommandResponse {
+    protected createErrorResponse(message: string): CommandResponse {
         return {
             message,
             error: true,
-            ...(action && { action }),
         };
     }
 
     /**
      * Create a success response
      * @param message - Success message
-     * @param action - Action identifier
      * @returns Success response
      */
-    protected createSuccessResponse(
-        message: string,
-        action: string
-    ): CommandResponse {
+    protected createSuccessResponse(message: string): CommandResponse {
         return {
             message,
             error: false,
-            action,
         };
     }
 
@@ -213,19 +206,16 @@ export abstract class BaseCommand implements Command {
      * Create a success response with UI update data
      * @param message - Success message
      * @param uiUpdate - UI update data
-     * @param action - Optional action for backward compatibility
      * @returns Success response with UI update data
      */
     protected createSuccessResponseWithUIUpdate(
         message: string,
-        uiUpdate: UIUpdateData,
-        action?: string
+        uiUpdate: UIUpdateData
     ): CommandResponse {
         return {
             message,
             error: false,
             uiUpdate,
-            ...(action && { action }),
         };
     }
 
@@ -396,7 +386,19 @@ export abstract class BaseCommand implements Command {
                 }
             );
 
-            return this.createSuccessResponse(responseMessage, operation);
+            // Create UI update data - progress changes are essentially edits
+            const uiUpdate: UIUpdateData = {
+                action: UIUpdateAction.EDIT,
+                challengeIndices: [index],
+                challenges: [updatedChallenge],
+                updateTimers: true,
+                updateCount: true,
+            };
+
+            return this.createSuccessResponseWithUIUpdate(
+                responseMessage,
+                uiUpdate
+            );
         } catch (error: unknown) {
             return this.createErrorResponse(
                 ResponseFormatter.formatError(

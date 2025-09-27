@@ -1,3 +1,7 @@
+import type { CommandResponse } from "../types/CommandResponse";
+import { ERROR_MESSAGES } from "../types/MessageConstants";
+import { UIUpdateAction } from "../types/UIUpdateAction";
+import type { UIUpdateData } from "../types/UIUpdateData";
 import { ResponseFormatter } from "../utils/ResponseFormatter";
 import { BaseCommand } from "./Command";
 
@@ -20,8 +24,7 @@ export class ClearAllCommand extends BaseCommand {
             // Check if there are any challenges to clear
             if (challengeCount === 0) {
                 return this.createSuccessResponse(
-                    "No challenges to clear",
-                    "clearall"
+                    ERROR_MESSAGES.NO_CHALLENGES_TO_CLEAR
                 );
             }
 
@@ -36,15 +39,14 @@ export class ClearAllCommand extends BaseCommand {
 
             // Create UI update data
             const uiUpdate: UIUpdateData = {
-                action: "clearAll" as UIUpdateAction,
+                action: UIUpdateAction.CLEAR_ALL,
                 updateTimers: true,
                 updateCount: true,
             };
 
             return this.createSuccessResponseWithUIUpdate(
                 responseMessage,
-                uiUpdate,
-                "clearAll"
+                uiUpdate
             );
         } catch (error: unknown) {
             return this.createErrorResponse(

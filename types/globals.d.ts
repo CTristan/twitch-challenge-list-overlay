@@ -300,55 +300,6 @@ interface ValidationResult {
     warnings: string[];
 }
 
-/**
- * UI Update Action Types
- * Defines the types of UI updates that can be performed
- */
-enum UIUpdateAction {
-    ADD = "add",
-    EDIT = "edit",
-    COMPLETE = "complete",
-    REVERT = "revert",
-    DELETE = "delete",
-    CLEAR_ALL = "clearAll",
-    CLEAR_DONE = "clearDone",
-    REFRESH = "refresh",
-}
-
-/**
- * UI Update Data
- * Contains structured information about what UI updates need to be performed
- */
-interface UIUpdateData {
-    /** Type of UI update to perform */
-    action: UIUpdateAction;
-    /** Challenge indices for operations that affect specific challenges */
-    challengeIndices?: number[];
-    /** Challenge objects for operations that need full challenge data */
-    challenges?: Challenge[];
-    /** Whether to update timer displays */
-    updateTimers?: boolean;
-    /** Whether to update challenge count */
-    updateCount?: boolean;
-    /** Additional metadata for the update */
-    metadata?: Record<string, any>;
-}
-
-/**
- * Response from command processing
- * Contains the result message and metadata about the operation
- */
-interface CommandResponse {
-    /** Response message to send to chat */
-    message: string;
-    /** Whether an error occurred */
-    error: boolean;
-    /** Type of action performed (for DOM updates) - kept for backward compatibility */
-    action?: string;
-    /** Structured UI update data */
-    uiUpdate?: UIUpdateData;
-}
-
 // ========================================
 // EXTERNAL LIBRARY TYPES
 // ========================================

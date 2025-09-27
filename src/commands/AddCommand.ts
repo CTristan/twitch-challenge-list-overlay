@@ -1,4 +1,7 @@
 import Challenge from "../classes/Challenge";
+import type { CommandResponse } from "../types/CommandResponse";
+import { UIUpdateAction } from "../types/UIUpdateAction";
+import type { UIUpdateData } from "../types/UIUpdateData";
 import { ResponseFormatter } from "../utils/ResponseFormatter";
 import { ValidationUtils } from "../utils/ValidationUtils";
 import { BaseCommand } from "./Command";
@@ -29,7 +32,7 @@ export class AddCommand extends BaseCommand {
                 !parsed.rawParameters &&
                 Object.keys(parsed.parameters).length === 0
             ) {
-                return this.createSuccessResponse(this.getUsageMessage(), "help");
+                return this.createSuccessResponse(this.getUsageMessage());
             }
 
             // Extract and validate title
@@ -85,18 +88,14 @@ export class AddCommand extends BaseCommand {
 
             // Create UI update data
             const uiUpdate: UIUpdateData = {
-                action: "add" as UIUpdateAction,
+                action: UIUpdateAction.ADD,
                 challengeIndices: [challengeIndex],
                 challenges: [challenge],
                 updateTimers: true,
                 updateCount: true,
             };
 
-            return this.createSuccessResponseWithUIUpdate(
-                response,
-                uiUpdate,
-                "add"
-            );
+            return this.createSuccessResponseWithUIUpdate(response, uiUpdate);
         } catch (error: unknown) {
             return this.createErrorResponse(
                 ResponseFormatter.formatError(error, "creating challenge")

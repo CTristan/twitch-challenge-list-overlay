@@ -1,4 +1,7 @@
 import type Challenge from "../classes/Challenge";
+import type { CommandResponse } from "../types/CommandResponse";
+import { UIUpdateAction } from "../types/UIUpdateAction";
+import type { UIUpdateData } from "../types/UIUpdateData";
 import { ResponseFormatter } from "../utils/ResponseFormatter";
 import { BaseCommand } from "./Command";
 
@@ -79,7 +82,7 @@ export class DoneCommand extends BaseCommand {
 
             // Create UI update data
             const uiUpdate: UIUpdateData = {
-                action: "complete" as UIUpdateAction,
+                action: UIUpdateAction.COMPLETE,
                 challengeIndices: completedIndices,
                 challenges: completedChallenges,
                 updateTimers: true,
@@ -88,8 +91,7 @@ export class DoneCommand extends BaseCommand {
 
             return this.createSuccessResponseWithUIUpdate(
                 responseMessage,
-                uiUpdate,
-                "complete"
+                uiUpdate
             );
         } catch (error: unknown) {
             return this.createErrorResponse(
