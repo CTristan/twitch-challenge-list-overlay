@@ -212,6 +212,13 @@ timerController.stopTimerUpdates();
 -   **Constants**: UPPER_SNAKE_CASE for config objects
 -   **CSS Variables**: kebab-case with `--` prefix (`--header-font-size`)
 
+### Type Safety & Enum Usage
+
+-   **Prefer enum references over string literals**: Use `UIUpdateAction.ADD` instead of `"add" as UIUpdateAction`
+-   **Eliminate magic strings**: Replace hardcoded string literals with centralized constants or enum values
+-   **Type assertions discouraged**: Avoid `"string_literal" as EnumType` patterns in favor of proper enum references
+-   **Centralized constants**: Use established enum systems like `CommandType` and `UIUpdateAction` for type-safe operations
+
 ### Documentation Standards
 
 -   **JSDoc comments** for all classes, methods, and complex functions
