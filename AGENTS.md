@@ -989,7 +989,7 @@ The project has undergone significant refactoring and improvements:
 
 ### Modifying Existing Code
 
-1. **Maintain backward compatibility** for configuration
+1. **No backward compatibility or legacy code** - Remove any legacy parameters, deprecated methods, or backward compatibility code
 2. **Follow existing naming conventions**
 3. **Update tests** for changed behavior
 4. **Use native TypeScript type annotations**
