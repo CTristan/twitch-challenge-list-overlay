@@ -91,7 +91,7 @@
 │   ├── dualWindow.test.ts # Dual window tests
 │   └── windowRefresh.test.ts # Window refresh tests
 ├── types/                # TypeScript type definitions
-│   └── globals.d.ts     # Global type definitions
+│   └── globals.d.ts     # Global type definitions (interfaces, types, and global declarations only - NO enums)
 ├── _config.js            # Fallback configuration file
 ├── dist/                 # Build output
 ├── jsconfig.json         # Legacy JavaScript configuration (for editor support)
@@ -133,6 +133,7 @@
 ## Core Utility Classes
 
 ### UIUpdateHandler
+
 Handles all DOM manipulation operations based on command results. Provides separation of concerns between command processing and UI updates.
 
 ```typescript
@@ -143,17 +144,19 @@ uiUpdateHandler.updateTimerDisplays();
 ```
 
 ### ChallengeRenderer
+
 Shared utilities for challenge DOM creation to eliminate duplication between App.ts and UIUpdateHandler.ts rendering logic.
 
 ```typescript
 // Create challenge elements consistently
 const challengeElement = ChallengeRenderer.createChallengeElement(challenge, {
     includeEventListeners: true,
-    eventHandler: this.handleCheckboxClick
+    eventHandler: this.handleCheckboxClick,
 });
 ```
 
 ### TimerDisplayUtils
+
 Shared utilities for timer display management with optimized performance using Map-based challenge lookup.
 
 ```typescript
@@ -162,6 +165,7 @@ const hasActiveTimers = TimerDisplayUtils.updateAllTimerDisplays(challengeList);
 ```
 
 ### DOMHelper
+
 Shared DOM manipulation routines for consistent challenge management operations.
 
 ```typescript
@@ -176,6 +180,7 @@ const cardElement = DOMHelper.createChallengeCard(completedCount, totalCount);
 ```
 
 ### TimerController
+
 Centralized timer lifecycle management with coordinated timer update intervals.
 
 ```typescript
@@ -218,6 +223,63 @@ timerController.stopTimerUpdates();
 -   **Eliminate magic strings**: Replace hardcoded string literals with centralized constants or enum values
 -   **Type assertions discouraged**: Avoid `"string_literal" as EnumType` patterns in favor of proper enum references
 -   **Centralized constants**: Use established enum systems like `CommandType` and `UIUpdateAction` for type-safe operations
+
+### Enum Management Guidelines
+
+**CRITICAL**: All enums must be defined in separate `.ts` files, NOT in `types/globals.d.ts`.
+
+-   **Enum Location**: Define all enums in individual `.ts` files within `src/types/` directory (e.g., `src/types/UIUpdateAction.ts`)
+-   **Global Types Limitation**: `types/globals.d.ts` should contain only interfaces, types, and global declarations - never enums
+-   **Import Requirement**: Enums must be explicitly imported where needed using ES module syntax: `import { EnumName } from "../types/EnumName"`
+-   **TypeScript Resolution**: Enums in `.d.ts` files are not properly accessible for import in ES modules, causing `ReferenceError: [EnumName] is not defined`
+-   **Established Pattern**: Follow the `UIUpdateAction` and `CommandType` patterns as examples of proper enum organization
+-   **Single Source of Truth**: All enums are defined only in separate `.ts` files - no duplication in globals.d.ts
+
+**Example of correct enum structure**:
+
+```typescript
+// ✅ src/types/UIUpdateAction.ts
+export enum UIUpdateAction {
+    ADD = "add",
+    EDIT = "edit",
+    COMPLETE = "complete",
+    // ...
+}
+
+// ✅ Usage in command files
+import { UIUpdateAction } from "../types/UIUpdateAction";
+import type { UIUpdateData } from "../types/UIUpdateData";
+
+const uiUpdate: UIUpdateData = {
+    action: UIUpdateAction.ADD,
+    // ...
+};
+```
+
+**Interfaces that use enums**:
+
+```typescript
+// ✅ src/types/UIUpdateData.ts - Interface that uses enum
+import type Challenge from "../classes/Challenge";
+import type { UIUpdateAction } from "./UIUpdateAction";
+
+export interface UIUpdateData {
+    action: UIUpdateAction;
+    challengeIndices?: number[];
+    challenges?: Challenge[];
+    // ...
+}
+```
+
+**Avoid**:
+
+```typescript
+// ❌ Never define enums in types/globals.d.ts
+enum UIUpdateAction /* ... */ {}
+
+// ❌ Never use global type declarations for enums
+type UIUpdateAction = "add" | "edit" | "complete";
+```
 
 ### Documentation Standards
 
@@ -344,8 +406,6 @@ The project uses strict TypeScript configuration with the following key settings
 -   **Generic constraints**: Use generic type parameters with constraints for reusable components
 -   **Enum usage**: Prefer `const enum` for compile-time constants to reduce bundle size
 
-
-
 ## Configuration System
 
 ### Configuration Management
@@ -404,23 +464,26 @@ For Twitch authentication, generate OAuth tokens from **https://twitchtokengener
 **Note**: The TwitchChat class automatically validates OAuth tokens and will auto-correct missing "oauth:" prefixes with a console warning.
 
 ### Dynamic Style Loading
-- CSS custom properties updated via JavaScript
-- camelCase config keys converted to kebab-case CSS variables
+
+-   CSS custom properties updated via JavaScript
+-   camelCase config keys converted to kebab-case CSS variables
 
 ## Testing Patterns
 
 ### Test Organization
-- **Unit tests** for each class in parallel file structure
-- **Global setup** with mocked configuration objects
-- **jsdom environment** for DOM testing
-- **Vitest** with coverage reporting and 80% coverage thresholds
-- **Specialized test utilities** (chatHandlerTestUtils.ts, domTestUtils.ts)
-- **Comprehensive test categories** (app/, classes/, commands/, integration/, twitch/, utils/)
-- **Integration-focused command testing** - commands tested through app-level integration tests rather than individual unit tests
-- **Command-specific tests** only for complex commands requiring detailed testing (e.g., UndoneCommand.test.ts)
-- **End-to-end command processing** validation through integration test suite
+
+-   **Unit tests** for each class in parallel file structure
+-   **Global setup** with mocked configuration objects
+-   **jsdom environment** for DOM testing
+-   **Vitest** with coverage reporting and 80% coverage thresholds
+-   **Specialized test utilities** (chatHandlerTestUtils.ts, domTestUtils.ts)
+-   **Comprehensive test categories** (app/, classes/, commands/, integration/, twitch/, utils/)
+-   **Integration-focused command testing** - commands tested through app-level integration tests rather than individual unit tests
+-   **Command-specific tests** only for complex commands requiring detailed testing (e.g., UndoneCommand.test.ts)
+-   **End-to-end command processing** validation through integration test suite
 
 ### Test Structure
+
 ```typescript
 import { beforeEach, describe, expect, it } from "vitest";
 import ClassName from "../src/path/ClassName";
@@ -530,34 +593,44 @@ pnpm run type-check:watch # Continuous type checking
 The application features a comprehensive countdown timer display system for challenge rows:
 
 #### Timer Display Functionality
-- **Real-time countdown**: Timers automatically count down every second with live updates
-- **Human-readable format**: Displays time in formats like "5:30", "1:23:45", "30s"
-- **Visual state indicators**: Dynamic color and emoji changes based on remaining time
-- **Seamless integration**: Works with existing Timer class infrastructure and command system
+
+-   **Real-time countdown**: Timers automatically count down every second with live updates
+-   **Human-readable format**: Displays time in formats like "5:30", "1:23:45", "30s"
+-   **Visual state indicators**: Dynamic color and emoji changes based on remaining time
+-   **Seamless integration**: Works with existing Timer class infrastructure and command system
 
 #### Visual State System
-- **Normal State**: White text with ⏱️ emoji for timers with >2 minutes remaining
-- **Warning State** (≤2 minutes): Gold color (#ffd700) with 🟡 emoji
-- **Critical State** (≤30 seconds): Red color (#ff6b6b) with 🔴 emoji
-- **Expired State**: Bright red (#ff4757) with ⏰ emoji when timer reaches zero
+
+-   **Normal State**: White text with ⏱️ emoji for timers with >2 minutes remaining
+-   **Warning State** (≤2 minutes): Gold color (#ffd700) with 🟡 emoji
+-   **Critical State** (≤30 seconds): Red color (#ff6b6b) with 🔴 emoji
+-   **Expired State**: Bright red (#ff4757) with ⏰ emoji when timer reaches zero
 
 #### CSS Styling Architecture
+
 ```css
 .challenge-timer {
     font-size: var(--challenge-timer-font-size);
     color: var(--challenge-timer-color);
     /* Base timer styling */
 }
-.challenge-timer.warning { color: var(--challenge-timer-warning-color); }
-.challenge-timer.critical { color: var(--challenge-timer-critical-color); }
-.challenge-timer.expired { color: var(--challenge-timer-expired-color); }
+.challenge-timer.warning {
+    color: var(--challenge-timer-warning-color);
+}
+.challenge-timer.critical {
+    color: var(--challenge-timer-critical-color);
+}
+.challenge-timer.expired {
+    color: var(--challenge-timer-expired-color);
+}
 ```
 
 #### Technical Implementation
-- **DOM Structure**: Timer elements created as `<div class="challenge-timer">` within challenge rows
-- **Update System**: Uses `setInterval` for real-time updates with automatic cleanup
-- **State Management**: Timer state persists across window refreshes via existing storage system
-- **Performance**: Efficient DOM updates using targeted element queries and batch operations
+
+-   **DOM Structure**: Timer elements created as `<div class="challenge-timer">` within challenge rows
+-   **Update System**: Uses `setInterval` for real-time updates with automatic cleanup
+-   **State Management**: Timer state persists across window refreshes via existing storage system
+-   **Performance**: Efficient DOM updates using targeted element queries and batch operations
 
 ### Dual-Mode Architecture (Implemented)
 
@@ -777,20 +850,18 @@ timer=5:30     # 5 minutes 30 seconds
 #### Timer Response Format
 
 When a challenge with a timer is successfully added, the bot responds with:
+
 ```
 [#ID] Challenge Title — 0/1 • 30s timer started 🔴 added!
 ```
 
 The response includes:
-- **Challenge ID**: Position-based ID for reference (#1, #2, #3, etc.)
-- **Challenge Title**: The challenge name
-- **Progress**: Current progress (0/amount)
-- **Timer Status**: Duration and start confirmation with emoji
-- **Action Confirmation**: "added!" to confirm successful creation
 
-
-
-
+-   **Challenge ID**: Position-based ID for reference (#1, #2, #3, etc.)
+-   **Challenge Title**: The challenge name
+-   **Progress**: Current progress (0/amount)
+-   **Timer Status**: Duration and start confirmation with emoji
+-   **Action Confirmation**: "added!" to confirm successful creation
 
 ## Current Project Status
 
@@ -897,6 +968,7 @@ The project has undergone significant refactoring and improvements:
 **Root Cause**: Invalid or missing OAuth token format causing authentication failures.
 
 **Solution**:
+
 1. **Generate new OAuth token** from https://twitchtokengenerator.com
 2. **Update `_config.js`** with the new token
 3. **Ensure proper format**: Token must start with `oauth:` prefix
@@ -914,16 +986,18 @@ The project has undergone significant refactoring and improvements:
 **Root Cause**: Import/require issues in TypeScript/ES module environment causing timer validation to fail silently.
 
 **Common Causes**:
-- Using `require()` instead of ES module `import` statements in TypeScript files
-- Timer validation failing due to module loading issues
-- Missing Timer class import in command files
+
+-   Using `require()` instead of ES module `import` statements in TypeScript files
+-   Timer validation failing due to module loading issues
+-   Missing Timer class import in command files
 
 **Solution**:
+
 1. **Check import statements**: Ensure all Timer imports use ES module syntax:
-   ```typescript
-   import Timer from "../utils/Timer";  // ✅ Correct
-   // const Timer = require("../utils/Timer").default;  // ❌ Incorrect
-   ```
+    ```typescript
+    import Timer from "../utils/Timer"; // ✅ Correct
+    // const Timer = require("../utils/Timer").default;  // ❌ Incorrect
+    ```
 2. **Rebuild application**: Run `pnpm run build` after fixing imports
 3. **Test with browser console**: Use Playwright or browser dev tools to verify timer creation
 4. **Check console logs**: Look for timer validation errors during command processing
@@ -933,6 +1007,7 @@ The project has undergone significant refactoring and improvements:
 **Symptoms**: Timer parameter extracted correctly but challenge created without timer.
 
 **Debugging Steps**:
+
 1. **Enable debug logging** temporarily in `AddCommand.ts`
 2. **Check timer format**: Ensure formats like "10s", "5m", "1h30m" are used
 3. **Verify Timer.parseDuration()**: Test timer parsing in browser console
@@ -943,12 +1018,14 @@ The project has undergone significant refactoring and improvements:
 #### OAuth Token Validation Errors
 
 **Common Error Messages**:
-- `"OAuth token is required and must be a valid string"`
-- `"OAuth token cannot be empty"`
-- `"OAuth token must contain content after 'oauth:' prefix"`
+
+-   `"OAuth token is required and must be a valid string"`
+-   `"OAuth token cannot be empty"`
+-   `"OAuth token must contain content after 'oauth:' prefix"`
 
 **Auto-Correction Warnings**:
-- `"[TwitchChat] OAuth token format auto-corrected: Added missing 'oauth:' prefix"`
+
+-   `"[TwitchChat] OAuth token format auto-corrected: Added missing 'oauth:' prefix"`
 
 **Resolution**: The system automatically handles most token format issues. If errors persist, verify the token is valid and properly formatted.
 
@@ -959,6 +1036,7 @@ The project has undergone significant refactoring and improvements:
 **Symptoms**: Console shows connection errors or "Invalid OAuth access token" messages.
 
 **Troubleshooting Steps**:
+
 1. **Verify OAuth token** is current and valid
 2. **Check token permissions** - ensure it has chat access
 3. **Regenerate token** if expired
@@ -969,9 +1047,10 @@ The project has undergone significant refactoring and improvements:
 **Symptoms**: No "Joined #channelname" message in console.
 
 **Common Causes**:
-- Incorrect channel name in configuration
-- OAuth token lacks channel access permissions
-- Network connectivity issues
+
+-   Incorrect channel name in configuration
+-   OAuth token lacks channel access permissions
+-   Network connectivity issues
 
 ### Command Processing Issues
 
