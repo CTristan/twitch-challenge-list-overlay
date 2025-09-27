@@ -62,7 +62,8 @@
 │   │   ├── errorHandler.ts # Error handling and logging
 │   │   └── windowRefresh.ts # Window refresh communication
 │   ├── types/            # TypeScript type definitions
-│   │   └── CommandTypes.ts # Command type system and aliasing
+│   │   ├── CommandTypes.ts # Command type system and aliasing
+│   │   └── MessageConstants.ts # Centralized string management system
 │   ├── animations/       # UI animations
 │   │   └── animateScroll.ts # Scroll animations
 │   ├── app.ts            # Main application controller
@@ -115,7 +116,8 @@
 -   **Individual Command Classes**: Specific command implementations (AddCommand, EditCommand, etc.)
 -   **CommandParser**: Command parsing utilities with key=value parameter syntax and simple string fallback support
 -   **CommandTypes**: Type-safe command constants, aliasing system, and permission categorization
--   **ResponseFormatter**: Centralized response formatting with consistent messaging
+-   **MessageConstants**: Centralized string management system for all user-facing messages, error messages, and response strings
+-   **ResponseFormatter**: Centralized response formatting with consistent messaging using MessageConstants
 -   **StorageManager**: Storage management with localStorage fallback and error handling
 -   **ValidationUtils**: Centralized validation utilities for consistent data validation
 -   **PositionUtils**: Lightweight utility functions for position-based challenge references (e.g., #1, #2, #3)
@@ -222,7 +224,8 @@ timerController.stopTimerUpdates();
 -   **Prefer enum references over string literals**: Use `UIUpdateAction.ADD` instead of `"add" as UIUpdateAction`
 -   **Eliminate magic strings**: Replace hardcoded string literals with centralized constants or enum values
 -   **Type assertions discouraged**: Avoid `"string_literal" as EnumType` patterns in favor of proper enum references
--   **Centralized constants**: Use established enum systems like `CommandType` and `UIUpdateAction` for type-safe operations
+-   **Centralized constants**: Use established systems like `CommandType`, `UIUpdateAction`, and `MessageConstants` for type-safe operations
+-   **Message constants**: Use `MessageConstants` for all user-facing messages, error messages, and response strings instead of hardcoded strings
 
 ### Enum Management Guidelines
 
@@ -279,6 +282,39 @@ enum UIUpdateAction /* ... */ {}
 
 // ❌ Never use global type declarations for enums
 type UIUpdateAction = "add" | "edit" | "complete";
+```
+
+### String Management Guidelines
+
+**CRITICAL**: All user-facing messages, error messages, and response strings must use the centralized `MessageConstants` system.
+
+-   **MessageConstants Location**: All message constants are defined in `src/types/MessageConstants.ts`
+-   **Organized Categories**: Constants are grouped by purpose (ERROR_MESSAGES, SUCCESS_MESSAGES, HELP_MESSAGES, etc.)
+-   **UPPER_SNAKE_CASE Naming**: All message constants follow the established naming convention
+-   **Import Requirement**: Message constants must be explicitly imported: `import { ERROR_MESSAGES } from "../types/MessageConstants"`
+-   **No Hardcoded Strings**: Avoid hardcoded string literals for any user-facing text
+-   **Consistent Messaging**: All similar messages across the application use the same constant
+
+**Example of correct usage**:
+
+```typescript
+// ✅ src/types/MessageConstants.ts
+export const ERROR_MESSAGES = {
+    NO_CHALLENGES_TO_CLEAR: "No challenges to clear",
+    CHALLENGE_NOT_FOUND: "Challenge not found",
+} as const;
+
+// ✅ Usage in command files
+import { ERROR_MESSAGES } from "../types/MessageConstants";
+
+return this.createSuccessResponse(ERROR_MESSAGES.NO_CHALLENGES_TO_CLEAR);
+```
+
+**Avoid**:
+
+```typescript
+// ❌ Never use hardcoded strings for user-facing messages
+return this.createSuccessResponse("No challenges to clear");
 ```
 
 ### Documentation Standards
@@ -868,6 +904,17 @@ The response includes:
 ### Recent Major Improvements (2024)
 
 The project has undergone significant refactoring and improvements:
+
+#### Centralized String Management System ✅ **COMPLETE**
+
+-   **MessageConstants system** implemented with organized message categories
+-   **Eliminated hardcoded strings** across all command classes and utilities
+-   **Type-safe message management** with proper TypeScript imports and exports
+-   **Consistent messaging** standardized across the entire application
+-   **UPPER_SNAKE_CASE naming** following established project conventions
+-   **Organized categories** (ERROR_MESSAGES, SUCCESS_MESSAGES, HELP_MESSAGES, STATUS_MESSAGES, LIST_MESSAGES, PERMISSION_MESSAGES)
+-   **Enhanced maintainability** with centralized location for all user-facing text
+-   **Comprehensive migration** of 20+ hardcoded strings from ResponseFormatter and command classes
 
 #### Command System Refactoring ✅ **COMPLETE**
 
