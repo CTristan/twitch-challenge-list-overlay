@@ -17,99 +17,17 @@
 
 ```
 ├── src/                    # Source code (fully TypeScript)
-│   ├── classes/           # Core business logic classes
-│   │   ├── AdminPanel.ts  # Admin interface functionality
-│   │   ├── Challenge.ts   # Individual challenge management
-│   │   ├── ChallengeList.ts # Single unified challenge list
-│   │   ├── ConfigManager.ts # Configuration management
-│   │   └── ConfigExporter.ts # Configuration backup/export
-│   ├── commands/         # Command pattern implementation
-│   │   ├── Command.ts    # Base command interface and abstract class
-│   │   ├── CommandRegistry.ts # Centralized command management
-│   │   ├── AddCommand.ts # Add challenge command
-│   │   ├── EditCommand.ts # Edit challenge command
-│   │   ├── DoneCommand.ts # Complete challenge command
-│   │   ├── UndoneCommand.ts # Revert completed challenges command
-│   │   ├── FailCommand.ts # Fail challenge command
-│   │   ├── DeleteCommand.ts # Delete challenge command
-│   │   ├── IncrementCommand.ts # Increment progress command
-│   │   ├── DecrementCommand.ts # Decrement progress command
-│   │   ├── SetCommand.ts # Set progress command
-│   │   ├── ListCommand.ts # List challenges command
-│   │   ├── ShowCommand.ts # Show challenge details command
-│   │   ├── CheckCommand.ts # Check statistics command
-│   │   ├── HelpCommand.ts # Help command
-│   │   ├── ClearAllCommand.ts # Clear all challenges command
-│   │   └── ClearDoneCommand.ts # Clear completed challenges command
-│   ├── twitch/           # Twitch IRC integration
-│   │   ├── TwitchChat.ts  # WebSocket IRC client
-│   │   ├── EventEmitter.ts # Custom event system
-│   │   ├── message-parsers.ts # Chat message parsing
-│   │   └── loadTestUsers.ts # Test user data loading
-│   ├── utils/            # Utility modules
-│   │   ├── CommandHandler.ts # Command execution coordinator
-│   │   ├── CommandParser.ts # Command parsing utilities
-│   │   ├── ResponseFormatter.ts # Response formatting utilities
-│   │   ├── StorageManager.ts # Storage management with fallback
-│   │   ├── ValidationUtils.ts # Centralized validation utilities
-│   │   ├── Timer.ts       # Timer functionality
-│   │   ├── TimerController.ts # Centralized timer lifecycle management
-│   │   ├── TimerDisplayUtils.ts # Timer display management utilities
-│   │   ├── PositionUtils.ts # Position-based challenge reference utilities
-│   │   ├── ChallengeRenderer.ts # Shared challenge DOM creation utilities
-│   │   ├── CollapsibleSection.ts # Collapsible section management with persistence
-│   │   ├── ColorUtils.ts  # Color manipulation and brightness detection utilities
-│   │   ├── DOMHelper.ts   # Shared DOM manipulation routines
-│   │   ├── UIUpdateHandler.ts # DOM manipulation and UI update coordination
-│   │   ├── errorHandler.ts # Error handling and logging
-│   │   └── windowRefresh.ts # Window refresh communication
-│   ├── types/            # TypeScript type definitions
-│   │   ├── ColorConstants.ts # Centralized color constants
-│   │   ├── CommandResponse.ts # Command response interface
-│   │   ├── CommandTypes.ts # Command type system and aliasing
-│   │   ├── ConfigConstants.ts # Configuration property constants
-│   │   ├── DOMConstants.ts # DOM-related constants (CSS classes, selectors, IDs)
-│   │   ├── FileConstants.ts # File format and filename constants
-│   │   ├── MessageConstants.ts # Centralized string management system
-│   │   ├── NumericConstants.ts # Numeric constraints and validation values
-│   │   ├── UIUpdateAction.ts # UI update action enum
-│   │   └── UIUpdateData.ts # UI update data interface
-│   ├── animations/       # UI animations
-│   │   └── animateScroll.ts # Scroll animations
-│   ├── app.ts            # Main application controller
-│   ├── index.ts          # Application entry point
-│   ├── dualWindow.ts     # Dual-window architecture
-│   ├── modal.ts          # Modal functionality
-│   └── styleLoader.ts    # Dynamic style loading
-├── styles/               # CSS organization
-│   ├── admin.css         # Admin panel styles
-│   ├── app.css           # Main application styles
-│   ├── modal.css         # Modal styles
-│   ├── utility.css       # Utility classes
-│   ├── variables.css     # CSS custom properties
-│   └── index.css         # Main CSS entry point
-├── tests/                # Unit tests (TypeScript)
-│   ├── app/             # Application-level tests
-│   ├── classes/         # Class-specific tests
-│   ├── commands/        # Command-specific tests
-│   ├── debug/           # Debug utilities (empty)
-│   ├── integration/     # Integration tests
-│   ├── twitch/          # Twitch integration tests
-│   ├── utils/           # Utility function tests
-│   │   ├── chatHandlerTestUtils.ts # Chat command testing utilities
-│   │   └── domTestUtils.ts # DOM testing utilities
-│   ├── globalSetup.ts   # Global test configuration
-│   ├── dualWindow.test.ts # Dual window tests
-│   └── windowRefresh.test.ts # Window refresh tests
-├── types/                # TypeScript type definitions
-│   └── globals.d.ts     # Global type definitions (interfaces, types, and global declarations only - NO enums)
-├── _config.js            # Fallback configuration file
-├── dist/                 # Build output
-├── jsconfig.json         # Legacy JavaScript configuration (for editor support)
-├── tsconfig.json         # TypeScript configuration
-├── vite.config.ts        # Vite build configuration
-├── vitest.config.ts      # Vitest test configuration
-└── index.html            # Entry point
+│   ├── classes/           # Core business logic (AdminPanel, Challenge, ChallengeList, ConfigManager, ConfigExporter)
+│   ├── commands/          # Command pattern implementation (15+ command classes)
+│   ├── twitch/            # Twitch IRC integration (TwitchChat, EventEmitter, message-parsers)
+│   ├── utils/             # Utility modules (CommandHandler, Timer, UIUpdateHandler, etc.)
+│   ├── types/             # TypeScript type definitions and constants
+│   ├── animations/        # UI animations
+│   ├── app.ts, index.ts, dualWindow.ts, modal.ts, styleLoader.ts
+├── styles/                # CSS organization (admin, app, modal, utility, variables)
+├── tests/                 # Unit tests (TypeScript) - 80% coverage requirement
+├── types/globals.d.ts     # Global type definitions (interfaces/types only - NO enums)
+├── _config.js, dist/, tsconfig.json, vite.config.ts, vitest.config.ts, index.html
 ```
 
 ### Key Classes & Responsibilities
@@ -155,94 +73,29 @@
 
 Handles all DOM manipulation operations based on command results. Provides separation of concerns between command processing and UI updates.
 
-```typescript
-// Usage example
-const uiUpdateHandler = new UIUpdateHandler(challengeList);
-uiUpdateHandler.handleCommandResult(response);
-uiUpdateHandler.updateTimerDisplays();
-```
-
 ### ChallengeRenderer
 
 Shared utilities for challenge DOM creation to eliminate duplication between App.ts and UIUpdateHandler.ts rendering logic.
-
-```typescript
-// Create challenge elements consistently
-const challengeElement = ChallengeRenderer.createChallengeElement(challenge, {
-    includeEventListeners: true,
-    eventHandler: this.handleCheckboxClick,
-});
-```
 
 ### TimerDisplayUtils
 
 Shared utilities for timer display management with optimized performance using Map-based challenge lookup.
 
-```typescript
-// Update all timer displays efficiently
-const hasActiveTimers = TimerDisplayUtils.updateAllTimerDisplays(challengeList);
-```
-
 ### DOMHelper
 
 Shared DOM manipulation routines for consistent challenge management operations.
-
-```typescript
-// Complete a challenge in the DOM
-DOMHelper.completeChallengeFromDOM(challengeId);
-
-// Delete a challenge from the DOM
-DOMHelper.deleteChallengeFromDOM(challengeId);
-
-// Create challenge card with header
-const cardElement = DOMHelper.createChallengeCard(completedCount, totalCount);
-```
 
 ### TimerController
 
 Centralized timer lifecycle management with coordinated timer update intervals.
 
-```typescript
-// Usage example
-const timerController = new TimerController(challengeList);
-timerController.startTimerUpdates();
-timerController.updateTimerDisplays();
-timerController.stopTimerUpdates();
-```
-
 ### CollapsibleSection
 
 Utility class for creating and managing collapsible sections with localStorage persistence and accessibility features.
 
-```typescript
-// Create collapsible section
-const section = CollapsibleSection.create({
-    id: "authentication",
-    title: "Authentication Settings",
-    content: "<form>...</form>",
-    defaultExpanded: true,
-});
-
-// Get instance and manage state
-const instance = CollapsibleSection.getInstance("authentication");
-instance?.toggle();
-instance?.updateContent("<updated content>");
-```
-
 ### ColorUtils
 
 Color manipulation and brightness detection utilities for background customization features.
-
-```typescript
-// Parse and manipulate colors
-const rgbColor = parseColor("#ff0000");
-const brightness = calculateBrightness(rgbColor);
-const optimalTextColor = calculateOptimalTextColor("#ff0000");
-
-// Combine colors with opacity
-const rgbaColor = combineColorWithOpacity("#ff0000", 0.8);
-const textShadow = generateTextShadow("#ffffff", true);
-```
 
 ## Technology Stack
 
@@ -297,42 +150,11 @@ export enum UIUpdateAction {
     ADD = "add",
     EDIT = "edit",
     COMPLETE = "complete",
-    // ...
 }
 
 // ✅ Usage in command files
 import { UIUpdateAction } from "../types/UIUpdateAction";
-import type { UIUpdateData } from "../types/UIUpdateData";
-
-const uiUpdate: UIUpdateData = {
-    action: UIUpdateAction.ADD,
-    // ...
-};
-```
-
-**Interfaces that use enums**:
-
-```typescript
-// ✅ src/types/UIUpdateData.ts - Interface that uses enum
-import type Challenge from "../classes/Challenge";
-import type { UIUpdateAction } from "./UIUpdateAction";
-
-export interface UIUpdateData {
-    action: UIUpdateAction;
-    challengeIndices?: number[];
-    challenges?: Challenge[];
-    // ...
-}
-```
-
-**Avoid**:
-
-```typescript
-// ❌ Never define enums in types/globals.d.ts
-enum UIUpdateAction /* ... */ {}
-
-// ❌ Never use global type declarations for enums
-type UIUpdateAction = "add" | "edit" | "complete";
+const uiUpdate: UIUpdateData = { action: UIUpdateAction.ADD };
 ```
 
 ### Constants Management Guidelines
@@ -371,7 +193,6 @@ export const ERROR_MESSAGES = {
 
 // ✅ Usage in command files
 import { ERROR_MESSAGES } from "../types/MessageConstants";
-
 return this.createSuccessResponse(ERROR_MESSAGES.NO_CHALLENGES_TO_CLEAR);
 ```
 
@@ -380,18 +201,6 @@ return this.createSuccessResponse(ERROR_MESSAGES.NO_CHALLENGES_TO_CLEAR);
 export const BACKGROUND_CONFIG = {
     CHALLENGE_BACKGROUND_COLOR: "challengeBackgroundColor",
     CHALLENGE_BACKGROUND_OPACITY: "challengeBackgroundOpacity",
-} as const;
-
-// ✅ src/types/ColorConstants.ts
-export const DEFAULT_COLORS = {
-    PRIMARY_BACKGROUND: "#ff0000",
-    PRIMARY_TEXT: "#ffffff",
-} as const;
-
-// ✅ src/types/DOMConstants.ts
-export const CSS_CLASSES = {
-    CHALLENGE: "challenge",
-    DONE: "done",
 } as const;
 
 // ✅ Usage across the application
@@ -406,23 +215,7 @@ element.classList.add(CSS_CLASSES.DONE);
 const color = DEFAULT_COLORS.PRIMARY_BACKGROUND;
 ```
 
-**Avoid**:
-
-```typescript
-// ❌ Never use hardcoded strings for user-facing messages
-return this.createSuccessResponse("No challenges to clear");
-
-// ❌ Never use hardcoded strings for configuration property names
-const backgroundColor = configManager.get("challengeBackgroundColor");
-
-// ❌ Never use hardcoded CSS classes or DOM constants
-element.classList.add("done");
-document.getElementById("config-form");
-
-// ❌ Never use hardcoded colors or numeric values
-const color = "#ff0000";
-const maxValue = 50;
-```
+**Avoid**: Never use hardcoded strings, CSS classes, colors, or numeric values. Always use centralized constants.
 
 ### Documentation Standards
 
@@ -434,29 +227,14 @@ const maxValue = 50;
 ### Class Structure Pattern
 
 ```typescript
-/**
- * @class ClassName
- * @property {type} property - Description
- * @method methodName - Description
- */
 export default class ClassName {
     #privateField: type | null = null;
     public publicProperty: type;
 
-    /**
-     * @constructor
-     * @param param - Description
-     */
     constructor(param: type) {
         this.publicProperty = this.validateParam(param);
     }
 
-    /**
-     * Method description
-     * @param param - Description
-     * @returns Description
-     * @throws {Error} Condition
-     */
     methodName(param: type): returnType {
         // Implementation
     }
@@ -499,39 +277,7 @@ Generate tokens from **https://twitchtokengenerator.com** - the system will auto
 
 ### TypeScript Configuration
 
-The project uses strict TypeScript configuration with the following key settings:
-
-```typescript
-// tsconfig.json highlights
-{
-  "compilerOptions": {
-    "strict": true,              // Enable all strict type checking
-    "noEmit": true,              // Vite handles compilation
-    "isolatedModules": true,     // Required for Vite bundling
-    "target": "ES2022",          // Modern JavaScript features
-    "module": "ESNext",          // ES modules with bundler resolution
-    "moduleResolution": "Bundler", // Modern bundler resolution
-
-    // Advanced TypeScript features
-    "noUncheckedIndexedAccess": true,
-    "exactOptionalPropertyTypes": true,
-    "noPropertyAccessFromIndexSignature": true,
-    "noImplicitOverride": true,
-    "noFallthroughCasesInSwitch": true,
-    "noImplicitReturns": true,
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
-    "verbatimModuleSyntax": true,
-
-    // Path mapping for better imports
-    "baseUrl": "./",
-    "paths": {
-      "@/*": ["src/*"],
-      "@/types/*": ["types/*"]
-    }
-  }
-}
-```
+The project uses strict TypeScript configuration with key settings: strict type checking, ES2022 target, ESNext modules, bundler resolution, and advanced TypeScript features like noUncheckedIndexedAccess, exactOptionalPropertyTypes, and path mapping for better imports.
 
 ### Build Process Integration
 
@@ -597,14 +343,7 @@ The system includes built-in defaults for all configuration properties:
 
 ### OAuth Token Generation
 
-For Twitch authentication, generate OAuth tokens from **https://twitchtokengenerator.com**:
-
-1. **Visit the token generator**: Navigate to https://twitchtokengenerator.com
-2. **Authorize the application**: Click "Connect" and authorize with your Twitch account
-3. **Copy the OAuth token**: The generated token will include the required "oauth:" prefix
-4. **Update configuration**: Add the token to your `_config.js` file or admin panel
-
-**Note**: The TwitchChat class automatically validates OAuth tokens and will auto-correct missing "oauth:" prefixes with a console warning.
+For Twitch authentication, generate OAuth tokens from **https://twitchtokengenerator.com** - the system will auto-correct format if needed.
 
 ### Dynamic Style Loading
 
@@ -665,9 +404,9 @@ describe("ClassName", () => {
 
 ### Specialized Test Categories
 
--   **OAuth Validation Tests**: `tests/twitch/TwitchChat.oauthValidation.test.ts` - Comprehensive OAuth token validation scenarios
+-   **OAuth Validation Tests**: Comprehensive OAuth token validation scenarios
 -   **Integration Tests**: End-to-end command processing and chat flow validation
--   **Increment-to-Completion Tests**: `tests/integration/incrementToCompletion.test.ts` - DOM update coordination for progress operations that trigger completion
+-   **Increment-to-Completion Tests**: DOM update coordination for progress operations that trigger completion
 -   **Permission Tests**: User role and access control validation
 -   **Error Handling Tests**: Defensive programming and edge case coverage
 
@@ -750,25 +489,6 @@ The application features a comprehensive countdown timer display system for chal
 -   **Critical State** (≤30 seconds): Red color (#ff6b6b) with 🔴 emoji
 -   **Expired State**: Bright red (#ff4757) with ⏰ emoji when timer reaches zero
 
-#### CSS Styling Architecture
-
-```css
-.challenge-timer {
-    font-size: var(--challenge-timer-font-size);
-    color: var(--challenge-timer-color);
-    /* Base timer styling */
-}
-.challenge-timer.warning {
-    color: var(--challenge-timer-warning-color);
-}
-.challenge-timer.critical {
-    color: var(--challenge-timer-critical-color);
-}
-.challenge-timer.expired {
-    color: var(--challenge-timer-expired-color);
-}
-```
-
 #### Technical Implementation
 
 -   **DOM Structure**: Timer elements created as `<div class="challenge-timer">` within challenge rows
@@ -800,16 +520,11 @@ The application features a complete dual-mode architecture system with a single 
 
 The project implements a controlled single-streamer challenge management system:
 
-##### Current System Features
-
 -   **Single challenge panel** displayed on overlay (unified view)
 -   **Restricted permissions** limited to streamer and moderators only
 -   **No viewer interaction** - regular users cannot add, modify, or remove challenges
 -   **Administrative control** exclusively managed by authorized users
 -   **Centralized challenge management** with streamer-focused workflow
-
-##### Implementation Details
-
 -   **Permission validation** integrated with Twitch user roles (broadcaster, moderator)
 -   **Command filtering** to reject unauthorized challenge management attempts
 -   **UI simplification** with single unified challenge display
@@ -889,22 +604,7 @@ export const CommandAliases: Record<string, CommandTypeValue> = {
     clearall: CommandType.CLEAR_ALL,
     cleardone: CommandType.CLEAR_DONE,
 
-    // Alternative aliases
-    del: CommandType.DELETE,
-    remove: CommandType.DELETE,
-    complete: CommandType.DONE,
-    finish: CommandType.DONE,
-    revert: CommandType.UNDONE,
-    uncomplete: CommandType.UNDONE,
-    undo: CommandType.UNDONE,
-    inc: CommandType.INCREMENT,
-    dec: CommandType.DECREMENT,
-    clearlist: CommandType.CLEAR_ALL,
-    clear: CommandType.CLEAR_ALL,
-    ls: CommandType.LIST,
-    status: CommandType.CHECK,
-    info: CommandType.SHOW,
-    display: CommandType.SHOW,
+    // Alternative aliases (del, remove, complete, finish, revert, uncomplete, undo, inc, dec, clearlist, clear, ls, status, info, display)
 };
 
 // Permission Model: ALL commands require moderator/broadcaster permissions
@@ -987,14 +687,6 @@ The system supports flexible command syntaxes for maximum user convenience:
 !ch add "Boss Fight" t=10s
 !ch add "Collection Quest" t=1h30m
 
-# Add challenge with timer (full parameters)
-!ch add "Speed Run" timer=5m
-!ch add "Boss Fight" timer=10s
-!ch add "Collection Quest" timer=1h30m
-
-# Mixed parameter formats (both work identically)
-!ch add "Mixed Example" d="Short desc" amount=3 t=15m
-
 # Timer formats supported
 timer=30s      # 30 seconds
 timer=5m       # 5 minutes
@@ -1010,14 +702,6 @@ When a challenge with a timer is successfully added, the bot responds with:
 ```
 [#ID] Challenge Title — 0/1 • 30s timer started 🔴 added!
 ```
-
-The response includes:
-
--   **Challenge ID**: Position-based ID for reference (#1, #2, #3, etc.)
--   **Challenge Title**: The challenge name
--   **Progress**: Current progress (0/amount)
--   **Timer Status**: Duration and start confirmation with emoji
--   **Action Confirmation**: "added!" to confirm successful creation
 
 ## Future Development Opportunities
 
@@ -1068,12 +752,6 @@ The response includes:
 
 **Root Cause**: Import/require issues in TypeScript/ES module environment causing timer validation to fail silently.
 
-**Common Causes**:
-
--   Using `require()` instead of ES module `import` statements in TypeScript files
--   Timer validation failing due to module loading issues
--   Missing Timer class import in command files
-
 **Solution**:
 
 1. **Check import statements**: Ensure all Timer imports use ES module syntax:
@@ -1089,26 +767,13 @@ The response includes:
 
 **Symptoms**: Timer parameter extracted correctly but challenge created without timer.
 
-**Debugging Steps**:
-
-1. **Enable debug logging** temporarily in `AddCommand.ts`
-2. **Check timer format**: Ensure formats like "10s", "5m", "1h30m" are used
-3. **Verify Timer.parseDuration()**: Test timer parsing in browser console
-4. **Check command response**: Look for timer confirmation in bot response message
-
 **Prevention**: Use proper ES module imports and comprehensive timer format validation.
 
 #### OAuth Token Validation Errors
 
-**Common Error Messages**:
+**Common Error Messages**: `"OAuth token is required and must be a valid string"`, `"OAuth token cannot be empty"`, `"OAuth token must contain content after 'oauth:' prefix"`
 
--   `"OAuth token is required and must be a valid string"`
--   `"OAuth token cannot be empty"`
--   `"OAuth token must contain content after 'oauth:' prefix"`
-
-**Auto-Correction Warnings**:
-
--   `"[TwitchChat] OAuth token format auto-corrected: Added missing 'oauth:' prefix"`
+**Auto-Correction Warnings**: `"[TwitchChat] OAuth token format auto-corrected: Added missing 'oauth:' prefix"`
 
 **Resolution**: The system automatically handles most token format issues. If errors persist, verify the token is valid and properly formatted.
 
@@ -1118,22 +783,13 @@ The response includes:
 
 **Symptoms**: Console shows connection errors or "Invalid OAuth access token" messages.
 
-**Troubleshooting Steps**:
-
-1. **Verify OAuth token** is current and valid
-2. **Check token permissions** - ensure it has chat access
-3. **Regenerate token** if expired
-4. **Verify network connectivity** to Twitch IRC servers
+**Troubleshooting Steps**: Verify OAuth token is current and valid, check token permissions, regenerate token if expired, verify network connectivity to Twitch IRC servers.
 
 #### Bot Not Joining Channel
 
 **Symptoms**: No "Joined #channelname" message in console.
 
-**Common Causes**:
-
--   Incorrect channel name in configuration
--   OAuth token lacks channel access permissions
--   Network connectivity issues
+**Common Causes**: Incorrect channel name in configuration, OAuth token lacks channel access permissions, network connectivity issues.
 
 ### Command Processing Issues
 
@@ -1155,31 +811,11 @@ The response includes:
 
 **Solution**: This issue has been resolved in the current version through enhanced completion status detection in the `executeProgressOperation` method.
 
-**Verification Steps**:
-
-1. **Test increment-to-completion**: Add a multi-step challenge and increment to completion
-2. **Check DOM immediately**: Verify completion styling appears without refresh
-3. **Test in both modes**: Ensure fix works in viewer and admin overlay modes
-4. **Run integration tests**: Execute `pnpm test tests/integration/incrementToCompletion.test.ts`
-
 **Prevention**: The system now automatically detects completion status changes during all progress operations (increment, decrement, set) and applies appropriate DOM updates.
 
 #### Progress Operations Not Triggering Visual Updates
 
 **Symptoms**: Commands like `!ch + 2`, `!ch - 1`, or `!ch set 3` execute successfully but don't trigger visual changes in the overlay.
-
-**Common Causes**:
-
--   UI update actions not properly coordinated with command results
--   Missing or incorrect UIUpdateAction enum values in command responses
--   DOM update handler not receiving completion status change information
-
-**Debugging Steps**:
-
-1. **Check browser console**: Look for UI update coordination errors
-2. **Verify command responses**: Ensure commands return proper UIUpdateData with correct actions
-3. **Test with simple operations**: Start with basic increment/decrement before testing completion scenarios
-4. **Validate DOM structure**: Ensure challenge elements exist and have proper IDs for DOM updates
 
 **Resolution**: Ensure all progress commands use the enhanced `executeProgressOperation` method which automatically handles completion status detection and UI action coordination.
 
@@ -1211,17 +847,7 @@ The response includes:
 
 ## Common Patterns
 
-### Event Handling
 
-```typescript
-// Custom event emitter pattern
-client.on("command", (data: ChatData) => {
-    const response = app.chatHandler(data);
-    if (!response.error) {
-        client.say(response.message);
-    }
-});
-```
 
 ### Configuration Access
 
