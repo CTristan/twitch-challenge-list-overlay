@@ -48,11 +48,11 @@ export class ChallengeRenderer {
             textContainer.appendChild(descriptionElement);
         }
 
-        // Add progress if it's greater than 1
+        // Add progress display only when amount > 1
         if (challenge.amount > 1) {
             const progressElement = document.createElement("div");
             progressElement.classList.add("challenge-amount");
-            progressElement.textContent = `Progress: ${challenge.progress}/${challenge.amount}`;
+            progressElement.textContent = `${challenge.progress}/${challenge.amount}`;
             textContainer.appendChild(progressElement);
         }
 

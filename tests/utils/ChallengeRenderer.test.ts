@@ -50,7 +50,7 @@ describe("ChallengeRenderer", () => {
             expect(descriptionElement).toBeTruthy();
             expect(descriptionElement?.textContent).toBe("Test Description");
 
-            // Should not have progress element
+            // Should not have progress element for amount=1
             const progressElement =
                 textElement.querySelector(".challenge-amount");
             expect(progressElement).toBeNull();
@@ -79,7 +79,7 @@ describe("ChallengeRenderer", () => {
             const progressElement =
                 textElement.querySelector(".challenge-amount");
             expect(progressElement).toBeTruthy();
-            expect(progressElement?.textContent).toBe("Progress: 0/5");
+            expect(progressElement?.textContent).toBe("0/5");
         });
 
         it("should not include timer in text element", () => {
@@ -161,7 +161,7 @@ describe("ChallengeRenderer", () => {
 
             const progressElement =
                 challengeElement.querySelector(".challenge-amount");
-            expect(progressElement?.textContent).toBe("Progress: 0/3");
+            expect(progressElement?.textContent).toBe("0/3");
         });
 
         it("should mark completed challenges with done class", () => {

@@ -2,6 +2,7 @@ import type { CommandResponse } from "../types/CommandResponse";
 import { UIUpdateAction } from "../types/UIUpdateAction";
 import type { UIUpdateData } from "../types/UIUpdateData";
 import { ResponseFormatter } from "../utils/ResponseFormatter";
+import Timer from "../utils/Timer";
 import { ValidationUtils } from "../utils/ValidationUtils";
 import { BaseCommand } from "./Command";
 
@@ -91,7 +92,6 @@ export class EditCommand extends BaseCommand {
             // Update timer if provided
             if (parsed.parameters.timer) {
                 try {
-                    const Timer = require("../utils/Timer").default;
                     Timer.parseDuration(parsed.parameters.timer); // Validate format
                     challenge.setTimer(parsed.parameters.timer);
                     updates.push("timer");

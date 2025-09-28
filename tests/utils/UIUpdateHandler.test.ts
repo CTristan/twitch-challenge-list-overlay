@@ -198,7 +198,7 @@ describe("UIUpdateHandler", () => {
             const progressElement =
                 textElement.querySelector(".challenge-amount");
             expect(progressElement).toBeTruthy();
-            expect(progressElement?.textContent).toBe("Progress: 0/5");
+            expect(progressElement?.textContent).toBe("0/5");
         });
     });
 

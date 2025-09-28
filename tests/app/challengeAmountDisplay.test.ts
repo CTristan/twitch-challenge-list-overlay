@@ -40,7 +40,7 @@ describe("Challenge Progress Display", () => {
             expect(progressElements).toHaveLength(1); // Single container
 
             progressElements.forEach((progressElement) => {
-                expect(progressElement.textContent).toBe("Progress: 0/5");
+                expect(progressElement.textContent).toBe("0/5");
                 expect(
                     progressElement.classList.contains("challenge-amount")
                 ).toBe(true);
@@ -97,7 +97,7 @@ describe("Challenge Progress Display", () => {
                 // Should have progress element
                 const progressElement =
                     textElement.querySelector(".challenge-amount");
-                expect(progressElement?.textContent).toBe("Progress: 0/3");
+                expect(progressElement?.textContent).toBe("0/3");
             });
         });
     });
@@ -168,7 +168,7 @@ describe("Challenge Progress Display", () => {
             expect(progressElement.classList.contains("challenge-amount")).toBe(
                 true
             );
-            expect(progressElement.textContent).toBe("Progress: 0/7");
+            expect(progressElement.textContent).toBe("0/7");
         });
     });
 
@@ -216,7 +216,7 @@ describe("Challenge Progress Display", () => {
                 expect((progressElement as HTMLElement).style.color).toBe(
                     "rgb(0, 255, 0)"
                 ); // green
-                expect(progressElement.textContent).toBe("Progress: 0/6");
+                expect(progressElement.textContent).toBe("0/6");
             });
         });
     });
@@ -236,7 +236,7 @@ describe("Challenge Progress Display", () => {
             expect(progressElements.length).toBeGreaterThan(0);
 
             progressElements.forEach((progressElement) => {
-                expect(progressElement.textContent).toBe("Progress: 0/8");
+                expect(progressElement.textContent).toBe("0/8");
             });
         });
 
@@ -253,7 +253,7 @@ describe("Challenge Progress Display", () => {
             let progressElements =
                 document.querySelectorAll(".challenge-amount");
             progressElements.forEach((progressElement) => {
-                expect(progressElement.textContent).toBe("Progress: 0/3");
+                expect(progressElement.textContent).toBe("0/3");
             });
 
             // Edit the amount
@@ -263,7 +263,7 @@ describe("Challenge Progress Display", () => {
             // Verify updated progress
             progressElements = document.querySelectorAll(".challenge-amount");
             progressElements.forEach((progressElement) => {
-                expect(progressElement.textContent).toBe("Progress: 0/12");
+                expect(progressElement.textContent).toBe("0/12");
             });
         });
 
@@ -280,6 +280,7 @@ describe("Challenge Progress Display", () => {
             let progressElements =
                 document.querySelectorAll(".challenge-amount");
             expect(progressElements.length).toBeGreaterThan(0);
+            expect(progressElements[0]?.textContent).toBe("0/5");
 
             // Edit the amount to 1
             challenge.setAmount(1);
@@ -314,7 +315,7 @@ describe("Challenge Progress Display", () => {
             expect(progressElements.length).toBeGreaterThan(0);
 
             progressElements.forEach((progressElement) => {
-                expect(progressElement.textContent).toBe("Progress: 0/3");
+                expect(progressElement.textContent).toBe("0/3");
             });
         });
     });
@@ -333,7 +334,7 @@ describe("Challenge Progress Display", () => {
             let progressElements =
                 document.querySelectorAll(".challenge-amount");
             progressElements.forEach((progressElement) => {
-                expect(progressElement.textContent).toBe("Progress: 0/10");
+                expect(progressElement.textContent).toBe("0/10");
             });
 
             // Update progress
@@ -343,7 +344,7 @@ describe("Challenge Progress Display", () => {
             // Verify updated progress
             progressElements = document.querySelectorAll(".challenge-amount");
             progressElements.forEach((progressElement) => {
-                expect(progressElement.textContent).toBe("Progress: 3/10");
+                expect(progressElement.textContent).toBe("3/10");
             });
 
             // Update progress again
@@ -353,7 +354,7 @@ describe("Challenge Progress Display", () => {
             // Verify final progress
             progressElements = document.querySelectorAll(".challenge-amount");
             progressElements.forEach((progressElement) => {
-                expect(progressElement.textContent).toBe("Progress: 7/10");
+                expect(progressElement.textContent).toBe("7/10");
             });
         });
     });
