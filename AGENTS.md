@@ -57,13 +57,23 @@
 │   │   ├── TimerDisplayUtils.ts # Timer display management utilities
 │   │   ├── PositionUtils.ts # Position-based challenge reference utilities
 │   │   ├── ChallengeRenderer.ts # Shared challenge DOM creation utilities
+│   │   ├── CollapsibleSection.ts # Collapsible section management with persistence
+│   │   ├── ColorUtils.ts  # Color manipulation and brightness detection utilities
 │   │   ├── DOMHelper.ts   # Shared DOM manipulation routines
 │   │   ├── UIUpdateHandler.ts # DOM manipulation and UI update coordination
 │   │   ├── errorHandler.ts # Error handling and logging
 │   │   └── windowRefresh.ts # Window refresh communication
 │   ├── types/            # TypeScript type definitions
+│   │   ├── ColorConstants.ts # Centralized color constants
+│   │   ├── CommandResponse.ts # Command response interface
 │   │   ├── CommandTypes.ts # Command type system and aliasing
-│   │   └── MessageConstants.ts # Centralized string management system
+│   │   ├── ConfigConstants.ts # Configuration property constants
+│   │   ├── DOMConstants.ts # DOM-related constants (CSS classes, selectors, IDs)
+│   │   ├── FileConstants.ts # File format and filename constants
+│   │   ├── MessageConstants.ts # Centralized string management system
+│   │   ├── NumericConstants.ts # Numeric constraints and validation values
+│   │   ├── UIUpdateAction.ts # UI update action enum
+│   │   └── UIUpdateData.ts # UI update data interface
 │   ├── animations/       # UI animations
 │   │   └── animateScroll.ts # Scroll animations
 │   ├── app.ts            # Main application controller
@@ -117,6 +127,13 @@
 -   **CommandParser**: Command parsing utilities with key=value parameter syntax and simple string fallback support
 -   **CommandTypes**: Type-safe command constants, aliasing system, and permission categorization
 -   **MessageConstants**: Centralized string management system for all user-facing messages, error messages, and response strings
+-   **ColorConstants**: Centralized color constants for UI elements, status indicators, and theming
+-   **ConfigConstants**: Configuration property names and defaults with type-safe access patterns
+-   **DOMConstants**: CSS classes, selectors, element IDs, and DOM-related constants
+-   **FileConstants**: File format, extension, and filename constants for import/export operations
+-   **NumericConstants**: Numeric constraints, validation values, and calculation constants
+-   **CollapsibleSection**: Admin panel collapsible sections with localStorage persistence and accessibility
+-   **ColorUtils**: Color manipulation, brightness detection, and optimal text color calculation
 -   **ResponseFormatter**: Centralized response formatting with consistent messaging using MessageConstants
 -   **StorageManager**: Storage management with localStorage fallback and error handling
 -   **ValidationUtils**: Centralized validation utilities for consistent data validation
@@ -191,6 +208,40 @@ const timerController = new TimerController(challengeList);
 timerController.startTimerUpdates();
 timerController.updateTimerDisplays();
 timerController.stopTimerUpdates();
+```
+
+### CollapsibleSection
+
+Utility class for creating and managing collapsible sections with localStorage persistence and accessibility features.
+
+```typescript
+// Create collapsible section
+const section = CollapsibleSection.create({
+    id: "authentication",
+    title: "Authentication Settings",
+    content: "<form>...</form>",
+    defaultExpanded: true,
+});
+
+// Get instance and manage state
+const instance = CollapsibleSection.getInstance("authentication");
+instance?.toggle();
+instance?.updateContent("<updated content>");
+```
+
+### ColorUtils
+
+Color manipulation and brightness detection utilities for background customization features.
+
+```typescript
+// Parse and manipulate colors
+const rgbColor = parseColor("#ff0000");
+const brightness = calculateBrightness(rgbColor);
+const optimalTextColor = calculateOptimalTextColor("#ff0000");
+
+// Combine colors with opacity
+const rgbaColor = combineColorWithOpacity("#ff0000", 0.8);
+const textShadow = generateTextShadow("#ffffff", true);
 ```
 
 ## Technology Stack
@@ -284,11 +335,12 @@ enum UIUpdateAction /* ... */ {}
 type UIUpdateAction = "add" | "edit" | "complete";
 ```
 
-### String Management Guidelines
+### Constants Management Guidelines
 
-**CRITICAL**: All user-facing messages, error messages, response strings, and configuration property names must use centralized constant systems.
+**CRITICAL**: All user-facing messages, error messages, response strings, configuration property names, DOM constants, colors, and numeric values must use centralized constant systems.
 
 #### Message Constants
+
 -   **MessageConstants Location**: All message constants are defined in `src/types/MessageConstants.ts`
 -   **Organized Categories**: Constants are grouped by purpose (ERROR_MESSAGES, SUCCESS_MESSAGES, HELP_MESSAGES, etc.)
 -   **UPPER_SNAKE_CASE Naming**: All message constants follow the established naming convention
@@ -296,13 +348,17 @@ type UIUpdateAction = "add" | "edit" | "complete";
 -   **No Hardcoded Strings**: Avoid hardcoded string literals for any user-facing text
 -   **Consistent Messaging**: All similar messages across the application use the same constant
 
-#### Configuration Property Constants
--   **ConfigConstants Location**: All configuration property names are defined in `src/types/ConfigConstants.ts`
--   **Categorized Organization**: Properties grouped by purpose (AUTH_CONFIG, BEHAVIOR_CONFIG, BACKGROUND_CONFIG, etc.)
--   **UPPER_SNAKE_CASE Naming**: All configuration constants follow the established naming convention
--   **Type Safety**: Use `ConfigPropertyValue` type for type-safe configuration access
--   **No Magic Strings**: Never pass hardcoded strings to `configManager.get()` or `configManager.set()`
--   **Centralized Defaults**: Default values defined as constants rather than inline literals
+#### Comprehensive Constants System
+
+-   **ConfigConstants**: Configuration property names in `src/types/ConfigConstants.ts` (AUTH_CONFIG, BEHAVIOR_CONFIG, BACKGROUND_CONFIG, etc.)
+-   **ColorConstants**: UI colors in `src/types/ColorConstants.ts` (DEFAULT_COLORS, STATUS_COLORS, SHADOW_COLORS)
+-   **DOMConstants**: CSS classes, selectors, element IDs in `src/types/DOMConstants.ts` (CSS_CLASSES, ELEMENT_IDS, EVENT_NAMES)
+-   **FileConstants**: File formats and filenames in `src/types/FileConstants.ts` (FILE_FORMATS, DEFAULT_FILENAMES)
+-   **NumericConstants**: Validation constraints and calculations in `src/types/NumericConstants.ts` (FORM_CONSTRAINTS, COLOR_CONSTANTS)
+-   **UPPER_SNAKE_CASE Naming**: All constants follow established naming convention
+-   **Type Safety**: Use appropriate types for type-safe constant access
+-   **No Magic Values**: Never use hardcoded strings, numbers, or CSS classes
+-   **Centralized Organization**: Related constants grouped by purpose and functionality
 
 **Example of correct usage**:
 
@@ -326,11 +382,28 @@ export const BACKGROUND_CONFIG = {
     CHALLENGE_BACKGROUND_OPACITY: "challengeBackgroundOpacity",
 } as const;
 
-// ✅ Usage in configuration access
-import { BACKGROUND_CONFIG } from "../types/ConfigConstants";
+// ✅ src/types/ColorConstants.ts
+export const DEFAULT_COLORS = {
+    PRIMARY_BACKGROUND: "#ff0000",
+    PRIMARY_TEXT: "#ffffff",
+} as const;
 
-const backgroundColor = configManager.get(BACKGROUND_CONFIG.CHALLENGE_BACKGROUND_COLOR);
-configManager.set(BACKGROUND_CONFIG.CHALLENGE_BACKGROUND_OPACITY, 0.8);
+// ✅ src/types/DOMConstants.ts
+export const CSS_CLASSES = {
+    CHALLENGE: "challenge",
+    DONE: "done",
+} as const;
+
+// ✅ Usage across the application
+import { BACKGROUND_CONFIG } from "../types/ConfigConstants";
+import { DEFAULT_COLORS } from "../types/ColorConstants";
+import { CSS_CLASSES } from "../types/DOMConstants";
+
+const backgroundColor = configManager.get(
+    BACKGROUND_CONFIG.CHALLENGE_BACKGROUND_COLOR
+);
+element.classList.add(CSS_CLASSES.DONE);
+const color = DEFAULT_COLORS.PRIMARY_BACKGROUND;
 ```
 
 **Avoid**:
@@ -341,7 +414,14 @@ return this.createSuccessResponse("No challenges to clear");
 
 // ❌ Never use hardcoded strings for configuration property names
 const backgroundColor = configManager.get("challengeBackgroundColor");
-configManager.set("challengeBackgroundOpacity", 0.8);
+
+// ❌ Never use hardcoded CSS classes or DOM constants
+element.classList.add("done");
+document.getElementById("config-form");
+
+// ❌ Never use hardcoded colors or numeric values
+const color = "#ff0000";
+const maxValue = 50;
 ```
 
 ### Documentation Standards
@@ -1146,16 +1226,31 @@ client.on("command", (data: ChatData) => {
 ### Configuration Access
 
 ```typescript
-// ConfigManager-based configuration access with centralized constants
-import { BEHAVIOR_CONFIG, COLOR_CONFIG, BACKGROUND_CONFIG } from "../types/ConfigConstants";
+// Comprehensive constants usage across the application
+import {
+    BEHAVIOR_CONFIG,
+    COLOR_CONFIG,
+    BACKGROUND_CONFIG,
+} from "../types/ConfigConstants";
+import { DEFAULT_COLORS, STATUS_COLORS } from "../types/ColorConstants";
+import { CSS_CLASSES, ELEMENT_IDS, EVENT_NAMES } from "../types/DOMConstants";
+import { FORM_CONSTRAINTS } from "../types/NumericConstants";
+import { CommandType, normalizeCommand } from "../types/CommandTypes";
 
 const configManager = ConfigManager.getInstance();
 const maxChallenges = configManager.get(BEHAVIOR_CONFIG.MAX_CHALLENGES);
-const colors = configManager.get(COLOR_CONFIG.CHALLENGE_ROW_COLORS);
-const backgroundColor = configManager.get(BACKGROUND_CONFIG.CHALLENGE_BACKGROUND_COLOR);
+const backgroundColor = configManager.get(
+    BACKGROUND_CONFIG.CHALLENGE_BACKGROUND_COLOR
+);
 
-// Command types are now managed through the centralized type system
-import { CommandType, normalizeCommand } from "../types/CommandTypes";
+// DOM manipulation with constants
+const element = document.getElementById(ELEMENT_IDS.CONFIG_FORM);
+element?.classList.add(CSS_CLASSES.EXPANDED);
+element?.addEventListener(EVENT_NAMES.CLICK, handler);
+
+// Color and validation with constants
+const primaryColor = DEFAULT_COLORS.PRIMARY_BACKGROUND;
+const maxValue = FORM_CONSTRAINTS.MAX_CHALLENGES_MAX;
 const commandType = normalizeCommand("add"); // Returns CommandType.ADD
 ```
 
