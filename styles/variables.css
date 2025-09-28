@@ -48,6 +48,13 @@
   --challenge-timer-critical-color: #ff6b6b;
   --challenge-timer-expired-color: #ff4757;
 
+  /* Background Customization */
+  --challenge-background-color: rgba(0, 0, 0, 0.7);
+  --challenge-background-opacity: 0.7;
+  --challenge-text-color-override: #ffffff;
+  --challenge-auto-text-color-enabled: true;
+  --challenge-text-shadow-enabled: true;
+
   /* Challenge Checkbox */
   --challenge-checkbox-size: calc(
     (

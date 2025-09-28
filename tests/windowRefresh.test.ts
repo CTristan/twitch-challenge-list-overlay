@@ -212,8 +212,8 @@ describe("WindowRefreshManager", () => {
             // First admin sends notification
             adminManager1.notifyConfigurationSaved();
 
-            // Wait for async operations (longer than refresh delay)
-            await new Promise((resolve) => setTimeout(resolve, 150));
+            // Wait for async operations (longer than double refresh delay: 50ms + 50ms = 100ms)
+            await new Promise((resolve) => setTimeout(resolve, 200));
 
             // Only the sender should refresh, receiver should ignore the message
             expect(mockReload).toHaveBeenCalledTimes(1);

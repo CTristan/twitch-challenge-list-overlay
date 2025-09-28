@@ -94,11 +94,11 @@ describe("AdminPanel Collapsible Sections Integration", () => {
             adminPanel.initialize();
 
             // Should create multiple collapsible sections
-            expect(MockedCollapsibleSection).toHaveBeenCalledTimes(6);
+            expect(MockedCollapsibleSection).toHaveBeenCalledTimes(7);
 
             // Verify section configurations
             const calls = MockedCollapsibleSection.mock.calls;
-            expect(calls).toHaveLength(6); // Ensure we have the expected number of calls
+            expect(calls).toHaveLength(7); // Ensure we have the expected number of calls
 
             // Authentication section
             expect(calls[0]?.[0]).toMatchObject({
@@ -121,22 +121,29 @@ describe("AdminPanel Collapsible Sections Integration", () => {
                 defaultExpanded: false,
             });
 
-            // Actions section
+            // Background section
             expect(calls[3]?.[0]).toMatchObject({
+                id: "background",
+                title: "Background Customization",
+                defaultExpanded: false,
+            });
+
+            // Actions section
+            expect(calls[4]?.[0]).toMatchObject({
                 id: "actions",
                 title: "Configuration Actions",
                 defaultExpanded: true,
             });
 
             // Backup section
-            expect(calls[4]?.[0]).toMatchObject({
+            expect(calls[5]?.[0]).toMatchObject({
                 id: "backup",
                 title: "Configuration Backup & Restore",
                 defaultExpanded: false,
             });
 
             // Danger zone section
-            expect(calls[5]?.[0]).toMatchObject({
+            expect(calls[6]?.[0]).toMatchObject({
                 id: "danger-zone",
                 title: "Danger Zone",
                 defaultExpanded: false,
@@ -153,7 +160,7 @@ describe("AdminPanel Collapsible Sections Integration", () => {
 
             // Should call createElement for each section
             expect(mockCollapsibleInstance.createElement).toHaveBeenCalledTimes(
-                6
+                7
             );
 
             // Check that sections were added to DOM
@@ -161,7 +168,7 @@ describe("AdminPanel Collapsible Sections Integration", () => {
             const collapsibleSections = adminContent?.querySelectorAll(
                 ".collapsible-section"
             );
-            expect(collapsibleSections?.length).toBe(6);
+            expect(collapsibleSections?.length).toBe(7);
         });
 
         it("should not create sections when not in admin mode", () => {
@@ -392,7 +399,7 @@ describe("AdminPanel Collapsible Sections Integration", () => {
             const sectionTitles = document.querySelectorAll(
                 ".collapsible-section h4"
             );
-            expect(sectionTitles.length).toBe(6); // One for each section
+            expect(sectionTitles.length).toBe(7); // One for each section
         });
     });
 

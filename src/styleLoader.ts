@@ -1,18 +1,44 @@
+import { BACKGROUND_DEFAULTS, CSS_VARIABLES } from "./types/ConfigConstants";
+
 /**
- * Load hardcoded default styles for the overlay.
- * @param {Config} _config - Configuration object (only used for future extensibility).
+ * Load styles for the overlay, combining defaults with configuration values.
+ * @param {Config} config - Configuration object with user customizations.
  * @returns {void}
  */
-export function loadStyles(_config: Config): void {
+export function loadStyles(config: Config): void {
     const root: HTMLElement = document.querySelector(":root") as HTMLElement;
 
     // Load default Google Fonts
     loadGoogleFont("Roboto Mono");
 
-    // Apply hardcoded default styles as CSS variables
+    // Apply default styles as CSS variables
     const defaultStyles = getDefaultStyles();
-    for (let [key, val] of Object.entries(defaultStyles)) {
-        root.style.setProperty(convertToCSSVar(key), val);
+
+    // Override defaults with configuration values for background customization
+    const configuredStyles = {
+        ...defaultStyles,
+        [CSS_VARIABLES.CHALLENGE_BACKGROUND_COLOR]:
+            config.challengeBackgroundColor ||
+            defaultStyles[CSS_VARIABLES.CHALLENGE_BACKGROUND_COLOR],
+        [CSS_VARIABLES.CHALLENGE_BACKGROUND_OPACITY]: (
+            config.challengeBackgroundOpacity ??
+            BACKGROUND_DEFAULTS.BACKGROUND_OPACITY
+        ).toString(),
+        [CSS_VARIABLES.CHALLENGE_TEXT_COLOR_OVERRIDE]:
+            config.challengeTextColor ||
+            defaultStyles[CSS_VARIABLES.CHALLENGE_TEXT_COLOR_OVERRIDE],
+        [CSS_VARIABLES.CHALLENGE_AUTO_TEXT_COLOR_ENABLED]: (
+            config.challengeAutoTextColor ?? BACKGROUND_DEFAULTS.AUTO_TEXT_COLOR
+        ).toString(),
+        [CSS_VARIABLES.CHALLENGE_TEXT_SHADOW_ENABLED]: (
+            config.challengeTextShadow ?? BACKGROUND_DEFAULTS.TEXT_SHADOW
+        ).toString(),
+    };
+
+    for (let [key, val] of Object.entries(configuredStyles)) {
+        if (val !== undefined) {
+            root.style.setProperty(convertToCSSVar(key), val);
+        }
     }
 }
 
@@ -47,6 +73,18 @@ function getDefaultStyles(): Record<string, string> {
         cardBorderRadius: "0.5rem",
         cardPadding: "1.5rem",
         cardBackgroundColor: "rgba(0, 0, 0, 0.7)",
+
+        // Background customization
+        [CSS_VARIABLES.CHALLENGE_BACKGROUND_COLOR]:
+            BACKGROUND_DEFAULTS.BACKGROUND_COLOR,
+        [CSS_VARIABLES.CHALLENGE_BACKGROUND_OPACITY]:
+            BACKGROUND_DEFAULTS.BACKGROUND_OPACITY.toString(),
+        [CSS_VARIABLES.CHALLENGE_TEXT_COLOR_OVERRIDE]:
+            BACKGROUND_DEFAULTS.TEXT_COLOR,
+        [CSS_VARIABLES.CHALLENGE_AUTO_TEXT_COLOR_ENABLED]:
+            BACKGROUND_DEFAULTS.AUTO_TEXT_COLOR.toString(),
+        [CSS_VARIABLES.CHALLENGE_TEXT_SHADOW_ENABLED]:
+            BACKGROUND_DEFAULTS.TEXT_SHADOW.toString(),
 
         // Username styling
         usernameFontSize: "2.25rem",

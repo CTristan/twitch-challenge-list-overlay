@@ -133,6 +133,21 @@ interface Config {
     /** Optional array of text colors for challenge rows (should match challengeRowColors length) */
     challengeRowTextColors?: string[];
 
+    /** Global background color for challenge containers (overridden by challengeRowColors if set) */
+    challengeBackgroundColor?: string;
+
+    /** Global background opacity for challenge containers (0-1, default: 0.7) */
+    challengeBackgroundOpacity?: number;
+
+    /** Global text color override for challenges (when not using automatic adjustment) */
+    challengeTextColor?: string;
+
+    /** Enable automatic text color adjustment based on background brightness (default: true) */
+    challengeAutoTextColor?: boolean;
+
+    /** Enable text shadow/outline for enhanced readability (default: true) */
+    challengeTextShadow?: boolean;
+
     /** Chat command configuration mapping command types to user-typed aliases */
     commands: ChatCommandsConfig;
 

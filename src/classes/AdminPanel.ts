@@ -1,4 +1,37 @@
 import type App from "../app";
+import {
+    DEFAULT_COLORS,
+    SHADOW_COLORS,
+    STATUS_COLORS,
+} from "../types/ColorConstants";
+import {
+    BACKGROUND_CONFIG,
+    BACKGROUND_DEFAULTS,
+    BACKGROUND_UI_ELEMENTS,
+    CORE_CONFIG,
+} from "../types/ConfigConstants";
+import {
+    CSS_CLASSES,
+    CSS_SELECTORS,
+    ELEMENT_IDS,
+    EVENT_NAMES,
+    URL_HASH,
+} from "../types/DOMConstants";
+import {
+    DEFAULT_FILENAMES,
+    FILE_FORMATS,
+    FILE_FORMAT_VALUES,
+} from "../types/FileConstants";
+import {
+    ADMIN_FEEDBACK_MESSAGES,
+    ADMIN_PANEL_LABELS,
+    VALIDATION_MESSAGES,
+} from "../types/MessageConstants";
+import {
+    COLOR_CONSTANTS,
+    FORM_CONSTRAINTS,
+    TIMING_CONSTANTS,
+} from "../types/NumericConstants";
 import CollapsibleSection from "../utils/CollapsibleSection";
 import { notifyConfigurationSaved } from "../utils/windowRefresh";
 import ConfigExporter from "./ConfigExporter";
@@ -40,7 +73,7 @@ export default class AdminPanel {
      */
     initialize(): void {
         // Only initialize if we're in admin mode
-        if (window.location.hash !== "#admin") {
+        if (window.location.hash !== URL_HASH.ADMIN) {
             return;
         }
 
@@ -90,9 +123,9 @@ export default class AdminPanel {
 
         // Add hashchange listener with abort signal
         window.addEventListener(
-            "hashchange",
+            EVENT_NAMES.HASHCHANGE,
             () => {
-                if (window.location.hash === "#admin") {
+                if (window.location.hash === URL_HASH.ADMIN) {
                     this.initialize();
                 }
             },
@@ -113,13 +146,15 @@ export default class AdminPanel {
      * @returns {void}
      */
     private setupBasicControls(): void {
-        const clearButton = document.getElementById("clear-localstorage-btn");
+        const clearButton = document.getElementById(
+            ELEMENT_IDS.CLEAR_LOCALSTORAGE_BTN
+        );
         if (clearButton) {
             const handler = () => this.clearLocalStorage();
-            clearButton.addEventListener("click", handler);
-            this.#eventListeners.set("clear-localstorage-btn", {
+            clearButton.addEventListener(EVENT_NAMES.CLICK, handler);
+            this.#eventListeners.set(ELEMENT_IDS.CLEAR_LOCALSTORAGE_BTN, {
                 element: clearButton,
-                event: "click",
+                event: EVENT_NAMES.CLICK,
                 handler,
             });
         }
@@ -141,14 +176,16 @@ export default class AdminPanel {
      * @returns {void}
      */
     private setupExportControls(): void {
-        const exportJsonBtn = document.getElementById("export-json-btn");
+        const exportJsonBtn = document.getElementById(
+            ELEMENT_IDS.EXPORT_JSON_BTN
+        );
 
         if (exportJsonBtn) {
-            const handler = () => this.exportConfiguration("json");
-            exportJsonBtn.addEventListener("click", handler);
-            this.#eventListeners.set("export-json-btn", {
+            const handler = () => this.exportConfiguration(FILE_FORMATS.JSON);
+            exportJsonBtn.addEventListener(EVENT_NAMES.CLICK, handler);
+            this.#eventListeners.set(ELEMENT_IDS.EXPORT_JSON_BTN, {
                 element: exportJsonBtn,
-                event: "click",
+                event: EVENT_NAMES.CLICK,
                 handler,
             });
         }
@@ -159,9 +196,11 @@ export default class AdminPanel {
      * @returns {void}
      */
     private setupImportControls(): void {
-        const importConfigBtn = document.getElementById("import-config-btn");
+        const importConfigBtn = document.getElementById(
+            ELEMENT_IDS.IMPORT_CONFIG_BTN
+        );
         const importFileInput = document.getElementById(
-            "import-file-input"
+            ELEMENT_IDS.IMPORT_FILE_INPUT
         ) as HTMLInputElement;
 
         // Handle import button click - trigger file picker
@@ -169,10 +208,10 @@ export default class AdminPanel {
             const clickHandler = () => {
                 importFileInput.click();
             };
-            importConfigBtn.addEventListener("click", clickHandler);
-            this.#eventListeners.set("import-config-btn", {
+            importConfigBtn.addEventListener(EVENT_NAMES.CLICK, clickHandler);
+            this.#eventListeners.set(ELEMENT_IDS.IMPORT_CONFIG_BTN, {
                 element: importConfigBtn,
-                event: "click",
+                event: EVENT_NAMES.CLICK,
                 handler: clickHandler,
             });
 
@@ -182,10 +221,10 @@ export default class AdminPanel {
                     this.importFromFile(importFileInput);
                 }
             };
-            importFileInput.addEventListener("change", changeHandler);
-            this.#eventListeners.set("import-file-input", {
+            importFileInput.addEventListener(EVENT_NAMES.CHANGE, changeHandler);
+            this.#eventListeners.set(ELEMENT_IDS.IMPORT_FILE_INPUT, {
                 element: importFileInput,
-                event: "change",
+                event: EVENT_NAMES.CHANGE,
                 handler: changeHandler,
             });
         }
@@ -196,29 +235,32 @@ export default class AdminPanel {
      * @returns {void}
      */
     private createConfigurationForm(): void {
-        const adminContent = document.querySelector(".admin-content");
+        const adminContent = document.querySelector(
+            CSS_SELECTORS.ADMIN_CONTENT
+        );
         if (!adminContent) {
             return;
         }
 
         // Check if form already exists
-        if (document.getElementById("config-form")) {
+        if (document.getElementById(ELEMENT_IDS.CONFIG_FORM)) {
             return;
         }
 
         // Create the main form container
         const formContainer = document.createElement("div");
-        formContainer.id = "config-form";
-        formContainer.className = "config-form";
+        formContainer.id = ELEMENT_IDS.CONFIG_FORM;
+        formContainer.className = CSS_CLASSES.CONFIG_FORM;
 
         const title = document.createElement("h3");
-        title.textContent = "Configuration Settings";
+        title.textContent = ADMIN_PANEL_LABELS.CONFIGURATION_SETTINGS;
         formContainer.appendChild(title);
 
         // Create collapsible sections
         this.createAuthenticationSection(formContainer);
         this.createBehaviorSection(formContainer);
         this.createColorSection(formContainer);
+        this.createBackgroundSection(formContainer);
         this.createActionsSection(formContainer);
         this.createBackupSection(formContainer);
         this.createDangerZoneSection(formContainer);
@@ -233,28 +275,31 @@ export default class AdminPanel {
     private createAuthenticationSection(container: HTMLElement): void {
         const authContent = `
           <div class="form-group">
-            <label for="twitch-oauth">Twitch OAuth Token:</label>
-            <input type="password" id="twitch-oauth" class="form-input" placeholder="OAuth Token">
+            <label for="${ELEMENT_IDS.TWITCH_OAUTH}">Twitch OAuth Token:</label>
+            <input type="password" id="${ELEMENT_IDS.TWITCH_OAUTH}" class="${CSS_CLASSES.FORM_INPUT}" placeholder="OAuth Token">
           </div>
           <div class="form-group">
-            <label for="twitch-username">Twitch Username:</label>
-            <input type="text" id="twitch-username" class="form-input" placeholder="Username">
+            <label for="${ELEMENT_IDS.TWITCH_USERNAME}">Twitch Username:</label>
+            <input type="text" id="${ELEMENT_IDS.TWITCH_USERNAME}" class="${CSS_CLASSES.FORM_INPUT}" placeholder="Username">
           </div>
           <div class="form-group">
-            <label for="twitch-channel">Twitch Channel:</label>
-            <input type="text" id="twitch-channel" class="form-input" placeholder="Channel">
+            <label for="${ELEMENT_IDS.TWITCH_CHANNEL}">Twitch Channel:</label>
+            <input type="text" id="${ELEMENT_IDS.TWITCH_CHANNEL}" class="${CSS_CLASSES.FORM_INPUT}" placeholder="Channel">
           </div>
         `;
 
         try {
             const authSection = new CollapsibleSection({
-                id: "authentication",
-                title: "Authentication Settings",
+                id: ELEMENT_IDS.AUTHENTICATION_SECTION,
+                title: ADMIN_PANEL_LABELS.AUTHENTICATION_SETTINGS,
                 content: authContent,
                 defaultExpanded: true, // Authentication should be expanded by default
             });
 
-            this.#collapsibleSections.set("authentication", authSection);
+            this.#collapsibleSections.set(
+                ELEMENT_IDS.AUTHENTICATION_SECTION,
+                authSection
+            );
             const element = authSection.createElement();
             container.appendChild(element);
         } catch (error) {
@@ -262,7 +307,7 @@ export default class AdminPanel {
             // Fallback to old HTML structure
             const fallbackHTML = `
                 <div class="config-section">
-                  <h4>Authentication</h4>
+                  <h4>${ADMIN_PANEL_LABELS.AUTHENTICATION}</h4>
                   ${authContent}
                 </div>
             `;
@@ -277,19 +322,22 @@ export default class AdminPanel {
     private createBehaviorSection(container: HTMLElement): void {
         const behaviorContent = `
           <div class="form-group">
-            <label for="max-challenges">Max Challenges:</label>
-            <input type="number" id="max-challenges" class="form-input" min="1" max="50">
+            <label for="${ELEMENT_IDS.MAX_CHALLENGES}">Max Challenges:</label>
+            <input type="number" id="${ELEMENT_IDS.MAX_CHALLENGES}" class="${CSS_CLASSES.FORM_INPUT}" min="${FORM_CONSTRAINTS.MAX_CHALLENGES_MIN}" max="${FORM_CONSTRAINTS.MAX_CHALLENGES_MAX}">
           </div>
         `;
 
         const behaviorSection = new CollapsibleSection({
-            id: "behavior",
-            title: "Behavior Settings",
+            id: ELEMENT_IDS.BEHAVIOR_SECTION,
+            title: ADMIN_PANEL_LABELS.BEHAVIOR_SETTINGS,
             content: behaviorContent,
             defaultExpanded: true, // Behavior should be expanded by default
         });
 
-        this.#collapsibleSections.set("behavior", behaviorSection);
+        this.#collapsibleSections.set(
+            ELEMENT_IDS.BEHAVIOR_SECTION,
+            behaviorSection
+        );
         container.appendChild(behaviorSection.createElement());
     }
 
@@ -311,11 +359,11 @@ export default class AdminPanel {
               <div class="color-pickers-container" id="primary-color-pickers">
                 <div class="color-picker-group">
                   <label class="color-picker-label">Row Background</label>
-                  <input type="color" id="primary-bg-color" class="form-input" value="#ff0000">
+                  <input type="color" id="primary-bg-color" class="form-input" value="${DEFAULT_COLORS.PRIMARY_BACKGROUND}">
                 </div>
                 <div class="color-picker-group">
                   <label class="color-picker-label">Text Color</label>
-                  <input type="color" id="primary-text-color" class="form-input" value="#ffffff">
+                  <input type="color" id="primary-text-color" class="form-input" value="${DEFAULT_COLORS.PRIMARY_TEXT}">
                 </div>
               </div>
             </div>
@@ -329,11 +377,11 @@ export default class AdminPanel {
               <div class="color-pickers-container" id="secondary-color-pickers">
                 <div class="color-picker-group">
                   <label class="color-picker-label">Row Background</label>
-                  <input type="color" id="secondary-bg-color" class="form-input" value="#00ff00">
+                  <input type="color" id="secondary-bg-color" class="form-input" value="${DEFAULT_COLORS.SECONDARY_BACKGROUND}">
                 </div>
                 <div class="color-picker-group">
                   <label class="color-picker-label">Text Color</label>
-                  <input type="color" id="secondary-text-color" class="form-input" value="#ffffff">
+                  <input type="color" id="secondary-text-color" class="form-input" value="${DEFAULT_COLORS.SECONDARY_TEXT}">
                 </div>
               </div>
             </div>
@@ -347,11 +395,11 @@ export default class AdminPanel {
               <div class="color-pickers-container" id="tertiary-color-pickers">
                 <div class="color-picker-group">
                   <label class="color-picker-label">Row Background</label>
-                  <input type="color" id="tertiary-bg-color" class="form-input" value="#0000ff">
+                  <input type="color" id="tertiary-bg-color" class="form-input" value="${DEFAULT_COLORS.TERTIARY_BACKGROUND}">
                 </div>
                 <div class="color-picker-group">
                   <label class="color-picker-label">Text Color</label>
-                  <input type="color" id="tertiary-text-color" class="form-input" value="#ffffff">
+                  <input type="color" id="tertiary-text-color" class="form-input" value="${DEFAULT_COLORS.TERTIARY_TEXT}">
                 </div>
               </div>
             </div>
@@ -359,14 +407,106 @@ export default class AdminPanel {
         `;
 
         const colorSection = new CollapsibleSection({
-            id: "colors",
-            title: "Color Configuration",
+            id: ELEMENT_IDS.COLORS_SECTION,
+            title: ADMIN_PANEL_LABELS.COLOR_CONFIGURATION,
             content: colorContent,
             defaultExpanded: false, // Colors should be collapsed by default
         });
 
-        this.#collapsibleSections.set("colors", colorSection);
+        this.#collapsibleSections.set(ELEMENT_IDS.COLORS_SECTION, colorSection);
         container.appendChild(colorSection.createElement());
+    }
+
+    /**
+     * Create the Background Customization section
+     * @param container - The parent container element
+     */
+    private createBackgroundSection(container: HTMLElement): void {
+        const backgroundContent = `
+          <div class="form-group">
+            <label>Background Customization:</label>
+            <p class="form-description">Configure global background appearance for challenge containers. These settings apply to all challenges unless overridden by row-specific colors above.</p>
+
+            <!-- Background Color Configuration -->
+            <div class="background-config-section">
+              <div class="form-row">
+                <div class="form-column">
+                  <label class="form-label">Background Color</label>
+                  <input type="color" id="challenge-background-color" class="form-input color-input" value="${DEFAULT_COLORS.CHALLENGE_BACKGROUND}">
+                </div>
+                <div class="form-column">
+                  <label class="form-label">Opacity (%)</label>
+                  <div class="opacity-control">
+                    <input type="range" id="challenge-background-opacity" class="form-input opacity-slider"
+                           min="0" max="100" value="70" step="5">
+                    <span id="opacity-display" class="opacity-value">70%</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Text Readability Configuration -->
+              <div class="text-readability-section">
+                <h5 class="subsection-title">Text Readability</h5>
+
+                <div class="form-row">
+                  <div class="checkbox-group">
+                    <input type="checkbox" id="challenge-auto-text-color" class="form-checkbox" checked>
+                    <label for="challenge-auto-text-color" class="checkbox-label">
+                      Automatic text color adjustment
+                      <span class="help-text">Automatically choose white or black text for optimal readability</span>
+                    </label>
+                  </div>
+                </div>
+
+                <div class="form-row">
+                  <div class="form-column">
+                    <label class="form-label">Manual Text Color Override</label>
+                    <input type="color" id="challenge-text-color" class="form-input color-input" value="${DEFAULT_COLORS.CHALLENGE_TEXT}" disabled>
+                    <span class="help-text">Used when automatic adjustment is disabled</span>
+                  </div>
+                </div>
+
+                <div class="form-row">
+                  <div class="checkbox-group">
+                    <input type="checkbox" id="challenge-text-shadow" class="form-checkbox" checked>
+                    <label for="challenge-text-shadow" class="checkbox-label">
+                      Enhanced text readability
+                      <span class="help-text">Add text shadows/outlines for better visibility on various backgrounds</span>
+                    </label>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Preview Section -->
+              <div class="background-preview-section">
+                <h5 class="subsection-title">Preview</h5>
+                <div id="background-preview" class="background-preview">
+                  <div class="preview-challenge">
+                    <div class="preview-checkbox"></div>
+                    <div class="preview-text">
+                      <div class="preview-title">Sample Challenge</div>
+                      <div class="preview-description">This is how your challenges will look</div>
+                      <div class="preview-progress">Progress: 3/5</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+
+        const backgroundSection = new CollapsibleSection({
+            id: ELEMENT_IDS.BACKGROUND_SECTION,
+            title: ADMIN_PANEL_LABELS.BACKGROUND_CUSTOMIZATION,
+            content: backgroundContent,
+            defaultExpanded: false,
+        });
+
+        this.#collapsibleSections.set(
+            ELEMENT_IDS.BACKGROUND_SECTION,
+            backgroundSection
+        );
+        container.appendChild(backgroundSection.createElement());
     }
 
     /**
@@ -376,19 +516,22 @@ export default class AdminPanel {
     private createActionsSection(container: HTMLElement): void {
         const actionsContent = `
           <div class="config-actions">
-            <button id="save-config-btn" class="admin-button">Save Configuration</button>
-            <button id="reset-config-btn" class="admin-button">Reset to Defaults</button>
+            <button id="${ELEMENT_IDS.SAVE_CONFIG_BTN}" class="admin-button">Save Configuration</button>
+            <button id="${ELEMENT_IDS.RESET_CONFIG_BTN}" class="admin-button">Reset to Defaults</button>
           </div>
         `;
 
         const actionsSection = new CollapsibleSection({
-            id: "actions",
-            title: "Configuration Actions",
+            id: ELEMENT_IDS.ACTIONS_SECTION,
+            title: ADMIN_PANEL_LABELS.CONFIGURATION_ACTIONS,
             content: actionsContent,
             defaultExpanded: true, // Actions should be expanded by default
         });
 
-        this.#collapsibleSections.set("actions", actionsSection);
+        this.#collapsibleSections.set(
+            ELEMENT_IDS.ACTIONS_SECTION,
+            actionsSection
+        );
         container.appendChild(actionsSection.createElement());
     }
 
@@ -399,20 +542,23 @@ export default class AdminPanel {
     private createBackupSection(container: HTMLElement): void {
         const backupContent = `
           <div class="transfer-actions">
-            <button id="export-json-btn" class="admin-button primary">Backup configuration</button>
-            <button id="import-config-btn" class="admin-button primary">Restore configuration</button>
-            <input type="file" id="import-file-input" accept=".json" style="display: none;">
+            <button id="${ELEMENT_IDS.EXPORT_JSON_BTN}" class="admin-button primary">Backup configuration</button>
+            <button id="${ELEMENT_IDS.IMPORT_CONFIG_BTN}" class="admin-button primary">Restore configuration</button>
+            <input type="file" id="${ELEMENT_IDS.IMPORT_FILE_INPUT}" accept=".json" style="display: none;">
           </div>
         `;
 
         const backupSection = new CollapsibleSection({
-            id: "backup",
-            title: "Configuration Backup & Restore",
+            id: ELEMENT_IDS.BACKUP_SECTION,
+            title: ADMIN_PANEL_LABELS.CONFIGURATION_BACKUP_RESTORE,
             content: backupContent,
             defaultExpanded: false, // Backup should be collapsed by default
         });
 
-        this.#collapsibleSections.set("backup", backupSection);
+        this.#collapsibleSections.set(
+            ELEMENT_IDS.BACKUP_SECTION,
+            backupSection
+        );
         container.appendChild(backupSection.createElement());
     }
 
@@ -424,20 +570,23 @@ export default class AdminPanel {
         const dangerContent = `
           <p class="danger-warning">The action below will permanently delete all stored configuration data. This cannot be undone.</p>
           <div class="danger-actions">
-            <button id="clear-localstorage-btn" class="admin-button danger">
+            <button id="${ELEMENT_IDS.CLEAR_LOCALSTORAGE_BTN}" class="admin-button danger">
               Clear LocalStorage
             </button>
           </div>
         `;
 
         const dangerSection = new CollapsibleSection({
-            id: "danger-zone",
-            title: "Danger Zone",
+            id: ELEMENT_IDS.DANGER_ZONE_SECTION,
+            title: ADMIN_PANEL_LABELS.DANGER_ZONE,
             content: dangerContent,
             defaultExpanded: false, // Danger zone should be collapsed by default
         });
 
-        this.#collapsibleSections.set("danger-zone", dangerSection);
+        this.#collapsibleSections.set(
+            ELEMENT_IDS.DANGER_ZONE_SECTION,
+            dangerSection
+        );
         container.appendChild(dangerSection.createElement());
     }
 
@@ -449,16 +598,22 @@ export default class AdminPanel {
         const config = this.#configManager.getAll();
 
         // Populate auth fields
-        this.setInputValue("twitch-oauth", config.auth?.twitch_oauth || "");
         this.setInputValue(
-            "twitch-username",
+            ELEMENT_IDS.TWITCH_OAUTH,
+            config.auth?.twitch_oauth || ""
+        );
+        this.setInputValue(
+            ELEMENT_IDS.TWITCH_USERNAME,
             config.auth?.twitch_username || ""
         );
-        this.setInputValue("twitch-channel", config.auth?.twitch_channel || "");
+        this.setInputValue(
+            ELEMENT_IDS.TWITCH_CHANNEL,
+            config.auth?.twitch_channel || ""
+        );
 
         // Populate behavior fields
         this.setInputValue(
-            "max-challenges",
+            ELEMENT_IDS.MAX_CHALLENGES,
             config.maxChallenges?.toString() || "10"
         );
 
@@ -467,6 +622,9 @@ export default class AdminPanel {
             config.challengeRowColors || [],
             config.challengeRowTextColors || []
         );
+
+        // Populate background configuration
+        this.populateBackgroundConfiguration(config);
     }
 
     /**
@@ -513,35 +671,141 @@ export default class AdminPanel {
     }
 
     /**
+     * Populate the background configuration UI with current values
+     * @param config - Configuration object with background settings
+     * @returns {void}
+     */
+    private populateBackgroundConfiguration(config: Config): void {
+        // Background color
+        const backgroundColorInput = document.getElementById(
+            BACKGROUND_UI_ELEMENTS.BACKGROUND_COLOR_INPUT
+        ) as HTMLInputElement;
+        if (backgroundColorInput) {
+            // Extract color from rgba or use default
+            const backgroundColor =
+                config.challengeBackgroundColor ||
+                BACKGROUND_DEFAULTS.BACKGROUND_COLOR;
+            const hexColor = this.extractColorFromRGBA(backgroundColor);
+            backgroundColorInput.value = hexColor;
+        }
+
+        // Background opacity
+        const opacitySlider = document.getElementById(
+            BACKGROUND_UI_ELEMENTS.BACKGROUND_OPACITY_SLIDER
+        ) as HTMLInputElement;
+        const opacityDisplay = document.getElementById(
+            BACKGROUND_UI_ELEMENTS.OPACITY_DISPLAY
+        );
+        if (opacitySlider && opacityDisplay) {
+            const opacity =
+                config.challengeBackgroundOpacity ??
+                BACKGROUND_DEFAULTS.BACKGROUND_OPACITY;
+            const opacityPercent = Math.round(opacity * 100);
+            opacitySlider.value = opacityPercent.toString();
+            opacityDisplay.textContent = `${opacityPercent}%`;
+        }
+
+        // Auto text color
+        const autoTextColorCheckbox = document.getElementById(
+            BACKGROUND_UI_ELEMENTS.AUTO_TEXT_COLOR_CHECKBOX
+        ) as HTMLInputElement;
+        if (autoTextColorCheckbox) {
+            autoTextColorCheckbox.checked =
+                config.challengeAutoTextColor ??
+                BACKGROUND_DEFAULTS.AUTO_TEXT_COLOR;
+        }
+
+        // Manual text color
+        const textColorInput = document.getElementById(
+            BACKGROUND_UI_ELEMENTS.TEXT_COLOR_INPUT
+        ) as HTMLInputElement;
+        if (textColorInput) {
+            textColorInput.value =
+                config.challengeTextColor || BACKGROUND_DEFAULTS.TEXT_COLOR;
+            textColorInput.disabled =
+                config.challengeAutoTextColor ??
+                BACKGROUND_DEFAULTS.AUTO_TEXT_COLOR;
+        }
+
+        // Text shadow
+        const textShadowCheckbox = document.getElementById(
+            BACKGROUND_UI_ELEMENTS.TEXT_SHADOW_CHECKBOX
+        ) as HTMLInputElement;
+        if (textShadowCheckbox) {
+            textShadowCheckbox.checked =
+                config.challengeTextShadow ?? BACKGROUND_DEFAULTS.TEXT_SHADOW;
+        }
+
+        // Update preview
+        this.updateBackgroundPreview();
+    }
+
+    /**
+     * Extract hex color from RGBA string or return default
+     * @param colorString - Color string (rgba, hex, etc.)
+     * @returns Hex color string
+     */
+    private extractColorFromRGBA(colorString: string): string {
+        // If it's already a hex color, return it
+        if (colorString.startsWith("#")) {
+            return colorString;
+        }
+
+        // Try to extract RGB values from rgba string
+        const rgbaMatch = colorString.match(
+            /rgba?\(([^,]+),\s*([^,]+),\s*([^,)]+)/
+        );
+        if (rgbaMatch && rgbaMatch[1] && rgbaMatch[2] && rgbaMatch[3]) {
+            const r = parseInt(rgbaMatch[1].trim());
+            const g = parseInt(rgbaMatch[2].trim());
+            const b = parseInt(rgbaMatch[3].trim());
+
+            // Convert to hex
+            const toHex = (n: number) => {
+                const hex = Math.max(0, Math.min(255, n)).toString(16);
+                return hex.length === 1 ? "0" + hex : hex;
+            };
+
+            return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
+        }
+
+        // Default fallback
+        return DEFAULT_COLORS.BLACK_TEXT;
+    }
+
+    /**
      * Setup event listeners for configuration form
      * @returns {void}
      */
     private setupConfigurationEventListeners(): void {
-        const saveBtn = document.getElementById("save-config-btn");
-        const resetBtn = document.getElementById("reset-config-btn");
+        const saveBtn = document.getElementById(ELEMENT_IDS.SAVE_CONFIG_BTN);
+        const resetBtn = document.getElementById(ELEMENT_IDS.RESET_CONFIG_BTN);
 
         if (saveBtn) {
             const saveHandler = () => this.saveConfiguration();
-            saveBtn.addEventListener("click", saveHandler);
-            this.#eventListeners.set("save-config-btn", {
+            saveBtn.addEventListener(EVENT_NAMES.CLICK, saveHandler);
+            this.#eventListeners.set(ELEMENT_IDS.SAVE_CONFIG_BTN, {
                 element: saveBtn,
-                event: "click",
+                event: EVENT_NAMES.CLICK,
                 handler: saveHandler,
             });
         }
 
         if (resetBtn) {
             const resetHandler = () => this.resetConfiguration();
-            resetBtn.addEventListener("click", resetHandler);
-            this.#eventListeners.set("reset-config-btn", {
+            resetBtn.addEventListener(EVENT_NAMES.CLICK, resetHandler);
+            this.#eventListeners.set(ELEMENT_IDS.RESET_CONFIG_BTN, {
                 element: resetBtn,
-                event: "click",
+                event: EVENT_NAMES.CLICK,
                 handler: resetHandler,
             });
         }
 
         // Setup color tier checkbox event listeners
         this.setupColorTierEventListeners();
+
+        // Setup background customization event listeners
+        this.setupBackgroundEventListeners();
     }
 
     /**
@@ -591,6 +855,207 @@ export default class AdminPanel {
     }
 
     /**
+     * Setup event listeners for background customization controls
+     * @returns {void}
+     */
+    private setupBackgroundEventListeners(): void {
+        // Background color picker
+        const backgroundColorInput = document.getElementById(
+            "challenge-background-color"
+        ) as HTMLInputElement;
+        if (backgroundColorInput) {
+            const colorHandler = () => this.updateBackgroundPreview();
+            backgroundColorInput.addEventListener("input", colorHandler);
+            this.#eventListeners.set("challenge-background-color", {
+                element: backgroundColorInput,
+                event: "input",
+                handler: colorHandler,
+            });
+        }
+
+        // Opacity slider
+        const opacitySlider = document.getElementById(
+            "challenge-background-opacity"
+        ) as HTMLInputElement;
+        const opacityDisplay = document.getElementById(
+            ELEMENT_IDS.OPACITY_DISPLAY
+        );
+        if (opacitySlider && opacityDisplay) {
+            const opacityHandler = () => {
+                opacityDisplay.textContent = `${opacitySlider.value}%`;
+                this.updateBackgroundPreview();
+            };
+            opacitySlider.addEventListener("input", opacityHandler);
+            this.#eventListeners.set("challenge-background-opacity", {
+                element: opacitySlider,
+                event: "input",
+                handler: opacityHandler,
+            });
+        }
+
+        // Auto text color checkbox
+        const autoTextColorCheckbox = document.getElementById(
+            "challenge-auto-text-color"
+        ) as HTMLInputElement;
+        const textColorInput = document.getElementById(
+            "challenge-text-color"
+        ) as HTMLInputElement;
+        if (autoTextColorCheckbox && textColorInput) {
+            const autoTextHandler = () => {
+                textColorInput.disabled = autoTextColorCheckbox.checked;
+                this.updateBackgroundPreview();
+            };
+            autoTextColorCheckbox.addEventListener("change", autoTextHandler);
+            this.#eventListeners.set("challenge-auto-text-color", {
+                element: autoTextColorCheckbox,
+                event: "change",
+                handler: autoTextHandler,
+            });
+        }
+
+        // Manual text color picker
+        if (textColorInput) {
+            const textColorHandler = () => this.updateBackgroundPreview();
+            textColorInput.addEventListener("input", textColorHandler);
+            this.#eventListeners.set("challenge-text-color", {
+                element: textColorInput,
+                event: "input",
+                handler: textColorHandler,
+            });
+        }
+
+        // Text shadow checkbox
+        const textShadowCheckbox = document.getElementById(
+            "challenge-text-shadow"
+        ) as HTMLInputElement;
+        if (textShadowCheckbox) {
+            const shadowHandler = () => this.updateBackgroundPreview();
+            textShadowCheckbox.addEventListener("change", shadowHandler);
+            this.#eventListeners.set("challenge-text-shadow", {
+                element: textShadowCheckbox,
+                event: "change",
+                handler: shadowHandler,
+            });
+        }
+
+        // Initial preview update
+        this.updateBackgroundPreview();
+    }
+
+    /**
+     * Update the background preview based on current settings
+     * @returns {void}
+     */
+    private updateBackgroundPreview(): void {
+        const preview = document.getElementById(ELEMENT_IDS.BACKGROUND_PREVIEW);
+        const previewChallenge = preview?.querySelector(
+            ".preview-challenge"
+        ) as HTMLElement;
+        const previewText = preview?.querySelector(
+            ".preview-text"
+        ) as HTMLElement;
+
+        if (!previewChallenge || !previewText) return;
+
+        // Get current values
+        const backgroundColorInput = document.getElementById(
+            "challenge-background-color"
+        ) as HTMLInputElement;
+        const opacitySlider = document.getElementById(
+            "challenge-background-opacity"
+        ) as HTMLInputElement;
+        const autoTextColorCheckbox = document.getElementById(
+            "challenge-auto-text-color"
+        ) as HTMLInputElement;
+        const textColorInput = document.getElementById(
+            "challenge-text-color"
+        ) as HTMLInputElement;
+        const textShadowCheckbox = document.getElementById(
+            "challenge-text-shadow"
+        ) as HTMLInputElement;
+
+        if (!backgroundColorInput || !opacitySlider) return;
+
+        // Apply background color and opacity
+        const backgroundColor = backgroundColorInput.value;
+        const opacity = parseInt(opacitySlider.value) / 100;
+        const rgbaBackground = this.convertColorToRGBA(
+            backgroundColor,
+            opacity
+        );
+        previewChallenge.style.backgroundColor = rgbaBackground;
+
+        // Apply text color
+        let textColor: string = DEFAULT_COLORS.WHITE_TEXT;
+        if (autoTextColorCheckbox?.checked) {
+            // Use automatic text color calculation
+            textColor = this.calculateOptimalTextColor(backgroundColor);
+        } else if (textColorInput) {
+            textColor = textColorInput.value;
+        }
+        previewText.style.color = textColor;
+
+        // Apply text shadow
+        if (textShadowCheckbox?.checked) {
+            const shadowStyle = this.generateTextShadow(textColor);
+            previewText.style.textShadow = shadowStyle;
+        } else {
+            previewText.style.textShadow = "none";
+        }
+    }
+
+    /**
+     * Convert a hex color and opacity to RGBA string
+     * @param hexColor - Hex color string
+     * @param opacity - Opacity value (0-1)
+     * @returns RGBA color string
+     */
+    private convertColorToRGBA(hexColor: string, opacity: number): string {
+        // Simple hex to RGB conversion
+        const hex = hexColor.replace("#", "");
+        const r = parseInt(hex.substring(0, 2), 16);
+        const g = parseInt(hex.substring(2, 4), 16);
+        const b = parseInt(hex.substring(4, 6), 16);
+        return `rgba(${r}, ${g}, ${b}, ${opacity})`;
+    }
+
+    /**
+     * Calculate optimal text color for readability (simplified version)
+     * @param backgroundColor - Background color hex string
+     * @returns Optimal text color ("#ffffff" or "#000000")
+     */
+    private calculateOptimalTextColor(backgroundColor: string): string {
+        // Simple brightness calculation
+        const hex = backgroundColor.replace("#", "");
+        const r = parseInt(hex.substring(0, 2), 16);
+        const g = parseInt(hex.substring(2, 4), 16);
+        const b = parseInt(hex.substring(4, 6), 16);
+        const brightness =
+            (r * COLOR_CONSTANTS.BRIGHTNESS_RED_WEIGHT +
+                g * COLOR_CONSTANTS.BRIGHTNESS_GREEN_WEIGHT +
+                b * COLOR_CONSTANTS.BRIGHTNESS_BLUE_WEIGHT) /
+            COLOR_CONSTANTS.BRIGHTNESS_DIVISOR;
+        return brightness > COLOR_CONSTANTS.BRIGHTNESS_THRESHOLD
+            ? DEFAULT_COLORS.BLACK_TEXT
+            : DEFAULT_COLORS.WHITE_TEXT;
+    }
+
+    /**
+     * Generate text shadow for enhanced readability (simplified version)
+     * @param textColor - Text color to determine shadow color
+     * @returns CSS text-shadow property value
+     */
+    private generateTextShadow(textColor: string): string {
+        const isDarkText =
+            this.calculateOptimalTextColor(textColor) ===
+            DEFAULT_COLORS.WHITE_TEXT;
+        const shadowColor = isDarkText
+            ? SHADOW_COLORS.WHITE_SHADOW
+            : SHADOW_COLORS.BLACK_SHADOW;
+        return `1px 1px 2px ${shadowColor}, -1px -1px 2px ${shadowColor}, 1px -1px 2px ${shadowColor}, -1px 1px 2px ${shadowColor}`;
+    }
+
+    /**
      * Update the visual state of a color tier based on checkbox state
      * @param tier - The color tier (primary, secondary, tertiary)
      * @param enabled - Whether the tier is enabled
@@ -637,18 +1102,18 @@ export default class AdminPanel {
         const defaultConfig: ColorConfigurationUI = {
             primary: {
                 enabled: false,
-                backgroundColor: "#ff0000",
-                textColor: "#ffffff",
+                backgroundColor: DEFAULT_COLORS.PRIMARY_BACKGROUND,
+                textColor: DEFAULT_COLORS.PRIMARY_TEXT,
             },
             secondary: {
                 enabled: false,
-                backgroundColor: "#00ff00",
-                textColor: "#ffffff",
+                backgroundColor: DEFAULT_COLORS.SECONDARY_BACKGROUND,
+                textColor: DEFAULT_COLORS.SECONDARY_TEXT,
             },
             tertiary: {
                 enabled: false,
-                backgroundColor: "#0000ff",
-                textColor: "#ffffff",
+                backgroundColor: DEFAULT_COLORS.TERTIARY_BACKGROUND,
+                textColor: DEFAULT_COLORS.TERTIARY_TEXT,
             },
         };
 
@@ -663,7 +1128,8 @@ export default class AdminPanel {
             if (index < tiers.length) {
                 const tier = tiers[index];
                 if (tier && defaultConfig[tier]) {
-                    const textColor = textColors[index] || "#ffffff"; // Use corresponding text color or default
+                    const textColor =
+                        textColors[index] || DEFAULT_COLORS.WHITE_TEXT; // Use corresponding text color or default
                     defaultConfig[tier].enabled = true;
                     defaultConfig[tier].backgroundColor =
                         backgroundColor.trim();
@@ -721,65 +1187,116 @@ export default class AdminPanel {
                 enabled:
                     (
                         document.getElementById(
-                            "primary-color-enabled"
+                            ELEMENT_IDS.PRIMARY_COLOR_ENABLED
                         ) as HTMLInputElement
                     )?.checked || false,
                 backgroundColor:
                     (
                         document.getElementById(
-                            "primary-bg-color"
+                            ELEMENT_IDS.PRIMARY_BG_COLOR
                         ) as HTMLInputElement
-                    )?.value || "#ff0000",
+                    )?.value || DEFAULT_COLORS.PRIMARY_BACKGROUND,
                 textColor:
                     (
                         document.getElementById(
-                            "primary-text-color"
+                            ELEMENT_IDS.PRIMARY_TEXT_COLOR
                         ) as HTMLInputElement
-                    )?.value || "#ffffff",
+                    )?.value || DEFAULT_COLORS.PRIMARY_TEXT,
             },
             secondary: {
                 enabled:
                     (
                         document.getElementById(
-                            "secondary-color-enabled"
+                            ELEMENT_IDS.SECONDARY_COLOR_ENABLED
                         ) as HTMLInputElement
                     )?.checked || false,
                 backgroundColor:
                     (
                         document.getElementById(
-                            "secondary-bg-color"
+                            ELEMENT_IDS.SECONDARY_BG_COLOR
                         ) as HTMLInputElement
-                    )?.value || "#00ff00",
+                    )?.value || DEFAULT_COLORS.SECONDARY_BACKGROUND,
                 textColor:
                     (
                         document.getElementById(
-                            "secondary-text-color"
+                            ELEMENT_IDS.SECONDARY_TEXT_COLOR
                         ) as HTMLInputElement
-                    )?.value || "#ffffff",
+                    )?.value || DEFAULT_COLORS.SECONDARY_TEXT,
             },
             tertiary: {
                 enabled:
                     (
                         document.getElementById(
-                            "tertiary-color-enabled"
+                            ELEMENT_IDS.TERTIARY_COLOR_ENABLED
                         ) as HTMLInputElement
                     )?.checked || false,
                 backgroundColor:
                     (
                         document.getElementById(
-                            "tertiary-bg-color"
+                            ELEMENT_IDS.TERTIARY_BG_COLOR
                         ) as HTMLInputElement
-                    )?.value || "#0000ff",
+                    )?.value || DEFAULT_COLORS.TERTIARY_BACKGROUND,
                 textColor:
                     (
                         document.getElementById(
-                            "tertiary-text-color"
+                            ELEMENT_IDS.TERTIARY_TEXT_COLOR
                         ) as HTMLInputElement
-                    )?.value || "#ffffff",
+                    )?.value || DEFAULT_COLORS.TERTIARY_TEXT,
             },
         };
 
         return config;
+    }
+
+    /**
+     * Get current background configuration from the UI
+     * @returns Background configuration object
+     */
+    private getCurrentBackgroundConfigFromUI(): {
+        challengeBackgroundColor: string;
+        challengeBackgroundOpacity: number;
+        challengeTextColor: string;
+        challengeAutoTextColor: boolean;
+        challengeTextShadow: boolean;
+    } {
+        const backgroundColorInput = document.getElementById(
+            BACKGROUND_UI_ELEMENTS.BACKGROUND_COLOR_INPUT
+        ) as HTMLInputElement;
+        const opacitySlider = document.getElementById(
+            BACKGROUND_UI_ELEMENTS.BACKGROUND_OPACITY_SLIDER
+        ) as HTMLInputElement;
+        const textColorInput = document.getElementById(
+            BACKGROUND_UI_ELEMENTS.TEXT_COLOR_INPUT
+        ) as HTMLInputElement;
+        const autoTextColorCheckbox = document.getElementById(
+            BACKGROUND_UI_ELEMENTS.AUTO_TEXT_COLOR_CHECKBOX
+        ) as HTMLInputElement;
+        const textShadowCheckbox = document.getElementById(
+            BACKGROUND_UI_ELEMENTS.TEXT_SHADOW_CHECKBOX
+        ) as HTMLInputElement;
+
+        // Combine color and opacity into RGBA format
+        const backgroundColor =
+            backgroundColorInput?.value || DEFAULT_COLORS.CHALLENGE_BACKGROUND;
+        const opacity = opacitySlider
+            ? parseInt(opacitySlider.value) / 100
+            : BACKGROUND_DEFAULTS.BACKGROUND_OPACITY;
+        const rgbaBackgroundColor = this.convertColorToRGBA(
+            backgroundColor,
+            opacity
+        );
+
+        return {
+            challengeBackgroundColor: rgbaBackgroundColor,
+            challengeBackgroundOpacity: opacity,
+            challengeTextColor:
+                textColorInput?.value || BACKGROUND_DEFAULTS.TEXT_COLOR,
+            challengeAutoTextColor:
+                autoTextColorCheckbox?.checked ??
+                BACKGROUND_DEFAULTS.AUTO_TEXT_COLOR,
+            challengeTextShadow:
+                textShadowCheckbox?.checked ?? BACKGROUND_DEFAULTS.TEXT_SHADOW,
+        };
     }
 
     /**
@@ -790,42 +1307,46 @@ export default class AdminPanel {
         try {
             const success = this.#configManager.clearStorage();
 
-            const button = document.getElementById("clear-localstorage-btn");
+            const button = document.getElementById(
+                ELEMENT_IDS.CLEAR_LOCALSTORAGE_BTN
+            );
             if (button) {
                 const originalText = button.textContent;
 
                 if (success) {
                     // Visual feedback for success
-                    button.textContent = "Cleared!";
-                    button.style.backgroundColor = "#28a745";
+                    button.textContent = ADMIN_FEEDBACK_MESSAGES.CLEARED;
+                    button.style.backgroundColor = STATUS_COLORS.SUCCESS;
 
                     // Refresh the form with default values
                     this.populateConfigurationForm();
                 } else {
                     // Visual feedback for failure
-                    button.textContent = "Error!";
-                    button.style.backgroundColor = "#dc3545";
+                    button.textContent = ADMIN_FEEDBACK_MESSAGES.ERROR;
+                    button.style.backgroundColor = STATUS_COLORS.ERROR;
                 }
 
                 setTimeout(() => {
                     button.textContent = originalText;
                     button.style.backgroundColor = "";
-                }, 2000);
+                }, TIMING_CONSTANTS.FEEDBACK_TIMEOUT);
             }
         } catch (error) {
             console.error("Error clearing localStorage:", error);
 
             // Visual feedback for error
-            const button = document.getElementById("clear-localstorage-btn");
+            const button = document.getElementById(
+                ELEMENT_IDS.CLEAR_LOCALSTORAGE_BTN
+            );
             if (button) {
                 const originalText = button.textContent;
-                button.textContent = "Error!";
-                button.style.backgroundColor = "#dc3545";
+                button.textContent = ADMIN_FEEDBACK_MESSAGES.ERROR;
+                button.style.backgroundColor = STATUS_COLORS.ERROR;
 
                 setTimeout(() => {
                     button.textContent = originalText;
                     button.style.backgroundColor = "";
-                }, 2000);
+                }, TIMING_CONSTANTS.FEEDBACK_TIMEOUT);
             }
         }
     }
@@ -838,13 +1359,15 @@ export default class AdminPanel {
         try {
             // Get form values
             const authConfig = {
-                twitch_oauth: this.getInputValue("twitch-oauth"),
-                twitch_username: this.getInputValue("twitch-username"),
-                twitch_channel: this.getInputValue("twitch-channel"),
+                twitch_oauth: this.getInputValue(ELEMENT_IDS.TWITCH_OAUTH),
+                twitch_username: this.getInputValue(
+                    ELEMENT_IDS.TWITCH_USERNAME
+                ),
+                twitch_channel: this.getInputValue(ELEMENT_IDS.TWITCH_CHANNEL),
             };
 
             const maxChallenges = parseInt(
-                this.getInputValue("max-challenges"),
+                this.getInputValue(ELEMENT_IDS.MAX_CHALLENGES),
                 10
             );
 
@@ -854,19 +1377,47 @@ export default class AdminPanel {
             const challengeRowTextColors =
                 this.convertUIToTextColors(colorConfig);
 
+            // Get background configuration from UI
+            const backgroundConfig = this.getCurrentBackgroundConfigFromUI();
+
             // Update configuration
-            const authSuccess = this.#configManager.set("auth", authConfig);
+            const authSuccess = this.#configManager.set(
+                CORE_CONFIG.AUTH,
+                authConfig
+            );
             const maxChallengesSuccess = this.#configManager.set(
-                "maxChallenges",
+                CORE_CONFIG.MAX_CHALLENGES,
                 maxChallenges
             );
             const colorsSuccess = this.#configManager.set(
-                "challengeRowColors",
+                CORE_CONFIG.CHALLENGE_ROW_COLORS,
                 challengeRowColors
             );
             const textColorsSuccess = this.#configManager.set(
-                "challengeRowTextColors",
+                CORE_CONFIG.CHALLENGE_ROW_TEXT_COLORS,
                 challengeRowTextColors
+            );
+
+            // Update background configuration
+            const backgroundColorSuccess = this.#configManager.set(
+                BACKGROUND_CONFIG.CHALLENGE_BACKGROUND_COLOR,
+                backgroundConfig.challengeBackgroundColor
+            );
+            const backgroundOpacitySuccess = this.#configManager.set(
+                BACKGROUND_CONFIG.CHALLENGE_BACKGROUND_OPACITY,
+                backgroundConfig.challengeBackgroundOpacity
+            );
+            const textColorSuccess = this.#configManager.set(
+                BACKGROUND_CONFIG.CHALLENGE_TEXT_COLOR,
+                backgroundConfig.challengeTextColor
+            );
+            const autoTextColorSuccess = this.#configManager.set(
+                BACKGROUND_CONFIG.CHALLENGE_AUTO_TEXT_COLOR,
+                backgroundConfig.challengeAutoTextColor
+            );
+            const textShadowSuccess = this.#configManager.set(
+                BACKGROUND_CONFIG.CHALLENGE_TEXT_SHADOW,
+                backgroundConfig.challengeTextShadow
             );
 
             // Check if all configuration updates were successful
@@ -874,10 +1425,19 @@ export default class AdminPanel {
                 authSuccess &&
                 maxChallengesSuccess &&
                 colorsSuccess &&
-                textColorsSuccess
+                textColorsSuccess &&
+                backgroundColorSuccess &&
+                backgroundOpacitySuccess &&
+                textColorSuccess &&
+                autoTextColorSuccess &&
+                textShadowSuccess
             ) {
                 // Visual feedback
-                this.showFeedback("save-config-btn", "Saved!", "#28a745");
+                this.showFeedback(
+                    ELEMENT_IDS.SAVE_CONFIG_BTN,
+                    ADMIN_FEEDBACK_MESSAGES.SAVED,
+                    STATUS_COLORS.SUCCESS
+                );
 
                 // Notify other windows to refresh after successful save
                 notifyConfigurationSaved();
@@ -885,14 +1445,18 @@ export default class AdminPanel {
                 // Some configuration updates failed
                 console.error("Some configuration updates failed");
                 this.showFeedback(
-                    "save-config-btn",
-                    "Partial Save Error!",
-                    "#dc3545"
+                    ELEMENT_IDS.SAVE_CONFIG_BTN,
+                    ADMIN_FEEDBACK_MESSAGES.PARTIAL_SAVE_ERROR,
+                    STATUS_COLORS.ERROR
                 );
             }
         } catch (error) {
             console.error("Error saving configuration:", error);
-            this.showFeedback("save-config-btn", "Error!", "#dc3545");
+            this.showFeedback(
+                ELEMENT_IDS.SAVE_CONFIG_BTN,
+                ADMIN_FEEDBACK_MESSAGES.ERROR,
+                STATUS_COLORS.ERROR
+            );
         }
     }
 
@@ -905,21 +1469,29 @@ export default class AdminPanel {
             const resetSuccess = this.#configManager.reset();
             if (resetSuccess) {
                 this.populateConfigurationForm();
-                this.showFeedback("reset-config-btn", "Reset!", "#28a745");
+                this.showFeedback(
+                    ELEMENT_IDS.RESET_CONFIG_BTN,
+                    ADMIN_FEEDBACK_MESSAGES.RESET,
+                    STATUS_COLORS.SUCCESS
+                );
 
                 // Notify other windows to refresh after successful reset
                 notifyConfigurationSaved();
             } else {
                 console.error("Configuration reset failed");
                 this.showFeedback(
-                    "reset-config-btn",
-                    "Reset Failed!",
-                    "#dc3545"
+                    ELEMENT_IDS.RESET_CONFIG_BTN,
+                    ADMIN_FEEDBACK_MESSAGES.RESET_FAILED,
+                    STATUS_COLORS.ERROR
                 );
             }
         } catch (error) {
             console.error("Error resetting configuration:", error);
-            this.showFeedback("reset-config-btn", "Error!", "#dc3545");
+            this.showFeedback(
+                ELEMENT_IDS.RESET_CONFIG_BTN,
+                ADMIN_FEEDBACK_MESSAGES.ERROR,
+                STATUS_COLORS.ERROR
+            );
         }
     }
 
@@ -929,7 +1501,7 @@ export default class AdminPanel {
      * @returns {void}
      */
     private exportConfiguration(format: string): void {
-        if (format !== "json") {
+        if (format !== FILE_FORMAT_VALUES.JSON) {
             console.error(
                 `Unsupported export format: ${format}. Only JSON export is supported.`
             );
@@ -941,18 +1513,30 @@ export default class AdminPanel {
             this.#configExporter = new ConfigExporter(config);
 
             const success = this.#configExporter.downloadAsJSON(
-                "twitch-overlay-config.json"
+                DEFAULT_FILENAMES.CONFIG_EXPORT
             );
-            const buttonId = "export-json-btn";
+            const buttonId = ELEMENT_IDS.EXPORT_JSON_BTN;
 
             if (success) {
-                this.showFeedback(buttonId, "Exported!", "#28a745");
+                this.showFeedback(
+                    buttonId,
+                    ADMIN_FEEDBACK_MESSAGES.EXPORTED,
+                    STATUS_COLORS.SUCCESS
+                );
             } else {
-                this.showFeedback(buttonId, "Failed!", "#dc3545");
+                this.showFeedback(
+                    buttonId,
+                    ADMIN_FEEDBACK_MESSAGES.FAILED,
+                    STATUS_COLORS.ERROR
+                );
             }
         } catch (error) {
             console.error("Error exporting configuration:", error);
-            this.showFeedback("export-json-btn", "Error!", "#dc3545");
+            this.showFeedback(
+                ELEMENT_IDS.EXPORT_JSON_BTN,
+                ADMIN_FEEDBACK_MESSAGES.ERROR,
+                STATUS_COLORS.ERROR
+            );
         }
     }
 
@@ -965,18 +1549,18 @@ export default class AdminPanel {
         const file = fileInput.files?.[0];
         if (!file) {
             this.showFeedback(
-                "import-config-btn",
-                "No file selected!",
-                "#dc3545"
+                ELEMENT_IDS.IMPORT_CONFIG_BTN,
+                ADMIN_FEEDBACK_MESSAGES.NO_FILE_SELECTED,
+                STATUS_COLORS.ERROR
             );
             return;
         }
 
         if (!file.name.toLowerCase().endsWith(".json")) {
             this.showFeedback(
-                "import-config-btn",
-                "Please select a JSON file!",
-                "#dc3545"
+                ELEMENT_IDS.IMPORT_CONFIG_BTN,
+                ADMIN_FEEDBACK_MESSAGES.INVALID_FILE_TYPE,
+                STATUS_COLORS.ERROR
             );
             return;
         }
@@ -992,18 +1576,18 @@ export default class AdminPanel {
             } catch (error) {
                 console.error("Error reading file:", error);
                 this.showFeedback(
-                    "import-config-btn",
-                    "Error reading file!",
-                    "#dc3545"
+                    ELEMENT_IDS.IMPORT_CONFIG_BTN,
+                    ADMIN_FEEDBACK_MESSAGES.FILE_READ_ERROR,
+                    STATUS_COLORS.ERROR
                 );
             }
         };
 
         reader.onerror = () => {
             this.showFeedback(
-                "import-config-btn",
-                "Error reading file!",
-                "#dc3545"
+                ELEMENT_IDS.IMPORT_CONFIG_BTN,
+                ADMIN_FEEDBACK_MESSAGES.FILE_READ_ERROR,
+                STATUS_COLORS.ERROR
             );
         };
 
@@ -1041,7 +1625,7 @@ export default class AdminPanel {
                 this.showFeedback(
                     buttonId,
                     validationResult.errorMessage,
-                    "#dc3545"
+                    STATUS_COLORS.ERROR
                 );
                 return;
             }
@@ -1052,30 +1636,38 @@ export default class AdminPanel {
             if (success) {
                 this.showFeedback(
                     buttonId,
-                    "Configuration imported successfully!",
-                    "#28a745"
+                    ADMIN_FEEDBACK_MESSAGES.CONFIGURATION_IMPORTED,
+                    STATUS_COLORS.SUCCESS
                 );
 
                 // Refresh the configuration UI to show imported values
                 setTimeout(() => {
                     this.refreshConfigurationUI();
-                }, 1000);
+                }, TIMING_CONSTANTS.IMPORT_REFRESH_DELAY);
 
                 // Notify other windows to refresh after successful import
                 notifyConfigurationSaved();
             } else {
                 this.showFeedback(
                     buttonId,
-                    "Failed to restore configuration!",
-                    "#dc3545"
+                    ADMIN_FEEDBACK_MESSAGES.RESTORE_FAILED,
+                    STATUS_COLORS.ERROR
                 );
             }
         } catch (error) {
             console.error("Error importing configuration:", error);
             if (error instanceof SyntaxError) {
-                this.showFeedback(buttonId, "Invalid JSON format!", "#dc3545");
+                this.showFeedback(
+                    buttonId,
+                    ADMIN_FEEDBACK_MESSAGES.INVALID_JSON_FORMAT,
+                    STATUS_COLORS.ERROR
+                );
             } else {
-                this.showFeedback(buttonId, "Import failed!", "#dc3545");
+                this.showFeedback(
+                    buttonId,
+                    ADMIN_FEEDBACK_MESSAGES.IMPORT_FAILED,
+                    STATUS_COLORS.ERROR
+                );
             }
         }
     }
@@ -1092,7 +1684,7 @@ export default class AdminPanel {
         if (!config || typeof config !== "object") {
             return {
                 isValid: false,
-                errorMessage: "Configuration must be a valid object!",
+                errorMessage: VALIDATION_MESSAGES.CONFIGURATION_INVALID_OBJECT,
             };
         }
 
@@ -1174,16 +1766,22 @@ export default class AdminPanel {
         const config = this.#configManager.getAll();
 
         // Update auth fields
-        this.setInputValue("twitch-channel", config.auth?.twitch_channel || "");
-        this.setInputValue("twitch-oauth", config.auth?.twitch_oauth || "");
         this.setInputValue(
-            "twitch-username",
+            ELEMENT_IDS.TWITCH_CHANNEL,
+            config.auth?.twitch_channel || ""
+        );
+        this.setInputValue(
+            ELEMENT_IDS.TWITCH_OAUTH,
+            config.auth?.twitch_oauth || ""
+        );
+        this.setInputValue(
+            ELEMENT_IDS.TWITCH_USERNAME,
             config.auth?.twitch_username || ""
         );
 
         // Update behavior fields
         this.setInputValue(
-            "max-challenges",
+            ELEMENT_IDS.MAX_CHALLENGES,
             config.maxChallenges?.toString() || ""
         );
 

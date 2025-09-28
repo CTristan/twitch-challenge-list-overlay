@@ -1,4 +1,19 @@
 import Challenge from "../classes/Challenge";
+import {
+    BACKGROUND_NUMERIC_CONSTANTS,
+    CSS_CUSTOM_PROPERTIES,
+} from "../types/ConfigConstants";
+import {
+    CSS_CLASSES,
+    CSS_SELECTORS,
+    DATA_ATTRIBUTES,
+} from "../types/DOMConstants";
+import {
+    calculateOptimalTextColor,
+    combineColorWithOpacity,
+    generateTextShadow,
+    isColorDark,
+} from "./ColorUtils";
 
 /**
  * Get a value from an array by rotating through it based on an index
@@ -28,11 +43,11 @@ export class ChallengeRenderer {
      */
     static createChallengeTextElement(challenge: Challenge): HTMLElement {
         const textContainer = document.createElement("div");
-        textContainer.classList.add("challenge-text");
+        textContainer.classList.add(CSS_CLASSES.CHALLENGE_TEXT);
 
         // Create title element
         const titleElement = document.createElement("div");
-        titleElement.classList.add("challenge-title");
+        titleElement.classList.add(CSS_CLASSES.CHALLENGE_TITLE);
         titleElement.textContent = challenge.title;
         textContainer.appendChild(titleElement);
 
@@ -43,7 +58,7 @@ export class ChallengeRenderer {
             challenge.description.trim() !== ""
         ) {
             const descriptionElement = document.createElement("div");
-            descriptionElement.classList.add("challenge-description");
+            descriptionElement.classList.add(CSS_CLASSES.CHALLENGE_DESCRIPTION);
             descriptionElement.textContent = challenge.description;
             textContainer.appendChild(descriptionElement);
         }
@@ -51,7 +66,7 @@ export class ChallengeRenderer {
         // Add progress display only when amount > 1
         if (challenge.amount > 1) {
             const progressElement = document.createElement("div");
-            progressElement.classList.add("challenge-amount");
+            progressElement.classList.add(CSS_CLASSES.CHALLENGE_AMOUNT);
             progressElement.textContent = `${challenge.progress}/${challenge.amount}`;
             textContainer.appendChild(progressElement);
         }
@@ -66,9 +81,9 @@ export class ChallengeRenderer {
      */
     static createChallengeCheckbox(isChecked: boolean = false): HTMLDivElement {
         const checkbox = document.createElement("div");
-        checkbox.classList.add("challenge-checkbox");
+        checkbox.classList.add(CSS_CLASSES.CHALLENGE_CHECKBOX);
         if (isChecked) {
-            checkbox.classList.add("checked");
+            checkbox.classList.add(CSS_CLASSES.CHECKED);
         }
         return checkbox;
     }
@@ -87,10 +102,10 @@ export class ChallengeRenderer {
         } = {}
     ): HTMLElement {
         const challengeElement = document.createElement("li");
-        challengeElement.className = `challenge ${
-            challenge.isComplete() ? "done" : ""
+        challengeElement.className = `${CSS_CLASSES.CHALLENGE} ${
+            challenge.isComplete() ? CSS_CLASSES.DONE : ""
         }`;
-        challengeElement.dataset["challengeId"] = challenge.id;
+        challengeElement.dataset[DATA_ATTRIBUTES.CHALLENGE_ID] = challenge.id;
 
         // Create checkbox
         const checkbox = this.createChallengeCheckbox(challenge.isComplete());
@@ -146,15 +161,15 @@ export class ChallengeRenderer {
     ): void {
         if (textColor) {
             checkbox.style.setProperty(
-                "--challenge-checkbox-border-color",
+                CSS_CUSTOM_PROPERTIES.CHALLENGE_CHECKBOX_BORDER_COLOR,
                 textColor
             );
             checkbox.style.setProperty(
-                "--challenge-checkbox-checked-border-color",
+                CSS_CUSTOM_PROPERTIES.CHALLENGE_CHECKBOX_CHECKED_BORDER_COLOR,
                 textColor
             );
             checkbox.style.setProperty(
-                "--challenge-checkbox-checkmark-color",
+                CSS_CUSTOM_PROPERTIES.CHALLENGE_CHECKBOX_CHECKMARK_COLOR,
                 textColor
             );
         }
@@ -173,17 +188,115 @@ export class ChallengeRenderer {
             textElement.style.color = textColor;
             // Also apply to child elements
             const titleElement = textElement.querySelector(
-                ".challenge-title"
+                CSS_SELECTORS.CHALLENGE_TITLE
             ) as HTMLElement;
             const descriptionElement = textElement.querySelector(
-                ".challenge-description"
+                CSS_SELECTORS.CHALLENGE_DESCRIPTION
             ) as HTMLElement;
             const progressElement = textElement.querySelector(
-                ".challenge-amount"
+                CSS_SELECTORS.CHALLENGE_AMOUNT
             ) as HTMLElement;
             if (titleElement) titleElement.style.color = textColor;
             if (descriptionElement) descriptionElement.style.color = textColor;
             if (progressElement) progressElement.style.color = textColor;
+        }
+    }
+
+    /**
+     * Apply background customization to a challenge element
+     * @param challengeElement - The challenge element to style
+     * @param config - Configuration object with background settings
+     * @param rowIndex - Optional row index for row-specific colors (overrides global settings)
+     * @param rowColors - Optional array of row-specific background colors
+     * @param rowTextColors - Optional array of row-specific text colors
+     */
+    static applyBackgroundCustomization(
+        challengeElement: HTMLElement,
+        config: {
+            challengeBackgroundColor?: string;
+            challengeBackgroundOpacity?: number;
+            challengeTextColor?: string;
+            challengeAutoTextColor?: boolean;
+            challengeTextShadow?: boolean;
+        },
+        rowIndex?: number,
+        rowColors?: string[],
+        rowTextColors?: string[]
+    ): void {
+        // Check if row-specific colors should override global settings
+        const hasRowColors = rowColors && rowColors.length > 0;
+        const hasRowTextColors = rowTextColors && rowTextColors.length > 0;
+
+        let finalBackgroundColor: string | null = null;
+        let finalTextColor: string | null = null;
+
+        if (hasRowColors && rowIndex !== undefined) {
+            // Use row-specific background color
+            finalBackgroundColor = getRotatingArrayValue(rowIndex, rowColors);
+        } else if (config.challengeBackgroundColor) {
+            // Use global background color with opacity
+            const opacity =
+                config.challengeBackgroundOpacity ??
+                BACKGROUND_NUMERIC_CONSTANTS.DEFAULT_OPACITY;
+            finalBackgroundColor = combineColorWithOpacity(
+                config.challengeBackgroundColor,
+                opacity
+            );
+        }
+
+        if (hasRowTextColors && rowIndex !== undefined) {
+            // Use row-specific text color
+            finalTextColor = getRotatingArrayValue(rowIndex, rowTextColors);
+        } else if (config.challengeAutoTextColor && finalBackgroundColor) {
+            // Calculate optimal text color based on background
+            finalTextColor = calculateOptimalTextColor(finalBackgroundColor);
+        } else if (config.challengeTextColor) {
+            // Use manual text color override
+            finalTextColor = config.challengeTextColor;
+        }
+
+        // Apply background color
+        if (finalBackgroundColor) {
+            challengeElement.style.backgroundColor = finalBackgroundColor;
+            challengeElement.classList.add(CSS_CLASSES.CUSTOM_BACKGROUND);
+        }
+
+        // Apply text color and styling
+        const textElement = challengeElement.querySelector(
+            CSS_SELECTORS.CHALLENGE_TEXT
+        ) as HTMLElement;
+        if (textElement && finalTextColor) {
+            ChallengeRenderer.applyChallengeTextColors(
+                textElement,
+                finalTextColor
+            );
+
+            // Apply text shadow for enhanced readability if enabled
+            if (config.challengeTextShadow) {
+                const shadowStyle = generateTextShadow(finalTextColor);
+                textElement.style.textShadow = shadowStyle;
+                textElement.classList.add(CSS_CLASSES.ENHANCED_READABILITY);
+
+                // Add appropriate shadow class based on text color
+                if (isColorDark(finalTextColor)) {
+                    textElement.classList.add(CSS_CLASSES.TEXT_SHADOW_LIGHT);
+                    textElement.classList.remove(CSS_CLASSES.TEXT_SHADOW_DARK);
+                } else {
+                    textElement.classList.add(CSS_CLASSES.TEXT_SHADOW_DARK);
+                    textElement.classList.remove(CSS_CLASSES.TEXT_SHADOW_LIGHT);
+                }
+            }
+        }
+
+        // Apply styling to checkbox
+        const checkbox = challengeElement.querySelector(
+            CSS_SELECTORS.CHALLENGE_CHECKBOX
+        ) as HTMLElement;
+        if (checkbox && finalTextColor) {
+            ChallengeRenderer.decorateChallengeCheckbox(
+                checkbox,
+                finalTextColor
+            );
         }
     }
 }

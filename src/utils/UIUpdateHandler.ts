@@ -3,6 +3,7 @@ import Challenge from "../classes/Challenge";
 import ChallengeList from "../classes/ChallengeList";
 import ConfigManager from "../classes/ConfigManager";
 import type { CommandResponse } from "../types/CommandResponse";
+import { BACKGROUND_CONFIG, COLOR_CONFIG } from "../types/ConfigConstants";
 import ChallengeRenderer from "./ChallengeRenderer";
 import DOMHelper from "./DOMHelper";
 import Timer from "./Timer";
@@ -504,9 +505,30 @@ export default class UIUpdateHandler {
         rowIndex?: number
     ): void {
         // Get color configuration
-        const rowColors = this.configManager.get("challengeRowColors") || [];
+        const rowColors =
+            this.configManager.get(COLOR_CONFIG.CHALLENGE_ROW_COLORS) || [];
         const rowTextColors =
-            this.configManager.get("challengeRowTextColors") || [];
+            this.configManager.get(COLOR_CONFIG.CHALLENGE_ROW_TEXT_COLORS) ||
+            [];
+
+        // Get background customization configuration
+        const backgroundConfig = {
+            challengeBackgroundColor: this.configManager.get(
+                BACKGROUND_CONFIG.CHALLENGE_BACKGROUND_COLOR
+            ),
+            challengeBackgroundOpacity: this.configManager.get(
+                BACKGROUND_CONFIG.CHALLENGE_BACKGROUND_OPACITY
+            ),
+            challengeTextColor: this.configManager.get(
+                BACKGROUND_CONFIG.CHALLENGE_TEXT_COLOR
+            ),
+            challengeAutoTextColor: this.configManager.get(
+                BACKGROUND_CONFIG.CHALLENGE_AUTO_TEXT_COLOR
+            ),
+            challengeTextShadow: this.configManager.get(
+                BACKGROUND_CONFIG.CHALLENGE_TEXT_SHADOW
+            ),
+        };
 
         // Determine row index if not provided
         const actualRowIndex =
@@ -516,29 +538,14 @@ export default class UIUpdateHandler {
                       (c) => c.id === challengeElement.dataset["challengeId"]
                   );
 
-        // Apply row colors using centralized helper
-        const textColor = ChallengeRenderer.applyChallengeRowColors(
+        // Apply background customization (includes row colors if configured)
+        ChallengeRenderer.applyBackgroundCustomization(
             challengeElement,
+            backgroundConfig,
             actualRowIndex,
             rowColors,
             rowTextColors
         );
-
-        // Apply styling to checkbox and text elements
-        const checkbox = challengeElement.querySelector(
-            ".challenge-checkbox"
-        ) as HTMLElement;
-        const textElement = challengeElement.querySelector(
-            ".challenge-text"
-        ) as HTMLElement;
-
-        if (checkbox) {
-            ChallengeRenderer.decorateChallengeCheckbox(checkbox, textColor);
-        }
-
-        if (textElement) {
-            ChallengeRenderer.applyChallengeTextColors(textElement, textColor);
-        }
     }
 
     /**

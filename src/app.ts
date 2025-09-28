@@ -3,6 +3,21 @@ import Challenge from "./classes/Challenge";
 import ChallengeList from "./classes/ChallengeList";
 import ConfigManager from "./classes/ConfigManager";
 import { loadStyles } from "./styleLoader";
+import {
+    BACKGROUND_CONFIG,
+    COLOR_CONFIG,
+    RESPONSE_CONFIG,
+} from "./types/ConfigConstants";
+import {
+    COMMAND_CONSTANTS,
+    COMMON_STRINGS,
+    CSS_CLASSES,
+    CSS_SELECTORS,
+    DATA_ATTRIBUTES,
+    EVENT_NAMES,
+    URL_HASH,
+} from "./types/DOMConstants";
+import { ERROR_MESSAGES, STATUS_MESSAGES } from "./types/MessageConstants";
 import ChallengeRenderer from "./utils/ChallengeRenderer";
 import CommandHandler from "./utils/CommandHandler";
 import DOMHelper from "./utils/DOMHelper";
@@ -89,7 +104,7 @@ export default class App {
         const list = cardEl.querySelector("ol");
 
         if (!list) {
-            console.error("Challenge list element not found in card");
+            console.error(ERROR_MESSAGES.CHALLENGE_LIST_ELEMENT_NOT_FOUND);
             return;
         }
 
@@ -100,9 +115,31 @@ export default class App {
 
             // Cache color arrays outside the loop to avoid repeated ConfigManager calls
             const rowColors =
-                this.#configManager.get("challengeRowColors") || [];
+                this.#configManager.get(COLOR_CONFIG.CHALLENGE_ROW_COLORS) ||
+                [];
             const rowTextColors =
-                this.#configManager.get("challengeRowTextColors") || [];
+                this.#configManager.get(
+                    COLOR_CONFIG.CHALLENGE_ROW_TEXT_COLORS
+                ) || [];
+
+            // Get background customization configuration
+            const backgroundConfig = {
+                challengeBackgroundColor: this.#configManager.get(
+                    BACKGROUND_CONFIG.CHALLENGE_BACKGROUND_COLOR
+                ),
+                challengeBackgroundOpacity: this.#configManager.get(
+                    BACKGROUND_CONFIG.CHALLENGE_BACKGROUND_OPACITY
+                ),
+                challengeTextColor: this.#configManager.get(
+                    BACKGROUND_CONFIG.CHALLENGE_TEXT_COLOR
+                ),
+                challengeAutoTextColor: this.#configManager.get(
+                    BACKGROUND_CONFIG.CHALLENGE_AUTO_TEXT_COLOR
+                ),
+                challengeTextShadow: this.#configManager.get(
+                    BACKGROUND_CONFIG.CHALLENGE_TEXT_SHADOW
+                ),
+            };
 
             this.challengeList
                 .getAllChallenges()
@@ -111,35 +148,14 @@ export default class App {
                     const listItem =
                         ChallengeRenderer.createChallengeElement(challenge);
 
-                    // Apply row colors using centralized helper
-                    const textColor = ChallengeRenderer.applyChallengeRowColors(
+                    // Apply background customization (includes row colors if configured)
+                    ChallengeRenderer.applyBackgroundCustomization(
                         listItem,
+                        backgroundConfig,
                         index,
                         rowColors,
                         rowTextColors
                     );
-
-                    // Apply styling to the checkbox and text elements
-                    const checkbox = listItem.querySelector(
-                        ".challenge-checkbox"
-                    ) as HTMLElement;
-                    const textElement = listItem.querySelector(
-                        ".challenge-text"
-                    ) as HTMLElement;
-
-                    if (checkbox) {
-                        ChallengeRenderer.decorateChallengeCheckbox(
-                            checkbox,
-                            textColor
-                        );
-                    }
-
-                    if (textElement) {
-                        ChallengeRenderer.applyChallengeTextColors(
-                            textElement,
-                            textColor
-                        );
-                    }
 
                     // Add timer display if timer exists and is active (as sibling to text)
                     if (challenge.timer && challenge.timer.isActive) {
@@ -162,13 +178,13 @@ export default class App {
         // Always append the card to container, even if the list is empty
         // This ensures the header is always visible
         const challengeContainer = document.querySelector(
-            ".challenge-container"
+            CSS_SELECTORS.CHALLENGE_CONTAINER
         );
         if (!challengeContainer) {
-            console.error("Challenge container not found");
+            console.error(ERROR_MESSAGES.CHALLENGE_CONTAINER_NOT_FOUND);
             return;
         }
-        challengeContainer.innerHTML = "";
+        challengeContainer.innerHTML = COMMON_STRINGS.EMPTY;
         challengeContainer.appendChild(cardEl);
 
         animateScroll();
@@ -186,10 +202,12 @@ export default class App {
      * @returns {void}
      */
     renderCustomText(text: string): void {
-        const customHeaderEl = document.querySelector(".custom-header");
-        const customTextEl = document.querySelector(".custom-text");
+        const customHeaderEl = document.querySelector(
+            CSS_SELECTORS.CUSTOM_HEADER
+        );
+        const customTextEl = document.querySelector(CSS_SELECTORS.CUSTOM_TEXT);
         if (customHeaderEl) {
-            customHeaderEl.classList.remove("hidden");
+            customHeaderEl.classList.remove(CSS_CLASSES.HIDDEN);
         }
         if (customTextEl) {
             customTextEl.textContent = text;
@@ -212,14 +230,17 @@ export default class App {
         flags: { broadcaster: boolean; mod: boolean },
         _extra: { userColor: string; messageId?: string }
     ): { error: boolean; message: string } {
-        command = `!${command.toLowerCase()}`;
+        command = `${COMMAND_CONSTANTS.PREFIX}${command.toLowerCase()}`;
 
         // Use simple guard instead of exception for control flow
-        if (command === "!ch" || command.startsWith("!ch ")) {
+        if (
+            command === COMMAND_CONSTANTS.COMMAND_PREFIX ||
+            command.startsWith(COMMAND_CONSTANTS.COMMAND_PREFIX_WITH_SPACE)
+        ) {
             try {
                 const response = this.#commandHandler.handleCommand(
                     username,
-                    command.slice(1), // Remove ! prefix
+                    command.slice(COMMAND_CONSTANTS.PREFIX_SLICE_INDEX), // Remove ! prefix
                     message,
                     flags
                 );
@@ -233,7 +254,7 @@ export default class App {
                 };
             } catch (error) {
                 return respondMessage(
-                    this.#configManager.get("responses.invalidCommand"),
+                    this.#configManager.get(RESPONSE_CONFIG.INVALID_COMMAND),
                     username,
                     error instanceof Error ? error.message : String(error),
                     true
@@ -243,9 +264,9 @@ export default class App {
 
         // Direct call for invalid commands instead of throwing and catching
         return respondMessage(
-            this.#configManager.get("responses.invalidCommand"),
+            this.#configManager.get(RESPONSE_CONFIG.INVALID_COMMAND),
             username,
-            "command not found",
+            COMMON_STRINGS.COMMAND_NOT_FOUND,
             true
         );
     }
@@ -308,31 +329,35 @@ export default class App {
      */
     enableAdminCheckboxInteraction(): void {
         // Only enable in admin mode
-        if (window.location.hash !== "#admin") {
+        if (window.location.hash !== URL_HASH.ADMIN) {
             return;
         }
 
         // Use event delegation on containers instead of individual checkboxes
         // This avoids re-querying and re-attaching listeners for every checkbox
-        const containers = document.querySelectorAll(".challenge-container");
+        const containers = document.querySelectorAll(
+            CSS_SELECTORS.CHALLENGE_CONTAINER
+        );
         containers.forEach((container) => {
             // Remove any existing delegated listeners to prevent duplicates
             container.removeEventListener(
-                "click",
+                EVENT_NAMES.CLICK,
                 this.handleDelegatedCheckboxClick
             );
 
             // Add single delegated listener per container
             container.addEventListener(
-                "click",
+                EVENT_NAMES.CLICK,
                 this.handleDelegatedCheckboxClick
             );
         });
 
         // Add visual indication that checkboxes are clickable in admin mode
-        const checkboxes = document.querySelectorAll(".challenge-checkbox");
+        const checkboxes = document.querySelectorAll(
+            CSS_SELECTORS.CHALLENGE_CHECKBOX
+        );
         checkboxes.forEach((checkbox) => {
-            checkbox.classList.add("admin-interactive");
+            checkbox.classList.add(CSS_CLASSES.ADMIN_INTERACTIVE);
         });
     }
 
@@ -346,21 +371,26 @@ export default class App {
         event.stopPropagation();
 
         // Only handle clicks in admin mode
-        if (window.location.hash !== "#admin") {
+        if (window.location.hash !== URL_HASH.ADMIN) {
             return;
         }
 
         const checkbox = event.target as HTMLElement;
-        const challengeElement = checkbox.closest(".challenge") as HTMLElement;
+        const challengeElement = checkbox.closest(
+            CSS_SELECTORS.CHALLENGE
+        ) as HTMLElement;
 
         if (!challengeElement) {
-            console.error("Could not find challenge element for checkbox");
+            console.error(
+                ERROR_MESSAGES.CHALLENGE_ELEMENT_NOT_FOUND_FOR_CHECKBOX
+            );
             return;
         }
 
-        const challengeId = challengeElement.dataset["challengeId"];
+        const challengeId =
+            challengeElement.dataset[DATA_ATTRIBUTES.CHALLENGE_ID];
         if (!challengeId) {
-            console.error("Could not find challenge ID for checkbox");
+            console.error(ERROR_MESSAGES.CHALLENGE_ID_NOT_FOUND_FOR_CHECKBOX);
             return;
         }
 
@@ -376,7 +406,12 @@ export default class App {
         const challenge =
             this.challengeList.toggleChallengeCompletion(challengeId);
         if (!challenge) {
-            console.error(`Challenge with ID ${challengeId} not found`);
+            console.error(
+                ERROR_MESSAGES.CHALLENGE_NOT_FOUND_BY_ID.replace(
+                    "{challengeId}",
+                    challengeId
+                )
+            );
             this.processingCheckboxClicks.delete(challengeId); // Clean up
             return;
         }
@@ -389,7 +424,10 @@ export default class App {
                 this.revertChallengeFromDOM(challengeId);
             }
         } catch (error) {
-            console.error("Error toggling challenge completion:", error);
+            console.error(
+                ERROR_MESSAGES.ERROR_TOGGLING_CHALLENGE_COMPLETION,
+                error
+            );
         } finally {
             // Clean up processing flag
             this.processingCheckboxClicks.delete(challengeId);
@@ -404,7 +442,7 @@ export default class App {
     private handleDelegatedCheckboxClick = (event: Event): void => {
         // Only handle clicks on checkboxes
         const target = event.target as HTMLElement;
-        if (!target.classList.contains("challenge-checkbox")) {
+        if (!target.classList.contains(CSS_CLASSES.CHALLENGE_CHECKBOX)) {
             return;
         }
 
@@ -452,7 +490,12 @@ export default class App {
         // Log the expiration but don't stop the timer immediately
         // This allows the expired state to be displayed
         if (challenge.timer && challenge.timer.isExpired()) {
-            console.log(`Timer expired for challenge: ${challenge.title}`);
+            console.log(
+                STATUS_MESSAGES.TIMER_EXPIRED_FOR_CHALLENGE.replace(
+                    "{title}",
+                    challenge.title
+                )
+            );
             // Timer will be stopped when challenge is completed/failed
         }
     }
