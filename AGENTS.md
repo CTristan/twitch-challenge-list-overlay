@@ -286,14 +286,23 @@ type UIUpdateAction = "add" | "edit" | "complete";
 
 ### String Management Guidelines
 
-**CRITICAL**: All user-facing messages, error messages, and response strings must use the centralized `MessageConstants` system.
+**CRITICAL**: All user-facing messages, error messages, response strings, and configuration property names must use centralized constant systems.
 
+#### Message Constants
 -   **MessageConstants Location**: All message constants are defined in `src/types/MessageConstants.ts`
 -   **Organized Categories**: Constants are grouped by purpose (ERROR_MESSAGES, SUCCESS_MESSAGES, HELP_MESSAGES, etc.)
 -   **UPPER_SNAKE_CASE Naming**: All message constants follow the established naming convention
 -   **Import Requirement**: Message constants must be explicitly imported: `import { ERROR_MESSAGES } from "../types/MessageConstants"`
 -   **No Hardcoded Strings**: Avoid hardcoded string literals for any user-facing text
 -   **Consistent Messaging**: All similar messages across the application use the same constant
+
+#### Configuration Property Constants
+-   **ConfigConstants Location**: All configuration property names are defined in `src/types/ConfigConstants.ts`
+-   **Categorized Organization**: Properties grouped by purpose (AUTH_CONFIG, BEHAVIOR_CONFIG, BACKGROUND_CONFIG, etc.)
+-   **UPPER_SNAKE_CASE Naming**: All configuration constants follow the established naming convention
+-   **Type Safety**: Use `ConfigPropertyValue` type for type-safe configuration access
+-   **No Magic Strings**: Never pass hardcoded strings to `configManager.get()` or `configManager.set()`
+-   **Centralized Defaults**: Default values defined as constants rather than inline literals
 
 **Example of correct usage**:
 
@@ -310,11 +319,29 @@ import { ERROR_MESSAGES } from "../types/MessageConstants";
 return this.createSuccessResponse(ERROR_MESSAGES.NO_CHALLENGES_TO_CLEAR);
 ```
 
+```typescript
+// ✅ src/types/ConfigConstants.ts
+export const BACKGROUND_CONFIG = {
+    CHALLENGE_BACKGROUND_COLOR: "challengeBackgroundColor",
+    CHALLENGE_BACKGROUND_OPACITY: "challengeBackgroundOpacity",
+} as const;
+
+// ✅ Usage in configuration access
+import { BACKGROUND_CONFIG } from "../types/ConfigConstants";
+
+const backgroundColor = configManager.get(BACKGROUND_CONFIG.CHALLENGE_BACKGROUND_COLOR);
+configManager.set(BACKGROUND_CONFIG.CHALLENGE_BACKGROUND_OPACITY, 0.8);
+```
+
 **Avoid**:
 
 ```typescript
 // ❌ Never use hardcoded strings for user-facing messages
 return this.createSuccessResponse("No challenges to clear");
+
+// ❌ Never use hardcoded strings for configuration property names
+const backgroundColor = configManager.get("challengeBackgroundColor");
+configManager.set("challengeBackgroundOpacity", 0.8);
 ```
 
 ### Documentation Standards
@@ -1119,11 +1146,13 @@ client.on("command", (data: ChatData) => {
 ### Configuration Access
 
 ```typescript
-// ConfigManager-based configuration access
+// ConfigManager-based configuration access with centralized constants
+import { BEHAVIOR_CONFIG, COLOR_CONFIG, BACKGROUND_CONFIG } from "../types/ConfigConstants";
+
 const configManager = ConfigManager.getInstance();
-const setting = configManager.get("propertyName");
-const maxChallenges = configManager.get("maxChallenges");
-const colors = configManager.get("challengeRowColors");
+const maxChallenges = configManager.get(BEHAVIOR_CONFIG.MAX_CHALLENGES);
+const colors = configManager.get(COLOR_CONFIG.CHALLENGE_ROW_COLORS);
+const backgroundColor = configManager.get(BACKGROUND_CONFIG.CHALLENGE_BACKGROUND_COLOR);
 
 // Command types are now managed through the centralized type system
 import { CommandType, normalizeCommand } from "../types/CommandTypes";
