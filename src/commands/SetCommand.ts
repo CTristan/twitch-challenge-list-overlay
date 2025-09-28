@@ -1,4 +1,5 @@
 import type { CommandResponse } from "../types/CommandResponse";
+import { CommandType } from "../types/CommandTypes";
 import { ValidationUtils } from "../utils/ValidationUtils";
 import { BaseCommand, ProgressOperation } from "./Command";
 
@@ -28,7 +29,7 @@ export class SetCommand extends BaseCommand {
                     required: true,
                 });
             },
-            "Progress value required. Usage: !ch set 1 5 or !ch set 1 value=5"
+            this.getCommandHelp(CommandType.SET)
         );
     }
 

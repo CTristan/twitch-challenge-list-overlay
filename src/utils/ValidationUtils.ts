@@ -281,18 +281,6 @@ export class ValidationUtils {
         const errors: string[] = [];
         const warnings: string[] = [];
 
-        // Validate title parameter
-        if (parameters["title"] !== undefined) {
-            try {
-                const title = this.unquoteString(parameters["title"]);
-                this.validateChallengeTitle(title);
-            } catch (error) {
-                errors.push(
-                    error instanceof Error ? error.message : String(error)
-                );
-            }
-        }
-
         // Validate description parameter
         if (parameters["desc"] !== undefined) {
             try {

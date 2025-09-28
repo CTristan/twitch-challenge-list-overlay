@@ -2,6 +2,7 @@ import Challenge from "../classes/Challenge";
 import ChallengeList from "../classes/ChallengeList";
 import ConfigManager from "../classes/ConfigManager";
 import type { CommandResponse } from "../types/CommandResponse";
+import { HELP_MESSAGES } from "../types/MessageConstants";
 import { UIUpdateAction } from "../types/UIUpdateAction";
 import type { UIUpdateData } from "../types/UIUpdateData";
 import {
@@ -407,5 +408,35 @@ export abstract class BaseCommand implements Command {
                 )
             );
         }
+    }
+
+    /**
+     * Get centralized help message for a specific command
+     * @param commandName - Name of the command to get help for
+     * @returns Help message from the centralized help system
+     */
+    protected getCommandHelp(commandName: string): string {
+        const helpMap: Record<string, string> = {
+            add: HELP_MESSAGES.ADD_COMMAND_HELP,
+            edit: HELP_MESSAGES.EDIT_COMMAND_HELP,
+            done: HELP_MESSAGES.DONE_COMMAND_HELP,
+            complete: HELP_MESSAGES.DONE_COMMAND_HELP,
+            fail: HELP_MESSAGES.FAIL_COMMAND_HELP,
+            delete: HELP_MESSAGES.DELETE_COMMAND_HELP,
+            remove: HELP_MESSAGES.DELETE_COMMAND_HELP,
+            "+": HELP_MESSAGES.INCREMENT_COMMAND_HELP,
+            increment: HELP_MESSAGES.INCREMENT_COMMAND_HELP,
+            "-": HELP_MESSAGES.DECREMENT_COMMAND_HELP,
+            decrement: HELP_MESSAGES.DECREMENT_COMMAND_HELP,
+            set: HELP_MESSAGES.SET_COMMAND_HELP,
+            list: HELP_MESSAGES.LIST_COMMAND_HELP,
+            show: HELP_MESSAGES.SHOW_COMMAND_HELP,
+            check: HELP_MESSAGES.CHECK_COMMAND_HELP,
+            clearall: HELP_MESSAGES.CLEARALL_COMMAND_HELP,
+            cleardone: HELP_MESSAGES.CLEARDONE_COMMAND_HELP,
+            help: HELP_MESSAGES.HELP_COMMAND_HELP,
+        };
+
+        return helpMap[commandName] || `Unknown command: ${commandName}`;
     }
 }

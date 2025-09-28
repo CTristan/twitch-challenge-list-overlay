@@ -37,17 +37,28 @@ export const TEST_CHALLENGE_DATA: Record<string, ChallengeTestData> = {
         title: "Testing Descriptions",
         description: "Should see a description for this challenge!",
         command:
-            'add t="Testing Descriptions" d="Should see a description for this challenge!"',
+            'add "Testing Descriptions" d="Should see a description for this challenge!"',
     },
     TITLE_ONLY: {
         title: "Title Only Challenge",
         description: "",
-        command: 'add title="Title Only Challenge"',
+        command: 'add "Title Only Challenge"',
     },
     SIMPLE_CHALLENGE: {
         title: "Simple Challenge",
         description: "Simple Challenge", // Same as title for legacy behavior
         command: "add Simple Challenge",
+    },
+    SHORT_ALIASES: {
+        title: "Short Title",
+        description: "Short desc",
+        command: 'add "Short Title" d="Short desc"',
+    },
+    COMPLEX_QUOTES: {
+        title: 'Title with "quotes"',
+        description: 'Description with "quotes"',
+        command:
+            'add "Title with \\"quotes\\"" d="Description with \\"quotes\\""',
     },
 } as const;
 

@@ -4,9 +4,7 @@ import CommandParser from "../../src/utils/CommandParser";
 describe("CommandParser", () => {
     describe("parseCommand", () => {
         it("should parse simple add command with title", () => {
-            const result = CommandParser.parseCommand(
-                'add title="Kick zombies"'
-            );
+            const result = CommandParser.parseCommand('add "Kick zombies"');
 
             expect(result.command).toBe("add");
             expect(result.parameters.title).toBe('"Kick zombies"');
@@ -16,7 +14,7 @@ describe("CommandParser", () => {
 
         it("should parse add command with multiple parameters", () => {
             const result = CommandParser.parseCommand(
-                'add title="Kick zombies" desc="Off the roof" amount=30 timer=10m'
+                'add "Kick zombies" desc="Off the roof" amount=30 timer=10m'
             );
 
             expect(result.command).toBe("add");
@@ -29,7 +27,7 @@ describe("CommandParser", () => {
 
         it("should parse command with parameter aliases", () => {
             const result = CommandParser.parseCommand(
-                'add t="Test" d="Description" a=5 tm=1h'
+                'add "Test" d="Description" a=5 t=1h'
             );
 
             expect(result.command).toBe("add");
@@ -49,20 +47,17 @@ describe("CommandParser", () => {
         });
 
         it("should parse edit command with target ID and parameters", () => {
-            const result = CommandParser.parseCommand(
-                'edit A7 title="New title" amount=50'
-            );
+            const result = CommandParser.parseCommand("edit A7 amount=50");
 
             expect(result.command).toBe("edit");
             expect(result.targetId).toBe("A7");
-            expect(result.parameters.title).toBe('"New title"');
             expect(result.parameters.amount).toBe("50");
             expect(result.isValid).toBe(true);
         });
 
         it("should handle quoted strings with spaces", () => {
             const result = CommandParser.parseCommand(
-                'add title="Kick 30 zombies off the roof" desc="Use only melee weapons"'
+                'add "Kick 30 zombies off the roof" desc="Use only melee weapons"'
             );
 
             expect(result.parameters.title).toBe(
@@ -74,7 +69,7 @@ describe("CommandParser", () => {
 
         it("should handle single quotes", () => {
             const result = CommandParser.parseCommand(
-                "add title='Single quoted title' desc='Single quoted desc'"
+                "add 'Single quoted title' desc='Single quoted desc'"
             );
 
             expect(result.parameters.title).toBe("'Single quoted title'");
@@ -84,18 +79,17 @@ describe("CommandParser", () => {
 
         it("should validate required parameters for add command", () => {
             const result = CommandParser.parseCommand(
-                'add desc="No title provided"'
+                'add "Test Title" desc="Description provided"'
             );
 
-            expect(result.isValid).toBe(false);
-            expect(result.errors).toContain(
-                "Title is required for add command"
-            );
+            expect(result.isValid).toBe(true);
+            expect(result.parameters.title).toBe('"Test Title"');
+            expect(result.parameters.desc).toBe('"Description provided"');
         });
 
         it("should validate unknown parameters", () => {
             const result = CommandParser.parseCommand(
-                'add title="Test" unknown=value'
+                'add "Test" unknown=value'
             );
 
             expect(result.isValid).toBe(false);
@@ -108,7 +102,7 @@ describe("CommandParser", () => {
 
         it("should validate amount parameter", () => {
             const result = CommandParser.parseCommand(
-                'add title="Test" amount=invalid'
+                'add "Test" amount=invalid'
             );
 
             expect(result.isValid).toBe(false);
@@ -119,7 +113,7 @@ describe("CommandParser", () => {
 
         it("should validate timer format", () => {
             const result = CommandParser.parseCommand(
-                'add title="Test" timer=invalid'
+                'add "Test" timer=invalid'
             );
 
             expect(result.isValid).toBe(false);

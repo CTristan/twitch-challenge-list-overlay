@@ -1,4 +1,8 @@
-import { normalizeCommand, TARGET_ID_COMMANDS } from "../types/CommandTypes";
+import {
+    CommandType,
+    normalizeCommand,
+    TARGET_ID_COMMANDS,
+} from "../types/CommandTypes";
 import Timer from "./Timer";
 import { ValidationUtils } from "./ValidationUtils";
 
@@ -9,15 +13,14 @@ import { ValidationUtils } from "./ValidationUtils";
  */
 export default class CommandParser {
     private static readonly PARAMETER_ALIASES: Record<string, string> = {
-        t: "title",
         d: "desc",
         description: "desc", // Allow both desc and description
         a: "amount",
-        tm: "timer",
+        t: "timer",
     };
 
     private static readonly VALID_PARAMETERS = new Set([
-        "title",
+        "title", // Internally generated from first token for add commands
         "desc",
         "amount",
         "timer",
@@ -57,7 +60,8 @@ export default class CommandParser {
             if (parts.parameterString) {
                 result.rawParameters = parts.parameterString;
                 result.parameters = CommandParser.parseParameters(
-                    parts.parameterString
+                    parts.parameterString,
+                    result.command
                 );
 
                 // Resolve aliases
@@ -227,17 +231,57 @@ export default class CommandParser {
     }
 
     /**
-     * Parse key=value parameters from string
+     * Parse parameters from string, treating first token as title for add commands and rest as key=value parameters
      * @param paramString - Parameter string
-     * @returns Parsed parameters
+     * @param command - Command type to determine if title extraction is needed
+     * @returns Parsed parameters with title extracted from first token for add commands
      */
     private static parseParameters(
-        paramString: string
+        paramString: string,
+        command: string
     ): ParsedCommandParameters {
         const parameters: ParsedCommandParameters = {};
         const tokens = CommandParser.tokenize(paramString);
 
-        for (let i = 0; i < tokens.length; i++) {
+        if (tokens.length === 0) {
+            return parameters;
+        }
+
+        let startIndex = 0;
+
+        // For add commands, handle title extraction
+        if (command === CommandType.ADD) {
+            const firstToken = tokens[0];
+            if (firstToken) {
+                // Check if first token is quoted (contains quotes)
+                if (
+                    (firstToken.startsWith('"') && firstToken.endsWith('"')) ||
+                    (firstToken.startsWith("'") && firstToken.endsWith("'"))
+                ) {
+                    // Quoted title - use first token only
+                    parameters.title = firstToken;
+                    startIndex = 1; // Start parsing key=value parameters from second token
+                } else {
+                    // Check if any remaining tokens contain key=value pairs
+                    const hasKeyValueParams = tokens
+                        .slice(1)
+                        .some((token) => token.includes("="));
+
+                    if (hasKeyValueParams) {
+                        // Mixed syntax: unquoted title + parameters
+                        parameters.title = firstToken;
+                        startIndex = 1;
+                    } else {
+                        // Simple string syntax: entire remaining string is title
+                        parameters.title = tokens.join(" ");
+                        startIndex = tokens.length; // Skip all tokens since they're part of title
+                    }
+                }
+            }
+        }
+
+        // Parse remaining tokens as key=value parameters
+        for (let i = startIndex; i < tokens.length; i++) {
             const token = tokens[i];
             if (!token) continue;
 
@@ -350,16 +394,6 @@ export default class CommandParser {
                         error instanceof Error ? error.message : String(error)
                     }`
                 );
-            }
-        }
-
-        // Command-specific validation
-        if (command === "add") {
-            // If using key=value parameter syntax, title is required
-            // If using simple string syntax (no key=value parameters), validation is handled in CommandHandler
-            const hasKeyValueParameters = Object.keys(parameters).length > 0;
-            if (hasKeyValueParameters && !parameters.title) {
-                errors.push("Title is required for add command");
             }
         }
 

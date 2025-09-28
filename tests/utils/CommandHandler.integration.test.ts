@@ -21,23 +21,23 @@ const TEST_CHALLENGE_DATA = {
         title: "Testing Descriptions",
         description: "Should see a description for this challenge!",
         command:
-            'add t="Testing Descriptions" d="Should see a description for this challenge!"',
+            'add "Testing Descriptions" d="Should see a description for this challenge!"',
     },
     TITLE_ONLY: {
         title: "Title Only Challenge",
         description: "",
-        command: 'add title="Title Only Challenge"',
+        command: 'add "Title Only Challenge"',
     },
     SHORT_ALIASES: {
         title: "Short Title",
         description: "Short description",
-        command: 'add t="Short Title" d="Short description"',
+        command: 'add "Short Title" d="Short description"',
     },
     COMPLEX_QUOTES: {
         title: 'Title with "quotes"',
         description: "Description with special chars: @#$%",
         command:
-            'add t="Title with \\"quotes\\"" d="Description with special chars: @#$%"',
+            'add "Title with \\"quotes\\"" d="Description with special chars: @#$%"',
     },
 } as const;
 
@@ -232,7 +232,7 @@ describe("Command Handler Integration", () => {
     });
 
     describe("Permission Handling", () => {
-        const testCommand = 'add t="Test" d="Test"';
+        const testCommand = 'add "Test" d="Test"';
 
         it("should silently ignore commands from non-moderators", () => {
             const response = executeChallengeCommand(

@@ -1,5 +1,6 @@
 import Challenge from "../classes/Challenge";
 import type { CommandResponse } from "../types/CommandResponse";
+import { HELP_MESSAGES } from "../types/MessageConstants";
 import { UIUpdateAction } from "../types/UIUpdateAction";
 import type { UIUpdateData } from "../types/UIUpdateData";
 import { ResponseFormatter } from "../utils/ResponseFormatter";
@@ -111,22 +112,22 @@ export class AddCommand extends BaseCommand {
     private extractTitle(parsed: ParsedCommand): string | null {
         const { title } = parsed.parameters;
 
-        // Support simple string syntax as fallback: "add Challenge Name"
-        if (!title && parsed.rawParameters) {
+        // Title is now always extracted from the first token by CommandParser
+        if (title) {
             try {
-                return ValidationUtils.validateChallengeTitle(
-                    parsed.rawParameters.trim()
-                );
+                const unquoted = ValidationUtils.unquoteString(title);
+                return ValidationUtils.validateChallengeTitle(unquoted);
             } catch (error) {
                 return null;
             }
         }
 
-        // Support key=value parameter syntax
-        if (title) {
+        // Fallback for simple string syntax when no parameters are parsed
+        if (!title && parsed.rawParameters) {
             try {
-                const unquoted = ValidationUtils.unquoteString(title);
-                return ValidationUtils.validateChallengeTitle(unquoted);
+                return ValidationUtils.validateChallengeTitle(
+                    parsed.rawParameters.trim()
+                );
             } catch (error) {
                 return null;
             }
@@ -191,29 +192,10 @@ export class AddCommand extends BaseCommand {
     }
 
     /**
-     * Get comprehensive usage message for the add command
-     * @returns Detailed usage instructions with parameter descriptions
+     * Get usage message for the add command using centralized help system
+     * @returns Help message from the centralized help system
      */
     private getUsageMessage(): string {
-        const usageLines = [
-            "Usage: !ch add [parameters]",
-            "",
-            "Two syntax options:",
-            "1. Simple: !ch add Challenge Name",
-            '2. Advanced: !ch add title="Challenge Name" desc="Description" amount=5 timer=10m',
-            "",
-            "Available parameters:",
-            '• title="..." (or t="...") - Challenge title (required)',
-            '• desc="..." (or d="...") - Challenge description (optional)',
-            "• amount=N (or a=N) - Target amount/quantity (optional, default: 1)",
-            "• timer=Xm (or tm=Xm) - Timer duration in minutes (optional)",
-            "",
-            "Examples:",
-            "• !ch add Beat the boss",
-            '• !ch add title="Collect 100 coins" amount=100',
-            '• !ch add t="Speed run" desc="Complete in under 5 minutes" timer=5m',
-        ];
-
-        return usageLines.join(" • ");
+        return HELP_MESSAGES.ADD_COMMAND_HELP;
     }
 }
