@@ -13,10 +13,15 @@ import { ValidationUtils } from "./ValidationUtils";
  */
 export default class CommandParser {
     private static readonly PARAMETER_ALIASES: Record<string, string> = {
+        // Abbreviated forms
         d: "desc",
-        description: "desc", // Allow both desc and description
         a: "amount",
         t: "timer",
+        // Full forms (map to themselves)
+        desc: "desc",
+        description: "desc", // Allow both desc and description
+        amount: "amount",
+        timer: "timer",
     };
 
     private static readonly VALID_PARAMETERS = new Set([
@@ -71,8 +76,7 @@ export default class CommandParser {
 
                 // Validate parameters
                 const validation = CommandParser.validateParameters(
-                    result.parameters,
-                    result.command
+                    result.parameters
                 );
                 result.errors = validation.errors;
                 result.isValid =
@@ -362,8 +366,7 @@ export default class CommandParser {
      * @returns Validation result
      */
     private static validateParameters(
-        parameters: ParsedCommandParameters,
-        command: string
+        parameters: ParsedCommandParameters
     ): ValidationResult {
         const errors: string[] = [];
         const warnings: string[] = [];

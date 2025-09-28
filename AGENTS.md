@@ -836,9 +836,12 @@ The command handling system has been simplified and unified:
 
 #### Dual Command Syntax Support
 
-The system supports two command syntaxes for maximum flexibility:
+The system supports flexible command syntaxes for maximum user convenience:
 
-1. **Key=value parameter syntax**: `!ch add title="Challenge Name" desc="Description" amount=5 timer=10m`
+1. **Key=value parameter syntax**: `!ch add "Challenge Name" d="Description" a=5 t=10m`
+   - **Abbreviated parameters**: `d=`, `a=`, `t=` (preferred for brevity)
+   - **Full parameters**: `desc=`, `amount=`, `timer=` (also supported)
+   - **Mixed usage**: Both formats can be used in the same command
 2. **Simple string syntax**: `!ch add Challenge Name` (uses entire string as title)
 
 #### Direct Array Indexing System
@@ -870,10 +873,18 @@ The system supports two command syntaxes for maximum flexibility:
 #### Timer Command Examples
 
 ```bash
-# Add challenge with timer
-!ch add title="Speed Run" timer=5m
-!ch add title="Boss Fight" timer=10s
-!ch add title="Collection Quest" timer=1h30m
+# Add challenge with timer (abbreviated parameters)
+!ch add "Speed Run" t=5m
+!ch add "Boss Fight" t=10s
+!ch add "Collection Quest" t=1h30m
+
+# Add challenge with timer (full parameters)
+!ch add "Speed Run" timer=5m
+!ch add "Boss Fight" timer=10s
+!ch add "Collection Quest" timer=1h30m
+
+# Mixed parameter formats (both work identically)
+!ch add "Mixed Example" d="Short desc" amount=3 t=15m
 
 # Timer formats supported
 timer=30s      # 30 seconds

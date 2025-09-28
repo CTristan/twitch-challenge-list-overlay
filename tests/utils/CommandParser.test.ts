@@ -14,7 +14,7 @@ describe("CommandParser", () => {
 
         it("should parse add command with multiple parameters", () => {
             const result = CommandParser.parseCommand(
-                'add "Kick zombies" desc="Off the roof" amount=30 timer=10m'
+                'add "Kick zombies" d="Off the roof" a=30 t=10m'
             );
 
             expect(result.command).toBe("add");
@@ -25,9 +25,35 @@ describe("CommandParser", () => {
             expect(result.isValid).toBe(true);
         });
 
-        it("should parse command with parameter aliases", () => {
+        it("should parse command with abbreviated parameter aliases", () => {
             const result = CommandParser.parseCommand(
                 'add "Test" d="Description" a=5 t=1h'
+            );
+
+            expect(result.command).toBe("add");
+            expect(result.parameters.title).toBe('"Test"');
+            expect(result.parameters.desc).toBe('"Description"');
+            expect(result.parameters.amount).toBe("5");
+            expect(result.parameters.timer).toBe("1h");
+            expect(result.isValid).toBe(true);
+        });
+
+        it("should parse command with full parameter names", () => {
+            const result = CommandParser.parseCommand(
+                'add "Test" desc="Description" amount=5 timer=1h'
+            );
+
+            expect(result.command).toBe("add");
+            expect(result.parameters.title).toBe('"Test"');
+            expect(result.parameters.desc).toBe('"Description"');
+            expect(result.parameters.amount).toBe("5");
+            expect(result.parameters.timer).toBe("1h");
+            expect(result.isValid).toBe(true);
+        });
+
+        it("should parse command with mixed abbreviated and full parameter names", () => {
+            const result = CommandParser.parseCommand(
+                'add "Test" d="Description" amount=5 t=1h'
             );
 
             expect(result.command).toBe("add");
@@ -47,7 +73,7 @@ describe("CommandParser", () => {
         });
 
         it("should parse edit command with target ID and parameters", () => {
-            const result = CommandParser.parseCommand("edit A7 amount=50");
+            const result = CommandParser.parseCommand("edit A7 a=50");
 
             expect(result.command).toBe("edit");
             expect(result.targetId).toBe("A7");
@@ -57,7 +83,7 @@ describe("CommandParser", () => {
 
         it("should handle quoted strings with spaces", () => {
             const result = CommandParser.parseCommand(
-                'add "Kick 30 zombies off the roof" desc="Use only melee weapons"'
+                'add "Kick 30 zombies off the roof" d="Use only melee weapons"'
             );
 
             expect(result.parameters.title).toBe(
@@ -69,7 +95,7 @@ describe("CommandParser", () => {
 
         it("should handle single quotes", () => {
             const result = CommandParser.parseCommand(
-                "add 'Single quoted title' desc='Single quoted desc'"
+                "add 'Single quoted title' d='Single quoted desc'"
             );
 
             expect(result.parameters.title).toBe("'Single quoted title'");
@@ -79,7 +105,7 @@ describe("CommandParser", () => {
 
         it("should validate required parameters for add command", () => {
             const result = CommandParser.parseCommand(
-                'add "Test Title" desc="Description provided"'
+                'add "Test Title" d="Description provided"'
             );
 
             expect(result.isValid).toBe(true);
@@ -100,7 +126,16 @@ describe("CommandParser", () => {
             ).toBe(true);
         });
 
-        it("should validate amount parameter", () => {
+        it("should validate amount parameter with abbreviated form", () => {
+            const result = CommandParser.parseCommand('add "Test" a=invalid');
+
+            expect(result.isValid).toBe(false);
+            expect(result.errors).toContain(
+                "Challenge amount must be a number"
+            );
+        });
+
+        it("should validate amount parameter with full form", () => {
             const result = CommandParser.parseCommand(
                 'add "Test" amount=invalid'
             );
@@ -111,7 +146,16 @@ describe("CommandParser", () => {
             );
         });
 
-        it("should validate timer format", () => {
+        it("should validate timer format with abbreviated form", () => {
+            const result = CommandParser.parseCommand('add "Test" t=invalid');
+
+            expect(result.isValid).toBe(false);
+            expect(
+                result.errors.some((e) => e.includes("Timer format invalid"))
+            ).toBe(true);
+        });
+
+        it("should validate timer format with full form", () => {
             const result = CommandParser.parseCommand(
                 'add "Test" timer=invalid'
             );

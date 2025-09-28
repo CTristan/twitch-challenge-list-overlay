@@ -9,8 +9,9 @@ import { BaseCommand } from "./Command";
 
 /**
  * Command to add new challenges
- * Handles: !ch add title="..." desc="..." amount=N timer=Xm
+ * Handles: !ch add "Challenge Name" d/desc="..." a/amount=N t/timer=Xm
  * Also supports simple syntax: !ch add Challenge Name
+ * Parameters support both abbreviated (d, a, t) and full (desc, amount, timer) forms
  */
 export class AddCommand extends BaseCommand {
     /**

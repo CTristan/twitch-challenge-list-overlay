@@ -33,6 +33,18 @@ const TEST_CHALLENGE_DATA = {
         description: "Short description",
         command: 'add "Short Title" d="Short description"',
     },
+    FULL_PARAMETER_NAMES: {
+        title: "Full Parameters",
+        description: "Testing full parameter names",
+        command:
+            'add "Full Parameters" desc="Testing full parameter names" amount=3 timer=5m',
+    },
+    MIXED_PARAMETER_NAMES: {
+        title: "Mixed Parameters",
+        description: "Testing mixed parameter formats",
+        command:
+            'add "Mixed Parameters" d="Testing mixed parameter formats" amount=2 t=10s',
+    },
     COMPLEX_QUOTES: {
         title: 'Title with "quotes"',
         description: "Description with special chars: @#$%",
@@ -290,6 +302,99 @@ describe("Command Handler Integration", () => {
                     command
                 );
                 expectSuccessResponse(authResponse);
+            });
+        });
+    });
+
+    describe("Parameter Format Support", () => {
+        describe("Full Parameter Names", () => {
+            it("should correctly parse and create challenge using full parameter names", () => {
+                const testData = TEST_CHALLENGE_DATA.FULL_PARAMETER_NAMES;
+                const response = executeChallengeCommand(
+                    app,
+                    adminUser,
+                    testData.command
+                );
+
+                expectSuccessResponse(response, [testData.title]);
+                assertChallengeCreated(
+                    challengeList,
+                    testData.title,
+                    testData.description
+                );
+
+                // Verify challenge properties
+                const challenge = challengeList.challenges[0];
+                if (!challenge) throw new Error("Challenge not found");
+                expect(challenge.title).toBe(testData.title);
+                expect(challenge.description).toBe(testData.description);
+                expect(challenge.amount).toBe(3);
+                expect(challenge.timer).toBeDefined();
+            });
+        });
+
+        describe("Mixed Parameter Names", () => {
+            it("should correctly parse and create challenge using mixed abbreviated and full parameter names", () => {
+                const testData = TEST_CHALLENGE_DATA.MIXED_PARAMETER_NAMES;
+                const response = executeChallengeCommand(
+                    app,
+                    adminUser,
+                    testData.command
+                );
+
+                expectSuccessResponse(response, [testData.title]);
+                assertChallengeCreated(
+                    challengeList,
+                    testData.title,
+                    testData.description
+                );
+
+                // Verify challenge properties
+                const challenge = challengeList.challenges[0];
+                if (!challenge) throw new Error("Challenge not found");
+                expect(challenge.title).toBe(testData.title);
+                expect(challenge.description).toBe(testData.description);
+                expect(challenge.amount).toBe(2);
+                expect(challenge.timer).toBeDefined();
+            });
+        });
+
+        describe("Parameter Format Equivalence", () => {
+            it("should produce identical results for abbreviated vs full parameter names", () => {
+                // Test abbreviated format
+                const { app: app1, challengeList: list1 } = createTestApp();
+                const response1 = executeChallengeCommand(
+                    app1,
+                    adminUser,
+                    'add "Test Challenge" d="Test Description" a=5 t=10m'
+                );
+
+                // Test full format
+                const { app: app2, challengeList: list2 } = createTestApp();
+                const response2 = executeChallengeCommand(
+                    app2,
+                    adminUser,
+                    'add "Test Challenge" desc="Test Description" amount=5 timer=10m'
+                );
+
+                // Both should succeed
+                expectSuccessResponse(response1, ["Test Challenge"]);
+                expectSuccessResponse(response2, ["Test Challenge"]);
+
+                // Both should create identical challenges
+                const challenge1 = list1.challenges[0];
+                const challenge2 = list2.challenges[0];
+
+                if (!challenge1 || !challenge2) {
+                    throw new Error("Challenges not created");
+                }
+
+                expect(challenge1.title).toBe(challenge2.title);
+                expect(challenge1.description).toBe(challenge2.description);
+                expect(challenge1.amount).toBe(challenge2.amount);
+                expect(challenge1.timer?.duration).toBe(
+                    challenge2.timer?.duration
+                );
             });
         });
     });

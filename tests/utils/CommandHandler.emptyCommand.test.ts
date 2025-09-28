@@ -143,10 +143,10 @@ describe("CommandHandler - Empty Command Behavior", () => {
 
             expect(response.error).toBe(false);
             expect(response.message).toContain("!ch add");
-            expect(response.message).toContain("title=");
-            expect(response.message).toContain("desc=");
-            expect(response.message).toContain("amount=");
-            expect(response.message).toContain("timer=");
+            expect(response.message).toContain('"Challenge Name"');
+            expect(response.message).toContain("d/desc=");
+            expect(response.message).toContain("a/amount=");
+            expect(response.message).toContain("t/timer=");
             expect(response.message).toContain(
                 "Add a new challenge with optional parameters"
             );

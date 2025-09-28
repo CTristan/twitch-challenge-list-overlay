@@ -97,9 +97,9 @@ export const HELP_MESSAGES = {
 
     // Command-specific help
     ADD_COMMAND_HELP:
-        '!ch add title="Challenge Name" desc="Description" amount=5 timer=10m - Add a new challenge with optional parameters',
+        '!ch add "Challenge Name" d/desc="Description" a/amount=5 t/timer=10m - Add a new challenge with optional parameters',
     EDIT_COMMAND_HELP:
-        '!ch edit 1 title="New Title" desc="New Description" amount=10 - Edit challenge properties',
+        '!ch edit 1 "New Title" d/desc="New Description" a/amount=10 - Edit challenge properties',
     DONE_COMMAND_HELP:
         "!ch done 1,2,3 - Mark challenges as completed (supports multiple IDs)",
     FAIL_COMMAND_HELP:
