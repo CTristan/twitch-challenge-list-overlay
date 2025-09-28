@@ -365,8 +365,9 @@ export abstract class BaseCommand implements Command {
                 }
             }
 
-            // Store old progress for response
+            // Store old progress and completion status for response and UI update detection
             const oldProgress = challenge.progress;
+            const wasComplete = challenge.isComplete();
 
             // Apply mutation
             const updatedChallenge = progressMutator(challenge, parsedValue);
@@ -375,6 +376,9 @@ export abstract class BaseCommand implements Command {
                     `Failed to ${operation} challenge progress`
                 );
             }
+
+            // Check if completion status changed after the operation
+            const isNowComplete = updatedChallenge.isComplete();
 
             // Format response
             const responseMessage = ResponseFormatter.formatProgressResponse(
@@ -387,9 +391,22 @@ export abstract class BaseCommand implements Command {
                 }
             );
 
-            // Create UI update data - progress changes are essentially edits
+            // Determine the appropriate UI action based on completion status change
+            let uiAction: UIUpdateAction;
+            if (!wasComplete && isNowComplete) {
+                // Challenge became complete - use COMPLETE action for proper DOM styling
+                uiAction = UIUpdateAction.COMPLETE;
+            } else if (wasComplete && !isNowComplete) {
+                // Challenge became incomplete - use REVERT action to remove completion styling
+                uiAction = UIUpdateAction.REVERT;
+            } else {
+                // No completion status change - use EDIT action for progress updates
+                uiAction = UIUpdateAction.EDIT;
+            }
+
+            // Create UI update data with the appropriate action
             const uiUpdate: UIUpdateData = {
-                action: UIUpdateAction.EDIT,
+                action: uiAction,
                 challengeIndices: [index],
                 challenges: [updatedChallenge],
                 updateTimers: true,

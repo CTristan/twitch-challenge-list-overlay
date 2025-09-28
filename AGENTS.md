@@ -560,6 +560,7 @@ describe("ClassName", () => {
 
 -   **OAuth Validation Tests**: `tests/twitch/TwitchChat.oauthValidation.test.ts` - Comprehensive OAuth token validation scenarios
 -   **Integration Tests**: End-to-end command processing and chat flow validation
+-   **Increment-to-Completion Tests**: `tests/integration/incrementToCompletion.test.ts` - DOM update coordination for progress operations that trigger completion
 -   **Permission Tests**: User role and access control validation
 -   **Error Handling Tests**: Defensive programming and edge case coverage
 
@@ -839,9 +840,9 @@ The command handling system has been simplified and unified:
 The system supports flexible command syntaxes for maximum user convenience:
 
 1. **Key=value parameter syntax**: `!ch add "Challenge Name" d="Description" a=5 t=10m`
-   - **Abbreviated parameters**: `d=`, `a=`, `t=` (preferred for brevity)
-   - **Full parameters**: `desc=`, `amount=`, `timer=` (also supported)
-   - **Mixed usage**: Both formats can be used in the same command
+    - **Abbreviated parameters**: `d=`, `a=`, `t=` (preferred for brevity)
+    - **Full parameters**: `desc=`, `amount=`, `timer=` (also supported)
+    - **Mixed usage**: Both formats can be used in the same command
 2. **Simple string syntax**: `!ch add Challenge Name` (uses entire string as title)
 
 #### Direct Array Indexing System
@@ -869,6 +870,7 @@ The system supports flexible command syntaxes for maximum user convenience:
 -   **Timer Integration**: Full support for timer parameters in add commands with format validation
 -   **Error Handling**: Detailed error messages for invalid commands, missing permissions, or malformed parameters
 -   **Command Help System**: Built-in help command provides usage information for all available commands
+-   **DOM Update Coordination**: Automatic completion status detection ensures real-time visual updates when progress operations trigger completion state changes
 
 #### Timer Command Examples
 
@@ -909,90 +911,6 @@ The response includes:
 -   **Progress**: Current progress (0/amount)
 -   **Timer Status**: Duration and start confirmation with emoji
 -   **Action Confirmation**: "added!" to confirm successful creation
-
-## Current Project Status
-
-### Recent Major Improvements (2024)
-
-The project has undergone significant refactoring and improvements:
-
-#### Centralized String Management System ✅ **COMPLETE**
-
--   **MessageConstants system** implemented with organized message categories
--   **Eliminated hardcoded strings** across all command classes and utilities
--   **Type-safe message management** with proper TypeScript imports and exports
--   **Consistent messaging** standardized across the entire application
--   **UPPER_SNAKE_CASE naming** following established project conventions
--   **Organized categories** (ERROR_MESSAGES, SUCCESS_MESSAGES, HELP_MESSAGES, STATUS_MESSAGES, LIST_MESSAGES, PERMISSION_MESSAGES)
--   **Enhanced maintainability** with centralized location for all user-facing text
--   **Comprehensive migration** of 20+ hardcoded strings from ResponseFormatter and command classes
-
-#### Command System Refactoring ✅ **COMPLETE**
-
--   **Centralized command type system** implemented with TypeScript enums and aliasing
--   **Unified "!ch" prefix** for all commands replacing multiple command formats
--   **Type-safe command processing** with compile-time validation
--   **Dual syntax support** for both key=value parameters and simple string commands
--   **Enhanced error handling** with detailed validation and user feedback
--   **Multiple target ID support** for batch operations (e.g., "!ch done 1,3,5")
-
-#### Test System Improvements ✅ **COMPLETE**
-
--   **Test isolation issues resolved** - all 405 tests now pass consistently
--   **Test isolation system** properly implemented using simple localStorage clearing
--   **State interference eliminated** between test runs
--   **Comprehensive test coverage** across all command functionality
--   **Enhanced OAuth validation testing** with 13 new test cases covering edge cases
--   **Timer display testing** with 12 comprehensive tests covering real-time countdown and visual states
-
-#### TypeScript Migration ✅ **COMPLETE**
-
--   **100% TypeScript migration** completed across entire codebase
--   **Strict type checking** enforced for all new development
--   **Enhanced IDE support** with better autocomplete and refactoring
--   **Type safety** implemented throughout with native TypeScript types
-
-#### OAuth Authentication Improvements ✅ **COMPLETE**
-
--   **Defensive OAuth token validation** with automatic format correction
--   **Comprehensive error handling** for authentication edge cases
--   **Auto-correction with user feedback** for missing "oauth:" prefixes
--   **Robust token validation** preventing authentication failures
--   **Enhanced troubleshooting documentation** for common authentication issues
--   **Updated token generation reference** to https://twitchtokengenerator.com
--   **Comprehensive test coverage** with 13 new OAuth validation test cases
-
-#### Countdown Timer Display ✅ **COMPLETE**
-
--   **Real-time countdown display** with live updates every second
--   **Visual state indicators** (normal, warning, critical, expired) with dynamic colors and emojis
--   **CSS styling architecture** with state-based classes and custom properties
--   **Timer integration** with existing Timer class infrastructure and command system
--   **DOM structure implementation** with proper element creation and cleanup
--   **State management** ensuring timer persistence across window refreshes
--   **Performance optimization** with efficient DOM updates and automatic cleanup
--   **Comprehensive testing** with 12 timer display tests covering all functionality
-
-#### PositionManager Removal Refactoring ✅ **COMPLETE**
-
--   **Eliminated dual ID system** - removed complex PositionManager class with constant recalculation overhead
--   **Implemented direct array indexing** - simplified challenge references using array positions directly
--   **Created lightweight PositionUtils** - replaced heavy PositionManager with simple utility functions
--   **Updated ResponseFormatter** - modified to accept index parameters instead of using challenge.shortId
--   **Refactored all command classes** - updated to pass array indices to ResponseFormatter methods
--   **Simplified App.ts** - updated chatHandler to work with array indices instead of shortId references
--   **Enhanced performance** - eliminated constant ID recalculation after every array modification
--   **Maintained functionality** - preserved #1, #2, #3 display format and command compatibility
--   **Comprehensive testing** - all 405 tests pass with improved system reliability
-
-### Architecture Achievements
-
--   **Zero-server deployment** - completely frontend-only application
--   **Real-time Twitch integration** via WebSocket IRC connection
--   **Dual-mode architecture** for streamer admin and viewer display
--   **Configuration-driven customization** with user-editable settings
--   **Robust error handling** and graceful degradation
--   **Performance optimized** with efficient DOM updates and memory management
 
 ## Future Development Opportunities
 
@@ -1119,6 +1037,44 @@ The project has undergone significant refactoring and improvements:
 **Authorized Users**: Only broadcasters and moderators can use bot commands.
 
 **Verification**: Check user permissions in Twitch chat - ensure you're testing with broadcaster or moderator account.
+
+### DOM Update Issues
+
+#### Increment Commands Not Showing Completion State
+
+**Symptoms**: When increment commands cause a challenge to reach completion (e.g., `!ch + 1` changing 4/5 to 5/5), the backend state updates correctly but the overlay doesn't show completion styling (no "done" class or checked checkbox) until manual browser refresh.
+
+**Root Cause**: Progress operations not detecting completion status changes and returning incorrect UI update actions.
+
+**Solution**: This issue has been resolved in the current version through enhanced completion status detection in the `executeProgressOperation` method.
+
+**Verification Steps**:
+
+1. **Test increment-to-completion**: Add a multi-step challenge and increment to completion
+2. **Check DOM immediately**: Verify completion styling appears without refresh
+3. **Test in both modes**: Ensure fix works in viewer and admin overlay modes
+4. **Run integration tests**: Execute `pnpm test tests/integration/incrementToCompletion.test.ts`
+
+**Prevention**: The system now automatically detects completion status changes during all progress operations (increment, decrement, set) and applies appropriate DOM updates.
+
+#### Progress Operations Not Triggering Visual Updates
+
+**Symptoms**: Commands like `!ch + 2`, `!ch - 1`, or `!ch set 3` execute successfully but don't trigger visual changes in the overlay.
+
+**Common Causes**:
+
+-   UI update actions not properly coordinated with command results
+-   Missing or incorrect UIUpdateAction enum values in command responses
+-   DOM update handler not receiving completion status change information
+
+**Debugging Steps**:
+
+1. **Check browser console**: Look for UI update coordination errors
+2. **Verify command responses**: Ensure commands return proper UIUpdateData with correct actions
+3. **Test with simple operations**: Start with basic increment/decrement before testing completion scenarios
+4. **Validate DOM structure**: Ensure challenge elements exist and have proper IDs for DOM updates
+
+**Resolution**: Ensure all progress commands use the enhanced `executeProgressOperation` method which automatically handles completion status detection and UI action coordination.
 
 ## Development Guidelines
 
