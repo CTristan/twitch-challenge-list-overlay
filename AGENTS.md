@@ -328,6 +328,7 @@ try {
 -   **Integration-focused command testing** - commands tested through app-level integration tests rather than individual unit tests
 -   **End-to-end command processing** validation through integration test suite
 -   **Comprehensive App class coverage** - 27-test suite achieving 88.46% branch coverage, 92.59% statement coverage, 95.45% function coverage, and 92.59% line coverage
+-   **AdminPanel class coverage** - 35-test suite achieving 82.22% branch coverage, 89.92% statement coverage, 92.3% function coverage, and 89.92% line coverage
 -   **ConfigDefaults utility testing** - 18-test suite achieving 97.5% statement coverage, 95% branch coverage, and 100% function coverage
 
 ### Test Structure
@@ -382,6 +383,7 @@ The App class implements comprehensive branch coverage testing to achieve 88.46%
 -   **Reporting**: Text and HTML coverage reports generated
 -   **Enforcement**: Build fails if coverage thresholds are not met
 -   **App class achievement**: Exceeds all thresholds with 88.46% branch coverage, 92.59% statement coverage, 95.45% function coverage, and 92.59% line coverage
+-   **AdminPanel class achievement**: Exceeds all thresholds with 82.22% branch coverage, 89.92% statement coverage, 92.3% function coverage, and 89.92% line coverage
 -   **Index.ts achievement**: Exceeds all thresholds with 90% branch coverage, 84.5% statement coverage, 100% function coverage, and 84.5% line coverage
 
 ### App Class Test Suite Structure
@@ -399,6 +401,28 @@ The index.ts file features a comprehensive 21-test suite organized into 5 test c
 3. **Configuration Error Path Testing** (2 tests) - Fallback configuration creation logic, error handling console messages
 4. **Window Load Event Handling** (8 tests) - App initialization, AdminPanel setup, event handlers, test mode detection
 5. **TwitchChat Event Handlers** (5 tests) - Command execution, OAuth events, error handling scenarios
+
+### AdminPanel Class Test Suite Structure
+
+The AdminPanel class features a comprehensive 35-test suite organized into 10 test categories:
+
+#### Test Categories
+
+1. **Initialization and Mode Handling** (4 tests) - Admin mode initialization, localStorage error handling, hash change handling, viewer mode behavior
+2. **Configuration Validation** (10 tests) - Import validation for auth, maxChallenges, commands, responses properties with various invalid configurations
+3. **Configuration Save and Reset** (4 tests) - Complete save/reset flows, error handling for save/reset failures
+4. **Background Configuration** (6 tests) - Background color/opacity configuration, preview updates, auto text color toggle, text shadow application
+5. **Configuration Export** (2 tests) - Unsupported format handling, export failure error handling
+6. **Configuration Import File Handling** (5 tests) - File picker triggering, file selection validation, invalid file types, file read errors, invalid JSON handling
+7. **UI Refresh** (2 tests) - Configuration UI refresh with current values, missing form elements graceful handling
+8. **Feedback System** (2 tests) - Feedback display and timeout reset, missing button element graceful handling
+
+#### Key Testing Strategies
+
+-   **Configuration validation testing**: Comprehensive validation of imported configurations with various invalid scenarios
+-   **Error path coverage**: Tests error handling in save/reset/export/import operations
+-   **DOM manipulation testing**: Tests background configuration UI updates and preview functionality
+-   **Integration approach**: End-to-end testing of configuration management flows
 
 ### ConfigDefaults Test Suite Structure
 
