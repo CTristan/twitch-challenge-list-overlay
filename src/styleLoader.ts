@@ -17,6 +17,16 @@ export function loadStyles(config: Config): void {
     // Override defaults with configuration values for background customization
     const configuredStyles = {
         ...defaultStyles,
+        // Overlay background properties
+        [CSS_VARIABLES.OVERLAY_BACKGROUND_COLOR]:
+            config.overlayBackgroundColor ||
+            defaultStyles[CSS_VARIABLES.OVERLAY_BACKGROUND_COLOR],
+        [CSS_VARIABLES.OVERLAY_BACKGROUND_OPACITY]: (
+            config.overlayBackgroundOpacity ??
+            BACKGROUND_DEFAULTS.OVERLAY_BACKGROUND_OPACITY
+        ).toString(),
+
+        // Challenge row background properties
         [CSS_VARIABLES.CHALLENGE_BACKGROUND_COLOR]:
             config.challengeBackgroundColor ||
             defaultStyles[CSS_VARIABLES.CHALLENGE_BACKGROUND_COLOR],
@@ -75,6 +85,13 @@ function getDefaultStyles(): Record<string, string> {
         cardBackgroundColor: "rgba(0, 0, 0, 0.7)",
 
         // Background customization
+        // Overlay background defaults
+        [CSS_VARIABLES.OVERLAY_BACKGROUND_COLOR]:
+            BACKGROUND_DEFAULTS.OVERLAY_BACKGROUND_COLOR,
+        [CSS_VARIABLES.OVERLAY_BACKGROUND_OPACITY]:
+            BACKGROUND_DEFAULTS.OVERLAY_BACKGROUND_OPACITY.toString(),
+
+        // Challenge row background defaults
         [CSS_VARIABLES.CHALLENGE_BACKGROUND_COLOR]:
             BACKGROUND_DEFAULTS.BACKGROUND_COLOR,
         [CSS_VARIABLES.CHALLENGE_BACKGROUND_OPACITY]:

@@ -49,6 +49,11 @@
   --challenge-timer-expired-color: #ff4757;
 
   /* Background Customization */
+  /* Overlay Background (main container) */
+  --overlay-background-color: rgba(100, 100, 100, 0.6);
+  --overlay-background-opacity: 0.6;
+
+  /* Challenge Row Backgrounds */
   --challenge-background-color: rgba(0, 0, 0, 0.7);
   --challenge-background-opacity: 0.7;
   --challenge-text-color-override: #ffffff;

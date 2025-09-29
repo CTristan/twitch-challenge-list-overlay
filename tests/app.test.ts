@@ -1,0 +1,580 @@
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import App from "../src/app";
+import Challenge from "../src/classes/Challenge";
+import ConfigManager from "../src/classes/ConfigManager";
+import { BACKGROUND_CONFIG } from "../src/types/ConfigConstants";
+import {
+    CSS_CLASSES,
+    CSS_SELECTORS,
+    DATA_ATTRIBUTES,
+    URL_HASH,
+} from "../src/types/DOMConstants";
+import { ERROR_MESSAGES, STATUS_MESSAGES } from "../src/types/MessageConstants";
+import {
+    createAdminUser,
+    createChatUser,
+    ensureTestIsolation,
+    setupTestEnvironment,
+} from "./utils/chatHandlerTestUtils";
+import { setupChallengeTestDOM } from "./utils/domTestUtils";
+
+describe("App", () => {
+    let app: App;
+    let consoleErrorSpy: ReturnType<typeof vi.spyOn>;
+    let consoleLogSpy: ReturnType<typeof vi.spyOn>;
+
+    beforeEach(() => {
+        ensureTestIsolation();
+        setupChallengeTestDOM();
+
+        // Set up console spies to capture error/log messages
+        consoleErrorSpy = vi
+            .spyOn(console, "error")
+            .mockImplementation(() => {});
+        consoleLogSpy = vi.spyOn(console, "log").mockImplementation(() => {});
+
+        app = new App("TestStore");
+    });
+
+    afterEach(() => {
+        consoleErrorSpy.mockRestore();
+        consoleLogSpy.mockRestore();
+    });
+
+    describe("Constructor and Initialization", () => {
+        it("should initialize with all required components", () => {
+            expect(app).toBeInstanceOf(App);
+            expect(app.challengeList).toBeDefined();
+            expect(app.getConfigManager()).toBeInstanceOf(ConfigManager);
+        });
+
+        it("should initialize with custom store name", () => {
+            const customApp = new App("CustomTestStore");
+            expect(customApp.challengeList).toBeDefined();
+            expect(customApp.challengeList.challenges).toEqual([]);
+        });
+
+        it("should load styles during initialization", () => {
+            // Verify that the app initializes without errors
+            expect(app).toBeDefined();
+            // The styleLoader is called in constructor, so if we get here it worked
+        });
+    });
+
+    describe("Checkbox Interaction Error Handling", () => {
+        beforeEach(() => {
+            // Set up admin mode for checkbox interaction
+            Object.defineProperty(window, "location", {
+                value: { hash: URL_HASH.ADMIN },
+                writable: true,
+            });
+
+            // Add a challenge and render it
+            app.challengeList.addChallenges("Test Challenge");
+            app.renderChallengeList();
+        });
+
+        it("should handle missing challenge element in checkbox click", () => {
+            // Create a mock event with a target that doesn't have a challenge parent
+            const mockCheckbox = document.createElement("div");
+            mockCheckbox.classList.add(CSS_CLASSES.CHALLENGE_CHECKBOX);
+            document.body.appendChild(mockCheckbox);
+
+            const mockEvent = new Event("click");
+            Object.defineProperty(mockEvent, "target", {
+                value: mockCheckbox,
+                writable: false,
+            });
+
+            // Trigger the checkbox click handler directly
+            app["handleCheckboxClick"](mockEvent);
+
+            // Should log error for missing challenge element
+            expect(consoleErrorSpy).toHaveBeenCalledWith(
+                ERROR_MESSAGES.CHALLENGE_ELEMENT_NOT_FOUND_FOR_CHECKBOX
+            );
+        });
+
+        it("should handle missing challenge ID in checkbox click", () => {
+            // Create a challenge element without data-challenge-id
+            const mockChallenge = document.createElement("li");
+            mockChallenge.classList.add("challenge");
+
+            const mockCheckbox = document.createElement("div");
+            mockCheckbox.classList.add(CSS_CLASSES.CHALLENGE_CHECKBOX);
+            mockChallenge.appendChild(mockCheckbox);
+            document.body.appendChild(mockChallenge);
+
+            const mockEvent = new Event("click");
+            Object.defineProperty(mockEvent, "target", {
+                value: mockCheckbox,
+                writable: false,
+            });
+
+            // Trigger the checkbox click handler
+            app["handleCheckboxClick"](mockEvent);
+
+            // Should log error for missing challenge ID
+            expect(consoleErrorSpy).toHaveBeenCalledWith(
+                ERROR_MESSAGES.CHALLENGE_ID_NOT_FOUND_FOR_CHECKBOX
+            );
+        });
+
+        it("should prevent duplicate processing of checkbox clicks", () => {
+            // Create a proper challenge element with ID
+            const mockChallenge = document.createElement("li");
+            mockChallenge.classList.add("challenge");
+            mockChallenge.dataset[DATA_ATTRIBUTES.CHALLENGE_ID] = "test-id";
+
+            const mockCheckbox = document.createElement("div");
+            mockCheckbox.classList.add(CSS_CLASSES.CHALLENGE_CHECKBOX);
+            mockChallenge.appendChild(mockCheckbox);
+            document.body.appendChild(mockChallenge);
+
+            // Add the challenge ID to processing set to simulate duplicate click
+            app["processingCheckboxClicks"].add("test-id");
+
+            const mockEvent = new Event("click");
+            Object.defineProperty(mockEvent, "target", {
+                value: mockCheckbox,
+                writable: false,
+            });
+
+            // Trigger the checkbox click handler
+            app["handleCheckboxClick"](mockEvent);
+
+            // Should return early without processing
+            expect(consoleErrorSpy).not.toHaveBeenCalled();
+        });
+
+        it("should handle challenge not found error in checkbox click", () => {
+            // Create a challenge element with non-existent ID
+            const mockChallenge = document.createElement("li");
+            mockChallenge.classList.add("challenge");
+            mockChallenge.dataset[DATA_ATTRIBUTES.CHALLENGE_ID] =
+                "non-existent-id";
+
+            const mockCheckbox = document.createElement("div");
+            mockCheckbox.classList.add(CSS_CLASSES.CHALLENGE_CHECKBOX);
+            mockChallenge.appendChild(mockCheckbox);
+            document.body.appendChild(mockChallenge);
+
+            const mockEvent = new Event("click");
+            Object.defineProperty(mockEvent, "target", {
+                value: mockCheckbox,
+                writable: false,
+            });
+
+            // Trigger the checkbox click handler
+            app["handleCheckboxClick"](mockEvent);
+
+            // Should log error for challenge not found
+            expect(consoleErrorSpy).toHaveBeenCalledWith(
+                ERROR_MESSAGES.CHALLENGE_NOT_FOUND_BY_ID.replace(
+                    "{challengeId}",
+                    "non-existent-id"
+                )
+            );
+        });
+
+        it("should handle errors in try/catch block during checkbox processing", () => {
+            // Mock the toggleChallengeCompletion to return null (challenge not found)
+            const originalToggle = app.challengeList.toggleChallengeCompletion;
+            app.challengeList.toggleChallengeCompletion = vi
+                .fn()
+                .mockReturnValue(null);
+
+            // Create a proper challenge element
+            const challenge = app.challengeList.challenges[0];
+            if (!challenge) throw new Error("Challenge not found");
+
+            const mockChallenge = document.createElement("li");
+            mockChallenge.classList.add("challenge");
+            mockChallenge.dataset[DATA_ATTRIBUTES.CHALLENGE_ID] = challenge.id;
+
+            const mockCheckbox = document.createElement("div");
+            mockCheckbox.classList.add(CSS_CLASSES.CHALLENGE_CHECKBOX);
+            mockChallenge.appendChild(mockCheckbox);
+            document.body.appendChild(mockChallenge);
+
+            const mockEvent = new Event("click");
+            Object.defineProperty(mockEvent, "target", {
+                value: mockCheckbox,
+                writable: false,
+            });
+
+            // Trigger the checkbox click handler
+            app["handleCheckboxClick"](mockEvent);
+
+            // Should log error for challenge not found
+            expect(consoleErrorSpy).toHaveBeenCalledWith(
+                ERROR_MESSAGES.CHALLENGE_NOT_FOUND_BY_ID.replace(
+                    "{challengeId}",
+                    challenge.id
+                )
+            );
+
+            // Restore original method
+            app.challengeList.toggleChallengeCompletion = originalToggle;
+        });
+
+        it("should handle non-checkbox targets in delegated click handler", () => {
+            // Create a non-checkbox element
+            const mockElement = document.createElement("div");
+            mockElement.classList.add("some-other-class");
+            document.body.appendChild(mockElement);
+
+            const mockEvent = new Event("click");
+            Object.defineProperty(mockEvent, "target", {
+                value: mockElement,
+                writable: false,
+            });
+
+            // Trigger the delegated checkbox click handler
+            app["handleDelegatedCheckboxClick"](mockEvent);
+
+            // Should return early without processing
+            expect(consoleErrorSpy).not.toHaveBeenCalled();
+        });
+    });
+
+    describe("Timer Methods", () => {
+        it("should stop timer updates", () => {
+            // Test the method directly since we can't spy on private fields
+            // This will test that the method exists and can be called
+            expect(() => app.stopTimerUpdates()).not.toThrow();
+        });
+
+        it("should handle timer expiration with expired timer", () => {
+            // Create a challenge with an expired timer using string duration
+            const challenge = new Challenge("Test Challenge", {
+                timer: "1s", // 1 second timer
+            });
+
+            // Mock the timer to be expired
+            if (challenge.timer) {
+                vi.spyOn(challenge.timer, "isExpired").mockReturnValue(true);
+            }
+
+            app.handleTimerExpiration(challenge);
+
+            // Should log timer expiration message
+            expect(consoleLogSpy).toHaveBeenCalledWith(
+                STATUS_MESSAGES.TIMER_EXPIRED_FOR_CHALLENGE.replace(
+                    "{title}",
+                    challenge.title
+                )
+            );
+        });
+
+        it("should handle timer expiration with non-expired timer", () => {
+            // Create a challenge with a non-expired timer using number
+            const challenge = new Challenge("Test Challenge", {
+                timer: 60, // 60 second timer
+            });
+
+            // Mock the timer to not be expired
+            if (challenge.timer) {
+                vi.spyOn(challenge.timer, "isExpired").mockReturnValue(false);
+            }
+
+            app.handleTimerExpiration(challenge);
+
+            // Should not log anything for non-expired timer
+            expect(consoleLogSpy).not.toHaveBeenCalled();
+        });
+
+        it("should handle timer expiration with challenge without timer", () => {
+            // Create a challenge without a timer
+            const challenge = new Challenge("Test Challenge");
+
+            app.handleTimerExpiration(challenge);
+
+            // Should not log anything for challenge without timer
+            expect(consoleLogSpy).not.toHaveBeenCalled();
+        });
+    });
+
+    describe("Admin Mode Functionality", () => {
+        it("should enable checkbox interaction in admin mode", () => {
+            // Set admin mode
+            Object.defineProperty(window, "location", {
+                value: { hash: URL_HASH.ADMIN },
+                writable: true,
+            });
+
+            // Add a challenge and render
+            app.challengeList.addChallenges("Test Challenge");
+            app.renderChallengeList();
+
+            // Enable admin checkbox interaction
+            app.enableAdminCheckboxInteraction();
+
+            // Check that checkboxes have admin interactive class
+            const checkboxes = document.querySelectorAll(
+                CSS_SELECTORS.CHALLENGE_CHECKBOX
+            );
+            checkboxes.forEach((checkbox) => {
+                expect(
+                    checkbox.classList.contains(CSS_CLASSES.ADMIN_INTERACTIVE)
+                ).toBe(true);
+            });
+        });
+
+        it("should not enable checkbox interaction in viewer mode", () => {
+            // Set viewer mode (no hash)
+            Object.defineProperty(window, "location", {
+                value: { hash: "" },
+                writable: true,
+            });
+
+            // Add a challenge and render
+            app.challengeList.addChallenges("Test Challenge");
+            app.renderChallengeList();
+
+            // Try to enable admin checkbox interaction
+            app.enableAdminCheckboxInteraction();
+
+            // Should return early without adding event listeners
+            const checkboxes = document.querySelectorAll(
+                CSS_SELECTORS.CHALLENGE_CHECKBOX
+            );
+            checkboxes.forEach((checkbox) => {
+                expect(
+                    checkbox.classList.contains(CSS_CLASSES.ADMIN_INTERACTIVE)
+                ).toBe(false);
+            });
+        });
+    });
+
+    describe("DOM Error Handling", () => {
+        it("should handle missing challenge container in renderChallengeList", () => {
+            // Remove the challenge container entirely
+            document.body.innerHTML = "<div>No challenge container</div>";
+
+            app.renderChallengeList();
+
+            // Should log error for missing challenge container
+            expect(consoleErrorSpy).toHaveBeenCalledWith(
+                ERROR_MESSAGES.CHALLENGE_CONTAINER_NOT_FOUND
+            );
+        });
+
+        it("should handle DOM manipulation methods", () => {
+            // Test that DOM manipulation methods exist and can be called
+            const challenge = new Challenge("Test Challenge");
+
+            expect(() => app.addChallengeToDOM(challenge)).not.toThrow();
+            expect(() => app.editChallengeFromDOM(challenge)).not.toThrow();
+            expect(() =>
+                app.deleteChallengeFromDOM(challenge.id)
+            ).not.toThrow();
+            expect(() =>
+                app.revertChallengeFromDOM(challenge.id)
+            ).not.toThrow();
+        });
+    });
+
+    describe("Integration Tests", () => {
+        it("should process complete command flow with UI updates", () => {
+            setupTestEnvironment(app);
+            const adminUser = createAdminUser();
+
+            // Execute add command using app.chatHandler directly
+            const response = app.chatHandler(
+                adminUser.username,
+                "ch",
+                "add Integration Test Challenge",
+                adminUser.flags,
+                adminUser.extra
+            );
+
+            expect(response.error).toBe(false);
+            expect(response.message).toContain("Integration Test Challenge");
+            expect(app.challengeList.challenges.length).toBeGreaterThan(0);
+        });
+
+        it("should handle command processing with error conditions", () => {
+            const regularUser = createChatUser();
+
+            // Regular user should get silent ignore
+            const response = app.chatHandler(
+                regularUser.username,
+                "ch",
+                "add Should be ignored",
+                regularUser.flags,
+                regularUser.extra
+            );
+
+            expect(response.error).toBe(true);
+            expect(response.message).toBe(""); // Silent ignore
+        });
+
+        it("should handle custom text rendering", () => {
+            const customText = "Custom overlay text";
+
+            // Set up DOM for custom text
+            document.body.innerHTML += `
+                <div class="custom-header hidden">
+                    <div class="custom-text"></div>
+                </div>
+            `;
+
+            app.renderCustomText(customText);
+
+            const customHeaderEl = document.querySelector(".custom-header");
+            const customTextEl = document.querySelector(".custom-text");
+
+            expect(customHeaderEl?.classList.contains("hidden")).toBe(false);
+            expect(customTextEl?.textContent).toBe(customText);
+        });
+
+        it("should handle challenge list operations", () => {
+            // Test basic challenge list operations
+            expect(app.challengeList.challenges.length).toBe(0);
+
+            app.challengeList.addChallenges("Test Challenge");
+            expect(app.challengeList.challenges.length).toBe(1);
+
+            // Test clearing
+            app.clearListFromDOM();
+            expect(() => app.updateChallengeCount()).not.toThrow();
+        });
+
+        it("should handle timer operations", () => {
+            // Test timer-related methods
+            expect(() => app.startTimerUpdates()).not.toThrow();
+            expect(() => app.updateTimerDisplays()).not.toThrow();
+            expect(() => app.stopTimerUpdates()).not.toThrow();
+        });
+
+        it("should handle rendering operations", () => {
+            // Test rendering methods
+            expect(() => app.render()).not.toThrow();
+            expect(() => app.renderChallengeList()).not.toThrow();
+        });
+    });
+
+    describe("Branch Coverage Tests", () => {
+        it("should handle invalid command that doesn't match prefix pattern", () => {
+            const adminUser = createAdminUser();
+
+            // Test command that doesn't start with expected prefix
+            const result = app.chatHandler(
+                adminUser.username,
+                "invalidcommand", // This won't match the prefix pattern
+                "test message",
+                adminUser.flags,
+                { userColor: "#FF0000" }
+            );
+
+            expect(result.error).toBe(true);
+            expect(result.message).toContain("Invalid command");
+        });
+
+        it("should handle checkbox click in viewer mode (non-admin)", () => {
+            // Set up DOM with challenge
+            app.challengeList.addChallenges("Test Challenge");
+            app.renderChallengeList();
+
+            // Simulate viewer mode (not admin)
+            const originalHash = window.location.hash;
+            Object.defineProperty(window.location, "hash", {
+                writable: true,
+                value: "", // Not "#admin"
+            });
+
+            // Create mock checkbox click event
+            const mockCheckbox = document.createElement("input");
+            mockCheckbox.type = "checkbox";
+            mockCheckbox.classList.add(CSS_CLASSES.CHALLENGE_CHECKBOX);
+
+            const mockEvent = new Event("click");
+            Object.defineProperty(mockEvent, "target", {
+                value: mockCheckbox,
+                enumerable: true,
+            });
+
+            // This should return early due to admin mode check
+            expect(() => app["handleCheckboxClick"](mockEvent)).not.toThrow();
+
+            // Restore original hash
+            Object.defineProperty(window.location, "hash", {
+                writable: true,
+                value: originalHash,
+            });
+        });
+
+        it("should handle overlay background color configuration", () => {
+            // Test the overlay background color branch in renderChallengeList
+            const configManager = app.getConfigManager();
+
+            // Set overlay background color to trigger the branch
+            configManager.set(
+                BACKGROUND_CONFIG.OVERLAY_BACKGROUND_COLOR,
+                "#ff0000"
+            );
+
+            // Add a challenge to trigger the rendering path with background config
+            app.challengeList.addChallenges("Test Challenge");
+
+            // This should trigger the overlay background color branch
+            expect(() => app.renderChallengeList()).not.toThrow();
+
+            // Verify the background color was applied
+            const card = document.querySelector(".card") as HTMLElement;
+            expect(card?.style.backgroundColor).toBe("rgb(255, 0, 0)");
+            expect(
+                card?.classList.contains(CSS_CLASSES.CUSTOM_OVERLAY_BACKGROUND)
+            ).toBe(true);
+        });
+
+        it("should handle DOM manipulation error in checkbox click", () => {
+            // Set up admin mode
+            Object.defineProperty(window.location, "hash", {
+                writable: true,
+                value: "#admin",
+            });
+
+            // Set up DOM with challenge
+            app.challengeList.addChallenges("Test Challenge");
+            app.renderChallengeList();
+
+            // Mock completeChallengeFromDOM to throw an error
+            const completeSpy = vi.spyOn(app, "completeChallengeFromDOM");
+            completeSpy.mockImplementation(() => {
+                throw new Error("DOM manipulation error");
+            });
+
+            // Create mock checkbox click event with proper challenge element
+            const challengeElement = document.querySelector(
+                "[data-challenge-id]"
+            );
+            if (challengeElement) {
+                const mockCheckbox = document.createElement("input");
+                mockCheckbox.type = "checkbox";
+                mockCheckbox.classList.add(CSS_CLASSES.CHALLENGE_CHECKBOX);
+                challengeElement.appendChild(mockCheckbox);
+
+                const mockEvent = new Event("click");
+                Object.defineProperty(mockEvent, "target", {
+                    value: mockCheckbox,
+                    enumerable: true,
+                });
+
+                // This should trigger the catch block
+                expect(() =>
+                    app["handleCheckboxClick"](mockEvent)
+                ).not.toThrow();
+
+                // Verify error was logged
+                expect(consoleErrorSpy).toHaveBeenCalledWith(
+                    ERROR_MESSAGES.ERROR_TOGGLING_CHALLENGE_COMPLETION,
+                    expect.any(Error)
+                );
+            }
+
+            completeSpy.mockRestore();
+        });
+    });
+});

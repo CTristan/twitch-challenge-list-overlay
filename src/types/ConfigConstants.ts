@@ -53,6 +53,11 @@ export const CORE_CONFIG = {
  * Background customization configuration property names
  */
 export const BACKGROUND_CONFIG = {
+    // Overlay background (main container behind all challenges)
+    OVERLAY_BACKGROUND_COLOR: "overlayBackgroundColor",
+    OVERLAY_BACKGROUND_OPACITY: "overlayBackgroundOpacity",
+
+    // Challenge row backgrounds (individual challenge containers)
     CHALLENGE_BACKGROUND_COLOR: "challengeBackgroundColor",
     CHALLENGE_BACKGROUND_OPACITY: "challengeBackgroundOpacity",
     CHALLENGE_TEXT_COLOR: "challengeTextColor",
@@ -87,6 +92,11 @@ export type ConfigPropertyValue =
  * Default values for background configuration
  */
 export const BACKGROUND_DEFAULTS = {
+    // Overlay background defaults (main container)
+    OVERLAY_BACKGROUND_COLOR: "rgba(100, 100, 100, 0.6)",
+    OVERLAY_BACKGROUND_OPACITY: 0.6,
+
+    // Challenge row background defaults
     BACKGROUND_COLOR: "rgba(0, 0, 0, 0.7)",
     BACKGROUND_OPACITY: 0.7,
     TEXT_COLOR: "#ffffff",
@@ -105,6 +115,11 @@ export const BACKGROUND_NUMERIC_CONSTANTS = {
  * CSS custom property names for background customization
  */
 export const CSS_VARIABLES = {
+    // Overlay background CSS variables
+    OVERLAY_BACKGROUND_COLOR: "overlayBackgroundColor",
+    OVERLAY_BACKGROUND_OPACITY: "overlayBackgroundOpacity",
+
+    // Challenge row background CSS variables
     CHALLENGE_BACKGROUND_COLOR: "challengeBackgroundColor",
     CHALLENGE_BACKGROUND_OPACITY: "challengeBackgroundOpacity",
     CHALLENGE_TEXT_COLOR_OVERRIDE: "challengeTextColorOverride",
@@ -126,6 +141,12 @@ export const CSS_CUSTOM_PROPERTIES = {
  * DOM element IDs for background configuration UI
  */
 export const BACKGROUND_UI_ELEMENTS = {
+    // Overlay background UI elements
+    OVERLAY_BACKGROUND_COLOR_INPUT: "overlay-background-color",
+    OVERLAY_BACKGROUND_OPACITY_SLIDER: "overlay-background-opacity",
+    OVERLAY_OPACITY_DISPLAY: "overlay-opacity-display",
+
+    // Challenge row background UI elements
     BACKGROUND_COLOR_INPUT: "challenge-background-color",
     BACKGROUND_OPACITY_SLIDER: "challenge-background-opacity",
     OPACITY_DISPLAY: "opacity-display",

@@ -57,6 +57,11 @@
   font-family: var(--card-font-family, "arial");
 }
 
+/* Overlay Background Customization Styles */
+.card.custom-overlay-background {
+  background-color: var(--overlay-background-color);
+}
+
 .username {
   overflow: hidden;
   white-space: nowrap;

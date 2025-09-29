@@ -124,6 +124,12 @@ export default class App {
 
             // Get background customization configuration
             const backgroundConfig = {
+                overlayBackgroundColor: this.#configManager.get(
+                    BACKGROUND_CONFIG.OVERLAY_BACKGROUND_COLOR
+                ),
+                overlayBackgroundOpacity: this.#configManager.get(
+                    BACKGROUND_CONFIG.OVERLAY_BACKGROUND_OPACITY
+                ),
                 challengeBackgroundColor: this.#configManager.get(
                     BACKGROUND_CONFIG.CHALLENGE_BACKGROUND_COLOR
                 ),
@@ -140,6 +146,13 @@ export default class App {
                     BACKGROUND_CONFIG.CHALLENGE_TEXT_SHADOW
                 ),
             };
+
+            // Apply overlay background styling if configured
+            if (backgroundConfig.overlayBackgroundColor) {
+                cardEl.style.backgroundColor =
+                    backgroundConfig.overlayBackgroundColor;
+                cardEl.classList.add(CSS_CLASSES.CUSTOM_OVERLAY_BACKGROUND);
+            }
 
             this.challengeList
                 .getAllChallenges()

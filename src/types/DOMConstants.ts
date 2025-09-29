@@ -27,6 +27,7 @@ export const CSS_CLASSES = {
     DISABLED: "disabled",
 
     // Background customization classes
+    CUSTOM_OVERLAY_BACKGROUND: "custom-overlay-background",
     CUSTOM_BACKGROUND: "custom-background",
     ENHANCED_READABILITY: "enhanced-readability",
     TEXT_SHADOW_LIGHT: "text-shadow-light",
@@ -140,6 +141,16 @@ export const ELEMENT_IDS = {
     BACKUP_SECTION: "backup",
     DANGER_ZONE_SECTION: "danger-zone",
 } as const;
+
+/**
+ * Color tier names used throughout the admin panel for color configuration
+ */
+export const COLOR_TIERS = ["primary", "secondary", "tertiary"] as const;
+
+/**
+ * Type for color tier values
+ */
+export type ColorTier = (typeof COLOR_TIERS)[number];
 
 /**
  * Data attribute names

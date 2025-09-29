@@ -1,4 +1,5 @@
 import type App from "../app";
+import { AdminPanelTemplates } from "../templates/AdminPanelTemplates";
 import {
     DEFAULT_COLORS,
     SHADOW_COLORS,
@@ -11,11 +12,13 @@ import {
     CORE_CONFIG,
 } from "../types/ConfigConstants";
 import {
+    COLOR_TIERS,
     CSS_CLASSES,
     CSS_SELECTORS,
     ELEMENT_IDS,
     EVENT_NAMES,
     URL_HASH,
+    type ColorTier,
 } from "../types/DOMConstants";
 import {
     DEFAULT_FILENAMES,
@@ -422,78 +425,12 @@ export default class AdminPanel {
      * @param container - The parent container element
      */
     private createBackgroundSection(container: HTMLElement): void {
-        const backgroundContent = `
-          <div class="form-group">
-            <label>Background Customization:</label>
-            <p class="form-description">Configure global background appearance for challenge containers. These settings apply to all challenges unless overridden by row-specific colors above.</p>
-
-            <!-- Background Color Configuration -->
-            <div class="background-config-section">
-              <div class="form-row">
-                <div class="form-column">
-                  <label class="form-label">Background Color</label>
-                  <input type="color" id="challenge-background-color" class="form-input color-input" value="${DEFAULT_COLORS.CHALLENGE_BACKGROUND}">
-                </div>
-                <div class="form-column">
-                  <label class="form-label">Opacity (%)</label>
-                  <div class="opacity-control">
-                    <input type="range" id="challenge-background-opacity" class="form-input opacity-slider"
-                           min="0" max="100" value="70" step="5">
-                    <span id="opacity-display" class="opacity-value">70%</span>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Text Readability Configuration -->
-              <div class="text-readability-section">
-                <h5 class="subsection-title">Text Readability</h5>
-
-                <div class="form-row">
-                  <div class="checkbox-group">
-                    <input type="checkbox" id="challenge-auto-text-color" class="form-checkbox" checked>
-                    <label for="challenge-auto-text-color" class="checkbox-label">
-                      Automatic text color adjustment
-                      <span class="help-text">Automatically choose white or black text for optimal readability</span>
-                    </label>
-                  </div>
-                </div>
-
-                <div class="form-row">
-                  <div class="form-column">
-                    <label class="form-label">Manual Text Color Override</label>
-                    <input type="color" id="challenge-text-color" class="form-input color-input" value="${DEFAULT_COLORS.CHALLENGE_TEXT}" disabled>
-                    <span class="help-text">Used when automatic adjustment is disabled</span>
-                  </div>
-                </div>
-
-                <div class="form-row">
-                  <div class="checkbox-group">
-                    <input type="checkbox" id="challenge-text-shadow" class="form-checkbox" checked>
-                    <label for="challenge-text-shadow" class="checkbox-label">
-                      Enhanced text readability
-                      <span class="help-text">Add text shadows/outlines for better visibility on various backgrounds</span>
-                    </label>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Preview Section -->
-              <div class="background-preview-section">
-                <h5 class="subsection-title">Preview</h5>
-                <div id="background-preview" class="background-preview">
-                  <div class="preview-challenge">
-                    <div class="preview-checkbox"></div>
-                    <div class="preview-text">
-                      <div class="preview-title">Sample Challenge</div>
-                      <div class="preview-description">This is how your challenges will look</div>
-                      <div class="preview-progress">Progress: 3/5</div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        `;
+        const backgroundContent = AdminPanelTemplates.backgroundSection({
+            overlayBackgroundColor: DEFAULT_COLORS.CHALLENGE_BACKGROUND,
+            challengeBackgroundColor: DEFAULT_COLORS.CHALLENGE_BACKGROUND,
+            challengeTextColor: DEFAULT_COLORS.CHALLENGE_TEXT,
+            elementIds: ELEMENT_IDS,
+        });
 
         const backgroundSection = new CollapsibleSection({
             id: ELEMENT_IDS.BACKGROUND_SECTION,
@@ -641,17 +578,19 @@ export default class AdminPanel {
             backgroundColors,
             textColors
         );
-        const tiers = ["primary", "secondary", "tertiary"] as const;
+        const tiers = COLOR_TIERS;
 
         tiers.forEach((tier) => {
+            const tierConstants = this.getColorTierConstants(tier);
+
             const checkbox = document.getElementById(
-                `${tier}-color-enabled`
+                tierConstants.enabled
             ) as HTMLInputElement;
             const bgColorInput = document.getElementById(
-                `${tier}-bg-color`
+                tierConstants.bgColor
             ) as HTMLInputElement;
             const textColorInput = document.getElementById(
-                `${tier}-text-color`
+                tierConstants.textColor
             ) as HTMLInputElement;
 
             if (checkbox && bgColorInput && textColorInput) {
@@ -676,7 +615,36 @@ export default class AdminPanel {
      * @returns {void}
      */
     private populateBackgroundConfiguration(config: Config): void {
-        // Background color
+        // Overlay background color
+        const overlayBackgroundColorInput = document.getElementById(
+            BACKGROUND_UI_ELEMENTS.OVERLAY_BACKGROUND_COLOR_INPUT
+        ) as HTMLInputElement;
+        if (overlayBackgroundColorInput) {
+            // Extract color from rgba or use default
+            const overlayBackgroundColor =
+                config.overlayBackgroundColor ||
+                BACKGROUND_DEFAULTS.OVERLAY_BACKGROUND_COLOR;
+            const hexColor = this.extractColorFromRGBA(overlayBackgroundColor);
+            overlayBackgroundColorInput.value = hexColor;
+        }
+
+        // Overlay background opacity
+        const overlayOpacitySlider = document.getElementById(
+            BACKGROUND_UI_ELEMENTS.OVERLAY_BACKGROUND_OPACITY_SLIDER
+        ) as HTMLInputElement;
+        const overlayOpacityDisplay = document.getElementById(
+            BACKGROUND_UI_ELEMENTS.OVERLAY_OPACITY_DISPLAY
+        );
+        if (overlayOpacitySlider && overlayOpacityDisplay) {
+            const overlayOpacity =
+                config.overlayBackgroundOpacity ??
+                BACKGROUND_DEFAULTS.OVERLAY_BACKGROUND_OPACITY;
+            const overlayOpacityPercent = Math.round(overlayOpacity * 100);
+            overlayOpacitySlider.value = overlayOpacityPercent.toString();
+            overlayOpacityDisplay.textContent = `${overlayOpacityPercent}%`;
+        }
+
+        // Challenge row background color
         const backgroundColorInput = document.getElementById(
             BACKGROUND_UI_ELEMENTS.BACKGROUND_COLOR_INPUT
         ) as HTMLInputElement;
@@ -689,7 +657,7 @@ export default class AdminPanel {
             backgroundColorInput.value = hexColor;
         }
 
-        // Background opacity
+        // Challenge row background opacity
         const opacitySlider = document.getElementById(
             BACKGROUND_UI_ELEMENTS.BACKGROUND_OPACITY_SLIDER
         ) as HTMLInputElement;
@@ -813,21 +781,23 @@ export default class AdminPanel {
      * @returns {void}
      */
     private setupColorTierEventListeners(): void {
-        const colorTiers = ["primary", "secondary", "tertiary"];
+        const colorTiers = COLOR_TIERS;
 
         colorTiers.forEach((tier) => {
+            const tierConstants = this.getColorTierConstants(tier);
+
             const checkbox = document.getElementById(
-                `${tier}-color-enabled`
+                tierConstants.enabled
             ) as HTMLInputElement;
             const pickersContainer = document.getElementById(
-                `${tier}-color-pickers`
+                tierConstants.pickers
             );
-            const section = document.getElementById(`${tier}-color-section`);
+            const section = document.getElementById(tierConstants.section);
             const bgColorInput = document.getElementById(
-                `${tier}-bg-color`
+                tierConstants.bgColor
             ) as HTMLInputElement;
             const textColorInput = document.getElementById(
-                `${tier}-text-color`
+                tierConstants.textColor
             ) as HTMLInputElement;
 
             if (
@@ -845,7 +815,7 @@ export default class AdminPanel {
                     this.updateColorTierState(tier, checkbox.checked);
                 };
                 checkbox.addEventListener("change", changeHandler);
-                this.#eventListeners.set(`${tier}-color-enabled`, {
+                this.#eventListeners.set(tierConstants.enabled, {
                     element: checkbox,
                     event: "change",
                     handler: changeHandler,
@@ -855,87 +825,197 @@ export default class AdminPanel {
     }
 
     /**
+     * Get the appropriate constants for a color tier
+     * @param tier - The color tier (primary, secondary, tertiary)
+     * @returns Object with the constants for that tier
+     */
+    private getColorTierConstants(tier: ColorTier): {
+        enabled: string;
+        pickers: string;
+        section: string;
+        bgColor: string;
+        textColor: string;
+    } {
+        switch (tier) {
+            case COLOR_TIERS[0]: // "primary"
+                return {
+                    enabled: ELEMENT_IDS.PRIMARY_COLOR_ENABLED,
+                    pickers: ELEMENT_IDS.PRIMARY_COLOR_PICKERS,
+                    section: ELEMENT_IDS.PRIMARY_COLOR_SECTION,
+                    bgColor: ELEMENT_IDS.PRIMARY_BG_COLOR,
+                    textColor: ELEMENT_IDS.PRIMARY_TEXT_COLOR,
+                };
+            case COLOR_TIERS[1]: // "secondary"
+                return {
+                    enabled: ELEMENT_IDS.SECONDARY_COLOR_ENABLED,
+                    pickers: ELEMENT_IDS.SECONDARY_COLOR_PICKERS,
+                    section: ELEMENT_IDS.SECONDARY_COLOR_SECTION,
+                    bgColor: ELEMENT_IDS.SECONDARY_BG_COLOR,
+                    textColor: ELEMENT_IDS.SECONDARY_TEXT_COLOR,
+                };
+            case COLOR_TIERS[2]: // "tertiary"
+                return {
+                    enabled: ELEMENT_IDS.TERTIARY_COLOR_ENABLED,
+                    pickers: ELEMENT_IDS.TERTIARY_COLOR_PICKERS,
+                    section: ELEMENT_IDS.TERTIARY_COLOR_SECTION,
+                    bgColor: ELEMENT_IDS.TERTIARY_BG_COLOR,
+                    textColor: ELEMENT_IDS.TERTIARY_TEXT_COLOR,
+                };
+        }
+    }
+
+    /**
      * Setup event listeners for background customization controls
      * @returns {void}
      */
     private setupBackgroundEventListeners(): void {
-        // Background color picker
+        // Overlay background color picker
+        const overlayBackgroundColorInput = document.getElementById(
+            BACKGROUND_UI_ELEMENTS.OVERLAY_BACKGROUND_COLOR_INPUT
+        ) as HTMLInputElement;
+        if (overlayBackgroundColorInput) {
+            const overlayColorHandler = () => this.updateBackgroundPreview();
+            overlayBackgroundColorInput.addEventListener(
+                EVENT_NAMES.INPUT,
+                overlayColorHandler
+            );
+            this.#eventListeners.set(
+                BACKGROUND_UI_ELEMENTS.OVERLAY_BACKGROUND_COLOR_INPUT,
+                {
+                    element: overlayBackgroundColorInput,
+                    event: EVENT_NAMES.INPUT,
+                    handler: overlayColorHandler,
+                }
+            );
+        }
+
+        // Overlay opacity slider
+        const overlayOpacitySlider = document.getElementById(
+            BACKGROUND_UI_ELEMENTS.OVERLAY_BACKGROUND_OPACITY_SLIDER
+        ) as HTMLInputElement;
+        const overlayOpacityDisplay = document.getElementById(
+            BACKGROUND_UI_ELEMENTS.OVERLAY_OPACITY_DISPLAY
+        );
+        if (overlayOpacitySlider && overlayOpacityDisplay) {
+            const overlayOpacityHandler = () => {
+                overlayOpacityDisplay.textContent = `${overlayOpacitySlider.value}%`;
+                this.updateBackgroundPreview();
+            };
+            overlayOpacitySlider.addEventListener(
+                EVENT_NAMES.INPUT,
+                overlayOpacityHandler
+            );
+            this.#eventListeners.set(
+                BACKGROUND_UI_ELEMENTS.OVERLAY_BACKGROUND_OPACITY_SLIDER,
+                {
+                    element: overlayOpacitySlider,
+                    event: EVENT_NAMES.INPUT,
+                    handler: overlayOpacityHandler,
+                }
+            );
+        }
+
+        // Challenge row background color picker
         const backgroundColorInput = document.getElementById(
-            "challenge-background-color"
+            BACKGROUND_UI_ELEMENTS.BACKGROUND_COLOR_INPUT
         ) as HTMLInputElement;
         if (backgroundColorInput) {
             const colorHandler = () => this.updateBackgroundPreview();
-            backgroundColorInput.addEventListener("input", colorHandler);
-            this.#eventListeners.set("challenge-background-color", {
-                element: backgroundColorInput,
-                event: "input",
-                handler: colorHandler,
-            });
+            backgroundColorInput.addEventListener(
+                EVENT_NAMES.INPUT,
+                colorHandler
+            );
+            this.#eventListeners.set(
+                BACKGROUND_UI_ELEMENTS.BACKGROUND_COLOR_INPUT,
+                {
+                    element: backgroundColorInput,
+                    event: EVENT_NAMES.INPUT,
+                    handler: colorHandler,
+                }
+            );
         }
 
-        // Opacity slider
+        // Challenge row opacity slider
         const opacitySlider = document.getElementById(
-            "challenge-background-opacity"
+            BACKGROUND_UI_ELEMENTS.BACKGROUND_OPACITY_SLIDER
         ) as HTMLInputElement;
         const opacityDisplay = document.getElementById(
-            ELEMENT_IDS.OPACITY_DISPLAY
+            BACKGROUND_UI_ELEMENTS.OPACITY_DISPLAY
         );
         if (opacitySlider && opacityDisplay) {
             const opacityHandler = () => {
                 opacityDisplay.textContent = `${opacitySlider.value}%`;
                 this.updateBackgroundPreview();
             };
-            opacitySlider.addEventListener("input", opacityHandler);
-            this.#eventListeners.set("challenge-background-opacity", {
-                element: opacitySlider,
-                event: "input",
-                handler: opacityHandler,
-            });
+            opacitySlider.addEventListener(EVENT_NAMES.INPUT, opacityHandler);
+            this.#eventListeners.set(
+                BACKGROUND_UI_ELEMENTS.BACKGROUND_OPACITY_SLIDER,
+                {
+                    element: opacitySlider,
+                    event: EVENT_NAMES.INPUT,
+                    handler: opacityHandler,
+                }
+            );
         }
 
         // Auto text color checkbox
         const autoTextColorCheckbox = document.getElementById(
-            "challenge-auto-text-color"
+            BACKGROUND_UI_ELEMENTS.AUTO_TEXT_COLOR_CHECKBOX
         ) as HTMLInputElement;
         const textColorInput = document.getElementById(
-            "challenge-text-color"
+            BACKGROUND_UI_ELEMENTS.TEXT_COLOR_INPUT
         ) as HTMLInputElement;
         if (autoTextColorCheckbox && textColorInput) {
             const autoTextHandler = () => {
                 textColorInput.disabled = autoTextColorCheckbox.checked;
                 this.updateBackgroundPreview();
             };
-            autoTextColorCheckbox.addEventListener("change", autoTextHandler);
-            this.#eventListeners.set("challenge-auto-text-color", {
-                element: autoTextColorCheckbox,
-                event: "change",
-                handler: autoTextHandler,
-            });
+            autoTextColorCheckbox.addEventListener(
+                EVENT_NAMES.CHANGE,
+                autoTextHandler
+            );
+            this.#eventListeners.set(
+                BACKGROUND_UI_ELEMENTS.AUTO_TEXT_COLOR_CHECKBOX,
+                {
+                    element: autoTextColorCheckbox,
+                    event: EVENT_NAMES.CHANGE,
+                    handler: autoTextHandler,
+                }
+            );
         }
 
         // Manual text color picker
         if (textColorInput) {
             const textColorHandler = () => this.updateBackgroundPreview();
-            textColorInput.addEventListener("input", textColorHandler);
-            this.#eventListeners.set("challenge-text-color", {
+            textColorInput.addEventListener(
+                EVENT_NAMES.INPUT,
+                textColorHandler
+            );
+            this.#eventListeners.set(BACKGROUND_UI_ELEMENTS.TEXT_COLOR_INPUT, {
                 element: textColorInput,
-                event: "input",
+                event: EVENT_NAMES.INPUT,
                 handler: textColorHandler,
             });
         }
 
         // Text shadow checkbox
         const textShadowCheckbox = document.getElementById(
-            "challenge-text-shadow"
+            BACKGROUND_UI_ELEMENTS.TEXT_SHADOW_CHECKBOX
         ) as HTMLInputElement;
         if (textShadowCheckbox) {
             const shadowHandler = () => this.updateBackgroundPreview();
-            textShadowCheckbox.addEventListener("change", shadowHandler);
-            this.#eventListeners.set("challenge-text-shadow", {
-                element: textShadowCheckbox,
-                event: "change",
-                handler: shadowHandler,
-            });
+            textShadowCheckbox.addEventListener(
+                EVENT_NAMES.CHANGE,
+                shadowHandler
+            );
+            this.#eventListeners.set(
+                BACKGROUND_UI_ELEMENTS.TEXT_SHADOW_CHECKBOX,
+                {
+                    element: textShadowCheckbox,
+                    event: EVENT_NAMES.CHANGE,
+                    handler: shadowHandler,
+                }
+            );
         }
 
         // Initial preview update
@@ -1061,15 +1141,15 @@ export default class AdminPanel {
      * @param enabled - Whether the tier is enabled
      * @returns {void}
      */
-    private updateColorTierState(tier: string, enabled: boolean): void {
-        const pickersContainer = document.getElementById(
-            `${tier}-color-pickers`
-        );
+    private updateColorTierState(tier: ColorTier, enabled: boolean): void {
+        const tierConstants = this.getColorTierConstants(tier);
+
+        const pickersContainer = document.getElementById(tierConstants.pickers);
         const bgColorInput = document.getElementById(
-            `${tier}-bg-color`
+            tierConstants.bgColor
         ) as HTMLInputElement;
         const textColorInput = document.getElementById(
-            `${tier}-text-color`
+            tierConstants.textColor
         ) as HTMLInputElement;
 
         if (pickersContainer && bgColorInput && textColorInput) {
@@ -1122,7 +1202,7 @@ export default class AdminPanel {
         }
 
         // Multiple colors rotate through the tiers
-        const tiers = ["primary", "secondary", "tertiary"] as const;
+        const tiers = COLOR_TIERS;
 
         backgroundColors.forEach((backgroundColor, index) => {
             if (index < tiers.length) {
@@ -1148,7 +1228,7 @@ export default class AdminPanel {
      */
     private convertUIToColors(colorConfig: ColorConfigurationUI): string[] {
         const colors: string[] = [];
-        const tiers = ["primary", "secondary", "tertiary"] as const;
+        const tiers = COLOR_TIERS;
 
         tiers.forEach((tier) => {
             if (colorConfig[tier].enabled) {
@@ -1166,7 +1246,7 @@ export default class AdminPanel {
      */
     private convertUIToTextColors(colorConfig: ColorConfigurationUI): string[] {
         const colors: string[] = [];
-        const tiers = ["primary", "secondary", "tertiary"] as const;
+        const tiers = COLOR_TIERS;
 
         tiers.forEach((tier) => {
             if (colorConfig[tier].enabled) {
@@ -1253,12 +1333,23 @@ export default class AdminPanel {
      * @returns Background configuration object
      */
     private getCurrentBackgroundConfigFromUI(): {
+        overlayBackgroundColor: string;
+        overlayBackgroundOpacity: number;
         challengeBackgroundColor: string;
         challengeBackgroundOpacity: number;
         challengeTextColor: string;
         challengeAutoTextColor: boolean;
         challengeTextShadow: boolean;
     } {
+        // Overlay background elements
+        const overlayBackgroundColorInput = document.getElementById(
+            BACKGROUND_UI_ELEMENTS.OVERLAY_BACKGROUND_COLOR_INPUT
+        ) as HTMLInputElement;
+        const overlayOpacitySlider = document.getElementById(
+            BACKGROUND_UI_ELEMENTS.OVERLAY_BACKGROUND_OPACITY_SLIDER
+        ) as HTMLInputElement;
+
+        // Challenge row background elements
         const backgroundColorInput = document.getElementById(
             BACKGROUND_UI_ELEMENTS.BACKGROUND_COLOR_INPUT
         ) as HTMLInputElement;
@@ -1275,7 +1366,19 @@ export default class AdminPanel {
             BACKGROUND_UI_ELEMENTS.TEXT_SHADOW_CHECKBOX
         ) as HTMLInputElement;
 
-        // Combine color and opacity into RGBA format
+        // Combine overlay color and opacity into RGBA format
+        const overlayBackgroundColor =
+            overlayBackgroundColorInput?.value ||
+            DEFAULT_COLORS.CHALLENGE_BACKGROUND;
+        const overlayOpacity = overlayOpacitySlider
+            ? parseInt(overlayOpacitySlider.value) / 100
+            : BACKGROUND_DEFAULTS.OVERLAY_BACKGROUND_OPACITY;
+        const rgbaOverlayBackgroundColor = this.convertColorToRGBA(
+            overlayBackgroundColor,
+            overlayOpacity
+        );
+
+        // Combine challenge row color and opacity into RGBA format
         const backgroundColor =
             backgroundColorInput?.value || DEFAULT_COLORS.CHALLENGE_BACKGROUND;
         const opacity = opacitySlider
@@ -1287,6 +1390,8 @@ export default class AdminPanel {
         );
 
         return {
+            overlayBackgroundColor: rgbaOverlayBackgroundColor,
+            overlayBackgroundOpacity: overlayOpacity,
             challengeBackgroundColor: rgbaBackgroundColor,
             challengeBackgroundOpacity: opacity,
             challengeTextColor:
@@ -1398,7 +1503,17 @@ export default class AdminPanel {
                 challengeRowTextColors
             );
 
-            // Update background configuration
+            // Update overlay background configuration
+            const overlayBackgroundColorSuccess = this.#configManager.set(
+                BACKGROUND_CONFIG.OVERLAY_BACKGROUND_COLOR,
+                backgroundConfig.overlayBackgroundColor
+            );
+            const overlayBackgroundOpacitySuccess = this.#configManager.set(
+                BACKGROUND_CONFIG.OVERLAY_BACKGROUND_OPACITY,
+                backgroundConfig.overlayBackgroundOpacity
+            );
+
+            // Update challenge row background configuration
             const backgroundColorSuccess = this.#configManager.set(
                 BACKGROUND_CONFIG.CHALLENGE_BACKGROUND_COLOR,
                 backgroundConfig.challengeBackgroundColor
@@ -1426,6 +1541,8 @@ export default class AdminPanel {
                 maxChallengesSuccess &&
                 colorsSuccess &&
                 textColorsSuccess &&
+                overlayBackgroundColorSuccess &&
+                overlayBackgroundOpacitySuccess &&
                 backgroundColorSuccess &&
                 backgroundOpacitySuccess &&
                 textColorSuccess &&
