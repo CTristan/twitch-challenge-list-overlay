@@ -3,6 +3,18 @@ let scrollAnimation: Animation;
 let isScrolling = false;
 
 /**
+ * Resets the animation state for testing purposes
+ * @internal This function is only intended for use in tests
+ */
+export function resetAnimationState(): void {
+    if (scrollAnimation) {
+        scrollAnimation.cancel();
+    }
+    scrollAnimation = undefined as any;
+    isScrolling = false;
+}
+
+/**
  * Animates the scroll of the challenge list
  * @returns {void}
  */
