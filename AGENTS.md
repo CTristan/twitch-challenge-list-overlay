@@ -325,8 +325,14 @@ try {
 -   **jsdom environment** for DOM testing
 -   **Vitest** with coverage reporting and 80% coverage thresholds
 -   **Specialized test utilities** (chatHandlerTestUtils.ts, domTestUtils.ts)
--   **Integration-focused command testing** - commands tested through app-level integration tests rather than individual unit tests
--   **End-to-end command processing** validation through integration test suite
+-   **Dual-layer command testing approach**:
+    -   **Integration tests** - End-to-end command processing validation through app-level integration test suite
+    -   **Unit tests** - Individual command class tests in `tests/commands/` directory for focused coverage
+-   **Command test coverage examples**:
+    -   **AddCommand** - 27-test suite covering challenge creation, parameter parsing, timer integration, and validation
+    -   **ShowCommand** - 8-test suite covering challenge detail display and formatting
+    -   **UndoneCommand** - 5-test suite covering challenge reversion and timer restart
+    -   **ClearAllCommand** - 10-test suite achieving 100% coverage across all metrics
 -   **Comprehensive App class coverage** - 27-test suite achieving 88.46% branch coverage, 92.59% statement coverage, 95.45% function coverage, and 92.59% line coverage
 -   **AdminPanel class coverage** - 35-test suite achieving 82.22% branch coverage, 89.92% statement coverage, 92.3% function coverage, and 89.92% line coverage
 -   **ConfigDefaults utility testing** - 18-test suite achieving 97.5% statement coverage, 95% branch coverage, and 100% function coverage
