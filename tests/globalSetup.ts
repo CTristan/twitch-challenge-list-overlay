@@ -64,7 +64,6 @@ const createTestCommandsConfig = (): Config['commands'] => ({
     editChallenge: [`${TEST_COMMAND_PREFIX} edit`],
     finishChallenge: [`${TEST_COMMAND_PREFIX} done`],
     deleteChallenge: [`${TEST_COMMAND_PREFIX} delete`, `${TEST_COMMAND_PREFIX} del`],
-    check: [`${TEST_COMMAND_PREFIX} check`],
     help: [`${TEST_COMMAND_PREFIX} help`],
 
     // Progress commands
@@ -93,8 +92,7 @@ const createTestResponsesConfig = (): Config['responses'] => ({
     finishChallenge: `Good job on completing challenge(s) ${TEST_RESPONSE_PLACEHOLDERS.message}!`,
     deleteChallenge: `Challenge(s) ${TEST_RESPONSE_PLACEHOLDERS.message} has been deleted!`,
     deleteAll: "All of your challenges have been deleted!",
-    check: `Your current challenge(s) are: ${TEST_RESPONSE_PLACEHOLDERS.message}`,
-    help: "Try these commands - !challenge !edit !done !delete !check",
+    help: "Try these commands - !challenge !edit !done !delete",
     maxChallengesAdded: "Maximum number of challenges reached, try deleting old challenges.",
     noChallengeFound: "That challenge doesn't seem to exist, try adding one!",
     invalidCommand: `Invalid command: ${TEST_RESPONSE_PLACEHOLDERS.message}. Try !help`,
@@ -147,13 +145,8 @@ vi.stubGlobal("_config", testConfig);
  * These can be used to create custom test configurations when needed
  */
 export {
-    createTestConfig,
     createTestAuthConfig,
-    createTestCommandsConfig,
-    createTestResponsesConfig,
-    TEST_AUTH_CONFIG,
-    TEST_LIMITS,
-    TEST_COMMAND_PREFIX,
-    TEST_RESPONSE_PLACEHOLDERS,
+    createTestCommandsConfig, createTestConfig, createTestResponsesConfig,
+    TEST_AUTH_CONFIG, TEST_COMMAND_PREFIX, TEST_LIMITS, TEST_RESPONSE_PLACEHOLDERS
 };
 

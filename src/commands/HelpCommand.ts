@@ -84,7 +84,6 @@ export class HelpCommand extends BaseCommand {
             set: HELP_MESSAGES.SET_COMMAND_HELP,
             list: HELP_MESSAGES.LIST_COMMAND_HELP,
             show: HELP_MESSAGES.SHOW_COMMAND_HELP,
-            check: HELP_MESSAGES.CHECK_COMMAND_HELP,
             clearall: HELP_MESSAGES.CLEARALL_COMMAND_HELP,
             cleardone: HELP_MESSAGES.CLEARDONE_COMMAND_HELP,
             help: HELP_MESSAGES.HELP_COMMAND_HELP,

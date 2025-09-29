@@ -99,7 +99,7 @@ export const SUCCESS_MESSAGES = {
 export const HELP_MESSAGES = {
     // General help
     GENERAL_HELP:
-        "Available commands: !ch add, !ch edit, !ch done, !ch undone, !ch delete, !ch list, !ch check, !ch clearall, !ch cleardone, !ch help",
+        "Available commands: !ch add, !ch edit, !ch done, !ch undone, !ch delete, !ch list, !ch clearall, !ch cleardone, !ch help",
 
     // Guidance messages
     USE_ADD_COMMAND: "Use !ch add to create your first challenge!",
@@ -126,7 +126,6 @@ export const HELP_MESSAGES = {
         "!ch list [all|done|incomplete] - List challenges with optional filter (default: incomplete)",
     SHOW_COMMAND_HELP:
         "!ch show 1 - Show detailed information about a specific challenge",
-    CHECK_COMMAND_HELP: "!ch check - Show challenge statistics and summary",
     CLEARALL_COMMAND_HELP:
         "!ch clearall - Clear all challenges (requires confirmation)",
     CLEARDONE_COMMAND_HELP: "!ch cleardone - Clear all completed challenges",

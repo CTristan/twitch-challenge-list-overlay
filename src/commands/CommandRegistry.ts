@@ -8,7 +8,6 @@ import {
 } from "../types/CommandTypes";
 import { ResponseFormatter } from "../utils/ResponseFormatter";
 import { AddCommand } from "./AddCommand";
-import { CheckCommand } from "./CheckCommand";
 import { ClearAllCommand } from "./ClearAllCommand";
 import { ClearDoneCommand } from "./ClearDoneCommand";
 import type { Command } from "./Command";
@@ -52,7 +51,6 @@ const COMMAND_CONFIGURATIONS: CommandConfig[] = [
     { type: CommandType.SET, constructor: SetCommand },
     { type: CommandType.LIST, constructor: ListCommand },
     { type: CommandType.SHOW, constructor: ShowCommand },
-    { type: CommandType.CHECK, constructor: CheckCommand },
     { type: CommandType.HELP, constructor: HelpCommand },
     { type: CommandType.CLEAR_ALL, constructor: ClearAllCommand },
     { type: CommandType.CLEAR_DONE, constructor: ClearDoneCommand },

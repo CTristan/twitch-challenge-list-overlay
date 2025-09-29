@@ -254,32 +254,6 @@ describe("App.chatHandler", () => {
     });
 
     describe("Information Commands", () => {
-        describe("Check Command", () => {
-            it("should list uncompleted challenges for moderators", () => {
-                testCommandPermissions(
-                    app,
-                    CommandType.CHECK,
-                    "",
-                    SHARED_USERS.moderator,
-                    SHARED_USERS.regular,
-                    [EXPECTED_MESSAGES.CURRENT_CHALLENGES]
-                );
-            });
-
-            it("should return no challenges message when all completed", () => {
-                // Complete all remaining challenges
-                app.challengeList.completeChallenges([0, 2, 3, 4]);
-                const response = executeChallengeCommand(
-                    app,
-                    SHARED_USERS.moderator,
-                    CommandType.CHECK
-                );
-                expectSuccessResponse(response, [
-                    EXPECTED_MESSAGES.NO_CHALLENGES,
-                ]);
-            });
-        });
-
         describe("Help Command", () => {
             it("should provide help information for moderators", () => {
                 testCommandPermissions(

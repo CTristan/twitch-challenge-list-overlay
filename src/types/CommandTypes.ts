@@ -26,7 +26,6 @@ export const CommandType = {
     // Information commands
     LIST: "list",
     SHOW: "show",
-    CHECK: "check",
     HELP: "help",
 
     // Admin commands
@@ -55,7 +54,6 @@ export const CommandAliases: Record<string, CommandTypeValue> = {
     set: CommandType.SET,
     list: CommandType.LIST,
     show: CommandType.SHOW,
-    check: CommandType.CHECK,
     help: CommandType.HELP,
     clearall: CommandType.CLEAR_ALL,
     cleardone: CommandType.CLEAR_DONE,
@@ -73,7 +71,6 @@ export const CommandAliases: Record<string, CommandTypeValue> = {
     clearlist: CommandType.CLEAR_ALL,
     clear: CommandType.CLEAR_ALL,
     ls: CommandType.LIST,
-    status: CommandType.CHECK,
     info: CommandType.SHOW,
     display: CommandType.SHOW,
 };

@@ -1,10 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import Challenge from "../src/classes/Challenge";
-import ChallengeList from "../src/classes/ChallengeList";
-import ConfigManager from "../src/classes/ConfigManager";
-import { AddCommand } from "../src/commands/AddCommand";
-import { HELP_MESSAGES } from "../src/types/MessageConstants";
-import { UIUpdateAction } from "../src/types/UIUpdateAction";
+import Challenge from "../../src/classes/Challenge";
+import ChallengeList from "../../src/classes/ChallengeList";
+import ConfigManager from "../../src/classes/ConfigManager";
+import { AddCommand } from "../../src/commands/AddCommand";
+import { HELP_MESSAGES } from "../../src/types/MessageConstants";
+import { UIUpdateAction } from "../../src/types/UIUpdateAction";
 
 describe("AddCommand", () => {
     let challengeList: ChallengeList;

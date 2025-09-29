@@ -549,7 +549,6 @@ export const CommandType = {
     // Information commands
     LIST: "list",
     SHOW: "show",
-    CHECK: "check",
     HELP: "help",
     // Admin commands
     CLEAR_ALL: "clearall",
