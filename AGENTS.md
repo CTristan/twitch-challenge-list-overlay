@@ -333,6 +333,7 @@ try {
     -   **ShowCommand** - 8-test suite covering challenge detail display and formatting
     -   **UndoneCommand** - 5-test suite covering challenge reversion and timer restart
     -   **ClearAllCommand** - 10-test suite achieving 100% coverage across all metrics
+    -   **ClearDoneCommand** - 13-test suite achieving 100% coverage across all metrics
 -   **Comprehensive App class coverage** - 27-test suite achieving 88.46% branch coverage, 92.59% statement coverage, 95.45% function coverage, and 92.59% line coverage
 -   **AdminPanel class coverage** - 35-test suite achieving 82.22% branch coverage, 89.92% statement coverage, 92.3% function coverage, and 89.92% line coverage
 -   **ConfigDefaults utility testing** - 18-test suite achieving 97.5% statement coverage, 95% branch coverage, and 100% function coverage
