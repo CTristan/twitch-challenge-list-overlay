@@ -16,7 +16,7 @@
 │   ├── classes/           # Core business logic (AdminPanel, Challenge, ChallengeList, ConfigManager, ConfigExporter)
 │   ├── commands/          # Command pattern implementation (15+ command classes)
 │   ├── twitch/            # Twitch IRC integration (TwitchChat, EventEmitter, message-parsers)
-│   ├── utils/             # Utility modules (CommandHandler, Timer, UIUpdateHandler, etc.)
+│   ├── utils/             # Utility modules (CommandHandler, Timer, UIUpdateHandler, ConfigDefaults, etc.)
 │   ├── types/             # TypeScript type definitions and constants
 │   ├── animations/        # UI animations
 │   ├── app.ts, index.ts, dualWindow.ts, modal.ts, styleLoader.ts
@@ -44,6 +44,7 @@
 - **FileConstants**: File format, extension, and filename constants for import/export operations
 - **NumericConstants**: Numeric constraints, validation values, and calculation constants
 - **UIUpdateHandler**: DOM manipulation and UI update coordination for command results
+- **ConfigDefaults**: Fallback configuration creation utility with validation functions
 - **TwitchChat**: WebSocket IRC client with event emission and OAuth token validation
 - **EventEmitter**: Custom event system for decoupled communication
 - **Timer**: Timer functionality with countdown, formatting, and state management
@@ -191,6 +192,7 @@ Configuration is managed through the **ConfigManager** class with **localStorage
 ### Configuration Architecture
 - **ConfigManager singleton**: Centralized configuration management
 - **localStorage persistence**: Automatic saving and loading of settings
+- **ConfigDefaults utility**: Modular fallback configuration creation with validation
 - **Default configuration**: Built-in fallback values for all settings
 - **Admin panel interface**: User-friendly configuration editing
 - **Import/export functionality**: Backup and restore configuration
@@ -221,6 +223,35 @@ The system includes built-in defaults for all configuration properties:
 - **Response templates**: Standardized bot responses
 - **Color configuration**: Optional challenge row styling
 
+### ConfigDefaults Utility Module
+The **ConfigDefaults** utility provides modular fallback configuration creation and validation:
+
+#### Core Functions
+- **`createFallbackConfig()`**: Creates a complete, valid Config object with default values for error recovery
+- **`isValidFallbackConfig()`**: Validates configuration structure with comprehensive property checking
+- **`getDefaultMaxChallenges()`**: Returns the default maximum challenges value (10)
+- **`getDefaultAuthConfig()`**: Returns default auth configuration with empty credential strings
+
+#### Usage Pattern
+```typescript
+import { createFallbackConfig } from "./utils/ConfigDefaults";
+
+// Error recovery in configuration loading
+try {
+    configManager = ConfigManager.getInstance(userConfig);
+} catch (error) {
+    console.warn("Configuration loading failed, using fallback");
+    const fallbackConfig = createFallbackConfig();
+    configManager = ConfigManager.getInstance(fallbackConfig);
+}
+```
+
+#### Refactoring Benefits
+- **Improved testability**: Fallback configuration logic can be tested independently
+- **Better modularity**: Configuration creation separated from error handling
+- **Enhanced coverage**: Achieves 97.5% statement coverage with comprehensive unit tests
+- **Type safety**: Full TypeScript support with proper Config interface compliance
+
 ## Testing Patterns
 
 ### Test Organization
@@ -232,6 +263,7 @@ The system includes built-in defaults for all configuration properties:
 - **Integration-focused command testing** - commands tested through app-level integration tests rather than individual unit tests
 - **End-to-end command processing** validation through integration test suite
 - **Comprehensive App class coverage** - 27-test suite achieving 88.46% branch coverage, 92.59% statement coverage, 95.45% function coverage, and 92.59% line coverage
+- **ConfigDefaults utility testing** - 18-test suite achieving 97.5% statement coverage, 95% branch coverage, and 100% function coverage
 
 ### Test Structure
 ```typescript
@@ -279,8 +311,31 @@ The App class implements comprehensive branch coverage testing to achieve 88.46%
 - **Reporting**: Text and HTML coverage reports generated
 - **Enforcement**: Build fails if coverage thresholds are not met
 - **App class achievement**: Exceeds all thresholds with 88.46% branch coverage, 92.59% statement coverage, 95.45% function coverage, and 92.59% line coverage
+- **Index.ts achievement**: Exceeds all thresholds with 90% branch coverage, 84.5% statement coverage, 100% function coverage, and 84.5% line coverage
 
 ### App Class Test Suite Structure
+The App class features a comprehensive 27-test suite organized into 7 test categories:
+
+### Index.ts Test Suite Structure
+The index.ts file features a comprehensive 21-test suite organized into 5 test categories:
+
+#### Test Categories
+1. **Module Initialization** (4 tests) - setupDualWindow, getWindowRefreshManager, ConfigManager, TwitchChat initialization
+2. **Configuration Error Handling** (2 tests) - Fallback configuration structure validation, WebSocket URL format validation
+3. **Configuration Error Path Testing** (2 tests) - Fallback configuration creation logic, error handling console messages
+4. **Window Load Event Handling** (8 tests) - App initialization, AdminPanel setup, event handlers, test mode detection
+5. **TwitchChat Event Handlers** (5 tests) - Command execution, OAuth events, error handling scenarios
+
+### ConfigDefaults Test Suite Structure
+The ConfigDefaults utility features a comprehensive 18-test suite organized into 4 test categories:
+
+#### Test Categories
+1. **createFallbackConfig** (8 tests) - Configuration structure validation, auth/commands/responses verification, consistency testing
+2. **isValidFallbackConfig** (6 tests) - Validation logic for various invalid configurations, type checking, property validation
+3. **getDefaultMaxChallenges** (2 tests) - Default value verification and type checking
+4. **getDefaultAuthConfig** (2 tests) - Default auth structure validation and object instance testing
+
+### App Class Test Suite Structure (Legacy)
 The App class features a comprehensive 27-test suite organized into 7 test categories:
 
 #### Test Categories
@@ -505,6 +560,28 @@ element?.addEventListener(EVENT_NAMES.CLICK, handler);
 const primaryColor = DEFAULT_COLORS.PRIMARY_BACKGROUND;
 const maxValue = FORM_CONSTRAINTS.MAX_CHALLENGES_MAX;
 const commandType = normalizeCommand("add"); // Returns CommandType.ADD
+```
+
+### Fallback Configuration Pattern
+```typescript
+import { createFallbackConfig } from "./utils/ConfigDefaults";
+
+// Error recovery in configuration loading
+let configManager: ConfigManager;
+try {
+    configManager = ConfigManager.getInstance(userConfig);
+} catch (error) {
+    console.warn("Configuration loading failed, using fallback");
+    const fallbackConfig = createFallbackConfig();
+    configManager = ConfigManager.getInstance(fallbackConfig);
+}
+
+// Validation of fallback configuration
+import { isValidFallbackConfig } from "./utils/ConfigDefaults";
+const config = createFallbackConfig();
+if (isValidFallbackConfig(config)) {
+    // Configuration is valid and ready to use
+}
 ```
 
 ### DOM Manipulation

@@ -5,6 +5,7 @@ import { setupDualWindow } from "./dualWindow";
 import { closeModal, openModal } from "./modal";
 import TwitchChat from "./twitch/TwitchChat";
 import { loadTestUsers } from "./twitch/loadTestUsers";
+import { createFallbackConfig } from "./utils/ConfigDefaults";
 import { getWindowRefreshManager } from "./utils/windowRefresh";
 
 // Initialize dual-window architecture
@@ -28,56 +29,7 @@ try {
     );
 
     // Create minimal default configuration for fallback
-    const minimalConfig: Config = {
-        auth: {
-            twitch_oauth: "",
-            twitch_username: "",
-            twitch_channel: "",
-        },
-        maxChallenges: 10,
-        commands: {
-            // Admin commands (restricted to moderators and broadcaster)
-            clearAll: ["!ch clearlist", "!ch clearall"],
-            clearDone: ["!ch cleardone"],
-
-            // Challenge management commands (restricted to moderators and broadcaster)
-            addChallenge: ["!ch add"],
-            editChallenge: ["!ch edit"],
-            finishChallenge: ["!ch done"],
-            deleteChallenge: ["!ch delete", "!ch del"],
-
-            // Progress commands
-            incrementChallenge: ["!ch +"],
-            decrementChallenge: ["!ch -"],
-            setProgress: ["!ch set"],
-            failChallenge: ["!ch fail"],
-
-            // Information commands
-            listChallenges: ["!ch list"],
-            showChallenge: ["!ch show"],
-            check: ["!ch check"],
-            help: ["!ch help"],
-        },
-        responses: {
-            // Admin responses
-            clearAll: "All challenges have been cleared",
-            clearDone: "All done challenges have been cleared",
-
-            // User responses
-            addChallenge: "Challenge(s) {message} added!",
-            editChallenge: "Challenge {message} updated!",
-            finishChallenge: "Good job on completing challenge(s) {message}!",
-            deleteChallenge: "Challenge(s) {message} has been deleted!",
-            deleteAll: "All of your challenges have been deleted!",
-            check: "Your current challenge(s) are: {message}",
-            help: "Try these commands - !ch add, !ch edit, !ch done, !ch delete, !ch check, !ch clearlist, !ch cleardone, !ch help",
-            maxChallengesAdded:
-                "Maximum number of challenges reached, try deleting old challenges.",
-            noChallengeFound:
-                "That challenge doesn't seem to exist, try adding one!",
-            invalidCommand: "Invalid command: {message}. Try !help",
-        },
-    };
+    const minimalConfig: Config = createFallbackConfig();
 
     // Create ConfigManager instance with minimal fallback configuration
     configManager = ConfigManager.getInstance(minimalConfig);
