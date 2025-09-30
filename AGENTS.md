@@ -327,20 +327,21 @@ try {
 
 ### Test Coverage Summary
 
-| Component | Tests | Statement | Branch | Function | Line |
-|-----------|-------|-----------|--------|----------|------|
-| App | 27 | 92.59% | 88.46% | 95.45% | 92.59% |
-| AdminPanel | 35 | 89.92% | 82.22% | 92.3% | 89.92% |
-| Index.ts | 21 | 84.5% | 90% | 100% | 84.5% |
-| CommandRegistry | 34 | 100% | 100% | 100% | 100% |
-| ConfigDefaults | 18 | 97.5% | 95% | 100% | - |
-| AddCommand | 27 | - | - | - | - |
-| EditCommand | 47 | 98.14% | 95.23% | 100% | 98.14% |
-| DoneCommand | 32 | 88.88% | 82.35% | 100% | 88.88% |
-| DeleteCommand | 30 | 83.33% | 83.33% | 100% | 83.33% |
-| FailCommand | 33 | 84.12% | 82.35% | 100% | 84.12% |
-| ClearAllCommand | 10 | 100% | 100% | 100% | 100% |
-| ClearDoneCommand | 13 | 100% | 100% | 100% | 100% |
+| Component        | Tests | Statement | Branch | Function | Line   |
+| ---------------- | ----- | --------- | ------ | -------- | ------ |
+| App              | 27    | 92.59%    | 88.46% | 95.45%   | 92.59% |
+| AdminPanel       | 35    | 89.92%    | 82.22% | 92.3%    | 89.92% |
+| Index.ts         | 21    | 84.5%     | 90%    | 100%     | 84.5%  |
+| CommandRegistry  | 34    | 100%      | 100%   | 100%     | 100%   |
+| ConfigDefaults   | 18    | 97.5%     | 95%    | 100%     | -      |
+| AddCommand       | 27    | -         | -      | -        | -      |
+| EditCommand      | 47    | 98.14%    | 95.23% | 100%     | 98.14% |
+| DoneCommand      | 32    | 88.88%    | 82.35% | 100%     | 88.88% |
+| DeleteCommand    | 30    | 83.33%    | 83.33% | 100%     | 83.33% |
+| FailCommand      | 33    | 84.12%    | 82.35% | 100%     | 84.12% |
+| HelpCommand      | 43    | 100%      | 100%   | 100%     | 100%   |
+| ClearAllCommand  | 10    | 100%      | 100%   | 100%     | 100%   |
+| ClearDoneCommand | 13    | 100%      | 100%   | 100%     | 100%   |
 
 ### Test Structure
 
@@ -680,5 +681,3 @@ validateInput(input: string): string {
     return input;
 }
 ```
-
-
