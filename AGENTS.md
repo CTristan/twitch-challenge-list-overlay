@@ -334,6 +334,7 @@ try {
     -   **UndoneCommand** - 5-test suite covering challenge reversion and timer restart
     -   **DeleteCommand** - 30-test suite achieving 83.33% coverage across all metrics, covering single/multiple deletion, error handling, and edge cases
     -   **DoneCommand** - 32-test suite achieving 88.88% statement coverage, 82.35% branch coverage, 100% function coverage, and 88.88% line coverage, covering single/multiple completion, timer stopping, error handling, and edge cases
+    -   **EditCommand** - 47-test suite achieving 98.14% statement coverage, 95.23% branch coverage, 100% function coverage, and 98.14% line coverage, covering title/description/amount/timer updates, multiple parameter updates, error handling, UI updates, and edge cases
     -   **ClearAllCommand** - 10-test suite achieving 100% coverage across all metrics
     -   **ClearDoneCommand** - 13-test suite achieving 100% coverage across all metrics
 -   **Comprehensive App class coverage** - 27-test suite achieving 88.46% branch coverage, 92.59% statement coverage, 95.45% function coverage, and 92.59% line coverage
