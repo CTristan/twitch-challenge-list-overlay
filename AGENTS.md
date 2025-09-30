@@ -332,6 +332,7 @@ try {
     -   **AddCommand** - 27-test suite covering challenge creation, parameter parsing, timer integration, and validation
     -   **ShowCommand** - 8-test suite covering challenge detail display and formatting
     -   **UndoneCommand** - 5-test suite covering challenge reversion and timer restart
+    -   **DeleteCommand** - 30-test suite achieving 83.33% coverage across all metrics, covering single/multiple deletion, error handling, and edge cases
     -   **ClearAllCommand** - 10-test suite achieving 100% coverage across all metrics
     -   **ClearDoneCommand** - 13-test suite achieving 100% coverage across all metrics
 -   **Comprehensive App class coverage** - 27-test suite achieving 88.46% branch coverage, 92.59% statement coverage, 95.45% function coverage, and 92.59% line coverage
