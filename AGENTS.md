@@ -1,57 +1,56 @@
-# AGENTS.md - Development Reference Guide (Condensed)
+# AGENTS.md - Development Reference Guide
 
 ## Project Overview
 
-**Twitch Challenge Overlay** - A lightweight browser-based single-streamer challenge management overlay for Twitch streamers with dual-mode architecture. Features an admin interface for streamers/moderators and a viewer display for on-stream use. Built as an OBS Browser Source with real-time Twitch IRC integration and zero-server deployment.
+**Twitch Challenge Overlay** - Browser-based single-streamer challenge management overlay with dual-mode architecture (admin/viewer). OBS Browser Source with Twitch IRC integration, zero-server deployment.
 
 ### Core Architecture
 
--   **Frontend-only application** - No backend/database required
--   **Event-driven architecture** using custom EventEmitter pattern
--   **Modular class-based design** with clear separation of concerns
--   **Configuration-driven** with external config files for customization
+-   **Frontend-only** - No backend/database
+-   **Event-driven** - Custom EventEmitter pattern
+-   **Modular class-based** - Clear separation of concerns
+-   **Configuration-driven** - External config files
 
 ### Directory Structure
 
 ```
-├── src/                    # Source code (fully TypeScript)
-│   ├── classes/           # Core business logic (AdminPanel, Challenge, ChallengeList, ConfigManager, ConfigExporter)
-│   ├── commands/          # Command pattern implementation (15+ command classes)
-│   ├── twitch/            # Twitch IRC integration (TwitchChat, EventEmitter, message-parsers)
-│   ├── utils/             # Utility modules (CommandHandler, Timer, UIUpdateHandler, ConfigDefaults, etc.)
-│   ├── types/             # TypeScript type definitions and constants
+├── src/                    # TypeScript source
+│   ├── classes/           # AdminPanel, Challenge, ChallengeList, ConfigManager, ConfigExporter
+│   ├── commands/          # Command pattern (15+ classes)
+│   ├── twitch/            # TwitchChat, EventEmitter, message-parsers
+│   ├── utils/             # CommandHandler, Timer, UIUpdateHandler, ConfigDefaults
+│   ├── types/             # Type definitions and constants
 │   ├── animations/        # UI animations
 │   ├── app.ts, index.ts, dualWindow.ts, modal.ts, styleLoader.ts
-├── styles/                # CSS organization (admin, app, modal, utility, variables)
-├── tests/                 # Unit tests (TypeScript) - 80% coverage requirement
-├── types/globals.d.ts     # Global type definitions (interfaces/types only - NO enums)
+├── styles/                # CSS (admin, app, modal, utility, variables)
+├── tests/                 # Unit tests - 80% coverage requirement
+├── types/globals.d.ts     # Global types (interfaces/types only - NO enums)
 ├── _config.js, dist/, tsconfig.json, vite.config.ts, vitest.config.ts, index.html
 ```
 
-### Key Classes & Responsibilities
+### Key Classes
 
--   **App**: Main controller, DOM rendering, chat command handling, timer display management
--   **ChallengeList**: Manages single unified challenge list and persistence
--   **Challenge**: Individual challenge with state management and timer integration
--   **AdminPanel**: Admin interface functionality and configuration management
--   **ConfigManager**: Singleton configuration management with localStorage persistence
--   **CommandHandler**: Command execution coordinator that delegates to CommandRegistry
--   **CommandRegistry**: Centralized command management using Command pattern
--   **Command/BaseCommand**: Command pattern interface and abstract base class for all commands
--   **CommandParser**: Command parsing utilities with key=value parameter syntax and simple string fallback support
--   **CommandTypes**: Type-safe command constants, aliasing system, and permission categorization
--   **MessageConstants**: Centralized string management system for all user-facing messages, error messages, and response strings
--   **ColorConstants**: Centralized color constants for UI elements, status indicators, and theming
--   **ConfigConstants**: Configuration property names and defaults with type-safe access patterns
--   **DOMConstants**: CSS classes, selectors, element IDs, and DOM-related constants
--   **FileConstants**: File format, extension, and filename constants for import/export operations
--   **NumericConstants**: Numeric constraints, validation values, and calculation constants
--   **UIUpdateHandler**: DOM manipulation and UI update coordination for command results
--   **ConfigDefaults**: Fallback configuration creation utility with validation functions
--   **TwitchChat**: WebSocket IRC client with event emission and OAuth token validation
--   **EventEmitter**: Custom event system for decoupled communication
--   **Timer**: Timer functionality with countdown, formatting, and state management
--   **TimerController**: Centralized timer lifecycle management with coordinated timer update intervals
+-   **App**: Main controller, DOM rendering, chat commands, timer display
+-   **ChallengeList**: Unified challenge list and persistence
+-   **Challenge**: State management and timer integration
+-   **AdminPanel**: Admin interface and configuration
+-   **ConfigManager**: Singleton configuration with localStorage
+-   **CommandHandler/CommandRegistry**: Command execution and routing
+-   **Command/BaseCommand**: Command pattern interface and base class
+-   **CommandParser**: key=value and simple string syntax parsing
+-   **CommandTypes**: Type-safe command constants and aliasing
+-   **MessageConstants**: Centralized user-facing messages
+-   **ColorConstants**: UI colors and status indicators
+-   **ConfigConstants**: Configuration property names
+-   **DOMConstants**: CSS classes, selectors, element IDs
+-   **FileConstants**: File formats and filenames
+-   **NumericConstants**: Validation constraints
+-   **UIUpdateHandler**: DOM manipulation coordination
+-   **ConfigDefaults**: Fallback configuration utility
+-   **TwitchChat**: WebSocket IRC client with OAuth validation
+-   **EventEmitter**: Custom event system
+-   **Timer**: Countdown, formatting, state management
+-   **TimerController**: Timer lifecycle management
 
 ## Technology Stack
 
@@ -321,25 +320,27 @@ try {
 ### Test Organization
 
 -   **Unit tests** for each class in parallel file structure
--   **Global setup** with mocked configuration objects
--   **jsdom environment** for DOM testing
--   **Vitest** with coverage reporting and 80% coverage thresholds
+-   **jsdom environment** for DOM testing with Vitest
+-   **80% coverage thresholds** (statements, branches, functions, lines)
 -   **Specialized test utilities** (chatHandlerTestUtils.ts, domTestUtils.ts)
--   **Dual-layer command testing approach**:
-    -   **Integration tests** - End-to-end command processing validation through app-level integration test suite
-    -   **Unit tests** - Individual command class tests in `tests/commands/` directory for focused coverage
--   **Command test coverage examples**:
-    -   **AddCommand** - 27-test suite covering challenge creation, parameter parsing, timer integration, and validation
-    -   **ShowCommand** - 8-test suite covering challenge detail display and formatting
-    -   **UndoneCommand** - 5-test suite covering challenge reversion and timer restart
-    -   **DeleteCommand** - 30-test suite achieving 83.33% coverage across all metrics, covering single/multiple deletion, error handling, and edge cases
-    -   **DoneCommand** - 32-test suite achieving 88.88% statement coverage, 82.35% branch coverage, 100% function coverage, and 88.88% line coverage, covering single/multiple completion, timer stopping, error handling, and edge cases
-    -   **EditCommand** - 47-test suite achieving 98.14% statement coverage, 95.23% branch coverage, 100% function coverage, and 98.14% line coverage, covering title/description/amount/timer updates, multiple parameter updates, error handling, UI updates, and edge cases
-    -   **ClearAllCommand** - 10-test suite achieving 100% coverage across all metrics
-    -   **ClearDoneCommand** - 13-test suite achieving 100% coverage across all metrics
--   **Comprehensive App class coverage** - 27-test suite achieving 88.46% branch coverage, 92.59% statement coverage, 95.45% function coverage, and 92.59% line coverage
--   **AdminPanel class coverage** - 35-test suite achieving 82.22% branch coverage, 89.92% statement coverage, 92.3% function coverage, and 89.92% line coverage
--   **ConfigDefaults utility testing** - 18-test suite achieving 97.5% statement coverage, 95% branch coverage, and 100% function coverage
+-   **Dual-layer testing**: Integration tests (app-level) + Unit tests (individual commands)
+
+### Test Coverage Summary
+
+| Component | Tests | Statement | Branch | Function | Line |
+|-----------|-------|-----------|--------|----------|------|
+| App | 27 | 92.59% | 88.46% | 95.45% | 92.59% |
+| AdminPanel | 35 | 89.92% | 82.22% | 92.3% | 89.92% |
+| Index.ts | 21 | 84.5% | 90% | 100% | 84.5% |
+| CommandRegistry | 34 | 100% | 100% | 100% | 100% |
+| ConfigDefaults | 18 | 97.5% | 95% | 100% | - |
+| AddCommand | 27 | - | - | - | - |
+| EditCommand | 47 | 98.14% | 95.23% | 100% | 98.14% |
+| DoneCommand | 32 | 88.88% | 82.35% | 100% | 88.88% |
+| DeleteCommand | 30 | 83.33% | 83.33% | 100% | 83.33% |
+| FailCommand | 33 | 84.12% | 82.35% | 100% | 84.12% |
+| ClearAllCommand | 10 | 100% | 100% | 100% | 100% |
+| ClearDoneCommand | 13 | 100% | 100% | 100% | 100% |
 
 ### Test Structure
 
@@ -366,134 +367,27 @@ describe("ClassName", () => {
 
 ### Branch Coverage Testing Strategies
 
-The App class implements comprehensive branch coverage testing to achieve 88.46% branch coverage through targeted test scenarios:
-
-#### Error Handling Path Testing
-
--   **Invalid command path testing**: Tests commands that don't match expected prefix patterns to cover error response branches
--   **DOM manipulation error testing**: Tests error handling in checkbox interactions when DOM operations throw exceptions
--   **Command handler error testing**: Tests try-catch blocks in chat command processing
-
-#### Conditional Branch Testing
-
--   **Admin mode vs viewer mode**: Tests different behavior paths based on `window.location.hash` values
--   **Configuration-dependent branches**: Tests overlay background color application and other config-driven conditional logic
--   **Timer state branches**: Tests active vs inactive timer conditions in challenge rendering
-
-#### Integration-Style Branch Coverage
-
--   **Complete command flow testing**: Tests entire command processing pipeline including UI updates
--   **Error condition handling**: Tests various error scenarios while maintaining integration test approach
--   **DOM state validation**: Tests different DOM states and their corresponding code branches
+-   **Error paths**: Invalid commands, DOM errors, command handler exceptions
+-   **Conditional branches**: Admin vs viewer mode, config-dependent logic, timer states
+-   **Integration-style**: Complete command flows, error scenarios, DOM state validation
 
 ### Test Coverage Requirements
 
--   **Coverage thresholds**: 80% minimum across all metrics (statements, branches, functions, lines)
--   **Provider**: v8 coverage provider for accurate TypeScript coverage
--   **Reporting**: Text and HTML coverage reports generated
--   **Enforcement**: Build fails if coverage thresholds are not met
--   **App class achievement**: Exceeds all thresholds with 88.46% branch coverage, 92.59% statement coverage, 95.45% function coverage, and 92.59% line coverage
--   **AdminPanel class achievement**: Exceeds all thresholds with 82.22% branch coverage, 89.92% statement coverage, 92.3% function coverage, and 89.92% line coverage
--   **Index.ts achievement**: Exceeds all thresholds with 90% branch coverage, 84.5% statement coverage, 100% function coverage, and 84.5% line coverage
+-   **Thresholds**: 80% minimum (statements, branches, functions, lines)
+-   **Provider**: v8 for TypeScript coverage
+-   **Enforcement**: Build fails below thresholds
 
-### App Class Test Suite Structure
+### Test Suite Categories
 
-The App class features a comprehensive 27-test suite organized into 7 test categories:
+**App (27 tests, 7 categories)**: Constructor/initialization, checkbox error handling, timer methods, admin mode, DOM errors, integration tests, branch coverage
 
-### Index.ts Test Suite Structure
+**Index.ts (21 tests, 5 categories)**: Module initialization, config error handling, error path testing, window load events, TwitchChat handlers
 
-The index.ts file features a comprehensive 21-test suite organized into 5 test categories:
+**AdminPanel (35 tests, 10 categories)**: Initialization/mode handling, config validation, save/reset, background config, export, import file handling, UI refresh, feedback system
 
-#### Test Categories
+**CommandRegistry (34 tests, 8 categories, 100% coverage)**: Constructor/init, getCommand, hasCommand, getRegisteredCommands, executeCommand, registerCommand, unregisterCommand, command pattern integration
 
-1. **Module Initialization** (4 tests) - setupDualWindow, getWindowRefreshManager, ConfigManager, TwitchChat initialization
-2. **Configuration Error Handling** (2 tests) - Fallback configuration structure validation, WebSocket URL format validation
-3. **Configuration Error Path Testing** (2 tests) - Fallback configuration creation logic, error handling console messages
-4. **Window Load Event Handling** (8 tests) - App initialization, AdminPanel setup, event handlers, test mode detection
-5. **TwitchChat Event Handlers** (5 tests) - Command execution, OAuth events, error handling scenarios
-
-### AdminPanel Class Test Suite Structure
-
-The AdminPanel class features a comprehensive 35-test suite organized into 10 test categories:
-
-#### Test Categories
-
-1. **Initialization and Mode Handling** (4 tests) - Admin mode initialization, localStorage error handling, hash change handling, viewer mode behavior
-2. **Configuration Validation** (10 tests) - Import validation for auth, maxChallenges, commands, responses properties with various invalid configurations
-3. **Configuration Save and Reset** (4 tests) - Complete save/reset flows, error handling for save/reset failures
-4. **Background Configuration** (6 tests) - Background color/opacity configuration, preview updates, auto text color toggle, text shadow application
-5. **Configuration Export** (2 tests) - Unsupported format handling, export failure error handling
-6. **Configuration Import File Handling** (5 tests) - File picker triggering, file selection validation, invalid file types, file read errors, invalid JSON handling
-7. **UI Refresh** (2 tests) - Configuration UI refresh with current values, missing form elements graceful handling
-8. **Feedback System** (2 tests) - Feedback display and timeout reset, missing button element graceful handling
-
-#### Key Testing Strategies
-
--   **Configuration validation testing**: Comprehensive validation of imported configurations with various invalid scenarios
--   **Error path coverage**: Tests error handling in save/reset/export/import operations
--   **DOM manipulation testing**: Tests background configuration UI updates and preview functionality
--   **Integration approach**: End-to-end testing of configuration management flows
-
-### CommandRegistry Test Suite Structure
-
-The CommandRegistry class features a comprehensive 34-test suite organized into 8 test categories achieving **100% coverage across all four metrics**:
-
-#### Test Categories
-
-1. **Constructor and Initialization** (3 tests) - ChallengeList/ConfigManager initialization, command registration verification, command count validation
-2. **getCommand** (7 tests) - Command instance retrieval, alias normalization, invalid command handling, case-insensitive lookup, instance caching
-3. **hasCommand** (5 tests) - Command type validation, alias support, invalid command detection, case-insensitive checking
-4. **getRegisteredCommands** (3 tests) - Registered command array retrieval, canonical type verification, array instance isolation
-5. **executeCommand** (6 tests) - Command execution delegation, help response for unknown commands, alias handling, username passing, empty command handling
-6. **registerCommand** (3 tests) - New command registration, command override, custom type registration
-7. **unregisterCommand** (4 tests) - Command removal, non-existent command handling, isolation verification, re-registration support
-8. **Integration with Command Pattern** (3 tests) - Add command execution, list command execution, clear all command execution
-
-#### Key Testing Strategies
-
--   **Command pattern validation**: Comprehensive testing of command registration, retrieval, and execution routing
--   **Alias normalization testing**: Verification of command alias resolution to canonical types
--   **Error path coverage**: Tests for invalid commands, missing commands, and edge cases
--   **Integration approach**: End-to-end testing of command execution flows with actual command implementations
-
-#### Coverage Achievement
-
--   **Statement coverage: 100%**
--   **Branch coverage: 100%**
--   **Function coverage: 100%**
--   **Line coverage: 100%**
-
-### ConfigDefaults Test Suite Structure
-
-The ConfigDefaults utility features a comprehensive 18-test suite organized into 4 test categories:
-
-#### Test Categories
-
-1. **createFallbackConfig** (8 tests) - Configuration structure validation, auth/commands/responses verification, consistency testing
-2. **isValidFallbackConfig** (6 tests) - Validation logic for various invalid configurations, type checking, property validation
-3. **getDefaultMaxChallenges** (2 tests) - Default value verification and type checking
-4. **getDefaultAuthConfig** (2 tests) - Default auth structure validation and object instance testing
-
-### App Class Test Suite Structure (Legacy)
-
-The App class features a comprehensive 27-test suite organized into 7 test categories:
-
-#### Test Categories
-
-1. **Constructor and Initialization** (3 tests) - Component initialization, custom store names, style loading
-2. **Checkbox Interaction Error Handling** (6 tests) - Missing elements, duplicate processing, error scenarios
-3. **Timer Methods** (4 tests) - Timer lifecycle management, expiration handling, state validation
-4. **Admin Mode Functionality** (2 tests) - Admin vs viewer mode behavior validation
-5. **DOM Error Handling** (2 tests) - Missing containers, DOM manipulation error recovery
-6. **Integration Tests** (6 tests) - Complete command flows, custom text rendering, operations testing
-7. **Branch Coverage Tests** (4 tests) - Targeted branch coverage for error paths and conditional logic
-
-#### Key Testing Strategies
-
--   **Error path validation**: Comprehensive testing of error handling branches and exception scenarios
--   **Mode-dependent testing**: Validation of admin vs viewer mode conditional behavior
--   **Configuration testing**: Coverage of config-dependent branches like overlay background colors
--   **Integration approach**: End-to-end testing of command processing flows rather than isolated unit tests
+**ConfigDefaults (18 tests, 4 categories)**: createFallbackConfig, isValidFallbackConfig, getDefaultMaxChallenges, getDefaultAuthConfig
 
 ## Build & Deployment
 
@@ -526,25 +420,14 @@ pnpm run type-check:watch # Continuous type checking
 
 ### Dual-Mode Architecture (Implemented)
 
-The application features a complete dual-mode architecture system with a single challenge panel that works in two different modes:
+Single challenge panel with dual-mode interface:
 
-#### Architecture Implementation
-
--   **Single HTML file deployment** with zero-server requirements
--   **Single challenge panel display** - One unified challenge overlay visible to users
--   **URL fragment-based routing** for interface mode switching:
-    -   `file:///path/to/index.html` - **Viewer Mode**: Clean challenge overlay only (for OBS Browser Source)
-    -   `file:///path/to/index.html#admin` - **Admin Mode**: Challenge overlay + admin panel (for streamer configuration)
--   **Dynamic interface switching** via hash change events without affecting challenge display
-
-#### Permission Model (Single-Streamer Controlled)
-
--   **Single challenge panel** displayed on overlay (unified view)
--   **Restricted permissions** limited to streamer and moderators only
--   **No viewer interaction** - regular users cannot add, modify, or remove challenges
--   **Administrative control** exclusively managed by authorized users
--   **Permission validation** integrated with Twitch user roles (broadcaster, moderator)
--   **Command filtering** to reject unauthorized challenge management attempts
+-   **Single HTML file** - Zero-server deployment
+-   **URL fragment routing**:
+    -   `file:///path/to/index.html` - Viewer Mode (OBS Browser Source)
+    -   `file:///path/to/index.html#admin` - Admin Mode (overlay + admin panel)
+-   **Permission Model**: Streamer/moderators only, no viewer interaction
+-   **Command filtering**: Rejects unauthorized attempts
 
 ### Countdown Timer Display (Implemented)
 
@@ -558,16 +441,14 @@ The application features a complete dual-mode architecture system with a single 
 
 ### Unified Command System (Implemented)
 
-The project implements a comprehensive unified command system with the following features:
+Comprehensive command system with:
 
-#### Core Command Architecture
-
--   **Unified "!ch" prefix** for all commands with keyword subcommands
--   **Type-safe command processing** with centralized command type system
--   **Command aliasing** supporting multiple command variations that resolve to canonical types
--   **Dual syntax support** - both key=value parameters and simple string syntax
--   **Advanced challenge management** (increment, decrement, set progress, multiple target IDs)
--   **Robust error handling** and validation
+-   **Unified "!ch" prefix** with keyword subcommands
+-   **Type-safe processing** with centralized command types
+-   **Command aliasing** - multiple variations resolve to canonical types
+-   **Dual syntax** - key=value and simple string
+-   **Advanced management** - increment, decrement, set, multiple IDs
+-   **Robust validation** and error handling
 
 #### Command Type System
 
@@ -800,6 +681,4 @@ validateInput(input: string): string {
 }
 ```
 
----
 
-This condensed version preserves all critical technical information while reducing the content by approximately 60%, focusing on actionable information that directly impacts development decisions and code quality. The structure maintains logical flow while eliminating redundancy and verbose explanations.
