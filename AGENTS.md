@@ -51,6 +51,7 @@
 -   **EventEmitter**: Custom event system
 -   **Timer**: Countdown, formatting, state management
 -   **TimerController**: Timer lifecycle management
+-   **StorageManager**: Static localStorage utility with memory fallback
 
 ## Technology Stack
 
@@ -354,6 +355,7 @@ try {
 | ColorUtils        | 47    | 98.63%    | 87.09% | 100%     | 98.63% |
 | ResponseFormatter | 77    | 94.02%    | 94.24% | 100%     | 94.02% |
 | ValidationUtils   | 57    | 99.57%    | 95.29% | 100%     | 99.57% |
+| StorageManager    | 34    | 78.49%    | 92.18% | 86.66%   | 78.49% |
 
 ### Test Structure
 

@@ -223,6 +223,18 @@ export class StorageManager {
     }
 
     /**
+     * Handle errors during localStorage remove operation
+     * @param error - The error that occurred
+     * @returns Error result
+     */
+    static #handleRemoveError(error: unknown): StorageResult<void> {
+        return {
+            success: false,
+            error: error instanceof Error ? error.message : String(error),
+        };
+    }
+
+    /**
      * Remove data from localStorage
      * @param key - Storage key
      * @returns Storage result
@@ -243,11 +255,16 @@ export class StorageManager {
                 success: true,
             };
         } catch (error) {
-            return {
-                success: false,
-                error: error instanceof Error ? error.message : String(error),
-            };
+            return this.#handleRemoveError(error);
         }
+    }
+
+    /**
+     * Handle errors during localStorage availability check
+     * @returns False indicating storage is not available
+     */
+    static #handleStorageCheckError(): boolean {
+        return false;
     }
 
     /**
@@ -261,8 +278,17 @@ export class StorageManager {
             localStorage.removeItem(test);
             return true;
         } catch {
-            return false;
+            return this.#handleStorageCheckError();
         }
+    }
+
+    /**
+     * Handle errors during localStorage key retrieval
+     * Silently ignores errors and continues with empty key list
+     */
+    static #handleGetKeysError(): void {
+        // Ignore errors when getting keys - this is expected behavior
+        // when localStorage is not available or access is denied
     }
 
     /**
@@ -285,7 +311,7 @@ export class StorageManager {
                 }
             }
         } catch {
-            // Ignore errors when getting keys
+            this.#handleGetKeysError();
         }
 
         return {
@@ -367,12 +393,25 @@ export class StorageManager {
                 data: removedCount,
             };
         } catch (error) {
-            return {
-                success: false,
-                error: error instanceof Error ? error.message : String(error),
-                data: removedCount,
-            };
+            return this.#handleCleanupError(error, removedCount);
         }
+    }
+
+    /**
+     * Handle errors during cleanup operation
+     * @param error - The error that occurred
+     * @param removedCount - Number of items removed before error
+     * @returns Error result with partial success data
+     */
+    static #handleCleanupError(
+        error: unknown,
+        removedCount: number
+    ): StorageResult<number> {
+        return {
+            success: false,
+            error: error instanceof Error ? error.message : String(error),
+            data: removedCount,
+        };
     }
 
     /**
