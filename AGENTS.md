@@ -327,29 +327,31 @@ try {
 
 ### Test Coverage Summary
 
-| Component        | Tests | Statement | Branch | Function | Line   |
-| ---------------- | ----- | --------- | ------ | -------- | ------ |
-| App              | 27    | 92.59%    | 88.46% | 95.45%   | 92.59% |
-| AdminPanel       | 35    | 89.92%    | 82.22% | 92.3%    | 89.92% |
-| Index.ts         | 21    | 84.5%     | 90%    | 100%     | 84.5%  |
-| CommandRegistry  | 34    | 100%      | 100%   | 100%     | 100%   |
-| ConfigDefaults   | 18    | 97.5%     | 95%    | 100%     | -      |
-| TwitchChat       | 34    | 100%      | 90.19% | 100%     | 100%   |
-| message-parsers  | 52    | 100%      | 98.57% | 100%     | 100%   |
-| loadTestUsers    | 25    | 100%      | 100%   | 100%     | 100%   |
-| AddCommand       | 27    | -         | -      | -        | -      |
-| EditCommand      | 47    | 98.14%    | 95.23% | 100%     | 98.14% |
-| DoneCommand      | 32    | 88.88%    | 82.35% | 100%     | 88.88% |
-| UndoneCommand    | 32    | 89.33%    | 88.23% | 100%     | 89.33% |
-| DeleteCommand    | 30    | 83.33%    | 83.33% | 100%     | 83.33% |
-| FailCommand      | 33    | 84.12%    | 82.35% | 100%     | 84.12% |
-| HelpCommand      | 43    | 100%      | 100%   | 100%     | 100%   |
-| ListCommand      | 45    | 93.28%    | 92.85% | 100%     | 93.28% |
-| SetCommand       | 38    | 100%      | 100%   | 100%     | 100%   |
-| ShowCommand      | 24    | 94.93%    | 95.23% | 100%     | 94.93% |
-| ClearAllCommand  | 10    | 100%      | 100%   | 100%     | 100%   |
-| ClearDoneCommand | 13    | 100%      | 100%   | 100%     | 100%   |
-| ColorUtils       | 47    | 98.63%    | 87.09% | 100%     | 98.63% |
+| Component         | Tests | Statement | Branch | Function | Line   |
+| ----------------- | ----- | --------- | ------ | -------- | ------ |
+| App               | 27    | 92.59%    | 88.46% | 95.45%   | 92.59% |
+| AdminPanel        | 35    | 89.92%    | 82.22% | 92.3%    | 89.92% |
+| Index.ts          | 21    | 84.5%     | 90%    | 100%     | 84.5%  |
+| CommandRegistry   | 34    | 100%      | 100%   | 100%     | 100%   |
+| ConfigDefaults    | 18    | 97.5%     | 95%    | 100%     | -      |
+| TwitchChat        | 34    | 100%      | 90.19% | 100%     | 100%   |
+| message-parsers   | 52    | 100%      | 98.57% | 100%     | 100%   |
+| loadTestUsers     | 25    | 100%      | 100%   | 100%     | 100%   |
+| AddCommand        | 27    | -         | -      | -        | -      |
+| EditCommand       | 47    | 98.14%    | 95.23% | 100%     | 98.14% |
+| DoneCommand       | 32    | 88.88%    | 82.35% | 100%     | 88.88% |
+| UndoneCommand     | 32    | 89.33%    | 88.23% | 100%     | 89.33% |
+| DeleteCommand     | 30    | 83.33%    | 83.33% | 100%     | 83.33% |
+| FailCommand       | 33    | 84.12%    | 82.35% | 100%     | 84.12% |
+| HelpCommand       | 43    | 100%      | 100%   | 100%     | 100%   |
+| ListCommand       | 45    | 93.28%    | 92.85% | 100%     | 93.28% |
+| SetCommand        | 38    | 100%      | 100%   | 100%     | 100%   |
+| ShowCommand       | 24    | 94.93%    | 95.23% | 100%     | 94.93% |
+| ClearAllCommand   | 10    | 100%      | 100%   | 100%     | 100%   |
+| ClearDoneCommand  | 13    | 100%      | 100%   | 100%     | 100%   |
+| ChallengeRenderer | 30    | 100%      | 97.91% | 100%     | 100%   |
+| CommandHandler    | 19    | 100%      | 100%   | 100%     | 100%   |
+| ColorUtils        | 47    | 98.63%    | 87.09% | 100%     | 98.63% |
 
 ### Test Structure
 
