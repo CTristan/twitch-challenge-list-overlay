@@ -18,8 +18,9 @@
 │   ├── classes/           # AdminPanel, Challenge, ChallengeList, ConfigManager, ConfigExporter
 │   ├── commands/          # Command pattern (15+ classes)
 │   ├── twitch/            # TwitchChat, EventEmitter, message-parsers
-│   ├── utils/             # CommandHandler, Timer, UIUpdateHandler, ConfigDefaults
+│   ├── utils/             # CommandHandler, Timer, UIUpdateHandler, ConfigDefaults, ChallengeRenderer
 │   ├── types/             # Type definitions and constants
+│   ├── templates/         # AdminPanelTemplates (HTML template methods)
 │   ├── animations/        # UI animations
 │   ├── app.ts, index.ts, dualWindow.ts, modal.ts, styleLoader.ts
 ├── styles/                # CSS (admin, app, modal, utility, variables)
@@ -33,7 +34,8 @@
 -   **App**: Main controller, DOM rendering, chat commands, timer display
 -   **ChallengeList**: Unified challenge list and persistence
 -   **Challenge**: State management and timer integration
--   **AdminPanel**: Admin interface and configuration
+-   **AdminPanel**: Admin interface and configuration with template-based UI rendering
+-   **AdminPanelTemplates**: Centralized HTML templates for admin panel sections
 -   **ConfigManager**: Singleton configuration with localStorage
 -   **CommandHandler/CommandRegistry**: Command execution and routing
 -   **Command/BaseCommand**: Command pattern interface and base class
@@ -41,11 +43,12 @@
 -   **CommandTypes**: Type-safe command constants and aliasing
 -   **MessageConstants**: Centralized user-facing messages
 -   **ColorConstants**: UI colors and status indicators
--   **ConfigConstants**: Configuration property names
+-   **ConfigConstants**: Configuration property names (including COLOR_CONFIG, BACKGROUND_DEFAULTS)
 -   **DOMConstants**: CSS classes, selectors, element IDs
 -   **FileConstants**: File formats and filenames
 -   **NumericConstants**: Validation constraints
 -   **UIUpdateHandler**: DOM manipulation coordination
+-   **ChallengeRenderer**: Centralized challenge DOM creation and styling with row color opacity support
 -   **ConfigDefaults**: Fallback configuration utility
 -   **TwitchChat**: WebSocket IRC client with OAuth validation
 -   **EventEmitter**: Custom event system
@@ -128,16 +131,24 @@ const uiUpdate: UIUpdateData = { action: UIUpdateAction.ADD };
 
 ```typescript
 // ✅ Usage across the application
-import { BACKGROUND_CONFIG } from "../types/ConfigConstants";
+import {
+    BACKGROUND_CONFIG,
+    BACKGROUND_DEFAULTS,
+    COLOR_CONFIG,
+} from "../types/ConfigConstants";
 import { DEFAULT_COLORS } from "../types/ColorConstants";
-import { CSS_CLASSES } from "../types/DOMConstants";
+import { CSS_CLASSES, ELEMENT_IDS } from "../types/DOMConstants";
 import { ERROR_MESSAGES } from "../types/MessageConstants";
 
 const backgroundColor = configManager.get(
     BACKGROUND_CONFIG.CHALLENGE_BACKGROUND_COLOR
 );
+const rowColorsOpacity =
+    configManager.get(COLOR_CONFIG.CHALLENGE_ROW_COLORS_OPACITY) ??
+    BACKGROUND_DEFAULTS.ROW_COLORS_OPACITY;
 element.classList.add(CSS_CLASSES.DONE);
 const color = DEFAULT_COLORS.PRIMARY_BACKGROUND;
+const opacitySlider = document.getElementById(ELEMENT_IDS.ROW_COLORS_OPACITY);
 return this.createSuccessResponse(ERROR_MESSAGES.NO_CHALLENGES_TO_CLEAR);
 ```
 
@@ -281,7 +292,8 @@ The system includes built-in defaults for all configuration properties:
 -   **Basic behavior**: maxChallenges: 10
 -   **Command mappings**: Unified "!ch" prefix system
 -   **Response templates**: Standardized bot responses
--   **Color configuration**: Optional challenge row styling
+-   **Color configuration**: Optional challenge row styling with opacity control
+-   **Row colors opacity**: challengeRowColorsOpacity: 1.0 (100% opaque by default)
 
 ### ConfigDefaults Utility Module
 
@@ -624,6 +636,7 @@ import {
     BEHAVIOR_CONFIG,
     COLOR_CONFIG,
     BACKGROUND_CONFIG,
+    BACKGROUND_DEFAULTS,
 } from "../types/ConfigConstants";
 import { DEFAULT_COLORS, STATUS_COLORS } from "../types/ColorConstants";
 import { CSS_CLASSES, ELEMENT_IDS, EVENT_NAMES } from "../types/DOMConstants";
@@ -635,6 +648,9 @@ const maxChallenges = configManager.get(BEHAVIOR_CONFIG.MAX_CHALLENGES);
 const backgroundColor = configManager.get(
     BACKGROUND_CONFIG.CHALLENGE_BACKGROUND_COLOR
 );
+const rowColorsOpacity =
+    configManager.get(COLOR_CONFIG.CHALLENGE_ROW_COLORS_OPACITY) ??
+    BACKGROUND_DEFAULTS.ROW_COLORS_OPACITY;
 
 // DOM manipulation with constants
 const element = document.getElementById(ELEMENT_IDS.CONFIG_FORM);
@@ -644,6 +660,7 @@ element?.addEventListener(EVENT_NAMES.CLICK, handler);
 // Color and validation with constants
 const primaryColor = DEFAULT_COLORS.PRIMARY_BACKGROUND;
 const maxValue = FORM_CONSTRAINTS.MAX_CHALLENGES_MAX;
+const opacitySlider = document.getElementById(ELEMENT_IDS.ROW_COLORS_OPACITY);
 const commandType = normalizeCommand("add"); // Returns CommandType.ADD
 ```
 
@@ -696,3 +713,71 @@ validateInput(input: string): string {
     return input;
 }
 ```
+
+### Admin Panel Template Pattern
+
+HTML templates for admin panel sections are centralized in `src/templates/AdminPanelTemplates.ts` for improved code organization and maintainability.
+
+```typescript
+// Template definition in AdminPanelTemplates.ts
+import { ELEMENT_IDS } from "../types/DOMConstants";
+
+export interface ColorSectionParams {
+    primaryBackgroundColor: string;
+    primaryTextColor: string;
+    secondaryBackgroundColor: string;
+    secondaryTextColor: string;
+    tertiaryBackgroundColor: string;
+    tertiaryTextColor: string;
+    rowColorsOpacityPercent: number;
+    elementIds: typeof ELEMENT_IDS;
+}
+
+export const AdminPanelTemplates = {
+    colorSection: (params: ColorSectionParams): string => `
+        <div class="form-group">
+            <label>Challenge Row Colors:</label>
+            <!-- HTML template with ${params.primaryBackgroundColor} etc. -->
+        </div>
+    `,
+
+    backgroundSection: (params: BackgroundSectionParams): string => `
+        <!-- Background customization HTML -->
+    `,
+};
+
+// Usage in AdminPanel class
+import { AdminPanelTemplates } from "../templates/AdminPanelTemplates";
+
+private createColorSection(container: HTMLElement): void {
+    const colorContent = AdminPanelTemplates.colorSection({
+        primaryBackgroundColor: DEFAULT_COLORS.PRIMARY_BACKGROUND,
+        primaryTextColor: DEFAULT_COLORS.PRIMARY_TEXT,
+        secondaryBackgroundColor: DEFAULT_COLORS.SECONDARY_BACKGROUND,
+        secondaryTextColor: DEFAULT_COLORS.SECONDARY_TEXT,
+        tertiaryBackgroundColor: DEFAULT_COLORS.TERTIARY_BACKGROUND,
+        tertiaryTextColor: DEFAULT_COLORS.TERTIARY_TEXT,
+        rowColorsOpacityPercent: Math.round(
+            BACKGROUND_DEFAULTS.ROW_COLORS_OPACITY * 100
+        ),
+        elementIds: ELEMENT_IDS,
+    });
+
+    const colorSection = new CollapsibleSection({
+        id: ELEMENT_IDS.COLORS_SECTION,
+        title: ADMIN_PANEL_LABELS.COLOR_CONFIGURATION,
+        content: colorContent,
+        defaultExpanded: false,
+    });
+
+    container.appendChild(colorSection.createElement());
+}
+```
+
+**Benefits**:
+
+-   **Separation of concerns**: HTML templates separated from class logic
+-   **Type safety**: TypeScript interfaces ensure all required parameters are provided
+-   **Maintainability**: Easier to update HTML structure in centralized location
+-   **Consistency**: Follows established pattern across admin panel sections
+-   **Reusability**: Templates can be reused across different contexts

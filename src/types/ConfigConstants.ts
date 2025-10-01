@@ -35,6 +35,7 @@ export const RESPONSE_CONFIG = {
 export const COLOR_CONFIG = {
     CHALLENGE_ROW_COLORS: "challengeRowColors",
     CHALLENGE_ROW_TEXT_COLORS: "challengeRowTextColors",
+    CHALLENGE_ROW_COLORS_OPACITY: "challengeRowColorsOpacity",
 } as const;
 
 /**
@@ -102,6 +103,9 @@ export const BACKGROUND_DEFAULTS = {
     TEXT_COLOR: "#ffffff",
     AUTO_TEXT_COLOR: true,
     TEXT_SHADOW: true,
+
+    // Challenge row colors opacity default
+    ROW_COLORS_OPACITY: 1.0,
 } as const;
 
 /**

@@ -133,6 +133,9 @@ interface Config {
     /** Optional array of text colors for challenge rows (should match challengeRowColors length) */
     challengeRowTextColors?: string[];
 
+    /** Opacity for challenge row colors when Color Configuration is enabled (0-1, default: 1.0) */
+    challengeRowColorsOpacity?: number;
+
     /** Overlay background color for the main container behind all challenges (default: rgba(100, 100, 100, 0.6)) */
     overlayBackgroundColor?: string;
 

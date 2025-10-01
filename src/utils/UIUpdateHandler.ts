@@ -3,7 +3,11 @@ import Challenge from "../classes/Challenge";
 import ChallengeList from "../classes/ChallengeList";
 import ConfigManager from "../classes/ConfigManager";
 import type { CommandResponse } from "../types/CommandResponse";
-import { BACKGROUND_CONFIG, COLOR_CONFIG } from "../types/ConfigConstants";
+import {
+    BACKGROUND_CONFIG,
+    BACKGROUND_DEFAULTS,
+    COLOR_CONFIG,
+} from "../types/ConfigConstants";
 import ChallengeRenderer from "./ChallengeRenderer";
 import DOMHelper from "./DOMHelper";
 import Timer from "./Timer";
@@ -510,6 +514,9 @@ export default class UIUpdateHandler {
         const rowTextColors =
             this.configManager.get(COLOR_CONFIG.CHALLENGE_ROW_TEXT_COLORS) ||
             [];
+        const rowColorsOpacity =
+            this.configManager.get(COLOR_CONFIG.CHALLENGE_ROW_COLORS_OPACITY) ??
+            BACKGROUND_DEFAULTS.ROW_COLORS_OPACITY;
 
         // Get background customization configuration
         const backgroundConfig = {
@@ -544,7 +551,8 @@ export default class UIUpdateHandler {
             backgroundConfig,
             actualRowIndex,
             rowColors,
-            rowTextColors
+            rowTextColors,
+            rowColorsOpacity
         );
     }
 

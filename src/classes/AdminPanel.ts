@@ -9,6 +9,7 @@ import {
     BACKGROUND_CONFIG,
     BACKGROUND_DEFAULTS,
     BACKGROUND_UI_ELEMENTS,
+    COLOR_CONFIG,
     CORE_CONFIG,
 } from "../types/ConfigConstants";
 import {
@@ -349,65 +350,18 @@ export default class AdminPanel {
      * @param container - The parent container element
      */
     private createColorSection(container: HTMLElement): void {
-        const colorContent = `
-          <div class="form-group">
-            <label>Challenge Row Colors:</label>
-
-            <!-- Primary Color Configuration -->
-            <div class="color-tier-section" id="primary-color-section">
-              <div class="color-tier-header">
-                <input type="checkbox" id="primary-color-enabled" class="color-tier-checkbox">
-                <h5 class="color-tier-title">Primary Color</h5>
-              </div>
-              <div class="color-pickers-container" id="primary-color-pickers">
-                <div class="color-picker-group">
-                  <label class="color-picker-label">Row Background</label>
-                  <input type="color" id="primary-bg-color" class="form-input" value="${DEFAULT_COLORS.PRIMARY_BACKGROUND}">
-                </div>
-                <div class="color-picker-group">
-                  <label class="color-picker-label">Text Color</label>
-                  <input type="color" id="primary-text-color" class="form-input" value="${DEFAULT_COLORS.PRIMARY_TEXT}">
-                </div>
-              </div>
-            </div>
-
-            <!-- Secondary Color Configuration -->
-            <div class="color-tier-section" id="secondary-color-section">
-              <div class="color-tier-header">
-                <input type="checkbox" id="secondary-color-enabled" class="color-tier-checkbox">
-                <h5 class="color-tier-title">Secondary Color</h5>
-              </div>
-              <div class="color-pickers-container" id="secondary-color-pickers">
-                <div class="color-picker-group">
-                  <label class="color-picker-label">Row Background</label>
-                  <input type="color" id="secondary-bg-color" class="form-input" value="${DEFAULT_COLORS.SECONDARY_BACKGROUND}">
-                </div>
-                <div class="color-picker-group">
-                  <label class="color-picker-label">Text Color</label>
-                  <input type="color" id="secondary-text-color" class="form-input" value="${DEFAULT_COLORS.SECONDARY_TEXT}">
-                </div>
-              </div>
-            </div>
-
-            <!-- Tertiary Color Configuration -->
-            <div class="color-tier-section" id="tertiary-color-section">
-              <div class="color-tier-header">
-                <input type="checkbox" id="tertiary-color-enabled" class="color-tier-checkbox">
-                <h5 class="color-tier-title">Tertiary Color</h5>
-              </div>
-              <div class="color-pickers-container" id="tertiary-color-pickers">
-                <div class="color-picker-group">
-                  <label class="color-picker-label">Row Background</label>
-                  <input type="color" id="tertiary-bg-color" class="form-input" value="${DEFAULT_COLORS.TERTIARY_BACKGROUND}">
-                </div>
-                <div class="color-picker-group">
-                  <label class="color-picker-label">Text Color</label>
-                  <input type="color" id="tertiary-text-color" class="form-input" value="${DEFAULT_COLORS.TERTIARY_TEXT}">
-                </div>
-              </div>
-            </div>
-          </div>
-        `;
+        const colorContent = AdminPanelTemplates.colorSection({
+            primaryBackgroundColor: DEFAULT_COLORS.PRIMARY_BACKGROUND,
+            primaryTextColor: DEFAULT_COLORS.PRIMARY_TEXT,
+            secondaryBackgroundColor: DEFAULT_COLORS.SECONDARY_BACKGROUND,
+            secondaryTextColor: DEFAULT_COLORS.SECONDARY_TEXT,
+            tertiaryBackgroundColor: DEFAULT_COLORS.TERTIARY_BACKGROUND,
+            tertiaryTextColor: DEFAULT_COLORS.TERTIARY_TEXT,
+            rowColorsOpacityPercent: Math.round(
+                BACKGROUND_DEFAULTS.ROW_COLORS_OPACITY * 100
+            ),
+            elementIds: ELEMENT_IDS,
+        });
 
         const colorSection = new CollapsibleSection({
             id: ELEMENT_IDS.COLORS_SECTION,
@@ -607,6 +561,23 @@ export default class AdminPanel {
                 this.updateColorTierState(tier, tierConfig.enabled);
             }
         });
+
+        // Populate row colors opacity
+        const opacitySlider = document.getElementById(
+            ELEMENT_IDS.ROW_COLORS_OPACITY
+        ) as HTMLInputElement;
+        const opacityDisplay = document.getElementById(
+            ELEMENT_IDS.ROW_COLORS_OPACITY_DISPLAY
+        );
+        if (opacitySlider && opacityDisplay) {
+            const opacity =
+                this.#configManager.get(
+                    COLOR_CONFIG.CHALLENGE_ROW_COLORS_OPACITY
+                ) ?? BACKGROUND_DEFAULTS.ROW_COLORS_OPACITY;
+            const opacityPercent = Math.round(opacity * 100);
+            opacitySlider.value = opacityPercent.toString();
+            opacityDisplay.textContent = `${opacityPercent}%`;
+        }
     }
 
     /**
@@ -772,6 +743,9 @@ export default class AdminPanel {
         // Setup color tier checkbox event listeners
         this.setupColorTierEventListeners();
 
+        // Setup row colors opacity event listener
+        this.setupRowColorsOpacityEventListener();
+
         // Setup background customization event listeners
         this.setupBackgroundEventListeners();
     }
@@ -822,6 +796,31 @@ export default class AdminPanel {
                 });
             }
         });
+    }
+
+    /**
+     * Setup event listener for row colors opacity slider
+     * @returns {void}
+     */
+    private setupRowColorsOpacityEventListener(): void {
+        const opacitySlider = document.getElementById(
+            ELEMENT_IDS.ROW_COLORS_OPACITY
+        ) as HTMLInputElement;
+        const opacityDisplay = document.getElementById(
+            ELEMENT_IDS.ROW_COLORS_OPACITY_DISPLAY
+        );
+
+        if (opacitySlider && opacityDisplay) {
+            const opacityHandler = () => {
+                opacityDisplay.textContent = `${opacitySlider.value}%`;
+            };
+            opacitySlider.addEventListener(EVENT_NAMES.INPUT, opacityHandler);
+            this.#eventListeners.set(ELEMENT_IDS.ROW_COLORS_OPACITY, {
+                element: opacitySlider,
+                event: EVENT_NAMES.INPUT,
+                handler: opacityHandler,
+            });
+        }
     }
 
     /**
@@ -1503,6 +1502,18 @@ export default class AdminPanel {
                 challengeRowTextColors
             );
 
+            // Get and save row colors opacity
+            const rowColorsOpacitySlider = document.getElementById(
+                ELEMENT_IDS.ROW_COLORS_OPACITY
+            ) as HTMLInputElement;
+            const rowColorsOpacity = rowColorsOpacitySlider
+                ? parseInt(rowColorsOpacitySlider.value) / 100
+                : BACKGROUND_DEFAULTS.ROW_COLORS_OPACITY;
+            const rowColorsOpacitySuccess = this.#configManager.set(
+                COLOR_CONFIG.CHALLENGE_ROW_COLORS_OPACITY,
+                rowColorsOpacity
+            );
+
             // Update overlay background configuration
             const overlayBackgroundColorSuccess = this.#configManager.set(
                 BACKGROUND_CONFIG.OVERLAY_BACKGROUND_COLOR,
@@ -1541,6 +1552,7 @@ export default class AdminPanel {
                 maxChallengesSuccess &&
                 colorsSuccess &&
                 textColorsSuccess &&
+                rowColorsOpacitySuccess &&
                 overlayBackgroundColorSuccess &&
                 overlayBackgroundOpacitySuccess &&
                 backgroundColorSuccess &&

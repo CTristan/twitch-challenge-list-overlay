@@ -114,6 +114,8 @@ export const ELEMENT_IDS = {
     TERTIARY_COLOR_ENABLED: "tertiary-color-enabled",
     TERTIARY_BG_COLOR: "tertiary-bg-color",
     TERTIARY_TEXT_COLOR: "tertiary-text-color",
+    ROW_COLORS_OPACITY: "row-colors-opacity",
+    ROW_COLORS_OPACITY_DISPLAY: "row-colors-opacity-display",
 
     // Background configuration elements
     CHALLENGE_BACKGROUND_COLOR: "challenge-background-color",

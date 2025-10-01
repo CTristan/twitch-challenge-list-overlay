@@ -5,6 +5,7 @@ import ConfigManager from "./classes/ConfigManager";
 import { loadStyles } from "./styleLoader";
 import {
     BACKGROUND_CONFIG,
+    BACKGROUND_DEFAULTS,
     COLOR_CONFIG,
     RESPONSE_CONFIG,
 } from "./types/ConfigConstants";
@@ -121,6 +122,10 @@ export default class App {
                 this.#configManager.get(
                     COLOR_CONFIG.CHALLENGE_ROW_TEXT_COLORS
                 ) || [];
+            const rowColorsOpacity =
+                this.#configManager.get(
+                    COLOR_CONFIG.CHALLENGE_ROW_COLORS_OPACITY
+                ) ?? BACKGROUND_DEFAULTS.ROW_COLORS_OPACITY;
 
             // Get background customization configuration
             const backgroundConfig = {
@@ -167,7 +172,8 @@ export default class App {
                         backgroundConfig,
                         index,
                         rowColors,
-                        rowTextColors
+                        rowTextColors,
+                        rowColorsOpacity
                     );
 
                     // Add timer display if timer exists and is active (as sibling to text)

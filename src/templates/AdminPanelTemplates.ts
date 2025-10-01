@@ -11,6 +11,20 @@ export interface BackgroundSectionParams {
 }
 
 /**
+ * Template parameters interface for color section
+ */
+export interface ColorSectionParams {
+    primaryBackgroundColor: string;
+    primaryTextColor: string;
+    secondaryBackgroundColor: string;
+    secondaryTextColor: string;
+    tertiaryBackgroundColor: string;
+    tertiaryTextColor: string;
+    rowColorsOpacityPercent: number;
+    elementIds: typeof ELEMENT_IDS;
+}
+
+/**
  * @class AdminPanelTemplates
  * HTML templates for admin panel sections to improve code readability,
  * maintainability, and separation of concerns.
@@ -19,6 +33,83 @@ export interface BackgroundSectionParams {
  * for dynamic content injection while maintaining type safety.
  */
 export const AdminPanelTemplates = {
+    /**
+     * Color configuration section template
+     * @param params - Template parameters for dynamic content
+     * @returns HTML string for the color section
+     */
+    colorSection: (params: ColorSectionParams): string => `
+          <div class="form-group">
+            <label>Challenge Row Colors:</label>
+
+            <!-- Primary Color Configuration -->
+            <div class="color-tier-section" id="primary-color-section">
+              <div class="color-tier-header">
+                <input type="checkbox" id="primary-color-enabled" class="color-tier-checkbox">
+                <h5 class="color-tier-title">Primary Color</h5>
+              </div>
+              <div class="color-pickers-container" id="primary-color-pickers">
+                <div class="color-picker-group">
+                  <label class="color-picker-label">Row Background</label>
+                  <input type="color" id="primary-bg-color" class="form-input" value="${params.primaryBackgroundColor}">
+                </div>
+                <div class="color-picker-group">
+                  <label class="color-picker-label">Text Color</label>
+                  <input type="color" id="primary-text-color" class="form-input" value="${params.primaryTextColor}">
+                </div>
+              </div>
+            </div>
+
+            <!-- Secondary Color Configuration -->
+            <div class="color-tier-section" id="secondary-color-section">
+              <div class="color-tier-header">
+                <input type="checkbox" id="secondary-color-enabled" class="color-tier-checkbox">
+                <h5 class="color-tier-title">Secondary Color</h5>
+              </div>
+              <div class="color-pickers-container" id="secondary-color-pickers">
+                <div class="color-picker-group">
+                  <label class="color-picker-label">Row Background</label>
+                  <input type="color" id="secondary-bg-color" class="form-input" value="${params.secondaryBackgroundColor}">
+                </div>
+                <div class="color-picker-group">
+                  <label class="color-picker-label">Text Color</label>
+                  <input type="color" id="secondary-text-color" class="form-input" value="${params.secondaryTextColor}">
+                </div>
+              </div>
+            </div>
+
+            <!-- Tertiary Color Configuration -->
+            <div class="color-tier-section" id="tertiary-color-section">
+              <div class="color-tier-header">
+                <input type="checkbox" id="tertiary-color-enabled" class="color-tier-checkbox">
+                <h5 class="color-tier-title">Tertiary Color</h5>
+              </div>
+              <div class="color-pickers-container" id="tertiary-color-pickers">
+                <div class="color-picker-group">
+                  <label class="color-picker-label">Row Background</label>
+                  <input type="color" id="tertiary-bg-color" class="form-input" value="${params.tertiaryBackgroundColor}">
+                </div>
+                <div class="color-picker-group">
+                  <label class="color-picker-label">Text Color</label>
+                  <input type="color" id="tertiary-text-color" class="form-input" value="${params.tertiaryTextColor}">
+                </div>
+              </div>
+            </div>
+
+            <!-- Row Colors Opacity Control -->
+            <div class="form-row" style="margin-top: 1rem;">
+              <div class="form-column">
+                <label class="form-label">Row Colors Opacity (%)</label>
+                <div class="opacity-control">
+                  <input type="range" id="row-colors-opacity" class="form-input opacity-slider"
+                         min="0" max="100" value="${params.rowColorsOpacityPercent}" step="5">
+                  <span id="row-colors-opacity-display" class="opacity-value">${params.rowColorsOpacityPercent}%</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        `,
+
     /**
      * Background customization section template
      * @param params - Template parameters for dynamic content

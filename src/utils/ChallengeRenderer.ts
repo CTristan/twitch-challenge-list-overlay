@@ -209,6 +209,7 @@ export class ChallengeRenderer {
      * @param rowIndex - Optional row index for row-specific colors (overrides global settings)
      * @param rowColors - Optional array of row-specific background colors
      * @param rowTextColors - Optional array of row-specific text colors
+     * @param rowColorsOpacity - Optional opacity for row colors (0-1, default: 1.0)
      */
     static applyBackgroundCustomization(
         challengeElement: HTMLElement,
@@ -221,7 +222,8 @@ export class ChallengeRenderer {
         },
         rowIndex?: number,
         rowColors?: string[],
-        rowTextColors?: string[]
+        rowTextColors?: string[],
+        rowColorsOpacity?: number
     ): void {
         // Check if row-specific colors should override global settings
         const hasRowColors = rowColors && rowColors.length > 0;
@@ -231,8 +233,15 @@ export class ChallengeRenderer {
         let finalTextColor: string | null = null;
 
         if (hasRowColors && rowIndex !== undefined) {
-            // Use row-specific background color
-            finalBackgroundColor = getRotatingArrayValue(rowIndex, rowColors);
+            // Use row-specific background color with opacity
+            const baseColor = getRotatingArrayValue(rowIndex, rowColors);
+            if (baseColor) {
+                const opacity = rowColorsOpacity ?? 1.0;
+                finalBackgroundColor = combineColorWithOpacity(
+                    baseColor,
+                    opacity
+                );
+            }
         } else if (config.challengeBackgroundColor) {
             // Use global background color with opacity
             const opacity =
