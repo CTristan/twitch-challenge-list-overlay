@@ -335,6 +335,7 @@ try {
 | CommandRegistry  | 34    | 100%      | 100%   | 100%     | 100%   |
 | ConfigDefaults   | 18    | 97.5%     | 95%    | 100%     | -      |
 | TwitchChat       | 34    | 100%      | 90.19% | 100%     | 100%   |
+| loadTestUsers    | 25    | 100%      | 100%   | 100%     | 100%   |
 | AddCommand       | 27    | -         | -      | -        | -      |
 | EditCommand      | 47    | 98.14%    | 95.23% | 100%     | 98.14% |
 | DoneCommand      | 32    | 88.88%    | 82.35% | 100%     | 88.88% |
