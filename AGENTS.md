@@ -353,6 +353,7 @@ try {
 | CommandHandler    | 19    | 100%      | 100%   | 100%     | 100%   |
 | ColorUtils        | 47    | 98.63%    | 87.09% | 100%     | 98.63% |
 | ResponseFormatter | 77    | 94.02%    | 94.24% | 100%     | 94.02% |
+| ValidationUtils   | 57    | 99.57%    | 95.29% | 100%     | 99.57% |
 
 ### Test Structure
 
