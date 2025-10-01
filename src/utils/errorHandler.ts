@@ -379,7 +379,7 @@ export class ErrorHandler {
         const criticalErrors = recentErrors
             .filter(
                 (entry) =>
-                    entry.context.includes("storage") ||
+                    entry.context.toLowerCase().includes("storage") ||
                     entry.context.includes("config-validation")
             )
             .map((entry) => entry.error);
