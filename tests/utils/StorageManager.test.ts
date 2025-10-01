@@ -538,4 +538,432 @@ describe("StorageManager", () => {
             }
         });
     });
+
+    describe("advanced error handling paths", () => {
+        describe("save method error scenarios", () => {
+            it("should fallback to memory when localStorage throws SecurityError", () => {
+                StorageManager.resetMemoryOnlyMode();
+
+                // Mock localStorage.setItem to throw SecurityError
+                const originalSetItem = Object.getOwnPropertyDescriptor(
+                    Storage.prototype,
+                    "setItem"
+                );
+                Object.defineProperty(Storage.prototype, "setItem", {
+                    configurable: true,
+                    value: vi.fn().mockImplementation(() => {
+                        throw new Error("SecurityError: Access denied");
+                    }),
+                });
+
+                const testData = { test: "value" };
+                const result = StorageManager.save("test-key", testData);
+
+                expect(result.success).toBe(true);
+                expect(result.data).toEqual(testData);
+                expect(result.fallbackUsed).toBe("memory-only");
+
+                // Verify memory-only mode was activated
+                const status = StorageManager.getStorageStatus();
+                expect(status.memoryOnlyMode).toBe(true);
+                expect(status.memoryKeys).toContain("test-key");
+
+                // Restore original method
+                if (originalSetItem) {
+                    Object.defineProperty(
+                        Storage.prototype,
+                        "setItem",
+                        originalSetItem
+                    );
+                }
+            });
+
+            it("should fallback to memory when localStorage is unavailable", () => {
+                StorageManager.resetMemoryOnlyMode();
+
+                // Mock localStorage.setItem to throw unavailable error
+                const originalSetItem = Object.getOwnPropertyDescriptor(
+                    Storage.prototype,
+                    "setItem"
+                );
+                Object.defineProperty(Storage.prototype, "setItem", {
+                    configurable: true,
+                    value: vi.fn().mockImplementation(() => {
+                        throw new Error("Storage unavailable");
+                    }),
+                });
+
+                const testData = { test: "value" };
+                const result = StorageManager.save("test-key", testData);
+
+                expect(result.success).toBe(true);
+                expect(result.data).toEqual(testData);
+                expect(result.fallbackUsed).toBe("memory-only");
+
+                // Restore original method
+                if (originalSetItem) {
+                    Object.defineProperty(
+                        Storage.prototype,
+                        "setItem",
+                        originalSetItem
+                    );
+                }
+            });
+
+            it("should cleanup and retry when quota is exceeded", () => {
+                StorageManager.resetMemoryOnlyMode();
+
+                // Add some old data that should be cleaned up
+                localStorage.setItem("temp_old_data", "should be removed");
+                localStorage.setItem(
+                    "overlay_config_old_backup",
+                    "should be removed"
+                );
+
+                let callCount = 0;
+                const originalSetItem = Object.getOwnPropertyDescriptor(
+                    Storage.prototype,
+                    "setItem"
+                );
+
+                Object.defineProperty(Storage.prototype, "setItem", {
+                    configurable: true,
+                    value: vi
+                        .fn()
+                        .mockImplementation((key: string, value: string) => {
+                            callCount++;
+                            // First call throws QuotaExceededError
+                            if (callCount === 1) {
+                                throw new Error(
+                                    "QuotaExceededError: Storage quota exceeded"
+                                );
+                            }
+                            // Second call (after cleanup) succeeds
+                            return originalSetItem?.value.call(
+                                localStorage,
+                                key,
+                                value
+                            );
+                        }),
+                });
+
+                const testData = { test: "value" };
+                const result = StorageManager.save("test-key", testData, {
+                    retryOnQuotaExceeded: true,
+                });
+
+                expect(result.success).toBe(true);
+                expect(result.data).toEqual(testData);
+                expect(result.fallbackUsed).toBe("cleanup-and-retry");
+
+                // Verify cleanup occurred
+                expect(localStorage.getItem("temp_old_data")).toBeNull();
+                expect(
+                    localStorage.getItem("overlay_config_old_backup")
+                ).toBeNull();
+
+                // Restore original method
+                if (originalSetItem) {
+                    Object.defineProperty(
+                        Storage.prototype,
+                        "setItem",
+                        originalSetItem
+                    );
+                }
+            });
+
+            it("should fallback to memory when cleanup retry fails", () => {
+                StorageManager.resetMemoryOnlyMode();
+
+                // Mock localStorage.setItem to always throw QuotaExceededError
+                const originalSetItem = Object.getOwnPropertyDescriptor(
+                    Storage.prototype,
+                    "setItem"
+                );
+                Object.defineProperty(Storage.prototype, "setItem", {
+                    configurable: true,
+                    value: vi.fn().mockImplementation(() => {
+                        throw new Error(
+                            "QuotaExceededError: Storage quota exceeded"
+                        );
+                    }),
+                });
+
+                const testData = { test: "value" };
+                const result = StorageManager.save("test-key", testData, {
+                    retryOnQuotaExceeded: true,
+                    fallbackToMemory: true,
+                });
+
+                expect(result.success).toBe(true);
+                expect(result.data).toEqual(testData);
+                expect(result.fallbackUsed).toBe("memory-only");
+
+                // Verify memory-only mode was activated
+                const status = StorageManager.getStorageStatus();
+                expect(status.memoryOnlyMode).toBe(true);
+
+                // Restore original method
+                if (originalSetItem) {
+                    Object.defineProperty(
+                        Storage.prototype,
+                        "setItem",
+                        originalSetItem
+                    );
+                }
+            });
+
+            it("should return error when all fallbacks fail", () => {
+                StorageManager.resetMemoryOnlyMode();
+
+                // Mock localStorage.setItem to throw error
+                const originalSetItem = Object.getOwnPropertyDescriptor(
+                    Storage.prototype,
+                    "setItem"
+                );
+                Object.defineProperty(Storage.prototype, "setItem", {
+                    configurable: true,
+                    value: vi.fn().mockImplementation(() => {
+                        throw new Error("Storage error");
+                    }),
+                });
+
+                const testData = { test: "value" };
+                const result = StorageManager.save("test-key", testData, {
+                    fallbackToMemory: false,
+                    retryOnQuotaExceeded: false,
+                });
+
+                expect(result.success).toBe(false);
+                expect(result.error).toBeDefined();
+
+                // Restore original method
+                if (originalSetItem) {
+                    Object.defineProperty(
+                        Storage.prototype,
+                        "setItem",
+                        originalSetItem
+                    );
+                }
+            });
+
+            it("should return error when quota exceeded and retry disabled", () => {
+                StorageManager.resetMemoryOnlyMode();
+
+                const originalSetItem = Object.getOwnPropertyDescriptor(
+                    Storage.prototype,
+                    "setItem"
+                );
+                Object.defineProperty(Storage.prototype, "setItem", {
+                    configurable: true,
+                    value: vi.fn().mockImplementation(() => {
+                        throw new Error(
+                            "QuotaExceededError: Storage quota exceeded"
+                        );
+                    }),
+                });
+
+                const testData = { test: "value" };
+                const result = StorageManager.save("test-key", testData, {
+                    retryOnQuotaExceeded: false,
+                    fallbackToMemory: false,
+                });
+
+                expect(result.success).toBe(false);
+                expect(result.error).toBeDefined();
+
+                // Restore original method
+                if (originalSetItem) {
+                    Object.defineProperty(
+                        Storage.prototype,
+                        "setItem",
+                        originalSetItem
+                    );
+                }
+            });
+
+            it("should not fallback to memory when cleanup retry fails and fallbackToMemory is false", () => {
+                StorageManager.resetMemoryOnlyMode();
+
+                const originalSetItem = Object.getOwnPropertyDescriptor(
+                    Storage.prototype,
+                    "setItem"
+                );
+                Object.defineProperty(Storage.prototype, "setItem", {
+                    configurable: true,
+                    value: vi.fn().mockImplementation(() => {
+                        throw new Error(
+                            "QuotaExceededError: Storage quota exceeded"
+                        );
+                    }),
+                });
+
+                const testData = { test: "value" };
+                const result = StorageManager.save("test-key", testData, {
+                    retryOnQuotaExceeded: true,
+                    fallbackToMemory: false,
+                });
+
+                expect(result.success).toBe(false);
+                expect(result.error).toBeDefined();
+
+                // Verify memory-only mode was NOT activated
+                const status = StorageManager.getStorageStatus();
+                expect(status.memoryOnlyMode).toBe(false);
+
+                // Restore original method
+                if (originalSetItem) {
+                    Object.defineProperty(
+                        Storage.prototype,
+                        "setItem",
+                        originalSetItem
+                    );
+                }
+            });
+
+            it("should handle non-Error exceptions in save", () => {
+                StorageManager.resetMemoryOnlyMode();
+
+                const originalSetItem = Object.getOwnPropertyDescriptor(
+                    Storage.prototype,
+                    "setItem"
+                );
+                Object.defineProperty(Storage.prototype, "setItem", {
+                    configurable: true,
+                    value: vi.fn().mockImplementation(() => {
+                        throw "String error message";
+                    }),
+                });
+
+                const testData = { test: "value" };
+                const result = StorageManager.save("test-key", testData, {
+                    fallbackToMemory: false,
+                });
+
+                expect(result.success).toBe(false);
+                expect(result.error).toBeDefined();
+
+                // Restore original method
+                if (originalSetItem) {
+                    Object.defineProperty(
+                        Storage.prototype,
+                        "setItem",
+                        originalSetItem
+                    );
+                }
+            });
+        });
+
+        describe("getStorageStatus error scenarios", () => {
+            it("should handle errors when iterating localStorage keys", () => {
+                // Add some test data first
+                localStorage.setItem("test-key1", "value1");
+                localStorage.setItem("test-key2", "value2");
+
+                // Mock localStorage.length to throw error
+                const originalLength = Object.getOwnPropertyDescriptor(
+                    Storage.prototype,
+                    "length"
+                );
+                Object.defineProperty(Storage.prototype, "length", {
+                    configurable: true,
+                    get: vi.fn().mockImplementation(() => {
+                        throw new Error("Access denied");
+                    }),
+                });
+
+                const status = StorageManager.getStorageStatus();
+
+                // Should still return valid status object
+                expect(status.available).toBeDefined();
+                expect(status.memoryOnlyMode).toBeDefined();
+                expect(status.memoryKeys).toBeDefined();
+                expect(status.localStorageKeys).toEqual([]);
+
+                // Restore original property
+                if (originalLength) {
+                    Object.defineProperty(
+                        Storage.prototype,
+                        "length",
+                        originalLength
+                    );
+                }
+            });
+        });
+
+        describe("cleanupOldData error scenarios", () => {
+            it("should handle errors during cleanup operation", () => {
+                // Add test data
+                localStorage.setItem("temp_data1", "value1");
+                localStorage.setItem("temp_data2", "value2");
+                localStorage.setItem("keep_this", "keep");
+
+                let removeCallCount = 0;
+                const originalRemoveItem = Object.getOwnPropertyDescriptor(
+                    Storage.prototype,
+                    "removeItem"
+                );
+
+                Object.defineProperty(Storage.prototype, "removeItem", {
+                    configurable: true,
+                    value: vi.fn().mockImplementation((key: string) => {
+                        removeCallCount++;
+                        // Throw error on second removal
+                        if (removeCallCount === 2) {
+                            throw new Error("Removal failed");
+                        }
+                        return originalRemoveItem?.value.call(
+                            localStorage,
+                            key
+                        );
+                    }),
+                });
+
+                const result = StorageManager.cleanupOldData();
+
+                expect(result.success).toBe(false);
+                expect(result.error).toBe("Removal failed");
+                expect(result.data).toBe(1); // One item was removed before error
+
+                // Restore original method
+                if (originalRemoveItem) {
+                    Object.defineProperty(
+                        Storage.prototype,
+                        "removeItem",
+                        originalRemoveItem
+                    );
+                }
+            });
+
+            it("should handle non-Error exceptions in cleanup", () => {
+                localStorage.setItem("temp_data", "value");
+
+                const originalRemoveItem = Object.getOwnPropertyDescriptor(
+                    Storage.prototype,
+                    "removeItem"
+                );
+
+                Object.defineProperty(Storage.prototype, "removeItem", {
+                    configurable: true,
+                    value: vi.fn().mockImplementation(() => {
+                        throw "String error message";
+                    }),
+                });
+
+                const result = StorageManager.cleanupOldData();
+
+                expect(result.success).toBe(false);
+                expect(result.error).toBe("String error message");
+
+                // Restore original method
+                if (originalRemoveItem) {
+                    Object.defineProperty(
+                        Storage.prototype,
+                        "removeItem",
+                        originalRemoveItem
+                    );
+                }
+            });
+        });
+    });
 });
