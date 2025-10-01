@@ -349,6 +349,7 @@ try {
 | ShowCommand      | 24    | 94.93%    | 95.23% | 100%     | 94.93% |
 | ClearAllCommand  | 10    | 100%      | 100%   | 100%     | 100%   |
 | ClearDoneCommand | 13    | 100%      | 100%   | 100%     | 100%   |
+| ColorUtils       | 47    | 98.63%    | 87.09% | 100%     | 98.63% |
 
 ### Test Structure
 
