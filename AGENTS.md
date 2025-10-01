@@ -352,6 +352,7 @@ try {
 | ChallengeRenderer | 30    | 100%      | 97.91% | 100%     | 100%   |
 | CommandHandler    | 19    | 100%      | 100%   | 100%     | 100%   |
 | ColorUtils        | 47    | 98.63%    | 87.09% | 100%     | 98.63% |
+| ResponseFormatter | 77    | 94.02%    | 94.24% | 100%     | 94.02% |
 
 ### Test Structure
 
