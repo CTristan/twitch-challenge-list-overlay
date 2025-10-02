@@ -544,10 +544,12 @@ The command system uses the Command pattern for extensibility and maintainabilit
 
 ### Admin Panel Features (Implemented)
 
+-   **Auto-save configuration** - All configuration changes are automatically saved to localStorage immediately when modified
 -   **Configuration management** with live editing capabilities
 -   **Challenge list controls** (clear all, clear completed)
--   **Configuration export/import** functionality
--   **Color configuration** for challenge rows
+-   **Configuration backup/restore** - Export and import configuration as JSON files
+-   **Reset to defaults** - Restore default configuration values
+-   **Color configuration** for challenge rows with opacity control
 -   **Real-time configuration updates** across windows
 -   **Window refresh communication** via BroadcastChannel for automatic viewer window updates
 

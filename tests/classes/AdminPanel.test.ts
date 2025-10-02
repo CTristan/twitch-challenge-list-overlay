@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import AdminPanel from "../../src/classes/AdminPanel";
 import ConfigManager from "../../src/classes/ConfigManager";
+import { ERROR_MESSAGES } from "../../src/types/MessageConstants";
 
 // Mock setTimeout to control timing in tests
 const mockSetTimeout = vi.fn();
@@ -458,39 +459,35 @@ describe("AdminPanel", () => {
                     <input type="color" id="challenge-background-color" value="#333333">
                     <input type="range" id="challenge-background-opacity" value="90">
                     <span id="challenge-opacity-display">90%</span>
-                    <input type="color" id="challenge-text-color" value="#ffffff">
+                    <input type="color" id="challenge-text-color" value="#ffffff" disabled>
                     <input type="checkbox" id="challenge-auto-text-color" checked>
                     <input type="checkbox" id="challenge-text-shadow">
                 </div>
             `;
 
             adminPanel = new AdminPanel();
+            adminPanel.initialize();
         });
 
-        it("should save configuration with all fields", () => {
-            const saveBtn = document.getElementById("save-config-btn") as HTMLButtonElement;
+        it("should auto-save configuration when fields change", () => {
             const configManager = ConfigManager.getInstance();
 
-            // Set the input value before clicking save
-            const maxChallengesInput = document.getElementById("max-challenges") as HTMLInputElement;
+            // Change the max challenges input value
+            const maxChallengesInput = document.getElementById(
+                "max-challenges"
+            ) as HTMLInputElement;
             maxChallengesInput.value = "15";
+            maxChallengesInput.dispatchEvent(new Event("change"));
 
-            // Click save button
-            saveBtn.click();
-
-            // Verify configuration was saved
+            // Verify configuration was auto-saved
             const savedConfig = configManager.getAll();
-            expect(savedConfig.auth?.twitch_oauth).toBe("oauth:test");
-            expect(savedConfig.auth?.twitch_username).toBe("testuser");
-            expect(savedConfig.auth?.twitch_channel).toBe("testchannel");
             expect(savedConfig.maxChallenges).toBe(15);
-
-            // Verify button feedback
-            expect(saveBtn.textContent).toBe("Saved!");
         });
 
         it("should reset configuration to defaults", () => {
-            const resetBtn = document.getElementById("reset-config-btn") as HTMLButtonElement;
+            const resetBtn = document.getElementById(
+                "reset-config-btn"
+            ) as HTMLButtonElement;
             const configManager = ConfigManager.getInstance();
 
             // Modify configuration
@@ -507,22 +504,31 @@ describe("AdminPanel", () => {
             expect(resetBtn.textContent).toBe("Reset!");
         });
 
-        it("should handle save configuration errors", () => {
-            const saveBtn = document.getElementById("save-config-btn") as HTMLButtonElement;
+        it("should handle auto-save configuration errors gracefully", () => {
             const configManager = ConfigManager.getInstance();
 
-            // Mock set method to return false
+            // Mock set method to throw an error
             const originalSet = configManager.set;
-            configManager.set = vi.fn(() => false);
+            configManager.set = vi.fn(() => {
+                throw new Error("Storage error");
+            });
 
-            const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+            const consoleSpy = vi
+                .spyOn(console, "error")
+                .mockImplementation(() => {});
 
-            // Click save button
-            saveBtn.click();
+            // Change a field to trigger auto-save
+            const maxChallengesInput = document.getElementById(
+                "max-challenges"
+            ) as HTMLInputElement;
+            maxChallengesInput.value = "15";
+            maxChallengesInput.dispatchEvent(new Event("change"));
 
-            // Verify error handling
-            expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining("Some configuration updates failed"));
-            expect(saveBtn.textContent).toBe("Partial Save Error!");
+            // Verify error handling (auto-save errors are logged but don't show UI feedback)
+            expect(consoleSpy).toHaveBeenCalledWith(
+                ERROR_MESSAGES.ERROR_AUTO_SAVING_BEHAVIOR_CONFIG,
+                expect.any(Error)
+            );
 
             // Restore
             configManager.set = originalSet;
@@ -530,20 +536,26 @@ describe("AdminPanel", () => {
         });
 
         it("should handle reset configuration errors", () => {
-            const resetBtn = document.getElementById("reset-config-btn") as HTMLButtonElement;
+            const resetBtn = document.getElementById(
+                "reset-config-btn"
+            ) as HTMLButtonElement;
             const configManager = ConfigManager.getInstance();
 
             // Mock reset method to return false
             const originalReset = configManager.reset;
             configManager.reset = vi.fn(() => false);
 
-            const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+            const consoleSpy = vi
+                .spyOn(console, "error")
+                .mockImplementation(() => {});
 
             // Click reset button
             resetBtn.click();
 
             // Verify error handling
-            expect(consoleSpy).toHaveBeenCalledWith("Configuration reset failed");
+            expect(consoleSpy).toHaveBeenCalledWith(
+                "Configuration reset failed"
+            );
             expect(resetBtn.textContent).toBe("Reset Failed!");
 
             // Restore
@@ -565,7 +577,7 @@ describe("AdminPanel", () => {
                     <input type="color" id="challenge-background-color" value="#333333">
                     <input type="range" id="challenge-background-opacity" value="90" min="0" max="100">
                     <span id="challenge-opacity-display">90%</span>
-                    <input type="color" id="challenge-text-color" value="#ffffff">
+                    <input type="color" id="challenge-text-color" value="#ffffff" disabled>
                     <input type="checkbox" id="challenge-auto-text-color" checked>
                     <input type="checkbox" id="challenge-text-shadow">
                     <div id="background-preview">
@@ -576,7 +588,12 @@ describe("AdminPanel", () => {
                 </div>
             `;
 
+            // Set up config with challengeAutoTextColor enabled
+            const configManager = ConfigManager.getInstance();
+            configManager.set("challengeAutoTextColor", true);
+
             adminPanel = new AdminPanel();
+            adminPanel.initialize();
         });
 
         it("should populate background configuration from config", () => {
@@ -585,7 +602,10 @@ describe("AdminPanel", () => {
             // Set background configuration
             configManager.set("overlayBackgroundColor", "rgba(255, 0, 0, 0.5)");
             configManager.set("overlayBackgroundOpacity", 0.5);
-            configManager.set("challengeBackgroundColor", "rgba(0, 255, 0, 0.8)");
+            configManager.set(
+                "challengeBackgroundColor",
+                "rgba(0, 255, 0, 0.8)"
+            );
             configManager.set("challengeBackgroundOpacity", 0.8);
             configManager.set("challengeTextColor", "#ff00ff");
             configManager.set("challengeAutoTextColor", false);
@@ -595,13 +615,27 @@ describe("AdminPanel", () => {
             adminPanel = new AdminPanel();
 
             // Verify form was populated
-            const overlayColorInput = document.getElementById("overlay-background-color") as HTMLInputElement;
-            const overlayOpacitySlider = document.getElementById("overlay-background-opacity") as HTMLInputElement;
-            const backgroundColorInput = document.getElementById("challenge-background-color") as HTMLInputElement;
-            const opacitySlider = document.getElementById("challenge-background-opacity") as HTMLInputElement;
-            const textColorInput = document.getElementById("challenge-text-color") as HTMLInputElement;
-            const autoTextColorCheckbox = document.getElementById("challenge-auto-text-color") as HTMLInputElement;
-            const textShadowCheckbox = document.getElementById("challenge-text-shadow") as HTMLInputElement;
+            const overlayColorInput = document.getElementById(
+                "overlay-background-color"
+            ) as HTMLInputElement;
+            const overlayOpacitySlider = document.getElementById(
+                "overlay-background-opacity"
+            ) as HTMLInputElement;
+            const backgroundColorInput = document.getElementById(
+                "challenge-background-color"
+            ) as HTMLInputElement;
+            const opacitySlider = document.getElementById(
+                "challenge-background-opacity"
+            ) as HTMLInputElement;
+            const textColorInput = document.getElementById(
+                "challenge-text-color"
+            ) as HTMLInputElement;
+            const autoTextColorCheckbox = document.getElementById(
+                "challenge-auto-text-color"
+            ) as HTMLInputElement;
+            const textShadowCheckbox = document.getElementById(
+                "challenge-text-shadow"
+            ) as HTMLInputElement;
 
             expect(overlayColorInput.value).toBe("#ff0000");
             expect(overlayOpacitySlider.value).toBe("50");
@@ -613,8 +647,12 @@ describe("AdminPanel", () => {
         });
 
         it("should update background preview when color changes", () => {
-            const backgroundColorInput = document.getElementById("challenge-background-color") as HTMLInputElement;
-            const previewChallenge = document.querySelector(".preview-challenge") as HTMLElement;
+            const backgroundColorInput = document.getElementById(
+                "challenge-background-color"
+            ) as HTMLInputElement;
+            const previewChallenge = document.querySelector(
+                ".preview-challenge"
+            ) as HTMLElement;
 
             // Change background color
             backgroundColorInput.value = "#ff0000";
@@ -625,8 +663,12 @@ describe("AdminPanel", () => {
         });
 
         it("should update opacity display when slider changes", () => {
-            const opacitySlider = document.getElementById("challenge-background-opacity") as HTMLInputElement;
-            const opacityDisplay = document.getElementById("challenge-opacity-display");
+            const opacitySlider = document.getElementById(
+                "challenge-background-opacity"
+            ) as HTMLInputElement;
+            const opacityDisplay = document.getElementById(
+                "challenge-opacity-display"
+            );
 
             // Verify initial value
             expect(opacityDisplay?.textContent).toBe("90%");
@@ -643,8 +685,12 @@ describe("AdminPanel", () => {
         });
 
         it("should toggle text color input when auto text color changes", () => {
-            const autoTextColorCheckbox = document.getElementById("challenge-auto-text-color") as HTMLInputElement;
-            const textColorInput = document.getElementById("challenge-text-color") as HTMLInputElement;
+            const autoTextColorCheckbox = document.getElementById(
+                "challenge-auto-text-color"
+            ) as HTMLInputElement;
+            const textColorInput = document.getElementById(
+                "challenge-text-color"
+            ) as HTMLInputElement;
 
             // Initially checked, so text color should be disabled
             expect(textColorInput.disabled).toBe(true);
@@ -658,8 +704,12 @@ describe("AdminPanel", () => {
         });
 
         it("should apply text shadow when checkbox is checked", () => {
-            const textShadowCheckbox = document.getElementById("challenge-text-shadow") as HTMLInputElement;
-            const previewText = document.querySelector(".preview-text") as HTMLElement;
+            const textShadowCheckbox = document.getElementById(
+                "challenge-text-shadow"
+            ) as HTMLInputElement;
+            const previewText = document.querySelector(
+                ".preview-text"
+            ) as HTMLElement;
 
             // Check text shadow
             textShadowCheckbox.checked = true;
@@ -684,7 +734,9 @@ describe("AdminPanel", () => {
         });
 
         it("should handle unsupported export format", () => {
-            const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+            const consoleSpy = vi
+                .spyOn(console, "error")
+                .mockImplementation(() => {});
 
             // Try to export with unsupported format
             (adminPanel as any).exportConfiguration("xml");
@@ -698,7 +750,9 @@ describe("AdminPanel", () => {
         });
 
         it("should handle export failure", () => {
-            const exportBtn = document.getElementById("export-json-btn") as HTMLButtonElement;
+            const exportBtn = document.getElementById(
+                "export-json-btn"
+            ) as HTMLButtonElement;
             const configManager = ConfigManager.getInstance();
 
             // Mock export to throw error
@@ -707,7 +761,9 @@ describe("AdminPanel", () => {
                 throw new Error("Export failed");
             });
 
-            const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+            const consoleSpy = vi
+                .spyOn(console, "error")
+                .mockImplementation(() => {});
 
             // Click export button
             exportBtn.click();
@@ -715,7 +771,7 @@ describe("AdminPanel", () => {
             // Verify error handling - console.error is called with message and error object
             expect(consoleSpy).toHaveBeenCalled();
             const firstCall = consoleSpy.mock.calls[0];
-            expect(firstCall[0]).toContain("Error exporting configuration");
+            expect(firstCall?.[0]).toContain("Error exporting configuration");
             expect(exportBtn.textContent).toBe("Error!");
 
             // Restore
@@ -739,8 +795,12 @@ describe("AdminPanel", () => {
         });
 
         it("should trigger file picker when import button is clicked", () => {
-            const importBtn = document.getElementById("import-config-btn") as HTMLButtonElement;
-            const fileInput = document.getElementById("import-file-input") as HTMLInputElement;
+            const importBtn = document.getElementById(
+                "import-config-btn"
+            ) as HTMLButtonElement;
+            const fileInput = document.getElementById(
+                "import-file-input"
+            ) as HTMLInputElement;
 
             // Spy on file input click
             const clickSpy = vi.spyOn(fileInput, "click");
@@ -755,7 +815,9 @@ describe("AdminPanel", () => {
         });
 
         it("should handle no file selected", () => {
-            const fileInput = document.getElementById("import-file-input") as HTMLInputElement;
+            const fileInput = document.getElementById(
+                "import-file-input"
+            ) as HTMLInputElement;
 
             // Trigger change event with no files
             fileInput.dispatchEvent(new Event("change"));
@@ -765,11 +827,17 @@ describe("AdminPanel", () => {
         });
 
         it("should reject invalid file types", () => {
-            const fileInput = document.getElementById("import-file-input") as HTMLInputElement;
-            const importBtn = document.getElementById("import-config-btn") as HTMLButtonElement;
+            const fileInput = document.getElementById(
+                "import-file-input"
+            ) as HTMLInputElement;
+            const importBtn = document.getElementById(
+                "import-config-btn"
+            ) as HTMLButtonElement;
 
             // Create a mock file with invalid extension
-            const mockFile = new File(["test content"], "config.txt", { type: "text/plain" });
+            const mockFile = new File(["test content"], "config.txt", {
+                type: "text/plain",
+            });
 
             // Mock the files property
             Object.defineProperty(fileInput, "files", {
@@ -785,11 +853,17 @@ describe("AdminPanel", () => {
         });
 
         it("should handle file read errors", () => {
-            const fileInput = document.getElementById("import-file-input") as HTMLInputElement;
-            const importBtn = document.getElementById("import-config-btn") as HTMLButtonElement;
+            const fileInput = document.getElementById(
+                "import-file-input"
+            ) as HTMLInputElement;
+            const importBtn = document.getElementById(
+                "import-config-btn"
+            ) as HTMLButtonElement;
 
             // Create a mock file
-            const mockFile = new File(['{"test": "data"}'], "config.json", { type: "application/json" });
+            const mockFile = new File(['{"test": "data"}'], "config.json", {
+                type: "application/json",
+            });
 
             // Mock the files property
             Object.defineProperty(fileInput, "files", {
@@ -824,11 +898,17 @@ describe("AdminPanel", () => {
         });
 
         it("should handle invalid JSON in imported file", () => {
-            const fileInput = document.getElementById("import-file-input") as HTMLInputElement;
-            const importBtn = document.getElementById("import-config-btn") as HTMLButtonElement;
+            const fileInput = document.getElementById(
+                "import-file-input"
+            ) as HTMLInputElement;
+            const importBtn = document.getElementById(
+                "import-config-btn"
+            ) as HTMLButtonElement;
 
             // Create a mock file with invalid JSON
-            const mockFile = new File(["invalid json content"], "config.json", { type: "application/json" });
+            const mockFile = new File(["invalid json content"], "config.json", {
+                type: "application/json",
+            });
 
             // Mock the files property
             Object.defineProperty(fileInput, "files", {
@@ -842,7 +922,9 @@ describe("AdminPanel", () => {
                 readAsText() {
                     setTimeout(() => {
                         if (this.onload) {
-                            this.onload({ target: { result: "invalid json" } } as any);
+                            this.onload({
+                                target: { result: "invalid json" },
+                            } as any);
                         }
                     }, 0);
                 }
@@ -894,10 +976,18 @@ describe("AdminPanel", () => {
             (adminPanel as any).refreshConfigurationUI();
 
             // Verify form was updated
-            const oauthInput = document.getElementById("twitch-oauth") as HTMLInputElement;
-            const usernameInput = document.getElementById("twitch-username") as HTMLInputElement;
-            const channelInput = document.getElementById("twitch-channel") as HTMLInputElement;
-            const maxChallengesInput = document.getElementById("max-challenges") as HTMLInputElement;
+            const oauthInput = document.getElementById(
+                "twitch-oauth"
+            ) as HTMLInputElement;
+            const usernameInput = document.getElementById(
+                "twitch-username"
+            ) as HTMLInputElement;
+            const channelInput = document.getElementById(
+                "twitch-channel"
+            ) as HTMLInputElement;
+            const maxChallengesInput = document.getElementById(
+                "max-challenges"
+            ) as HTMLInputElement;
 
             expect(oauthInput.value).toBe("oauth:refreshed");
             expect(usernameInput.value).toBe("refresheduser");
@@ -930,11 +1020,17 @@ describe("AdminPanel", () => {
         });
 
         it("should show feedback and reset after timeout", () => {
-            const button = document.getElementById("test-button") as HTMLButtonElement;
+            const button = document.getElementById(
+                "test-button"
+            ) as HTMLButtonElement;
             const originalText = button.textContent;
 
             // Call showFeedback
-            (adminPanel as any).showFeedback("test-button", "Success!", "rgb(40, 167, 69)");
+            (adminPanel as any).showFeedback(
+                "test-button",
+                "Success!",
+                "rgb(40, 167, 69)"
+            );
 
             // Verify immediate feedback
             expect(button.textContent).toBe("Success!");
@@ -951,7 +1047,11 @@ describe("AdminPanel", () => {
         it("should handle missing button element gracefully", () => {
             // Call showFeedback with non-existent button
             expect(() => {
-                (adminPanel as any).showFeedback("non-existent-button", "Test", "red");
+                (adminPanel as any).showFeedback(
+                    "non-existent-button",
+                    "Test",
+                    "red"
+                );
             }).not.toThrow();
         });
     });

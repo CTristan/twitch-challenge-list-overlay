@@ -49,6 +49,7 @@ function createMockConfig() {
             editChallenge: createCommands(["edit"]),
             finishChallenge: createCommands(["done"]),
             deleteChallenge: createCommands(["delete", "del"]),
+            check: createCommands(["check"]),
             help: createCommands(["help"]),
             incrementChallenge: createCommands(["+"]),
             decrementChallenge: createCommands(["-"]),
@@ -65,6 +66,7 @@ function createMockConfig() {
             finishChallenge: "Challenge completed!",
             deleteChallenge: "Challenge deleted!",
             deleteAll: "All challenges deleted!",
+            check: "Challenge checked!",
             help: "Available commands:",
             maxChallengesAdded: "Maximum challenges reached!",
             noChallengeFound: "No challenge found!",
@@ -249,23 +251,20 @@ describe("AdminPanel Color Configuration", () => {
             ).toBe(false);
         });
 
-        it("should convert UI configuration to challengeRowColors array when saving", () => {
+        it("should convert UI configuration to challengeRowColors array when auto-saving", () => {
             // Enable primary and secondary colors
             const primaryElements = getColorTierElements("primary");
             const secondaryElements = getColorTierElements("secondary");
 
             primaryElements.checkbox.checked = true;
             primaryElements.bgColorPicker.value = TEST_COLORS.RED;
+            primaryElements.checkbox.dispatchEvent(new Event("change"));
+
             secondaryElements.checkbox.checked = true;
             secondaryElements.bgColorPicker.value = TEST_COLORS.GREEN;
+            secondaryElements.checkbox.dispatchEvent(new Event("change"));
 
-            // Trigger save
-            const saveBtn = document.getElementById(
-                "save-config-btn"
-            ) as HTMLButtonElement;
-            saveBtn.click();
-
-            // Check that the configuration was saved correctly
+            // Check that the configuration was auto-saved correctly
             const savedColors = configManager.get("challengeRowColors");
             expect(savedColors).toEqual([TEST_COLORS.RED, TEST_COLORS.GREEN]);
         });

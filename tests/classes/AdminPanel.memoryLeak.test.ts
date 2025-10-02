@@ -145,10 +145,6 @@ describe("AdminPanel Memory Leak Prevention", () => {
                 importButton!,
                 "removeEventListener"
             );
-            const saveButtonRemoveSpy = vi.spyOn(
-                saveButton!,
-                "removeEventListener"
-            );
 
             // Call initialize again to trigger cleanup
             adminPanel.initialize();
@@ -166,16 +162,11 @@ describe("AdminPanel Memory Leak Prevention", () => {
                 "click",
                 expect.any(Function)
             );
-            expect(saveButtonRemoveSpy).toHaveBeenCalledWith(
-                "click",
-                expect.any(Function)
-            );
 
             // Clean up spies
             clearButtonRemoveSpy.mockRestore();
             exportButtonRemoveSpy.mockRestore();
             importButtonRemoveSpy.mockRestore();
-            saveButtonRemoveSpy.mockRestore();
         });
 
         it("should prevent duplicate button event listeners", () => {

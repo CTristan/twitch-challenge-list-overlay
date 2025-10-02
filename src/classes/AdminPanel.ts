@@ -29,6 +29,7 @@ import {
 import {
     ADMIN_FEEDBACK_MESSAGES,
     ADMIN_PANEL_LABELS,
+    ERROR_MESSAGES,
     VALIDATION_MESSAGES,
 } from "../types/MessageConstants";
 import {
@@ -266,7 +267,6 @@ export default class AdminPanel {
         this.createColorSection(formContainer);
         this.createBackgroundSection(formContainer);
         this.createActionsSection(formContainer);
-        this.createBackupSection(formContainer);
         this.createDangerZoneSection(formContainer);
 
         adminContent.appendChild(formContainer);
@@ -401,14 +401,17 @@ export default class AdminPanel {
     }
 
     /**
-     * Create the Actions section
+     * Create the consolidated Configuration Actions section
+     * Combines backup, restore, and reset functionality
      * @param container - The parent container element
      */
     private createActionsSection(container: HTMLElement): void {
         const actionsContent = `
           <div class="config-actions">
-            <button id="${ELEMENT_IDS.SAVE_CONFIG_BTN}" class="admin-button">Save Configuration</button>
+            <button id="${ELEMENT_IDS.EXPORT_JSON_BTN}" class="admin-button primary">Backup Configuration</button>
+            <button id="${ELEMENT_IDS.IMPORT_CONFIG_BTN}" class="admin-button primary">Restore Configuration</button>
             <button id="${ELEMENT_IDS.RESET_CONFIG_BTN}" class="admin-button">Reset to Defaults</button>
+            <input type="file" id="${ELEMENT_IDS.IMPORT_FILE_INPUT}" accept=".json" style="display: none;">
           </div>
         `;
 
@@ -424,33 +427,6 @@ export default class AdminPanel {
             actionsSection
         );
         container.appendChild(actionsSection.createElement());
-    }
-
-    /**
-     * Create the Backup & Restore section
-     * @param container - The parent container element
-     */
-    private createBackupSection(container: HTMLElement): void {
-        const backupContent = `
-          <div class="transfer-actions">
-            <button id="${ELEMENT_IDS.EXPORT_JSON_BTN}" class="admin-button primary">Backup configuration</button>
-            <button id="${ELEMENT_IDS.IMPORT_CONFIG_BTN}" class="admin-button primary">Restore configuration</button>
-            <input type="file" id="${ELEMENT_IDS.IMPORT_FILE_INPUT}" accept=".json" style="display: none;">
-          </div>
-        `;
-
-        const backupSection = new CollapsibleSection({
-            id: ELEMENT_IDS.BACKUP_SECTION,
-            title: ADMIN_PANEL_LABELS.CONFIGURATION_BACKUP_RESTORE,
-            content: backupContent,
-            defaultExpanded: false, // Backup should be collapsed by default
-        });
-
-        this.#collapsibleSections.set(
-            ELEMENT_IDS.BACKUP_SECTION,
-            backupSection
-        );
-        container.appendChild(backupSection.createElement());
     }
 
     /**
@@ -713,22 +689,11 @@ export default class AdminPanel {
     }
 
     /**
-     * Setup event listeners for configuration form
+     * Setup event listeners for configuration form with auto-save
      * @returns {void}
      */
     private setupConfigurationEventListeners(): void {
-        const saveBtn = document.getElementById(ELEMENT_IDS.SAVE_CONFIG_BTN);
         const resetBtn = document.getElementById(ELEMENT_IDS.RESET_CONFIG_BTN);
-
-        if (saveBtn) {
-            const saveHandler = () => this.saveConfiguration();
-            saveBtn.addEventListener(EVENT_NAMES.CLICK, saveHandler);
-            this.#eventListeners.set(ELEMENT_IDS.SAVE_CONFIG_BTN, {
-                element: saveBtn,
-                event: EVENT_NAMES.CLICK,
-                handler: saveHandler,
-            });
-        }
 
         if (resetBtn) {
             const resetHandler = () => this.resetConfiguration();
@@ -740,18 +705,72 @@ export default class AdminPanel {
             });
         }
 
-        // Setup color tier checkbox event listeners
+        // Setup auto-save for authentication fields
+        this.setupAuthenticationAutoSave();
+
+        // Setup auto-save for behavior fields
+        this.setupBehaviorAutoSave();
+
+        // Setup color tier checkbox event listeners with auto-save
         this.setupColorTierEventListeners();
 
-        // Setup row colors opacity event listener
+        // Setup row colors opacity event listener with auto-save
         this.setupRowColorsOpacityEventListener();
 
-        // Setup background customization event listeners
+        // Setup background customization event listeners with auto-save
         this.setupBackgroundEventListeners();
     }
 
     /**
-     * Setup event listeners for color tier checkboxes
+     * Setup auto-save for authentication fields
+     * @returns {void}
+     */
+    private setupAuthenticationAutoSave(): void {
+        const authFields = [
+            ELEMENT_IDS.TWITCH_OAUTH,
+            ELEMENT_IDS.TWITCH_USERNAME,
+            ELEMENT_IDS.TWITCH_CHANNEL,
+        ];
+
+        authFields.forEach((fieldId) => {
+            const input = document.getElementById(fieldId) as HTMLInputElement;
+            if (input) {
+                const changeHandler = () => this.autoSaveAuthConfiguration();
+                input.addEventListener(EVENT_NAMES.CHANGE, changeHandler);
+                this.#eventListeners.set(fieldId, {
+                    element: input,
+                    event: EVENT_NAMES.CHANGE,
+                    handler: changeHandler,
+                });
+            }
+        });
+    }
+
+    /**
+     * Setup auto-save for behavior fields
+     * @returns {void}
+     */
+    private setupBehaviorAutoSave(): void {
+        const maxChallengesInput = document.getElementById(
+            ELEMENT_IDS.MAX_CHALLENGES
+        ) as HTMLInputElement;
+
+        if (maxChallengesInput) {
+            const changeHandler = () => this.autoSaveBehaviorConfiguration();
+            maxChallengesInput.addEventListener(
+                EVENT_NAMES.CHANGE,
+                changeHandler
+            );
+            this.#eventListeners.set(ELEMENT_IDS.MAX_CHALLENGES, {
+                element: maxChallengesInput,
+                event: EVENT_NAMES.CHANGE,
+                handler: changeHandler,
+            });
+        }
+    }
+
+    /**
+     * Setup event listeners for color tier checkboxes with auto-save
      * @returns {void}
      */
     private setupColorTierEventListeners(): void {
@@ -784,22 +803,47 @@ export default class AdminPanel {
                 // Initial state setup
                 this.updateColorTierState(tier, checkbox.checked);
 
-                // Add change event listener with proper tracking
+                // Add change event listener with auto-save
                 const changeHandler = () => {
                     this.updateColorTierState(tier, checkbox.checked);
+                    this.autoSaveColorConfiguration();
                 };
-                checkbox.addEventListener("change", changeHandler);
+                checkbox.addEventListener(EVENT_NAMES.CHANGE, changeHandler);
                 this.#eventListeners.set(tierConstants.enabled, {
                     element: checkbox,
-                    event: "change",
+                    event: EVENT_NAMES.CHANGE,
                     handler: changeHandler,
+                });
+
+                // Add auto-save for color pickers
+                const bgColorHandler = () => this.autoSaveColorConfiguration();
+                bgColorInput.addEventListener(
+                    EVENT_NAMES.INPUT,
+                    bgColorHandler
+                );
+                this.#eventListeners.set(tierConstants.bgColor, {
+                    element: bgColorInput,
+                    event: EVENT_NAMES.INPUT,
+                    handler: bgColorHandler,
+                });
+
+                const textColorHandler = () =>
+                    this.autoSaveColorConfiguration();
+                textColorInput.addEventListener(
+                    EVENT_NAMES.INPUT,
+                    textColorHandler
+                );
+                this.#eventListeners.set(tierConstants.textColor, {
+                    element: textColorInput,
+                    event: EVENT_NAMES.INPUT,
+                    handler: textColorHandler,
                 });
             }
         });
     }
 
     /**
-     * Setup event listener for row colors opacity slider
+     * Setup event listener for row colors opacity slider with auto-save
      * @returns {void}
      */
     private setupRowColorsOpacityEventListener(): void {
@@ -813,6 +857,7 @@ export default class AdminPanel {
         if (opacitySlider && opacityDisplay) {
             const opacityHandler = () => {
                 opacityDisplay.textContent = `${opacitySlider.value}%`;
+                this.autoSaveColorConfiguration();
             };
             opacitySlider.addEventListener(EVENT_NAMES.INPUT, opacityHandler);
             this.#eventListeners.set(ELEMENT_IDS.ROW_COLORS_OPACITY, {
@@ -864,7 +909,7 @@ export default class AdminPanel {
     }
 
     /**
-     * Setup event listeners for background customization controls
+     * Setup event listeners for background customization controls with auto-save
      * @returns {void}
      */
     private setupBackgroundEventListeners(): void {
@@ -873,7 +918,10 @@ export default class AdminPanel {
             BACKGROUND_UI_ELEMENTS.OVERLAY_BACKGROUND_COLOR_INPUT
         ) as HTMLInputElement;
         if (overlayBackgroundColorInput) {
-            const overlayColorHandler = () => this.updateBackgroundPreview();
+            const overlayColorHandler = () => {
+                this.updateBackgroundPreview();
+                this.autoSaveBackgroundConfiguration();
+            };
             overlayBackgroundColorInput.addEventListener(
                 EVENT_NAMES.INPUT,
                 overlayColorHandler
@@ -899,6 +947,7 @@ export default class AdminPanel {
             const overlayOpacityHandler = () => {
                 overlayOpacityDisplay.textContent = `${overlayOpacitySlider.value}%`;
                 this.updateBackgroundPreview();
+                this.autoSaveBackgroundConfiguration();
             };
             overlayOpacitySlider.addEventListener(
                 EVENT_NAMES.INPUT,
@@ -919,7 +968,10 @@ export default class AdminPanel {
             BACKGROUND_UI_ELEMENTS.BACKGROUND_COLOR_INPUT
         ) as HTMLInputElement;
         if (backgroundColorInput) {
-            const colorHandler = () => this.updateBackgroundPreview();
+            const colorHandler = () => {
+                this.updateBackgroundPreview();
+                this.autoSaveBackgroundConfiguration();
+            };
             backgroundColorInput.addEventListener(
                 EVENT_NAMES.INPUT,
                 colorHandler
@@ -945,6 +997,7 @@ export default class AdminPanel {
             const opacityHandler = () => {
                 opacityDisplay.textContent = `${opacitySlider.value}%`;
                 this.updateBackgroundPreview();
+                this.autoSaveBackgroundConfiguration();
             };
             opacitySlider.addEventListener(EVENT_NAMES.INPUT, opacityHandler);
             this.#eventListeners.set(
@@ -968,6 +1021,7 @@ export default class AdminPanel {
             const autoTextHandler = () => {
                 textColorInput.disabled = autoTextColorCheckbox.checked;
                 this.updateBackgroundPreview();
+                this.autoSaveBackgroundConfiguration();
             };
             autoTextColorCheckbox.addEventListener(
                 EVENT_NAMES.CHANGE,
@@ -985,7 +1039,10 @@ export default class AdminPanel {
 
         // Manual text color picker
         if (textColorInput) {
-            const textColorHandler = () => this.updateBackgroundPreview();
+            const textColorHandler = () => {
+                this.updateBackgroundPreview();
+                this.autoSaveBackgroundConfiguration();
+            };
             textColorInput.addEventListener(
                 EVENT_NAMES.INPUT,
                 textColorHandler
@@ -1002,7 +1059,10 @@ export default class AdminPanel {
             BACKGROUND_UI_ELEMENTS.TEXT_SHADOW_CHECKBOX
         ) as HTMLInputElement;
         if (textShadowCheckbox) {
-            const shadowHandler = () => this.updateBackgroundPreview();
+            const shadowHandler = () => {
+                this.updateBackgroundPreview();
+                this.autoSaveBackgroundConfiguration();
+            };
             textShadowCheckbox.addEventListener(
                 EVENT_NAMES.CHANGE,
                 shadowHandler
@@ -1456,12 +1516,11 @@ export default class AdminPanel {
     }
 
     /**
-     * Save configuration from form inputs
+     * Auto-save authentication configuration
      * @returns {void}
      */
-    private saveConfiguration(): void {
+    private autoSaveAuthConfiguration(): void {
         try {
-            // Get form values
             const authConfig = {
                 twitch_oauth: this.getInputValue(ELEMENT_IDS.TWITCH_OAUTH),
                 twitch_username: this.getInputValue(
@@ -1470,29 +1529,69 @@ export default class AdminPanel {
                 twitch_channel: this.getInputValue(ELEMENT_IDS.TWITCH_CHANNEL),
             };
 
+            const success = this.#configManager.set(
+                CORE_CONFIG.AUTH,
+                authConfig
+            );
+
+            if (success) {
+                // Notify other windows to refresh after successful save
+                notifyConfigurationSaved();
+            }
+        } catch (error) {
+            console.error(ERROR_MESSAGES.ERROR_AUTO_SAVING_AUTH_CONFIG, error);
+        }
+    }
+
+    /**
+     * Auto-save behavior configuration
+     * @returns {void}
+     */
+    private autoSaveBehaviorConfiguration(): void {
+        try {
             const maxChallenges = parseInt(
                 this.getInputValue(ELEMENT_IDS.MAX_CHALLENGES),
                 10
             );
 
-            // Get color configuration from new UI
+            const success = this.#configManager.set(
+                CORE_CONFIG.MAX_CHALLENGES,
+                maxChallenges
+            );
+
+            if (success) {
+                // Notify other windows to refresh after successful save
+                notifyConfigurationSaved();
+            }
+        } catch (error) {
+            console.error(
+                ERROR_MESSAGES.ERROR_AUTO_SAVING_BEHAVIOR_CONFIG,
+                error
+            );
+        }
+    }
+
+    /**
+     * Auto-save color configuration
+     * @returns {void}
+     */
+    private autoSaveColorConfiguration(): void {
+        try {
+            // Get color configuration from UI
             const colorConfig = this.getCurrentColorConfigFromUI();
             const challengeRowColors = this.convertUIToColors(colorConfig);
             const challengeRowTextColors =
                 this.convertUIToTextColors(colorConfig);
 
-            // Get background configuration from UI
-            const backgroundConfig = this.getCurrentBackgroundConfigFromUI();
+            // Get row colors opacity
+            const rowColorsOpacitySlider = document.getElementById(
+                ELEMENT_IDS.ROW_COLORS_OPACITY
+            ) as HTMLInputElement;
+            const rowColorsOpacity = rowColorsOpacitySlider
+                ? parseInt(rowColorsOpacitySlider.value) / 100
+                : BACKGROUND_DEFAULTS.ROW_COLORS_OPACITY;
 
-            // Update configuration
-            const authSuccess = this.#configManager.set(
-                CORE_CONFIG.AUTH,
-                authConfig
-            );
-            const maxChallengesSuccess = this.#configManager.set(
-                CORE_CONFIG.MAX_CHALLENGES,
-                maxChallenges
-            );
+            // Save all color-related configuration
             const colorsSuccess = this.#configManager.set(
                 CORE_CONFIG.CHALLENGE_ROW_COLORS,
                 challengeRowColors
@@ -1501,20 +1600,30 @@ export default class AdminPanel {
                 CORE_CONFIG.CHALLENGE_ROW_TEXT_COLORS,
                 challengeRowTextColors
             );
-
-            // Get and save row colors opacity
-            const rowColorsOpacitySlider = document.getElementById(
-                ELEMENT_IDS.ROW_COLORS_OPACITY
-            ) as HTMLInputElement;
-            const rowColorsOpacity = rowColorsOpacitySlider
-                ? parseInt(rowColorsOpacitySlider.value) / 100
-                : BACKGROUND_DEFAULTS.ROW_COLORS_OPACITY;
             const rowColorsOpacitySuccess = this.#configManager.set(
                 COLOR_CONFIG.CHALLENGE_ROW_COLORS_OPACITY,
                 rowColorsOpacity
             );
 
-            // Update overlay background configuration
+            if (colorsSuccess && textColorsSuccess && rowColorsOpacitySuccess) {
+                // Notify other windows to refresh after successful save
+                notifyConfigurationSaved();
+            }
+        } catch (error) {
+            console.error(ERROR_MESSAGES.ERROR_AUTO_SAVING_COLOR_CONFIG, error);
+        }
+    }
+
+    /**
+     * Auto-save background configuration
+     * @returns {void}
+     */
+    private autoSaveBackgroundConfiguration(): void {
+        try {
+            // Get background configuration from UI
+            const backgroundConfig = this.getCurrentBackgroundConfigFromUI();
+
+            // Save all background-related configuration
             const overlayBackgroundColorSuccess = this.#configManager.set(
                 BACKGROUND_CONFIG.OVERLAY_BACKGROUND_COLOR,
                 backgroundConfig.overlayBackgroundColor
@@ -1523,8 +1632,6 @@ export default class AdminPanel {
                 BACKGROUND_CONFIG.OVERLAY_BACKGROUND_OPACITY,
                 backgroundConfig.overlayBackgroundOpacity
             );
-
-            // Update challenge row background configuration
             const backgroundColorSuccess = this.#configManager.set(
                 BACKGROUND_CONFIG.CHALLENGE_BACKGROUND_COLOR,
                 backgroundConfig.challengeBackgroundColor
@@ -1546,13 +1653,7 @@ export default class AdminPanel {
                 backgroundConfig.challengeTextShadow
             );
 
-            // Check if all configuration updates were successful
             if (
-                authSuccess &&
-                maxChallengesSuccess &&
-                colorsSuccess &&
-                textColorsSuccess &&
-                rowColorsOpacitySuccess &&
                 overlayBackgroundColorSuccess &&
                 overlayBackgroundOpacitySuccess &&
                 backgroundColorSuccess &&
@@ -1561,30 +1662,13 @@ export default class AdminPanel {
                 autoTextColorSuccess &&
                 textShadowSuccess
             ) {
-                // Visual feedback
-                this.showFeedback(
-                    ELEMENT_IDS.SAVE_CONFIG_BTN,
-                    ADMIN_FEEDBACK_MESSAGES.SAVED,
-                    STATUS_COLORS.SUCCESS
-                );
-
                 // Notify other windows to refresh after successful save
                 notifyConfigurationSaved();
-            } else {
-                // Some configuration updates failed
-                console.error("Some configuration updates failed");
-                this.showFeedback(
-                    ELEMENT_IDS.SAVE_CONFIG_BTN,
-                    ADMIN_FEEDBACK_MESSAGES.PARTIAL_SAVE_ERROR,
-                    STATUS_COLORS.ERROR
-                );
             }
         } catch (error) {
-            console.error("Error saving configuration:", error);
-            this.showFeedback(
-                ELEMENT_IDS.SAVE_CONFIG_BTN,
-                ADMIN_FEEDBACK_MESSAGES.ERROR,
-                STATUS_COLORS.ERROR
+            console.error(
+                ERROR_MESSAGES.ERROR_AUTO_SAVING_BACKGROUND_CONFIG,
+                error
             );
         }
     }

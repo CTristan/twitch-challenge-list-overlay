@@ -59,6 +59,15 @@ export const ERROR_MESSAGES = {
         "Could not find challenge ID for checkbox",
     CHALLENGE_NOT_FOUND_BY_ID: "Challenge with ID {challengeId} not found",
     ERROR_TOGGLING_CHALLENGE_COMPLETION: "Error toggling challenge completion:",
+
+    // Auto-save configuration errors
+    ERROR_AUTO_SAVING_AUTH_CONFIG:
+        "Error auto-saving authentication configuration:",
+    ERROR_AUTO_SAVING_BEHAVIOR_CONFIG:
+        "Error auto-saving behavior configuration:",
+    ERROR_AUTO_SAVING_COLOR_CONFIG: "Error auto-saving color configuration:",
+    ERROR_AUTO_SAVING_BACKGROUND_CONFIG:
+        "Error auto-saving background configuration:",
 } as const;
 
 /**
