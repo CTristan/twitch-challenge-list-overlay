@@ -97,6 +97,7 @@
   flex-shrink: 0;
   width: var(--challenge-checkbox-size);
   height: var(--challenge-checkbox-size);
+  margin-left: 0.75rem;
   margin-right: var(--challenge-checkbox-margin-right);
   border: var(--challenge-checkbox-border-width) solid
     var(--challenge-checkbox-border-color, #ffffff);
