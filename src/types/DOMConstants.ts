@@ -25,6 +25,11 @@ export const CSS_CLASSES = {
     ADMIN_INTERACTIVE: "admin-interactive",
     EXPANDED: "expanded",
     DISABLED: "disabled",
+    ERROR: "error",
+
+    // Add Challenge Button classes
+    ADD_CHALLENGE_BTN: "add-challenge-btn",
+    ADD_CHALLENGE_CONTAINER: "add-challenge-container",
 
     // Background customization classes
     CUSTOM_OVERLAY_BACKGROUND: "custom-overlay-background",
@@ -71,6 +76,7 @@ export const CSS_SELECTORS = {
     // Header and text selectors
     CUSTOM_HEADER: ".custom-header",
     CUSTOM_TEXT: ".custom-text",
+    CARD: ".card",
     CARD_HEADER: ".card .username",
 
     // Admin panel selectors
@@ -103,6 +109,16 @@ export const ELEMENT_IDS = {
 
     // Behavior form elements
     MAX_CHALLENGES: "max-challenges",
+
+    // Add Challenge Modal elements
+    ADD_CHALLENGE_MODAL: "add-challenge-modal",
+    ADD_CHALLENGE_FORM: "add-challenge-form",
+    ADD_CHALLENGE_TITLE: "add-challenge-title",
+    ADD_CHALLENGE_DESCRIPTION: "add-challenge-description",
+    ADD_CHALLENGE_AMOUNT: "add-challenge-amount",
+    ADD_CHALLENGE_TIMER: "add-challenge-timer",
+    ADD_CHALLENGE_SUBMIT: "add-challenge-submit",
+    ADD_CHALLENGE_CANCEL: "add-challenge-cancel",
 
     // Color configuration elements
     PRIMARY_COLOR_ENABLED: "primary-color-enabled",
@@ -205,9 +221,42 @@ export const COMMON_STRINGS = {
 } as const;
 
 /**
+ * HTML element type constants
+ */
+export const HTML_ELEMENTS = {
+    DIV: "div",
+    BUTTON: "button",
+} as const;
+
+/**
+ * HTML attribute value constants
+ */
+export const HTML_ATTRIBUTES = {
+    BUTTON_TYPE: "button",
+} as const;
+
+/**
+ * Button text constants
+ */
+export const BUTTON_TEXT = {
+    ADD_CHALLENGE: "Add Challenge",
+} as const;
+
+/**
  * Type definitions for constant values
  */
 export type CSSClassValue = (typeof CSS_CLASSES)[keyof typeof CSS_CLASSES];
 export type EventNameValue = (typeof EVENT_NAMES)[keyof typeof EVENT_NAMES];
 export type DataAttributeValue =
     (typeof DATA_ATTRIBUTES)[keyof typeof DATA_ATTRIBUTES];
+export type ElementIdValue = (typeof ELEMENT_IDS)[keyof typeof ELEMENT_IDS];
+export type URLHashValue = (typeof URL_HASH)[keyof typeof URL_HASH];
+export type CommonStringValue =
+    (typeof COMMON_STRINGS)[keyof typeof COMMON_STRINGS];
+export type CommandConstantValue =
+    (typeof COMMAND_CONSTANTS)[keyof typeof COMMAND_CONSTANTS];
+export type HTMLElementValue =
+    (typeof HTML_ELEMENTS)[keyof typeof HTML_ELEMENTS];
+export type HTMLAttributeValue =
+    (typeof HTML_ATTRIBUTES)[keyof typeof HTML_ATTRIBUTES];
+export type ButtonTextValue = (typeof BUTTON_TEXT)[keyof typeof BUTTON_TEXT];

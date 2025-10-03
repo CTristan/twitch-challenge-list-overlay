@@ -7,9 +7,11 @@ describe("modal.ts", () => {
     beforeEach(() => {
         // Clear DOM before each test
         document.body.innerHTML = "";
-        
+
         // Set up console error spy
-        consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+        consoleErrorSpy = vi
+            .spyOn(console, "error")
+            .mockImplementation(() => {});
     });
 
     describe("openModal", () => {
@@ -209,5 +211,89 @@ describe("modal.ts", () => {
             expect(modal?.classList.contains("hidden")).toBe(true);
         });
     });
-});
 
+    describe("Custom Modal ID Support", () => {
+        describe("openModal with custom ID", () => {
+            it("should work with custom modal ID", () => {
+                // Set up DOM with custom modal element
+                document.body.innerHTML = `
+                    <div id="custom-modal" class="hidden"></div>
+                `;
+
+                const modal = document.getElementById("custom-modal");
+                expect(modal?.classList.contains("hidden")).toBe(true);
+                expect(modal?.classList.contains("flex")).toBe(false);
+
+                // Execute function with custom ID
+                openModal("custom-modal");
+
+                // Verify class changes
+                expect(modal?.classList.contains("hidden")).toBe(false);
+                expect(modal?.classList.contains("flex")).toBe(true);
+            });
+
+            it("should handle non-existent custom modal ID gracefully", () => {
+                // No modal element in DOM
+                document.body.innerHTML = `<div></div>`;
+
+                // Execute function with non-existent ID - should not throw error
+                expect(() => openModal("non-existent")).not.toThrow();
+
+                // Verify no errors were logged
+                expect(consoleErrorSpy).not.toHaveBeenCalled();
+            });
+        });
+
+        describe("closeModal with custom ID", () => {
+            it("should work with custom modal ID", () => {
+                // Set up DOM with custom modal element that is open
+                document.body.innerHTML = `
+                    <div id="custom-modal" class="flex"></div>
+                `;
+
+                const modal = document.getElementById("custom-modal");
+                expect(modal?.classList.contains("flex")).toBe(true);
+                expect(modal?.classList.contains("hidden")).toBe(false);
+
+                // Execute function with custom ID
+                closeModal("custom-modal");
+
+                // Verify class changes
+                expect(modal?.classList.contains("flex")).toBe(false);
+                expect(modal?.classList.contains("hidden")).toBe(true);
+            });
+
+            it("should handle non-existent custom modal ID gracefully", () => {
+                // No modal element in DOM
+                document.body.innerHTML = `<div></div>`;
+
+                // Execute function with non-existent ID - should not throw error
+                expect(() => closeModal("non-existent")).not.toThrow();
+
+                // Verify no errors were logged
+                expect(consoleErrorSpy).not.toHaveBeenCalled();
+            });
+        });
+
+        describe("Backward compatibility", () => {
+            it("should still work with default modal ID when no parameter provided", () => {
+                // Set up DOM with default modal element
+                document.body.innerHTML = `
+                    <div id="modal" class="hidden"></div>
+                `;
+
+                const modal = document.getElementById("modal");
+
+                // Test openModal without parameter
+                openModal();
+                expect(modal?.classList.contains("hidden")).toBe(false);
+                expect(modal?.classList.contains("flex")).toBe(true);
+
+                // Test closeModal without parameter
+                closeModal();
+                expect(modal?.classList.contains("hidden")).toBe(true);
+                expect(modal?.classList.contains("flex")).toBe(false);
+            });
+        });
+    });
+});

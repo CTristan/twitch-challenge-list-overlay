@@ -49,6 +49,14 @@ export const ERROR_MESSAGES = {
     MAXIMUM_CHALLENGES_REACHED:
         "Maximum number of challenges reached ({limit}). Delete some challenges first.",
 
+    // Form validation errors
+    CHALLENGE_TITLE_REQUIRED: "Challenge title is required",
+    AMOUNT_INVALID_RANGE: "Amount must be a number between 1 and 999",
+    TIMER_FORMAT_INVALID: "Timer format should be like '5m', '30s', or '1h'",
+    FAILED_TO_CREATE_CHALLENGE: "Failed to create challenge",
+    MAXIMUM_CHALLENGES_ALLOWED: "Maximum of {maxChallenges} challenges allowed",
+    ERROR_CREATING_CHALLENGE: "Error creating challenge:",
+
     // DOM-related errors
     CHALLENGE_LIST_ELEMENT_NOT_FOUND:
         "Challenge list element not found in card",

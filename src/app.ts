@@ -2,25 +2,33 @@ import { animateScroll } from "./animations/animateScroll";
 import Challenge from "./classes/Challenge";
 import ChallengeList from "./classes/ChallengeList";
 import ConfigManager from "./classes/ConfigManager";
+import { closeModal, openModal } from "./modal";
 import { loadStyles } from "./styleLoader";
 import {
     BACKGROUND_CONFIG,
     BACKGROUND_DEFAULTS,
+    BEHAVIOR_CONFIG,
     COLOR_CONFIG,
     RESPONSE_CONFIG,
 } from "./types/ConfigConstants";
 import {
+    BUTTON_TEXT,
     COMMAND_CONSTANTS,
     COMMON_STRINGS,
     CSS_CLASSES,
     CSS_SELECTORS,
     DATA_ATTRIBUTES,
+    ELEMENT_IDS,
     EVENT_NAMES,
+    HTML_ATTRIBUTES,
+    HTML_ELEMENTS,
     URL_HASH,
 } from "./types/DOMConstants";
 import { ERROR_MESSAGES, STATUS_MESSAGES } from "./types/MessageConstants";
+import { VALIDATION_CONSTRAINTS, VALIDATION_PATTERNS } from "./types/ValidationConstants";
 import ChallengeRenderer from "./utils/ChallengeRenderer";
 import CommandHandler from "./utils/CommandHandler";
+import { getDefaultMaxChallenges } from "./utils/ConfigDefaults";
 import DOMHelper from "./utils/DOMHelper";
 import TimerController from "./utils/TimerController";
 import TimerDisplayUtils from "./utils/TimerDisplayUtils";
@@ -77,6 +85,9 @@ export default class App {
      */
     render(): void {
         this.#uiUpdateHandler.renderChallengeList();
+
+        // Setup admin mode features after rendering
+        this.enableAdminCheckboxInteraction();
     }
 
     /**
@@ -294,6 +305,9 @@ export default class App {
         // Use UIUpdateHandler for consistent rendering instead of App's own renderChallengeList
         // This ensures all rendering goes through the same path and prevents duplicate headers
         this.#uiUpdateHandler.renderChallengeList();
+
+        // Setup admin mode features after rendering
+        this.enableAdminCheckboxInteraction();
     }
 
     /**
@@ -378,7 +392,186 @@ export default class App {
         checkboxes.forEach((checkbox) => {
             checkbox.classList.add(CSS_CLASSES.ADMIN_INTERACTIVE);
         });
+
+        // Setup add challenge button for admin mode
+        this.setupAddChallengeButton();
     }
+
+    /**
+     * Setup add challenge button for admin mode
+     * Creates and manages the button visibility based on admin mode
+     * @returns {void}
+     */
+    setupAddChallengeButton(): void {
+        // Only setup in admin mode
+        if (window.location.hash !== URL_HASH.ADMIN) {
+            return;
+        }
+
+        // Find all challenge cards
+        const challengeCards = document.querySelectorAll(CSS_SELECTORS.CARD);
+        challengeCards.forEach((card) => {
+            // Check if button container already exists
+            let buttonContainer = card.querySelector(
+                `.${CSS_CLASSES.ADD_CHALLENGE_CONTAINER}`
+            );
+
+            if (!buttonContainer) {
+                // Create button container
+                buttonContainer = document.createElement(HTML_ELEMENTS.DIV);
+                buttonContainer.className = CSS_CLASSES.ADD_CHALLENGE_CONTAINER;
+
+                // Create the button
+                const addButton = document.createElement(HTML_ELEMENTS.BUTTON);
+                addButton.className = CSS_CLASSES.ADD_CHALLENGE_BTN;
+                addButton.textContent = BUTTON_TEXT.ADD_CHALLENGE;
+                addButton.type = HTML_ATTRIBUTES.BUTTON_TYPE;
+
+                // Add click event listener
+                addButton.addEventListener(
+                    EVENT_NAMES.CLICK,
+                    this.handleAddChallengeClick
+                );
+
+                buttonContainer.appendChild(addButton);
+                card.appendChild(buttonContainer);
+            }
+        });
+    }
+
+    /**
+     * Handle add challenge button click
+     * Opens the add challenge modal
+     * @returns {void}
+     */
+    private handleAddChallengeClick = (): void => {
+        this.openAddChallengeModal();
+    };
+
+    /**
+     * Open the add challenge modal
+     * @returns {void}
+     */
+    private openAddChallengeModal(): void {
+        // Clear form data
+        this.clearAddChallengeForm();
+
+        // Show modal using the updated modal function
+        openModal(ELEMENT_IDS.ADD_CHALLENGE_MODAL);
+
+        // Setup form event listeners
+        this.setupAddChallengeFormListeners();
+    }
+
+    /**
+     * Close the add challenge modal
+     * @returns {void}
+     */
+    private closeAddChallengeModal(): void {
+        // Close modal using the updated modal function
+        closeModal(ELEMENT_IDS.ADD_CHALLENGE_MODAL);
+
+        // Clear form data
+        this.clearAddChallengeForm();
+    }
+
+    /**
+     * Clear the add challenge form
+     * @returns {void}
+     */
+    private clearAddChallengeForm(): void {
+        const titleInput = document.getElementById(
+            ELEMENT_IDS.ADD_CHALLENGE_TITLE
+        ) as HTMLInputElement;
+        const descInput = document.getElementById(
+            ELEMENT_IDS.ADD_CHALLENGE_DESCRIPTION
+        ) as HTMLTextAreaElement;
+        const amountInput = document.getElementById(
+            ELEMENT_IDS.ADD_CHALLENGE_AMOUNT
+        ) as HTMLInputElement;
+        const timerInput = document.getElementById(
+            ELEMENT_IDS.ADD_CHALLENGE_TIMER
+        ) as HTMLInputElement;
+
+        if (titleInput) titleInput.value = COMMON_STRINGS.EMPTY;
+        if (descInput) descInput.value = COMMON_STRINGS.EMPTY;
+        if (amountInput) amountInput.value = COMMON_STRINGS.EMPTY;
+        if (timerInput) timerInput.value = COMMON_STRINGS.EMPTY;
+
+        // Clear any error states
+        [titleInput, descInput, amountInput, timerInput].forEach((input) => {
+            if (input) {
+                input.classList.remove(CSS_CLASSES.ERROR);
+            }
+        });
+    }
+
+    /**
+     * Setup form event listeners for the add challenge modal
+     * @returns {void}
+     */
+    private setupAddChallengeFormListeners(): void {
+        const form = document.getElementById(ELEMENT_IDS.ADD_CHALLENGE_FORM);
+        const cancelButton = document.getElementById(
+            ELEMENT_IDS.ADD_CHALLENGE_CANCEL
+        );
+
+        if (form) {
+            // Remove existing listeners to prevent duplicates
+            form.removeEventListener(
+                EVENT_NAMES.SUBMIT,
+                this.handleAddChallengeSubmit
+            );
+            form.addEventListener(
+                EVENT_NAMES.SUBMIT,
+                this.handleAddChallengeSubmit
+            );
+        }
+
+        if (cancelButton) {
+            cancelButton.removeEventListener(
+                EVENT_NAMES.CLICK,
+                this.handleAddChallengeCancelClick
+            );
+            cancelButton.addEventListener(
+                EVENT_NAMES.CLICK,
+                this.handleAddChallengeCancelClick
+            );
+        }
+    }
+
+    /**
+     * Handle add challenge form submission
+     * @param {Event} event - The form submit event
+     * @returns {void}
+     */
+    private handleAddChallengeSubmit = (event: Event): void => {
+        event.preventDefault();
+
+        try {
+            const challengeData = this.extractChallengeFormData();
+            if (challengeData) {
+                this.createChallengeFromForm(challengeData);
+                this.closeAddChallengeModal();
+            }
+        } catch (error) {
+            console.error(ERROR_MESSAGES.ERROR_CREATING_CHALLENGE, error);
+            // Show error to user (could be enhanced with better error display)
+            alert(
+                error instanceof Error
+                    ? error.message
+                    : ERROR_MESSAGES.FAILED_TO_CREATE_CHALLENGE
+            );
+        }
+    };
+
+    /**
+     * Handle cancel button click
+     * @returns {void}
+     */
+    private handleAddChallengeCancelClick = (): void => {
+        this.closeAddChallengeModal();
+    };
 
     /**
      * Handle checkbox click events to toggle challenge completion status
@@ -517,6 +710,157 @@ export default class App {
             );
             // Timer will be stopped when challenge is completed/failed
         }
+    }
+
+    /**
+     * Extract challenge data from the form
+     * @returns {object|null} Challenge data or null if validation fails
+     */
+    private extractChallengeFormData(): {
+        title: string;
+        description?: string;
+        amount?: number;
+        timer?: string;
+    } | null {
+        const titleInput = document.getElementById(
+            ELEMENT_IDS.ADD_CHALLENGE_TITLE
+        ) as HTMLInputElement;
+        const descInput = document.getElementById(
+            ELEMENT_IDS.ADD_CHALLENGE_DESCRIPTION
+        ) as HTMLTextAreaElement;
+        const amountInput = document.getElementById(
+            ELEMENT_IDS.ADD_CHALLENGE_AMOUNT
+        ) as HTMLInputElement;
+        const timerInput = document.getElementById(
+            ELEMENT_IDS.ADD_CHALLENGE_TIMER
+        ) as HTMLInputElement;
+
+        // Clear any previous error states
+        [titleInput, descInput, amountInput, timerInput].forEach((input) => {
+            if (input) {
+                input.classList.remove(CSS_CLASSES.ERROR);
+            }
+        });
+
+        // Validate required title
+        const title = titleInput?.value?.trim();
+        if (!title) {
+            if (titleInput) {
+                titleInput.classList.add(CSS_CLASSES.ERROR);
+                titleInput.focus();
+            }
+            throw new Error(ERROR_MESSAGES.CHALLENGE_TITLE_REQUIRED);
+        }
+
+        // Extract optional fields
+        const description = descInput?.value?.trim() || undefined;
+        const amountStr = amountInput?.value?.trim();
+        const timerStr = timerInput?.value?.trim();
+
+        // Validate amount if provided
+        let amount: number | undefined;
+        if (amountStr) {
+            amount = parseInt(amountStr, 10);
+            if (
+                isNaN(amount) ||
+                amount < VALIDATION_CONSTRAINTS.AMOUNT_MIN ||
+                amount > VALIDATION_CONSTRAINTS.AMOUNT_MAX
+            ) {
+                if (amountInput) {
+                    amountInput.classList.add(CSS_CLASSES.ERROR);
+                    amountInput.focus();
+                }
+                throw new Error(ERROR_MESSAGES.AMOUNT_INVALID_RANGE);
+            }
+        }
+
+        // Basic timer format validation if provided
+        let timer: string | undefined;
+        if (timerStr) {
+            // Simple validation - should match patterns like "5m", "30s", "1h"
+            const timerPattern = VALIDATION_PATTERNS.TIMER_FORMAT;
+            if (!timerPattern.test(timerStr)) {
+                if (timerInput) {
+                    timerInput.classList.add(CSS_CLASSES.ERROR);
+                    timerInput.focus();
+                }
+                throw new Error(ERROR_MESSAGES.TIMER_FORMAT_INVALID);
+            }
+            timer = timerStr;
+        }
+
+        const result: {
+            title: string;
+            description?: string;
+            amount?: number;
+            timer?: string;
+        } = { title };
+
+        if (description) {
+            result.description = description;
+        }
+        if (amount !== undefined) {
+            result.amount = amount;
+        }
+        if (timer) {
+            result.timer = timer;
+        }
+
+        return result;
+    }
+
+    /**
+     * Create a challenge from form data
+     * @param {object} challengeData - The challenge data from the form
+     * @returns {void}
+     */
+    private createChallengeFromForm(challengeData: {
+        title: string;
+        description?: string;
+        amount?: number;
+        timer?: string;
+    }): void {
+        // Check challenge limit
+        const maxChallenges = this.#configManager.get(BEHAVIOR_CONFIG.MAX_CHALLENGES) || getDefaultMaxChallenges();
+        if (this.challengeList.challenges.length >= maxChallenges) {
+            throw new Error(
+                ERROR_MESSAGES.MAXIMUM_CHALLENGES_ALLOWED.replace(
+                    "{maxChallenges}",
+                    maxChallenges.toString()
+                )
+            );
+        }
+
+        // Create challenge options
+        const challengeOptions: {
+            description?: string;
+            amount?: number;
+            timer?: string;
+        } = {};
+
+        if (challengeData.description) {
+            challengeOptions.description = challengeData.description;
+        }
+        if (challengeData.amount) {
+            challengeOptions.amount = challengeData.amount;
+        }
+        if (challengeData.timer) {
+            challengeOptions.timer = challengeData.timer;
+        }
+
+        // Create the challenge
+        const challenge = new Challenge(challengeData.title, challengeOptions);
+
+        // Start timer if present
+        if (challengeData.timer) {
+            challenge.startTimer();
+        }
+
+        // Add to challenge list
+        this.challengeList.addChallengeObjects(challenge);
+
+        // Update DOM
+        this.addChallengeToDOM(challenge);
     }
 }
 

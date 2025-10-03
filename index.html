@@ -56,5 +56,88 @@
                 </div>
             </div>
         </div>
+
+        <!-- Add Challenge Modal -->
+        <div
+            id="add-challenge-modal"
+            class="modal hidden justify-center items-center absolute"
+        >
+            <div class="modal-content">
+                <h2 class="modal-header">Add New Challenge</h2>
+                <div class="modal-body">
+                    <form id="add-challenge-form">
+                        <div class="form-group">
+                            <label for="add-challenge-title"
+                                >Title (required):</label
+                            >
+                            <input
+                                type="text"
+                                id="add-challenge-title"
+                                class="form-input"
+                                placeholder="Enter challenge title"
+                                required
+                                maxlength="100"
+                            />
+                        </div>
+
+                        <div class="form-group">
+                            <label for="add-challenge-description"
+                                >Description (optional):</label
+                            >
+                            <textarea
+                                id="add-challenge-description"
+                                class="form-input"
+                                placeholder="Enter challenge description"
+                                maxlength="200"
+                                rows="3"
+                            ></textarea>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="add-challenge-amount"
+                                >Amount (optional):</label
+                            >
+                            <input
+                                type="number"
+                                id="add-challenge-amount"
+                                class="form-input"
+                                placeholder="1"
+                                min="1"
+                                max="999"
+                            />
+                        </div>
+
+                        <div class="form-group">
+                            <label for="add-challenge-timer"
+                                >Timer (optional):</label
+                            >
+                            <input
+                                type="text"
+                                id="add-challenge-timer"
+                                class="form-input"
+                                placeholder="e.g., 5m, 30s, 1h"
+                            />
+                        </div>
+
+                        <div class="form-actions">
+                            <button
+                                type="submit"
+                                id="add-challenge-submit"
+                                class="admin-button primary"
+                            >
+                                Add Challenge
+                            </button>
+                            <button
+                                type="button"
+                                id="add-challenge-cancel"
+                                class="admin-button"
+                            >
+                                Cancel
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
     </body>
 </html>
