@@ -6,6 +6,10 @@
   padding: 0;
 }
 
+body {
+  background-color: #000000;
+}
+
 #app {
   display: flex;
   flex-direction: column;
@@ -20,11 +24,11 @@
 .header {
   display: var(--header-display, flex);
   margin-bottom: var(--header-margin-bottom);
-  border-top: 1px solid rgba(255, 255, 255, 0.2);
-  border-left: 1px solid rgba(255, 255, 255, 0.1);
+  border-top: 1px solid var(--border-color-light);
+  border-left: 1px solid var(--border-color-light);
   border-radius: var(--header-border-radius);
   padding: var(--header-padding);
-  box-shadow: 1px 1px 1px 0 rgba(0, 0, 0, 0.2);
+  box-shadow: 1px 1px 1px 0 var(--border-color-dark);
   background-color: var(--header-background-color);
   font-family: var(--header-font-family, "arial");
   color: var(--header-font-color);
@@ -48,12 +52,12 @@
 }
 
 .card {
-  border-left: 1px solid rgba(255, 255, 255, 0.1);
+  border-left: 1px solid var(--border-color-light);
   border-radius: var(--card-border-radius);
   background-color: var(--card-background-color);
   margin-bottom: var(--card-gap-between);
   padding: var(--card-padding);
-  box-shadow: 1px 1px 1px 0 rgba(0, 0, 0, 0.2);
+  box-shadow: 1px 1px 1px 0 var(--border-color-dark);
   font-family: var(--card-font-family, "arial");
 }
 
@@ -152,6 +156,40 @@
   transform: scale(0.95);
 }
 
+/* Increment/Decrement button styling */
+.challenge-increment-button,
+.challenge-decrement-button {
+  flex-shrink: 0;
+  width: var(--challenge-checkbox-size);
+  height: var(--challenge-checkbox-size);
+  margin-left: 0.25rem;
+  margin-right: 0.25rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: calc(var(--challenge-checkbox-size) * 0.8);
+  font-weight: bold;
+  opacity: 0.7;
+  transition: opacity 0.2s ease, transform 0.2s ease, background-color 0.2s ease;
+  user-select: none;
+  border-radius: 4px;
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.challenge-increment-button:hover,
+.challenge-decrement-button:hover {
+  opacity: 1;
+  transform: scale(1.1);
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+.challenge-increment-button:active,
+.challenge-decrement-button:active {
+  transform: scale(0.95);
+  background-color: rgba(255, 255, 255, 0.15);
+}
+
 .challenge-text {
   flex: 1;
   display: flex;
@@ -172,12 +210,21 @@
 
 .challenge-description {
   font-size: var(--challenge-description-font-size);
-  font-weight: 300;
+  font-weight: 400;
   color: inherit;
   opacity: 0.85;
   white-space: normal;
   overflow-wrap: anywhere;
   line-height: 1.1;
+}
+
+.challenge-metadata {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 4px;
+  width: 100%;
 }
 
 .challenge-amount {
@@ -187,7 +234,7 @@
   opacity: 0.75;
   white-space: nowrap;
   line-height: 1.1;
-  margin-top: 1px;
+  flex-shrink: 0;
 }
 
 .challenge-timer {
@@ -196,8 +243,9 @@
   color: var(--challenge-timer-color);
   white-space: nowrap;
   line-height: 1.1;
-  margin-top: 2px;
   opacity: 0.9;
+  margin-left: auto;
+  flex-shrink: 0;
 }
 
 .challenge-timer.warning {
@@ -259,7 +307,7 @@
 /* Add Challenge Button Styles */
 .add-challenge-container {
   padding: 1rem 1.5rem 0.5rem;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  border-top: 1px solid var(--border-color-light);
   margin-top: 0.5rem;
   display: flex;
   gap: 10px;

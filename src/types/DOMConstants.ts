@@ -13,9 +13,12 @@ export const CSS_CLASSES = {
     CHALLENGE_CONTAINER: "challenge-container",
     CHALLENGE_CHECKBOX: "challenge-checkbox",
     CHALLENGE_EDIT_ICON: "challenge-edit-icon",
+    CHALLENGE_INCREMENT_BUTTON: "challenge-increment-button",
+    CHALLENGE_DECREMENT_BUTTON: "challenge-decrement-button",
     CHALLENGE_TEXT: "challenge-text",
     CHALLENGE_TITLE: "challenge-title",
     CHALLENGE_DESCRIPTION: "challenge-description",
+    CHALLENGE_METADATA: "challenge-metadata",
     CHALLENGE_AMOUNT: "challenge-amount",
     CHALLENGES: "challenges",
 
@@ -69,9 +72,12 @@ export const CSS_SELECTORS = {
     CHALLENGE_CONTAINER: ".challenge-container",
     CHALLENGE_CHECKBOX: ".challenge-checkbox",
     CHALLENGE_EDIT_ICON: ".challenge-edit-icon",
+    CHALLENGE_INCREMENT_BUTTON: ".challenge-increment-button",
+    CHALLENGE_DECREMENT_BUTTON: ".challenge-decrement-button",
     CHALLENGE_TEXT: ".challenge-text",
     CHALLENGE_TITLE: ".challenge-title",
     CHALLENGE_DESCRIPTION: ".challenge-description",
+    CHALLENGE_METADATA: ".challenge-metadata",
     CHALLENGE_AMOUNT: ".challenge-amount",
     CHALLENGE: ".challenge",
     CHALLENGES_LIST: ".challenges",
@@ -236,6 +242,15 @@ export const HTML_ELEMENTS = {
 } as const;
 
 /**
+ * HTML attribute name constants
+ */
+export const HTML_ATTRIBUTE_NAMES = {
+    ROLE: "role",
+    ARIA_LABEL: "aria-label",
+    TABINDEX: "tabindex",
+} as const;
+
+/**
  * HTML attribute value constants
  */
 export const HTML_ATTRIBUTES = {
@@ -275,6 +290,8 @@ export type CommandConstantValue =
     (typeof COMMAND_CONSTANTS)[keyof typeof COMMAND_CONSTANTS];
 export type HTMLElementValue =
     (typeof HTML_ELEMENTS)[keyof typeof HTML_ELEMENTS];
+export type HTMLAttributeNameValue =
+    (typeof HTML_ATTRIBUTE_NAMES)[keyof typeof HTML_ATTRIBUTE_NAMES];
 export type HTMLAttributeValue =
     (typeof HTML_ATTRIBUTES)[keyof typeof HTML_ATTRIBUTES];
 export type ButtonTextValue = (typeof BUTTON_TEXT)[keyof typeof BUTTON_TEXT];

@@ -225,6 +225,8 @@ export const STORAGE_MESSAGES = {
  */
 export const UI_ELEMENTS = {
     EDIT_ICON: "✏️",
+    INCREMENT_BUTTON: "+",
+    DECREMENT_BUTTON: "-",
 } as const;
 
 /**
@@ -232,6 +234,8 @@ export const UI_ELEMENTS = {
  */
 export const ARIA_LABELS = {
     EDIT_CHALLENGE: "Edit challenge",
+    INCREMENT_PROGRESS: "Increment challenge progress",
+    DECREMENT_PROGRESS: "Decrement challenge progress",
 } as const;
 
 /**

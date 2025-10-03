@@ -25,6 +25,8 @@ export default class UIUpdateHandler {
     private configManager: ConfigManager;
     private timerController: TimerController;
     private editHandler?: (event: Event) => void;
+    private incrementHandler?: (event: Event) => void;
+    private decrementHandler?: (event: Event) => void;
 
     // DOM element cache for performance optimization
     private challengeContainer: HTMLElement | null = null;
@@ -58,17 +60,27 @@ export default class UIUpdateHandler {
      * @param challengeList - The challenge list instance
      * @param configManager - The configuration manager instance
      * @param editHandler - Optional edit icon click handler
+     * @param incrementHandler - Optional increment button click handler
+     * @param decrementHandler - Optional decrement button click handler
      */
     constructor(
         challengeList: ChallengeList,
         configManager: ConfigManager,
-        editHandler?: (event: Event) => void
+        editHandler?: (event: Event) => void,
+        incrementHandler?: (event: Event) => void,
+        decrementHandler?: (event: Event) => void
     ) {
         this.challengeList = challengeList;
         this.configManager = configManager;
         this.timerController = new TimerController(challengeList);
         if (editHandler !== undefined) {
             this.editHandler = editHandler;
+        }
+        if (incrementHandler !== undefined) {
+            this.incrementHandler = incrementHandler;
+        }
+        if (decrementHandler !== undefined) {
+            this.decrementHandler = decrementHandler;
         }
     }
 
@@ -368,13 +380,19 @@ export default class UIUpdateHandler {
                     existingTimer.remove();
                 }
 
-                // Add timer display if timer exists and is active (as sibling to text)
+                // Add timer display if timer exists and is active (inside metadata row)
                 if (challenge.timer && challenge.timer.isActive) {
                     const timerElement = TimerDisplayUtils.createTimerElement(
                         challenge.timer,
                         challenge.id
                     );
-                    challengeElement.appendChild(timerElement);
+                    // Find the metadata row and append timer to it
+                    const metadataRow = challengeElement.querySelector(
+                        CSS_SELECTORS.CHALLENGE_METADATA
+                    );
+                    if (metadataRow) {
+                        metadataRow.appendChild(timerElement);
+                    }
                 }
             }
         }
@@ -500,15 +518,25 @@ export default class UIUpdateHandler {
             includeEventListeners: boolean;
             eventHandler: (event: Event) => void;
             editHandler?: (event: Event) => void;
+            incrementHandler?: (event: Event) => void;
+            decrementHandler?: (event: Event) => void;
             displayPosition?: number;
         } = {
             includeEventListeners: !isAdminMode, // Don't add direct listeners in admin mode
             eventHandler: this.handleCheckboxClick,
         };
 
-        // Add edit handler if provided and in admin mode
-        if (isAdminMode && this.editHandler) {
-            options.editHandler = this.editHandler;
+        // Add admin mode handlers if provided and in admin mode
+        if (isAdminMode) {
+            if (this.editHandler) {
+                options.editHandler = this.editHandler;
+            }
+            if (this.incrementHandler) {
+                options.incrementHandler = this.incrementHandler;
+            }
+            if (this.decrementHandler) {
+                options.decrementHandler = this.decrementHandler;
+            }
         }
 
         if (displayPosition !== undefined) {
@@ -523,13 +551,19 @@ export default class UIUpdateHandler {
         // Apply styling using centralized helpers
         this.applyStylingToChallengeElement(challengeElement, rowIndex);
 
-        // Add timer element if challenge has timer
-        if (challenge.timer) {
+        // Add timer element if challenge has timer (inside metadata row)
+        if (challenge.timer && challenge.timer.isActive) {
             const timerElement = this.createTimerElement(
                 challenge.timer,
                 challenge.id
             );
-            challengeElement.appendChild(timerElement);
+            // Find the metadata row and append timer to it
+            const metadataRow = challengeElement.querySelector(
+                CSS_SELECTORS.CHALLENGE_METADATA
+            );
+            if (metadataRow) {
+                metadataRow.appendChild(timerElement);
+            }
         }
 
         return challengeElement;

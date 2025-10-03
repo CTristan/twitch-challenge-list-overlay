@@ -78,7 +78,9 @@ export default class App {
         this.#uiUpdateHandler = new UIUpdateHandler(
             this.challengeList,
             this.#configManager,
-            this.handleEditIconClick
+            this.handleEditIconClick,
+            this.handleIncrementButtonClick,
+            this.handleDecrementButtonClick
         );
         this.#timerController = new TimerController(this.challengeList);
         loadStyles(this.#configManager.getAll());
@@ -166,6 +168,39 @@ export default class App {
             return;
         }
 
+        // Get background customization configuration
+        const backgroundConfig = {
+            overlayBackgroundColor: this.#configManager.get(
+                BACKGROUND_CONFIG.OVERLAY_BACKGROUND_COLOR
+            ),
+            overlayBackgroundOpacity: this.#configManager.get(
+                BACKGROUND_CONFIG.OVERLAY_BACKGROUND_OPACITY
+            ),
+            challengeBackgroundColor: this.#configManager.get(
+                BACKGROUND_CONFIG.CHALLENGE_BACKGROUND_COLOR
+            ),
+            challengeBackgroundOpacity: this.#configManager.get(
+                BACKGROUND_CONFIG.CHALLENGE_BACKGROUND_OPACITY
+            ),
+            challengeTextColor: this.#configManager.get(
+                BACKGROUND_CONFIG.CHALLENGE_TEXT_COLOR
+            ),
+            challengeAutoTextColor: this.#configManager.get(
+                BACKGROUND_CONFIG.CHALLENGE_AUTO_TEXT_COLOR
+            ),
+            challengeTextShadow: this.#configManager.get(
+                BACKGROUND_CONFIG.CHALLENGE_TEXT_SHADOW
+            ),
+        };
+
+        // Apply overlay background styling if configured
+        // This must be done outside the challenges.length check to ensure it's always applied
+        if (backgroundConfig.overlayBackgroundColor) {
+            cardEl.style.backgroundColor =
+                backgroundConfig.overlayBackgroundColor;
+            cardEl.classList.add(CSS_CLASSES.CUSTOM_OVERLAY_BACKGROUND);
+        }
+
         // Only populate the list with challenge items if there are challenges
         if (this.challengeList.challenges.length > 0) {
             // Create DocumentFragment for batch DOM operations to reduce reflows
@@ -184,38 +219,6 @@ export default class App {
                     COLOR_CONFIG.CHALLENGE_ROW_COLORS_OPACITY
                 ) ?? BACKGROUND_DEFAULTS.ROW_COLORS_OPACITY;
 
-            // Get background customization configuration
-            const backgroundConfig = {
-                overlayBackgroundColor: this.#configManager.get(
-                    BACKGROUND_CONFIG.OVERLAY_BACKGROUND_COLOR
-                ),
-                overlayBackgroundOpacity: this.#configManager.get(
-                    BACKGROUND_CONFIG.OVERLAY_BACKGROUND_OPACITY
-                ),
-                challengeBackgroundColor: this.#configManager.get(
-                    BACKGROUND_CONFIG.CHALLENGE_BACKGROUND_COLOR
-                ),
-                challengeBackgroundOpacity: this.#configManager.get(
-                    BACKGROUND_CONFIG.CHALLENGE_BACKGROUND_OPACITY
-                ),
-                challengeTextColor: this.#configManager.get(
-                    BACKGROUND_CONFIG.CHALLENGE_TEXT_COLOR
-                ),
-                challengeAutoTextColor: this.#configManager.get(
-                    BACKGROUND_CONFIG.CHALLENGE_AUTO_TEXT_COLOR
-                ),
-                challengeTextShadow: this.#configManager.get(
-                    BACKGROUND_CONFIG.CHALLENGE_TEXT_SHADOW
-                ),
-            };
-
-            // Apply overlay background styling if configured
-            if (backgroundConfig.overlayBackgroundColor) {
-                cardEl.style.backgroundColor =
-                    backgroundConfig.overlayBackgroundColor;
-                cardEl.classList.add(CSS_CLASSES.CUSTOM_OVERLAY_BACKGROUND);
-            }
-
             this.challengeList
                 .getAllChallenges()
                 .forEach((challenge, index) => {
@@ -226,14 +229,20 @@ export default class App {
                         displayPosition: number;
                         includeEventListeners?: boolean;
                         editHandler?: (event: Event) => void;
+                        incrementHandler?: (event: Event) => void;
+                        decrementHandler?: (event: Event) => void;
                     } = {
                         displayPosition: index + 1,
                     };
 
-                    // Add edit handler in admin mode
+                    // Add handlers in admin mode
                     if (isAdminMode) {
                         options.includeEventListeners = true;
                         options.editHandler = this.handleEditIconClick;
+                        options.incrementHandler =
+                            this.handleIncrementButtonClick;
+                        options.decrementHandler =
+                            this.handleDecrementButtonClick;
                     }
 
                     const listItem = ChallengeRenderer.createChallengeElement(
@@ -251,14 +260,20 @@ export default class App {
                         rowColorsOpacity
                     );
 
-                    // Add timer display if timer exists and is active (as sibling to text)
+                    // Add timer display if timer exists and is active (inside metadata row)
                     if (challenge.timer && challenge.timer.isActive) {
                         const timerElement =
                             TimerDisplayUtils.createTimerElement(
                                 challenge.timer,
                                 challenge.id
                             );
-                        listItem.appendChild(timerElement);
+                        // Find the metadata row and append timer to it
+                        const metadataRow = listItem.querySelector(
+                            CSS_SELECTORS.CHALLENGE_METADATA
+                        );
+                        if (metadataRow) {
+                            metadataRow.appendChild(timerElement);
+                        }
                     }
 
                     // Append to fragment instead of directly to DOM
@@ -1190,6 +1205,88 @@ export default class App {
 
         // Open edit modal with challenge data
         this.openEditChallengeModal(challengeId);
+    };
+
+    /**
+     * Handle increment button click events
+     * @param {Event} event - The click event
+     * @returns {void}
+     */
+    private handleIncrementButtonClick = (event: Event): void => {
+        // Prevent event from bubbling
+        event.stopPropagation();
+
+        // Only handle clicks in admin mode
+        if (window.location.hash !== URL_HASH.ADMIN) {
+            return;
+        }
+
+        const target = event.target as HTMLElement;
+        const challengeElement = target.closest(
+            CSS_SELECTORS.CHALLENGE
+        ) as HTMLElement;
+
+        if (!challengeElement) {
+            return;
+        }
+
+        const challengeId =
+            challengeElement.dataset[DATA_ATTRIBUTES.CHALLENGE_ID];
+        if (!challengeId) {
+            return;
+        }
+
+        // Increment challenge progress
+        const updatedChallenge =
+            this.challengeList.incrementChallengeProgress(challengeId);
+        if (updatedChallenge) {
+            // Re-render the challenge list to reflect the updated progress
+            this.renderChallengeList();
+
+            // Notify other windows (viewer overlay) about the state change
+            notifyChallengeStateChanged();
+        }
+    };
+
+    /**
+     * Handle decrement button click events
+     * @param {Event} event - The click event
+     * @returns {void}
+     */
+    private handleDecrementButtonClick = (event: Event): void => {
+        // Prevent event from bubbling
+        event.stopPropagation();
+
+        // Only handle clicks in admin mode
+        if (window.location.hash !== URL_HASH.ADMIN) {
+            return;
+        }
+
+        const target = event.target as HTMLElement;
+        const challengeElement = target.closest(
+            CSS_SELECTORS.CHALLENGE
+        ) as HTMLElement;
+
+        if (!challengeElement) {
+            return;
+        }
+
+        const challengeId =
+            challengeElement.dataset[DATA_ATTRIBUTES.CHALLENGE_ID];
+        if (!challengeId) {
+            return;
+        }
+
+        // Decrement challenge progress
+        const updatedChallenge =
+            this.challengeList.decrementChallengeProgress(challengeId);
+        if (updatedChallenge) {
+            // Re-render the challenge list to reflect the updated progress
+            this.renderChallengeList();
+
+            // Notify other windows (viewer overlay) about the state change
+            notifyChallengeStateChanged();
+        }
     };
 }
 

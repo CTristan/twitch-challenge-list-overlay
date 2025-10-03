@@ -262,10 +262,10 @@ export default class AdminPanel {
         formContainer.appendChild(title);
 
         // Create collapsible sections
-        this.createAuthenticationSection(formContainer);
-        this.createBehaviorSection(formContainer);
         this.createColorSection(formContainer);
         this.createBackgroundSection(formContainer);
+        this.createAuthenticationSection(formContainer);
+        this.createBehaviorSection(formContainer);
         this.createActionsSection(formContainer);
         this.createDangerZoneSection(formContainer);
 
@@ -589,6 +589,25 @@ export default class AdminPanel {
             const overlayOpacityPercent = Math.round(overlayOpacity * 100);
             overlayOpacitySlider.value = overlayOpacityPercent.toString();
             overlayOpacityDisplay.textContent = `${overlayOpacityPercent}%`;
+        }
+
+        // App background opacity
+        const appBackgroundOpacitySlider = document.getElementById(
+            BACKGROUND_UI_ELEMENTS.APP_BACKGROUND_OPACITY_SLIDER
+        ) as HTMLInputElement;
+        const appBackgroundOpacityDisplay = document.getElementById(
+            BACKGROUND_UI_ELEMENTS.APP_BACKGROUND_OPACITY_DISPLAY
+        );
+        if (appBackgroundOpacitySlider && appBackgroundOpacityDisplay) {
+            const appBackgroundOpacity =
+                config.appBackgroundOpacity ??
+                BACKGROUND_DEFAULTS.APP_BACKGROUND_OPACITY;
+            const appBackgroundOpacityPercent = Math.round(
+                appBackgroundOpacity * 100
+            );
+            appBackgroundOpacitySlider.value =
+                appBackgroundOpacityPercent.toString();
+            appBackgroundOpacityDisplay.textContent = `${appBackgroundOpacityPercent}%`;
         }
 
         // Challenge row background color
@@ -959,6 +978,32 @@ export default class AdminPanel {
                     element: overlayOpacitySlider,
                     event: EVENT_NAMES.INPUT,
                     handler: overlayOpacityHandler,
+                }
+            );
+        }
+
+        // App background opacity slider
+        const appBackgroundOpacitySlider = document.getElementById(
+            BACKGROUND_UI_ELEMENTS.APP_BACKGROUND_OPACITY_SLIDER
+        ) as HTMLInputElement;
+        const appBackgroundOpacityDisplay = document.getElementById(
+            BACKGROUND_UI_ELEMENTS.APP_BACKGROUND_OPACITY_DISPLAY
+        );
+        if (appBackgroundOpacitySlider && appBackgroundOpacityDisplay) {
+            const appBackgroundOpacityHandler = () => {
+                appBackgroundOpacityDisplay.textContent = `${appBackgroundOpacitySlider.value}%`;
+                this.autoSaveBackgroundConfiguration();
+            };
+            appBackgroundOpacitySlider.addEventListener(
+                EVENT_NAMES.INPUT,
+                appBackgroundOpacityHandler
+            );
+            this.#eventListeners.set(
+                BACKGROUND_UI_ELEMENTS.APP_BACKGROUND_OPACITY_SLIDER,
+                {
+                    element: appBackgroundOpacitySlider,
+                    event: EVENT_NAMES.INPUT,
+                    handler: appBackgroundOpacityHandler,
                 }
             );
         }
@@ -1399,6 +1444,7 @@ export default class AdminPanel {
         challengeTextColor: string;
         challengeAutoTextColor: boolean;
         challengeTextShadow: boolean;
+        appBackgroundOpacity: number;
     } {
         // Overlay background elements
         const overlayBackgroundColorInput = document.getElementById(
@@ -1406,6 +1452,11 @@ export default class AdminPanel {
         ) as HTMLInputElement;
         const overlayOpacitySlider = document.getElementById(
             BACKGROUND_UI_ELEMENTS.OVERLAY_BACKGROUND_OPACITY_SLIDER
+        ) as HTMLInputElement;
+
+        // App background opacity element
+        const appBackgroundOpacitySlider = document.getElementById(
+            BACKGROUND_UI_ELEMENTS.APP_BACKGROUND_OPACITY_SLIDER
         ) as HTMLInputElement;
 
         // Challenge row background elements
@@ -1437,6 +1488,11 @@ export default class AdminPanel {
             overlayOpacity
         );
 
+        // Get app background opacity
+        const appBackgroundOpacity = appBackgroundOpacitySlider
+            ? parseInt(appBackgroundOpacitySlider.value) / 100
+            : BACKGROUND_DEFAULTS.APP_BACKGROUND_OPACITY;
+
         // Combine challenge row color and opacity into RGBA format
         const backgroundColor =
             backgroundColorInput?.value || DEFAULT_COLORS.CHALLENGE_BACKGROUND;
@@ -1460,6 +1516,7 @@ export default class AdminPanel {
                 BACKGROUND_DEFAULTS.AUTO_TEXT_COLOR,
             challengeTextShadow:
                 textShadowCheckbox?.checked ?? BACKGROUND_DEFAULTS.TEXT_SHADOW,
+            appBackgroundOpacity: appBackgroundOpacity,
         };
     }
 
@@ -1652,6 +1709,10 @@ export default class AdminPanel {
                 BACKGROUND_CONFIG.CHALLENGE_TEXT_SHADOW,
                 backgroundConfig.challengeTextShadow
             );
+            const appBackgroundOpacitySuccess = this.#configManager.set(
+                BACKGROUND_CONFIG.APP_BACKGROUND_OPACITY,
+                backgroundConfig.appBackgroundOpacity
+            );
 
             if (
                 overlayBackgroundColorSuccess &&
@@ -1660,7 +1721,8 @@ export default class AdminPanel {
                 backgroundOpacitySuccess &&
                 textColorSuccess &&
                 autoTextColorSuccess &&
-                textShadowSuccess
+                textShadowSuccess &&
+                appBackgroundOpacitySuccess
             ) {
                 // Notify other windows to refresh after successful save
                 notifyConfigurationSaved();

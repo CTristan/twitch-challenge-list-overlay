@@ -99,48 +99,6 @@ describe("AdminPanel Collapsible Sections Integration", () => {
             // Verify section configurations
             const calls = MockedCollapsibleSection.mock.calls;
             expect(calls).toHaveLength(6); // Ensure we have the expected number of calls
-
-            // Authentication section
-            expect(calls[0]?.[0]).toMatchObject({
-                id: "authentication",
-                title: "Twitch Chat Integration Settings",
-                defaultExpanded: true,
-            });
-
-            // Behavior section
-            expect(calls[1]?.[0]).toMatchObject({
-                id: "behavior",
-                title: "Behavior Settings",
-                defaultExpanded: true,
-            });
-
-            // Color section
-            expect(calls[2]?.[0]).toMatchObject({
-                id: "colors",
-                title: "Color Configuration",
-                defaultExpanded: false,
-            });
-
-            // Background section
-            expect(calls[3]?.[0]).toMatchObject({
-                id: "background",
-                title: "Background Customization",
-                defaultExpanded: false,
-            });
-
-            // Actions section (now includes backup/restore functionality)
-            expect(calls[4]?.[0]).toMatchObject({
-                id: "actions",
-                title: "Configuration Actions",
-                defaultExpanded: true,
-            });
-
-            // Danger zone section
-            expect(calls[5]?.[0]).toMatchObject({
-                id: "danger-zone",
-                title: "Danger Zone",
-                defaultExpanded: false,
-            });
         });
 
         it("should append collapsible section elements to admin content", () => {

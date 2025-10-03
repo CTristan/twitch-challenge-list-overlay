@@ -144,11 +144,17 @@ describe("Challenge Progress Display", () => {
                     progressElement.classList.contains("challenge-amount")
                 ).toBe(true);
 
-                // Validate element order (title, description, progress)
+                // Validate element order (title, description, metadata row containing progress)
                 const children = Array.from(textElement.children);
                 expect(children[0]).toBe(titleElement);
                 expect(children[1]).toBe(descriptionElement);
-                expect(children[2]).toBe(progressElement);
+
+                // Progress element should be inside metadata row
+                const metadataRow = children[2] as HTMLElement;
+                expect(
+                    metadataRow.classList.contains("challenge-metadata")
+                ).toBe(true);
+                expect(metadataRow.contains(progressElement)).toBe(true);
             });
         });
 

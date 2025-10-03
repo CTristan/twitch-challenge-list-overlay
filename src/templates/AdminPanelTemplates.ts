@@ -139,6 +139,18 @@ export const AdminPanelTemplates = {
                   </div>
                 </div>
               </div>
+
+              <div class="form-row">
+                <div class="form-column">
+                  <label class="form-label">App Background Opacity (%)</label>
+                  <div class="opacity-control">
+                    <input type="range" id="app-background-opacity" class="form-input opacity-slider"
+                           min="0" max="100" value="0" step="5">
+                    <span id="app-background-opacity-display" class="opacity-value">0%</span>
+                  </div>
+                  <p class="help-text" style="margin-top: 0.5rem; font-size: 0.9rem;">Controls the transparency of the main app container background (0% = fully transparent, 100% = fully opaque)</p>
+                </div>
+              </div>
             </div>
 
             <!-- Challenge Row Background Configuration -->

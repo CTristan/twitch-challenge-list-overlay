@@ -90,7 +90,7 @@ const uiUpdate: UIUpdateData = { action: UIUpdateAction.ADD };
 -   **MessageConstants**: All message constants in `src/types/MessageConstants.ts` (ERROR_MESSAGES, SUCCESS_MESSAGES, HELP_MESSAGES, MODAL_TEXT, UI_ELEMENTS, ARIA_LABELS, etc.)
 -   **ConfigConstants**: Configuration property names in `src/types/ConfigConstants.ts` (AUTH_CONFIG, BEHAVIOR_CONFIG, BACKGROUND_CONFIG, etc.)
 -   **ColorConstants**: UI colors in `src/types/ColorConstants.ts` (DEFAULT_COLORS, STATUS_COLORS, SHADOW_COLORS)
--   **DOMConstants**: CSS classes, selectors, element IDs, HTML elements, HTML attributes in `src/types/DOMConstants.ts` (CSS_CLASSES, ELEMENT_IDS, EVENT_NAMES, HTML_ELEMENTS, HTML_ATTRIBUTES, MODAL_MODES, etc.)
+-   **DOMConstants**: CSS classes, selectors, element IDs, HTML elements, HTML attribute names, HTML attribute values in `src/types/DOMConstants.ts` (CSS_CLASSES, ELEMENT_IDS, EVENT_NAMES, HTML_ELEMENTS, HTML_ATTRIBUTE_NAMES, HTML_ATTRIBUTES, MODAL_MODES, etc.)
 -   **FileConstants**: File formats and filenames in `src/types/FileConstants.ts` (FILE_FORMATS, DEFAULT_FILENAMES)
 -   **NumericConstants**: Validation constraints and calculations in `src/types/NumericConstants.ts` (FORM_CONSTRAINTS, COLOR_CONSTANTS)
 -   **UPPER_SNAKE_CASE Naming**: All constants follow established naming convention
@@ -98,11 +98,17 @@ const uiUpdate: UIUpdateData = { action: UIUpdateAction.ADD };
 -   **No Magic Values**: Never use hardcoded strings, numbers, or CSS classes
 -   **Centralized Organization**: Related constants grouped by purpose and functionality
 
+#### DOMConstants Details
+
+**HTML Attribute Names vs Values**:
+-   **HTML_ATTRIBUTE_NAMES**: Attribute name strings for use in `setAttribute()` calls (ROLE, ARIA_LABEL, TABINDEX)
+-   **HTML_ATTRIBUTES**: Attribute value strings (ROLE_BUTTON = "button", TABINDEX_ZERO = "0")
+
 ```typescript
 // ✅ Usage examples
 import { BACKGROUND_CONFIG, COLOR_CONFIG } from "../types/ConfigConstants";
 import { DEFAULT_COLORS } from "../types/ColorConstants";
-import { CSS_CLASSES, ELEMENT_IDS, EVENT_NAMES } from "../types/DOMConstants";
+import { CSS_CLASSES, ELEMENT_IDS, EVENT_NAMES, HTML_ATTRIBUTE_NAMES, HTML_ATTRIBUTES } from "../types/DOMConstants";
 import { ERROR_MESSAGES, MODAL_TEXT } from "../types/MessageConstants";
 
 const backgroundColor = configManager.get(
@@ -110,6 +116,11 @@ const backgroundColor = configManager.get(
 );
 element.classList.add(CSS_CLASSES.DONE);
 window.addEventListener(EVENT_NAMES.CHALLENGE_LIST_REFRESH, handler);
+
+// HTML attribute usage
+element.setAttribute(HTML_ATTRIBUTE_NAMES.ROLE, HTML_ATTRIBUTES.ROLE_BUTTON);
+element.setAttribute(HTML_ATTRIBUTE_NAMES.ARIA_LABEL, ARIA_LABELS.EDIT_CHALLENGE);
+element.setAttribute(HTML_ATTRIBUTE_NAMES.TABINDEX, HTML_ATTRIBUTES.TABINDEX_ZERO);
 ```
 
 ### Class Structure Pattern
@@ -365,6 +376,30 @@ Single challenge panel with dual-mode interface:
     Should see a description for this challenge!
     ```
 
+### Challenge Metadata Row Layout (Implemented)
+
+-   **Metadata row container**: Challenge amount and timer are positioned in a dedicated `.challenge-metadata` flexbox container
+-   **Prevents text truncation**: Title and description always display fully without being cut off by timer
+-   **Proper positioning**: Amount on bottom-left, timer on bottom-right, never overlapping
+-   **Flexbox layout**: Uses `display: flex` with `justify-content: space-between` for automatic spacing
+-   **Conditional rendering**: Metadata row only created when amount > 1 OR timer exists
+-   **Improved readability**: Challenge description font weight increased from 300 (light) to 400 (normal) for better readability
+
+**Layout structure**:
+```
+.challenge (flex container, horizontal)
+├── .challenge-checkbox
+├── .challenge-edit-icon (admin only)
+├── .challenge-increment-button (admin only, if amount > 1)
+├── .challenge-decrement-button (admin only, if amount > 1)
+└── .challenge-text (flex container, vertical)
+    ├── .challenge-title
+    ├── .challenge-description (if different from title)
+    └── .challenge-metadata (flex container, horizontal)
+        ├── .challenge-amount (left side)
+        └── .challenge-timer (right side)
+```
+
 ### Countdown Timer Display (Implemented)
 
 -   **Real-time countdown**: Timers automatically count down every second with live updates
@@ -458,6 +493,7 @@ The command system uses the Command pattern for extensibility and maintainabilit
 -   **Configuration backup/restore** - Export and import configuration as JSON files
 -   **Reset to defaults** - Restore default configuration values
 -   **Color configuration** for challenge rows with opacity control
+-   **App background opacity control** - Configurable opacity (0-100%) for the main app container background, allowing fully transparent overlays (default: 0%)
 -   **Real-time configuration updates** across windows - Configuration changes trigger full page reload in viewer window
 -   **Real-time challenge state synchronization** - Challenge state changes trigger DOM-only updates in viewer window
 -   **Window refresh communication** via BroadcastChannel for automatic viewer window updates
@@ -744,7 +780,45 @@ challenges.forEach((challenge: Challenge, index: number) => {
 });
 ```
 
-**Key Points**: Use `displayPosition: index + 1` for ID prefix. Format: `"{id}. {title}"` (e.g., "1. Complete tutorial")
+**Key Points**:
+- Use `displayPosition: index + 1` for ID prefix
+- Format: `"{id}. {title}"` (e.g., "1. Complete tutorial")
+- Metadata row (`.challenge-metadata`) automatically created when amount > 1 OR timer exists
+- Amount and timer positioned side-by-side in metadata row (amount left, timer right)
+
+### HTML Attribute Setting Pattern
+
+Use `HTML_ATTRIBUTE_NAMES` constants for attribute names in `setAttribute()` calls:
+
+```typescript
+import { HTML_ATTRIBUTE_NAMES, HTML_ATTRIBUTES } from "../types/DOMConstants";
+import { ARIA_LABELS, UI_ELEMENTS } from "../types/MessageConstants";
+
+// ✅ CORRECT: Use constants for both attribute names and values
+const editIcon = document.createElement(HTML_ELEMENTS.DIV);
+editIcon.textContent = UI_ELEMENTS.EDIT_ICON;
+editIcon.setAttribute(
+    HTML_ATTRIBUTE_NAMES.ROLE,
+    HTML_ATTRIBUTES.ROLE_BUTTON
+);
+editIcon.setAttribute(
+    HTML_ATTRIBUTE_NAMES.ARIA_LABEL,
+    ARIA_LABELS.EDIT_CHALLENGE
+);
+editIcon.setAttribute(
+    HTML_ATTRIBUTE_NAMES.TABINDEX,
+    HTML_ATTRIBUTES.TABINDEX_ZERO
+);
+
+// ❌ INCORRECT: Hardcoded attribute names
+editIcon.setAttribute("role", HTML_ATTRIBUTES.ROLE_BUTTON);
+editIcon.setAttribute("aria-label", ARIA_LABELS.EDIT_CHALLENGE);
+```
+
+**Key Points**:
+- **HTML_ATTRIBUTE_NAMES**: Attribute name strings (ROLE = "role", ARIA_LABEL = "aria-label", TABINDEX = "tabindex")
+- **HTML_ATTRIBUTES**: Attribute value strings (ROLE_BUTTON = "button", TABINDEX_ZERO = "0")
+- Always use constants for both attribute names and values to eliminate magic strings
 
 ### Admin Panel Template Pattern
 

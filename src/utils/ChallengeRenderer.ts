@@ -8,6 +8,7 @@ import {
     CSS_SELECTORS,
     DATA_ATTRIBUTES,
     EVENT_NAMES,
+    HTML_ATTRIBUTE_NAMES,
     HTML_ATTRIBUTES,
     HTML_ELEMENTS,
 } from "../types/DOMConstants";
@@ -75,12 +76,25 @@ export class ChallengeRenderer {
             textContainer.appendChild(descriptionElement);
         }
 
-        // Add progress display only when amount > 1
-        if (challenge.amount > 1) {
-            const progressElement = document.createElement(HTML_ELEMENTS.DIV);
-            progressElement.classList.add(CSS_CLASSES.CHALLENGE_AMOUNT);
-            progressElement.textContent = `${challenge.progress}/${challenge.amount}`;
-            textContainer.appendChild(progressElement);
+        // Create metadata row for amount and timer (if either exists)
+        const hasAmount = challenge.amount > 1;
+        const hasTimer = challenge.timer && challenge.timer.isActive;
+
+        if (hasAmount || hasTimer) {
+            const metadataRow = document.createElement(HTML_ELEMENTS.DIV);
+            metadataRow.classList.add(CSS_CLASSES.CHALLENGE_METADATA);
+
+            // Add progress display only when amount > 1
+            if (hasAmount) {
+                const progressElement = document.createElement(
+                    HTML_ELEMENTS.DIV
+                );
+                progressElement.classList.add(CSS_CLASSES.CHALLENGE_AMOUNT);
+                progressElement.textContent = `${challenge.progress}/${challenge.amount}`;
+                metadataRow.appendChild(progressElement);
+            }
+
+            textContainer.appendChild(metadataRow);
         }
 
         return textContainer;
@@ -108,10 +122,65 @@ export class ChallengeRenderer {
         const editIcon = document.createElement(HTML_ELEMENTS.DIV);
         editIcon.classList.add(CSS_CLASSES.CHALLENGE_EDIT_ICON);
         editIcon.textContent = UI_ELEMENTS.EDIT_ICON;
-        editIcon.setAttribute("role", HTML_ATTRIBUTES.ROLE_BUTTON);
-        editIcon.setAttribute("aria-label", ARIA_LABELS.EDIT_CHALLENGE);
-        editIcon.setAttribute("tabindex", HTML_ATTRIBUTES.TABINDEX_ZERO);
+        editIcon.setAttribute(
+            HTML_ATTRIBUTE_NAMES.ROLE,
+            HTML_ATTRIBUTES.ROLE_BUTTON
+        );
+        editIcon.setAttribute(
+            HTML_ATTRIBUTE_NAMES.ARIA_LABEL,
+            ARIA_LABELS.EDIT_CHALLENGE
+        );
+        editIcon.setAttribute(
+            HTML_ATTRIBUTE_NAMES.TABINDEX,
+            HTML_ATTRIBUTES.TABINDEX_ZERO
+        );
         return editIcon;
+    }
+
+    /**
+     * Create an increment button element for a challenge
+     * @returns The increment button element
+     */
+    static createChallengeIncrementButton(): HTMLDivElement {
+        const incrementButton = document.createElement(HTML_ELEMENTS.DIV);
+        incrementButton.classList.add(CSS_CLASSES.CHALLENGE_INCREMENT_BUTTON);
+        incrementButton.textContent = UI_ELEMENTS.INCREMENT_BUTTON;
+        incrementButton.setAttribute(
+            HTML_ATTRIBUTE_NAMES.ROLE,
+            HTML_ATTRIBUTES.ROLE_BUTTON
+        );
+        incrementButton.setAttribute(
+            HTML_ATTRIBUTE_NAMES.ARIA_LABEL,
+            ARIA_LABELS.INCREMENT_PROGRESS
+        );
+        incrementButton.setAttribute(
+            HTML_ATTRIBUTE_NAMES.TABINDEX,
+            HTML_ATTRIBUTES.TABINDEX_ZERO
+        );
+        return incrementButton;
+    }
+
+    /**
+     * Create a decrement button element for a challenge
+     * @returns The decrement button element
+     */
+    static createChallengeDecrementButton(): HTMLDivElement {
+        const decrementButton = document.createElement(HTML_ELEMENTS.DIV);
+        decrementButton.classList.add(CSS_CLASSES.CHALLENGE_DECREMENT_BUTTON);
+        decrementButton.textContent = UI_ELEMENTS.DECREMENT_BUTTON;
+        decrementButton.setAttribute(
+            HTML_ATTRIBUTE_NAMES.ROLE,
+            HTML_ATTRIBUTES.ROLE_BUTTON
+        );
+        decrementButton.setAttribute(
+            HTML_ATTRIBUTE_NAMES.ARIA_LABEL,
+            ARIA_LABELS.DECREMENT_PROGRESS
+        );
+        decrementButton.setAttribute(
+            HTML_ATTRIBUTE_NAMES.TABINDEX,
+            HTML_ATTRIBUTES.TABINDEX_ZERO
+        );
+        return decrementButton;
     }
 
     /**
@@ -126,6 +195,8 @@ export class ChallengeRenderer {
             includeEventListeners?: boolean;
             eventHandler?: (event: Event) => void;
             editHandler?: (event: Event) => void;
+            incrementHandler?: (event: Event) => void;
+            decrementHandler?: (event: Event) => void;
             displayPosition?: number;
         } = {}
     ): HTMLElement {
@@ -157,6 +228,28 @@ export class ChallengeRenderer {
             const editIcon = this.createChallengeEditIcon();
             editIcon.addEventListener(EVENT_NAMES.CLICK, options.editHandler);
             challengeElement.appendChild(editIcon);
+        }
+
+        // Create and add increment/decrement buttons only if handlers are provided (admin mode only)
+        // and challenge has progress tracking (amount > 1)
+        if (challenge.amount > 1) {
+            if (options.incrementHandler) {
+                const incrementButton = this.createChallengeIncrementButton();
+                incrementButton.addEventListener(
+                    EVENT_NAMES.CLICK,
+                    options.incrementHandler
+                );
+                challengeElement.appendChild(incrementButton);
+            }
+
+            if (options.decrementHandler) {
+                const decrementButton = this.createChallengeDecrementButton();
+                decrementButton.addEventListener(
+                    EVENT_NAMES.CLICK,
+                    options.decrementHandler
+                );
+                challengeElement.appendChild(decrementButton);
+            }
         }
 
         challengeElement.appendChild(textElement);

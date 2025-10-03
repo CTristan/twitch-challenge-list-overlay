@@ -7,7 +7,8 @@
   --app-border-radius: 0.5rem;
   --app-padding: 0.75rem;
   --app-background-image: url(../images/transparent-image.png);
-  --app-background-color: rgba(130, 130, 130, 0);
+  --app-background-opacity: 0;
+  --app-background-color: rgba(130, 130, 130, var(--app-background-opacity));
 
   /* Header */
   --header-display: flex;
@@ -59,6 +60,10 @@
   --challenge-text-color-override: #ffffff;
   --challenge-auto-text-color-enabled: true;
   --challenge-text-shadow-enabled: true;
+
+  /* Border Customization (for decorative borders on header/cards) */
+  --border-color-light: rgba(255, 255, 255, 0.2);
+  --border-color-dark: rgba(0, 0, 0, 0.2);
 
   /* Challenge Checkbox */
   --challenge-checkbox-size: calc(
