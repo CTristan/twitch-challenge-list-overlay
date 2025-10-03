@@ -39,16 +39,22 @@ export class ChallengeRenderer {
     /**
      * Create DOM structure for challenge text with title and description on separate lines
      * @param challenge - The challenge object
+     * @param displayPosition - Optional 1-based position number to display as prefix (e.g., "1. ", "2. ")
      * @returns DOM element containing the formatted challenge text (without timer)
      */
-    static createChallengeTextElement(challenge: Challenge): HTMLElement {
+    static createChallengeTextElement(
+        challenge: Challenge,
+        displayPosition?: number
+    ): HTMLElement {
         const textContainer = document.createElement("div");
         textContainer.classList.add(CSS_CLASSES.CHALLENGE_TEXT);
 
-        // Create title element
+        // Create title element with optional position prefix
         const titleElement = document.createElement("div");
         titleElement.classList.add(CSS_CLASSES.CHALLENGE_TITLE);
-        titleElement.textContent = challenge.title;
+        const titlePrefix =
+            displayPosition !== undefined ? `${displayPosition}. ` : "";
+        titleElement.textContent = `${titlePrefix}${challenge.title}`;
         textContainer.appendChild(titleElement);
 
         // Add description if it's different from title and not empty
@@ -99,6 +105,7 @@ export class ChallengeRenderer {
         options: {
             includeEventListeners?: boolean;
             eventHandler?: (event: Event) => void;
+            displayPosition?: number;
         } = {}
     ): HTMLElement {
         const challengeElement = document.createElement("li");
@@ -115,8 +122,11 @@ export class ChallengeRenderer {
             checkbox.addEventListener("click", options.eventHandler);
         }
 
-        // Create challenge text
-        const textElement = this.createChallengeTextElement(challenge);
+        // Create challenge text with optional display position
+        const textElement = this.createChallengeTextElement(
+            challenge,
+            options.displayPosition
+        );
 
         // Assemble the challenge element
         challengeElement.appendChild(checkbox);

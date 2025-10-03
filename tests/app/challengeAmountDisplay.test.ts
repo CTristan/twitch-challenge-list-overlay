@@ -83,10 +83,10 @@ describe("Challenge Progress Display", () => {
 
             const textElements = document.querySelectorAll(".challenge-text");
             textElements.forEach((textElement) => {
-                // Should have title element
+                // Should have title element with ID prefix
                 const titleElement =
                     textElement.querySelector(".challenge-title");
-                expect(titleElement?.textContent).toBe("Repeat Task");
+                expect(titleElement?.textContent).toBe("1. Repeat Task");
 
                 // Should NOT have description element (empty description)
                 const descriptionElement = textElement.querySelector(

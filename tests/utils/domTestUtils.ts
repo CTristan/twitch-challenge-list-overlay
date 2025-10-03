@@ -136,11 +136,12 @@ export const assertChallengeDOMStructure = (
     const textElements = document.querySelectorAll(".challenge-text");
     expect(textElements.length).toBeGreaterThan(0);
 
-    textElements.forEach((textElement) => {
-        // Validate title element
+    textElements.forEach((textElement, index) => {
+        // Validate title element with ID prefix (1-based position)
         const titleElement = textElement.querySelector(".challenge-title");
         expect(titleElement).toBeTruthy();
-        expect(titleElement?.textContent).toBe(expectedTitle);
+        const expectedTitleWithId = `${index + 1}. ${expectedTitle}`;
+        expect(titleElement?.textContent).toBe(expectedTitleWithId);
 
         // Validate description element based on expectations
         const descriptionElement = textElement.querySelector(

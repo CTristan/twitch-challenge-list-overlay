@@ -43,7 +43,7 @@ describe("Two-Line Challenge Layout", () => {
                     textElement.querySelector(".challenge-title");
                 expect(titleElement).toBeTruthy();
                 expect(titleElement?.tagName).toBe("DIV");
-                expect(titleElement?.textContent).toBe("Test Title");
+                expect(titleElement?.textContent).toBe("1. Test Title");
 
                 // Should contain description element
                 const descriptionElement = textElement.querySelector(
@@ -69,7 +69,9 @@ describe("Two-Line Challenge Layout", () => {
                 const titleElement =
                     textElement.querySelector(".challenge-title");
                 expect(titleElement).toBeTruthy();
-                expect(titleElement?.textContent).toBe("Title Only Challenge");
+                expect(titleElement?.textContent).toBe(
+                    "1. Title Only Challenge"
+                );
 
                 // Should NOT contain description element (since description is empty)
                 const descriptionElement = textElement.querySelector(
@@ -96,7 +98,7 @@ describe("Two-Line Challenge Layout", () => {
                 // Should contain title element
                 const titleElement =
                     textElement.querySelector(".challenge-title");
-                expect(titleElement?.textContent).toBe("Title Only");
+                expect(titleElement?.textContent).toBe("1. Title Only");
 
                 // Should NOT contain description element (empty description)
                 const descriptionElement = textElement.querySelector(
@@ -253,7 +255,7 @@ describe("Two-Line Challenge Layout", () => {
                     ".challenge-description"
                 );
 
-                expect(titleElement?.textContent).toBe("New Title");
+                expect(titleElement?.textContent).toBe("1. New Title");
                 expect(descriptionElement?.textContent).toBe("New description");
             });
         });

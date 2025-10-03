@@ -25,7 +25,10 @@ import {
     URL_HASH,
 } from "./types/DOMConstants";
 import { ERROR_MESSAGES, STATUS_MESSAGES } from "./types/MessageConstants";
-import { VALIDATION_CONSTRAINTS, VALIDATION_PATTERNS } from "./types/ValidationConstants";
+import {
+    VALIDATION_CONSTRAINTS,
+    VALIDATION_PATTERNS,
+} from "./types/ValidationConstants";
 import ChallengeRenderer from "./utils/ChallengeRenderer";
 import CommandHandler from "./utils/CommandHandler";
 import { getDefaultMaxChallenges } from "./utils/ConfigDefaults";
@@ -174,8 +177,13 @@ export default class App {
                 .getAllChallenges()
                 .forEach((challenge, index) => {
                     // Use ChallengeRenderer for consistent element creation
-                    const listItem =
-                        ChallengeRenderer.createChallengeElement(challenge);
+                    // Pass displayPosition as index + 1 for 1-based numbering
+                    const listItem = ChallengeRenderer.createChallengeElement(
+                        challenge,
+                        {
+                            displayPosition: index + 1,
+                        }
+                    );
 
                     // Apply background customization (includes row colors if configured)
                     ChallengeRenderer.applyBackgroundCustomization(
@@ -821,7 +829,9 @@ export default class App {
         timer?: string;
     }): void {
         // Check challenge limit
-        const maxChallenges = this.#configManager.get(BEHAVIOR_CONFIG.MAX_CHALLENGES) || getDefaultMaxChallenges();
+        const maxChallenges =
+            this.#configManager.get(BEHAVIOR_CONFIG.MAX_CHALLENGES) ||
+            getDefaultMaxChallenges();
         if (this.challengeList.challenges.length >= maxChallenges) {
             throw new Error(
                 ERROR_MESSAGES.MAXIMUM_CHALLENGES_ALLOWED.replace(

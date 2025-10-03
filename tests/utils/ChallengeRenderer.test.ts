@@ -31,6 +31,52 @@ describe("ChallengeRenderer", () => {
             expect(progressElement).toBeNull();
         });
 
+        it("should include display position prefix when provided", () => {
+            const challenge = new Challenge("Test Title");
+            const textElement = ChallengeRenderer.createChallengeTextElement(
+                challenge,
+                1
+            );
+
+            const titleElement = textElement.querySelector(".challenge-title");
+            expect(titleElement).toBeTruthy();
+            expect(titleElement?.textContent).toBe("1. Test Title");
+        });
+
+        it("should format display position correctly for different numbers", () => {
+            const challenge = new Challenge("Test Title");
+
+            // Test position 5
+            const textElement5 = ChallengeRenderer.createChallengeTextElement(
+                challenge,
+                5
+            );
+            const titleElement5 =
+                textElement5.querySelector(".challenge-title");
+            expect(titleElement5?.textContent).toBe("5. Test Title");
+
+            // Test position 10
+            const textElement10 = ChallengeRenderer.createChallengeTextElement(
+                challenge,
+                10
+            );
+            const titleElement10 =
+                textElement10.querySelector(".challenge-title");
+            expect(titleElement10?.textContent).toBe("10. Test Title");
+        });
+
+        it("should not include prefix when display position is undefined", () => {
+            const challenge = new Challenge("Test Title");
+            const textElement = ChallengeRenderer.createChallengeTextElement(
+                challenge,
+                undefined
+            );
+
+            const titleElement = textElement.querySelector(".challenge-title");
+            expect(titleElement).toBeTruthy();
+            expect(titleElement?.textContent).toBe("Test Title");
+        });
+
         it("should create proper DOM structure for challenge with title and description", () => {
             const challenge = new Challenge("Test Title", {
                 description: "Test Description",
@@ -56,6 +102,24 @@ describe("ChallengeRenderer", () => {
             expect(progressElement).toBeNull();
         });
 
+        it("should include display position with description", () => {
+            const challenge = new Challenge("Test Title", {
+                description: "Test Description",
+            });
+            const textElement = ChallengeRenderer.createChallengeTextElement(
+                challenge,
+                2
+            );
+
+            const titleElement = textElement.querySelector(".challenge-title");
+            expect(titleElement?.textContent).toBe("2. Test Title");
+
+            const descriptionElement = textElement.querySelector(
+                ".challenge-description"
+            );
+            expect(descriptionElement?.textContent).toBe("Test Description");
+        });
+
         it("should create proper DOM structure for challenge with progress", () => {
             const challenge = new Challenge("Test Title", {
                 description: "Test Description",
@@ -79,6 +143,24 @@ describe("ChallengeRenderer", () => {
             const progressElement =
                 textElement.querySelector(".challenge-amount");
             expect(progressElement).toBeTruthy();
+            expect(progressElement?.textContent).toBe("0/5");
+        });
+
+        it("should include display position with progress indicator", () => {
+            const challenge = new Challenge("Test Title", {
+                description: "Test Description",
+                amount: 5,
+            });
+            const textElement = ChallengeRenderer.createChallengeTextElement(
+                challenge,
+                3
+            );
+
+            const titleElement = textElement.querySelector(".challenge-title");
+            expect(titleElement?.textContent).toBe("3. Test Title");
+
+            const progressElement =
+                textElement.querySelector(".challenge-amount");
             expect(progressElement?.textContent).toBe("0/5");
         });
 
@@ -162,6 +244,35 @@ describe("ChallengeRenderer", () => {
             const progressElement =
                 challengeElement.querySelector(".challenge-amount");
             expect(progressElement?.textContent).toBe("0/3");
+        });
+
+        it("should include display position when provided in options", () => {
+            const challenge = new Challenge("Test Title", {
+                description: "Test Description",
+                amount: 3,
+            });
+
+            const challengeElement = ChallengeRenderer.createChallengeElement(
+                challenge,
+                {
+                    displayPosition: 4,
+                }
+            );
+
+            const titleElement =
+                challengeElement.querySelector(".challenge-title");
+            expect(titleElement?.textContent).toBe("4. Test Title");
+        });
+
+        it("should not include display position when not provided", () => {
+            const challenge = new Challenge("Test Title");
+
+            const challengeElement =
+                ChallengeRenderer.createChallengeElement(challenge);
+
+            const titleElement =
+                challengeElement.querySelector(".challenge-title");
+            expect(titleElement?.textContent).toBe("Test Title");
         });
 
         it("should mark completed challenges with done class", () => {

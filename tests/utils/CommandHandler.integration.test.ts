@@ -115,11 +115,12 @@ function assertChallengeDOM(
     const textElements = document.querySelectorAll(".challenge-text");
     expect(textElements.length).toBeGreaterThan(0);
 
-    textElements.forEach((textElement) => {
-        // Check title element
+    textElements.forEach((textElement, index) => {
+        // Check title element with ID prefix (1-based position)
         const titleElement = textElement.querySelector(".challenge-title");
         expect(titleElement).toBeTruthy();
-        expect(titleElement?.textContent).toBe(expectedTitle);
+        const expectedTitleWithId = `${index + 1}. ${expectedTitle}`;
+        expect(titleElement?.textContent).toBe(expectedTitleWithId);
 
         // Check description element based on whether description exists
         const descriptionElement = textElement.querySelector(

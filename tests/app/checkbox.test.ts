@@ -67,13 +67,15 @@ describe("Challenge Checkbox Functionality", () => {
             expect(textElements).toHaveLength(1); // Single container
 
             textElements.forEach((textElement) => {
-                expect(textElement.textContent).toBe("Test challenge text");
+                expect(textElement.textContent).toBe("1. Test challenge text");
 
-                // Verify the structure contains title element
+                // Verify the structure contains title element with ID prefix
                 const titleElement =
                     textElement.querySelector(".challenge-title");
                 expect(titleElement).toBeTruthy();
-                expect(titleElement?.textContent).toBe("Test challenge text");
+                expect(titleElement?.textContent).toBe(
+                    "1. Test challenge text"
+                );
 
                 // For legacy challenges, there should be no description element
                 const descriptionElement = textElement.querySelector(
@@ -169,7 +171,7 @@ describe("Challenge Checkbox Functionality", () => {
             // The CSS selector ".challenge.done .challenge-text" should target only text
             // This test verifies the DOM structure supports the CSS fix
             textElements.forEach((textElement) => {
-                expect(textElement.textContent).toBe("Test strikethrough");
+                expect(textElement.textContent).toBe("1. Test strikethrough");
             });
         });
     });

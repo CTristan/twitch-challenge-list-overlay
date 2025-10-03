@@ -475,13 +475,27 @@ export default class UIUpdateHandler {
         challenge: Challenge,
         rowIndex?: number
     ): HTMLElement {
+        // Calculate display position (1-based) from row index
+        const displayPosition =
+            rowIndex !== undefined ? rowIndex + 1 : undefined;
+
         // Use shared renderer with event handling support
+        const options: {
+            includeEventListeners: boolean;
+            eventHandler: (event: Event) => void;
+            displayPosition?: number;
+        } = {
+            includeEventListeners: true,
+            eventHandler: this.handleCheckboxClick,
+        };
+
+        if (displayPosition !== undefined) {
+            options.displayPosition = displayPosition;
+        }
+
         const challengeElement = ChallengeRenderer.createChallengeElement(
             challenge,
-            {
-                includeEventListeners: true,
-                eventHandler: this.handleCheckboxClick,
-            }
+            options
         );
 
         // Apply styling using centralized helpers

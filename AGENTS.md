@@ -48,7 +48,7 @@
 -   **FileConstants**: File formats and filenames
 -   **NumericConstants**: Validation constraints
 -   **UIUpdateHandler**: DOM manipulation coordination
--   **ChallengeRenderer**: Centralized challenge DOM creation and styling with row color opacity support
+-   **ChallengeRenderer**: Centralized challenge DOM creation and styling with row color opacity support and numeric ID prefix display
 -   **ConfigDefaults**: Fallback configuration utility
 -   **TwitchChat**: WebSocket IRC client with OAuth validation
 -   **EventEmitter**: Custom event system
@@ -362,7 +362,7 @@ try {
 | ShowCommand       | 24    | 94.93%    | 95.23% | 100%     | 94.93% |
 | ClearAllCommand   | 10    | 100%      | 100%   | 100%     | 100%   |
 | ClearDoneCommand  | 13    | 100%      | 100%   | 100%     | 100%   |
-| ChallengeRenderer | 30    | 100%      | 97.91% | 100%     | 100%   |
+| ChallengeRenderer | 37    | 100%      | 97.91% | 100%     | 100%   |
 | CommandHandler    | 19    | 100%      | 100%   | 100%     | 100%   |
 | ColorUtils        | 47    | 98.63%    | 87.09% | 100%     | 98.63% |
 | ResponseFormatter | 77    | 94.02%    | 94.24% | 100%     | 94.02% |
@@ -456,6 +456,27 @@ Single challenge panel with dual-mode interface:
     -   `file:///path/to/index.html#admin` - Admin Mode (overlay + admin panel)
 -   **Permission Model**: Streamer/moderators only, no viewer interaction
 -   **Command filtering**: Rejects unauthorized attempts
+
+### Challenge Display with Numeric ID Prefixes (Implemented)
+
+-   **Numeric ID prefix**: Each challenge row displays its position number at the beginning (e.g., "1. ", "2. ", "3. ")
+-   **Visual format**: `"{id}. {challenge_title}"` where `{id}` is the 1-based position number
+-   **Consistent display**: ID prefix appears in both viewer mode (OBS overlay) and admin mode
+-   **User experience benefit**: Makes it easier for moderators to identify which numeric ID to use in chat commands
+-   **Command integration**: IDs correspond to command parameters (e.g., `!ch done 1`, `!ch edit 2 title="New Title"`, `!ch delete 3`)
+-   **Implementation**: ChallengeRenderer accepts optional `displayPosition` parameter for rendering ID prefix
+-   **Position calculation**: Display position is calculated as `index + 1` (converting 0-based array indices to 1-based user-facing IDs)
+
+**Example output formats**:
+
+-   Simple challenge: `"1. Complete the tutorial"`
+-   Challenge with progress: `"2. Collect 5 items (3/5)"`
+-   Challenge with timer: `"3. Speed run challenge ⏱️ 5:30"`
+-   Challenge with description:
+    ```
+    1. Testing Descriptions
+    Should see a description for this challenge!
+    ```
 
 ### Countdown Timer Display (Implemented)
 
@@ -715,6 +736,58 @@ validateInput(input: string): string {
     return input;
 }
 ```
+
+### Challenge Rendering with ID Prefix Pattern
+
+The ChallengeRenderer utility provides centralized challenge DOM creation with optional numeric ID prefix display:
+
+```typescript
+import ChallengeRenderer from "../utils/ChallengeRenderer";
+
+// Rendering challenges with ID prefix (viewer/admin mode)
+challenges.forEach((challenge: Challenge, index: number) => {
+    const listItem = ChallengeRenderer.createChallengeElement(challenge, {
+        displayPosition: index + 1, // Convert 0-based index to 1-based ID
+        includeEventListeners: true,
+        eventHandler: handleCheckboxClick,
+    });
+    container.appendChild(listItem);
+});
+
+// Rendering without ID prefix (if needed)
+const challengeElement = ChallengeRenderer.createChallengeElement(challenge, {
+    includeEventListeners: false,
+    eventHandler: () => {},
+});
+
+// UIUpdateHandler pattern for dynamic updates
+const displayPosition = rowIndex !== undefined ? rowIndex + 1 : undefined;
+
+const options: {
+    includeEventListeners: boolean;
+    eventHandler: (event: Event) => void;
+    displayPosition?: number;
+} = {
+    includeEventListeners: true,
+    eventHandler: this.handleCheckboxClick,
+};
+
+if (displayPosition !== undefined) {
+    options.displayPosition = displayPosition;
+}
+
+const challengeElement = ChallengeRenderer.createChallengeElement(
+    challenge,
+    options
+);
+```
+
+**Key Points**:
+
+-   **displayPosition parameter**: Optional 1-based position number for ID prefix
+-   **Position calculation**: Always use `index + 1` to convert array indices to user-facing IDs
+-   **Conditional assignment**: Use proper TypeScript optional property handling with `exactOptionalPropertyTypes: true`
+-   **Consistent formatting**: ID prefix format is `"{id}. {title}"` (e.g., "1. Complete tutorial")
 
 ### Admin Panel Template Pattern
 
