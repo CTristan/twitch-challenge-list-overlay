@@ -103,7 +103,7 @@ describe("AdminPanel Collapsible Sections Integration", () => {
             // Authentication section
             expect(calls[0]?.[0]).toMatchObject({
                 id: "authentication",
-                title: "Authentication Settings",
+                title: "Twitch Chat Integration Settings",
                 defaultExpanded: true,
             });
 

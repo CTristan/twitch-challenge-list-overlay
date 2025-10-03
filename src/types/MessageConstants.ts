@@ -225,7 +225,7 @@ export const STORAGE_MESSAGES = {
  */
 export const ADMIN_PANEL_LABELS = {
     CONFIGURATION_SETTINGS: "Configuration Settings",
-    AUTHENTICATION_SETTINGS: "Authentication Settings",
+    AUTHENTICATION_SETTINGS: "Twitch Chat Integration Settings",
     AUTHENTICATION: "Authentication",
     BEHAVIOR_SETTINGS: "Behavior Settings",
     COLOR_CONFIGURATION: "Color Configuration",
