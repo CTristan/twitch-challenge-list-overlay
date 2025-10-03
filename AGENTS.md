@@ -288,7 +288,7 @@ configManager.set("auth", {
 
 The system includes built-in defaults for all configuration properties:
 
--   **Authentication settings**: Empty strings (configured via admin panel)
+-   **Twitch chat integration settings**: Empty strings (configured via admin panel)
 -   **Basic behavior**: maxChallenges: 10
 -   **Command mappings**: Unified "!ch" prefix system
 -   **Response templates**: Standardized bot responses

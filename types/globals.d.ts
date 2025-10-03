@@ -121,7 +121,7 @@ interface ColorConfigurationUI {
  * Contains all user-configurable settings for the Twitch Challenge Overlay
  */
 interface Config {
-    /** Twitch authentication settings */
+    /** Twitch chat integration settings */
     auth: TwitchAuthConfig;
 
     /** Maximum number of challenges that can be active simultaneously */
