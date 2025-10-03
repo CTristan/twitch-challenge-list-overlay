@@ -24,6 +24,7 @@ export default class UIUpdateHandler {
     private challengeList: ChallengeList;
     private configManager: ConfigManager;
     private timerController: TimerController;
+    private editHandler?: (event: Event) => void;
 
     // DOM element cache for performance optimization
     private challengeContainer: HTMLElement | null = null;
@@ -56,11 +57,19 @@ export default class UIUpdateHandler {
      * @constructor
      * @param challengeList - The challenge list instance
      * @param configManager - The configuration manager instance
+     * @param editHandler - Optional edit icon click handler
      */
-    constructor(challengeList: ChallengeList, configManager: ConfigManager) {
+    constructor(
+        challengeList: ChallengeList,
+        configManager: ConfigManager,
+        editHandler?: (event: Event) => void
+    ) {
         this.challengeList = challengeList;
         this.configManager = configManager;
         this.timerController = new TimerController(challengeList);
+        if (editHandler !== undefined) {
+            this.editHandler = editHandler;
+        }
     }
 
     /**
@@ -490,11 +499,17 @@ export default class UIUpdateHandler {
         const options: {
             includeEventListeners: boolean;
             eventHandler: (event: Event) => void;
+            editHandler?: (event: Event) => void;
             displayPosition?: number;
         } = {
             includeEventListeners: !isAdminMode, // Don't add direct listeners in admin mode
             eventHandler: this.handleCheckboxClick,
         };
+
+        // Add edit handler if provided and in admin mode
+        if (isAdminMode && this.editHandler) {
+            options.editHandler = this.editHandler;
+        }
 
         if (displayPosition !== undefined) {
             options.displayPosition = displayPosition;

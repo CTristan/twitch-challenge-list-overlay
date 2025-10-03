@@ -12,6 +12,7 @@ export const CSS_CLASSES = {
     CHALLENGE: "challenge",
     CHALLENGE_CONTAINER: "challenge-container",
     CHALLENGE_CHECKBOX: "challenge-checkbox",
+    CHALLENGE_EDIT_ICON: "challenge-edit-icon",
     CHALLENGE_TEXT: "challenge-text",
     CHALLENGE_TITLE: "challenge-title",
     CHALLENGE_DESCRIPTION: "challenge-description",
@@ -67,6 +68,7 @@ export const CSS_SELECTORS = {
     // Challenge-related selectors
     CHALLENGE_CONTAINER: ".challenge-container",
     CHALLENGE_CHECKBOX: ".challenge-checkbox",
+    CHALLENGE_EDIT_ICON: ".challenge-edit-icon",
     CHALLENGE_TEXT: ".challenge-text",
     CHALLENGE_TITLE: ".challenge-title",
     CHALLENGE_DESCRIPTION: ".challenge-description",
@@ -114,6 +116,7 @@ export const ELEMENT_IDS = {
 
     // Add Challenge Modal elements
     ADD_CHALLENGE_MODAL: "add-challenge-modal",
+    ADD_CHALLENGE_MODAL_TITLE: "add-challenge-modal-title",
     ADD_CHALLENGE_FORM: "add-challenge-form",
     ADD_CHALLENGE_TITLE: "add-challenge-title",
     ADD_CHALLENGE_DESCRIPTION: "add-challenge-description",
@@ -229,6 +232,7 @@ export const COMMON_STRINGS = {
 export const HTML_ELEMENTS = {
     DIV: "div",
     BUTTON: "button",
+    LI: "li",
 } as const;
 
 /**
@@ -236,6 +240,8 @@ export const HTML_ELEMENTS = {
  */
 export const HTML_ATTRIBUTES = {
     BUTTON_TYPE: "button",
+    ROLE_BUTTON: "button",
+    TABINDEX_ZERO: "0",
 } as const;
 
 /**
@@ -244,6 +250,14 @@ export const HTML_ATTRIBUTES = {
 export const BUTTON_TEXT = {
     ADD_CHALLENGE: "Add Challenge",
     CLEAR_FINISHED: "Clear Finished Challenges",
+} as const;
+
+/**
+ * Modal mode constants for form dialogs
+ */
+export const MODAL_MODES = {
+    ADD: "add",
+    EDIT: "edit",
 } as const;
 
 /**
@@ -264,3 +278,4 @@ export type HTMLElementValue =
 export type HTMLAttributeValue =
     (typeof HTML_ATTRIBUTES)[keyof typeof HTML_ATTRIBUTES];
 export type ButtonTextValue = (typeof BUTTON_TEXT)[keyof typeof BUTTON_TEXT];
+export type ModalModeValue = (typeof MODAL_MODES)[keyof typeof MODAL_MODES];

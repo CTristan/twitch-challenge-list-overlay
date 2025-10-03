@@ -221,6 +221,36 @@ export const STORAGE_MESSAGES = {
 } as const;
 
 /**
+ * UI element text content constants
+ */
+export const UI_ELEMENTS = {
+    EDIT_ICON: "✏️",
+} as const;
+
+/**
+ * ARIA label constants for accessibility
+ */
+export const ARIA_LABELS = {
+    EDIT_CHALLENGE: "Edit challenge",
+} as const;
+
+/**
+ * Modal text constants for form dialogs
+ */
+export const MODAL_TEXT = {
+    // Add Challenge Modal
+    ADD_CHALLENGE_TITLE: "Add New Challenge",
+    ADD_CHALLENGE_BUTTON: "Add Challenge",
+
+    // Edit Challenge Modal
+    EDIT_CHALLENGE_TITLE: "Edit Challenge",
+    EDIT_CHALLENGE_BUTTON: "Save Changes",
+
+    // Error messages
+    CHALLENGE_NOT_FOUND_FOR_EDIT: "Challenge not found",
+} as const;
+
+/**
  * Admin panel section titles and labels
  */
 export const ADMIN_PANEL_LABELS = {
@@ -278,6 +308,8 @@ export const VALIDATION_MESSAGES = {
 /**
  * Type definitions for message constant values
  */
+export type UIElementValue = (typeof UI_ELEMENTS)[keyof typeof UI_ELEMENTS];
+export type AriaLabelValue = (typeof ARIA_LABELS)[keyof typeof ARIA_LABELS];
 export type ErrorMessageValue =
     (typeof ERROR_MESSAGES)[keyof typeof ERROR_MESSAGES];
 export type SuccessMessageValue =
@@ -292,6 +324,7 @@ export type PermissionMessageValue =
     (typeof PERMISSION_MESSAGES)[keyof typeof PERMISSION_MESSAGES];
 export type StorageMessageValue =
     (typeof STORAGE_MESSAGES)[keyof typeof STORAGE_MESSAGES];
+export type ModalTextValue = (typeof MODAL_TEXT)[keyof typeof MODAL_TEXT];
 export type AdminPanelLabelValue =
     (typeof ADMIN_PANEL_LABELS)[keyof typeof ADMIN_PANEL_LABELS];
 export type AdminFeedbackMessageValue =

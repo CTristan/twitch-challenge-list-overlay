@@ -22,9 +22,14 @@ import {
     EVENT_NAMES,
     HTML_ATTRIBUTES,
     HTML_ELEMENTS,
+    MODAL_MODES,
     URL_HASH,
 } from "./types/DOMConstants";
-import { ERROR_MESSAGES, STATUS_MESSAGES } from "./types/MessageConstants";
+import {
+    ERROR_MESSAGES,
+    MODAL_TEXT,
+    STATUS_MESSAGES,
+} from "./types/MessageConstants";
 import {
     VALIDATION_CONSTRAINTS,
     VALIDATION_PATTERNS,
@@ -56,6 +61,9 @@ export default class App {
     // Track challenges being processed
     private processingCheckboxClicks = new Set<string>();
 
+    // Track current editing challenge ID for modal mode switching
+    private editingChallengeId: string | null = null;
+
     /**
      * @constructor
      * @param {string} storeName - The store name
@@ -69,7 +77,8 @@ export default class App {
         );
         this.#uiUpdateHandler = new UIUpdateHandler(
             this.challengeList,
-            this.#configManager
+            this.#configManager,
+            this.handleEditIconClick
         );
         this.#timerController = new TimerController(this.challengeList);
         loadStyles(this.#configManager.getAll());
@@ -212,11 +221,24 @@ export default class App {
                 .forEach((challenge, index) => {
                     // Use ChallengeRenderer for consistent element creation
                     // Pass displayPosition as index + 1 for 1-based numbering
+                    const isAdminMode = window.location.hash === URL_HASH.ADMIN;
+                    const options: {
+                        displayPosition: number;
+                        includeEventListeners?: boolean;
+                        editHandler?: (event: Event) => void;
+                    } = {
+                        displayPosition: index + 1,
+                    };
+
+                    // Add edit handler in admin mode
+                    if (isAdminMode) {
+                        options.includeEventListeners = true;
+                        options.editHandler = this.handleEditIconClick;
+                    }
+
                     const listItem = ChallengeRenderer.createChallengeElement(
                         challenge,
-                        {
-                            displayPosition: index + 1,
-                        }
+                        options
                     );
 
                     // Apply background customization (includes row colors if configured)
@@ -540,6 +562,12 @@ export default class App {
      * @returns {void}
      */
     private openAddChallengeModal(): void {
+        // Clear editing state
+        this.editingChallengeId = null;
+
+        // Update modal title and button text for add mode
+        this.setModalMode(MODAL_MODES.ADD);
+
         // Clear form data
         this.clearAddChallengeForm();
 
@@ -551,15 +579,132 @@ export default class App {
     }
 
     /**
-     * Close the add challenge modal
+     * Open the edit challenge modal
+     * @param {string} challengeId - The ID of the challenge to edit
+     * @returns {void}
+     */
+    private openEditChallengeModal(challengeId: string): void {
+        // Set editing state
+        this.editingChallengeId = challengeId;
+
+        // Update modal title and button text for edit mode
+        this.setModalMode(MODAL_MODES.EDIT);
+
+        // Populate form with challenge data
+        this.populateFormForEdit(challengeId);
+
+        // Show modal using the updated modal function
+        openModal(ELEMENT_IDS.ADD_CHALLENGE_MODAL);
+
+        // Setup form event listeners
+        this.setupAddChallengeFormListeners();
+    }
+
+    /**
+     * Close the add/edit challenge modal
      * @returns {void}
      */
     private closeAddChallengeModal(): void {
         // Close modal using the updated modal function
         closeModal(ELEMENT_IDS.ADD_CHALLENGE_MODAL);
 
-        // Clear form data
+        // Clear form data and editing state
         this.clearAddChallengeForm();
+        this.editingChallengeId = null;
+    }
+
+    /**
+     * Set modal mode (add or edit)
+     * @param {string} mode - The mode to set (MODAL_MODES.ADD or MODAL_MODES.EDIT)
+     * @returns {void}
+     */
+    private setModalMode(
+        mode: (typeof MODAL_MODES)[keyof typeof MODAL_MODES]
+    ): void {
+        const modalTitle = document.getElementById(
+            ELEMENT_IDS.ADD_CHALLENGE_MODAL_TITLE
+        );
+        const submitButton = document.getElementById(
+            ELEMENT_IDS.ADD_CHALLENGE_SUBMIT
+        );
+
+        if (modalTitle) {
+            modalTitle.textContent =
+                mode === MODAL_MODES.ADD
+                    ? MODAL_TEXT.ADD_CHALLENGE_TITLE
+                    : MODAL_TEXT.EDIT_CHALLENGE_TITLE;
+        }
+
+        if (submitButton) {
+            submitButton.textContent =
+                mode === MODAL_MODES.ADD
+                    ? MODAL_TEXT.ADD_CHALLENGE_BUTTON
+                    : MODAL_TEXT.EDIT_CHALLENGE_BUTTON;
+        }
+    }
+
+    /**
+     * Populate form with challenge data for editing
+     * @param {string} challengeId - The ID of the challenge to edit
+     * @returns {void}
+     */
+    private populateFormForEdit(challengeId: string): void {
+        const challenge = this.challengeList.getChallengeById(challengeId);
+        if (!challenge) {
+            console.error(
+                MODAL_TEXT.CHALLENGE_NOT_FOUND_FOR_EDIT + " for editing:",
+                challengeId
+            );
+            return;
+        }
+
+        const titleInput = document.getElementById(
+            ELEMENT_IDS.ADD_CHALLENGE_TITLE
+        ) as HTMLInputElement;
+        const descInput = document.getElementById(
+            ELEMENT_IDS.ADD_CHALLENGE_DESCRIPTION
+        ) as HTMLTextAreaElement;
+        const amountInput = document.getElementById(
+            ELEMENT_IDS.ADD_CHALLENGE_AMOUNT
+        ) as HTMLInputElement;
+        const timerInput = document.getElementById(
+            ELEMENT_IDS.ADD_CHALLENGE_TIMER
+        ) as HTMLInputElement;
+
+        // Populate title
+        if (titleInput) {
+            titleInput.value = challenge.title;
+        }
+
+        // Populate description
+        if (descInput) {
+            descInput.value = challenge.description || COMMON_STRINGS.EMPTY;
+        }
+
+        // Populate amount (only if > 1)
+        if (amountInput) {
+            amountInput.value =
+                challenge.amount > 1
+                    ? challenge.amount.toString()
+                    : COMMON_STRINGS.EMPTY;
+        }
+
+        // Populate timer (format as human-readable)
+        if (timerInput && challenge.timer) {
+            const timerString = challenge.timer.getFormattedTime(
+                challenge.timer.duration
+            );
+            timerInput.value = timerString;
+        } else if (timerInput) {
+            timerInput.value = COMMON_STRINGS.EMPTY;
+        }
+
+        // Clear any error states
+        [titleInput, descInput, amountInput, timerInput].forEach((input) => {
+            if (input) {
+                input.classList.remove(CSS_CLASSES.ERROR);
+            }
+        });
     }
 
     /**
@@ -628,7 +773,7 @@ export default class App {
     }
 
     /**
-     * Handle add challenge form submission
+     * Handle add/edit challenge form submission
      * @param {Event} event - The form submit event
      * @returns {void}
      */
@@ -638,7 +783,16 @@ export default class App {
         try {
             const challengeData = this.extractChallengeFormData();
             if (challengeData) {
-                this.createChallengeFromForm(challengeData);
+                if (this.editingChallengeId) {
+                    // Edit mode
+                    this.updateChallengeFromForm(
+                        this.editingChallengeId,
+                        challengeData
+                    );
+                } else {
+                    // Add mode
+                    this.createChallengeFromForm(challengeData);
+                }
                 this.closeAddChallengeModal();
             }
         } catch (error) {
@@ -957,6 +1111,85 @@ export default class App {
         // Notify other windows (viewer overlay) about the state change
         notifyChallengeStateChanged();
     }
+
+    /**
+     * Update a challenge from form data
+     * @param {string} challengeId - The ID of the challenge to update
+     * @param {object} challengeData - The challenge data from the form
+     * @returns {void}
+     */
+    private updateChallengeFromForm(
+        challengeId: string,
+        challengeData: {
+            title: string;
+            description?: string;
+            amount?: number;
+            timer?: string;
+        }
+    ): void {
+        const challenge = this.challengeList.getChallengeById(challengeId);
+        if (!challenge) {
+            throw new Error(MODAL_TEXT.CHALLENGE_NOT_FOUND_FOR_EDIT);
+        }
+
+        // Update title
+        challenge.setTitle(challengeData.title);
+
+        // Update description
+        challenge.setDescription(challengeData.description || "");
+
+        // Update amount
+        if (challengeData.amount !== undefined) {
+            challenge.setAmount(challengeData.amount);
+        }
+
+        // Update timer if provided
+        if (challengeData.timer) {
+            challenge.setTimer(challengeData.timer);
+            challenge.startTimer();
+        }
+
+        // Changes are automatically saved to localStorage via ChallengeList
+
+        // Re-render the challenge list to reflect the changes
+        this.renderChallengeList();
+
+        // Notify other windows (viewer overlay) about the state change
+        notifyChallengeStateChanged();
+    }
+
+    /**
+     * Handle edit icon click events
+     * @param {Event} event - The click event
+     * @returns {void}
+     */
+    private handleEditIconClick = (event: Event): void => {
+        // Prevent event from bubbling
+        event.stopPropagation();
+
+        // Only handle clicks in admin mode
+        if (window.location.hash !== URL_HASH.ADMIN) {
+            return;
+        }
+
+        const target = event.target as HTMLElement;
+        const challengeElement = target.closest(
+            CSS_SELECTORS.CHALLENGE
+        ) as HTMLElement;
+
+        if (!challengeElement) {
+            return;
+        }
+
+        const challengeId =
+            challengeElement.dataset[DATA_ATTRIBUTES.CHALLENGE_ID];
+        if (!challengeId) {
+            return;
+        }
+
+        // Open edit modal with challenge data
+        this.openEditChallengeModal(challengeId);
+    };
 }
 
 /**

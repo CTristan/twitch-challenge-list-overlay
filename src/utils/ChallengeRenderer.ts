@@ -7,7 +7,11 @@ import {
     CSS_CLASSES,
     CSS_SELECTORS,
     DATA_ATTRIBUTES,
+    EVENT_NAMES,
+    HTML_ATTRIBUTES,
+    HTML_ELEMENTS,
 } from "../types/DOMConstants";
+import { ARIA_LABELS, UI_ELEMENTS } from "../types/MessageConstants";
 import {
     calculateOptimalTextColor,
     combineColorWithOpacity,
@@ -46,11 +50,11 @@ export class ChallengeRenderer {
         challenge: Challenge,
         displayPosition?: number
     ): HTMLElement {
-        const textContainer = document.createElement("div");
+        const textContainer = document.createElement(HTML_ELEMENTS.DIV);
         textContainer.classList.add(CSS_CLASSES.CHALLENGE_TEXT);
 
         // Create title element with optional position prefix
-        const titleElement = document.createElement("div");
+        const titleElement = document.createElement(HTML_ELEMENTS.DIV);
         titleElement.classList.add(CSS_CLASSES.CHALLENGE_TITLE);
         const titlePrefix =
             displayPosition !== undefined ? `${displayPosition}. ` : "";
@@ -63,7 +67,9 @@ export class ChallengeRenderer {
             challenge.description &&
             challenge.description.trim() !== ""
         ) {
-            const descriptionElement = document.createElement("div");
+            const descriptionElement = document.createElement(
+                HTML_ELEMENTS.DIV
+            );
             descriptionElement.classList.add(CSS_CLASSES.CHALLENGE_DESCRIPTION);
             descriptionElement.textContent = challenge.description;
             textContainer.appendChild(descriptionElement);
@@ -71,7 +77,7 @@ export class ChallengeRenderer {
 
         // Add progress display only when amount > 1
         if (challenge.amount > 1) {
-            const progressElement = document.createElement("div");
+            const progressElement = document.createElement(HTML_ELEMENTS.DIV);
             progressElement.classList.add(CSS_CLASSES.CHALLENGE_AMOUNT);
             progressElement.textContent = `${challenge.progress}/${challenge.amount}`;
             textContainer.appendChild(progressElement);
@@ -86,12 +92,26 @@ export class ChallengeRenderer {
      * @returns The checkbox element
      */
     static createChallengeCheckbox(isChecked: boolean = false): HTMLDivElement {
-        const checkbox = document.createElement("div");
+        const checkbox = document.createElement(HTML_ELEMENTS.DIV);
         checkbox.classList.add(CSS_CLASSES.CHALLENGE_CHECKBOX);
         if (isChecked) {
             checkbox.classList.add(CSS_CLASSES.CHECKED);
         }
         return checkbox;
+    }
+
+    /**
+     * Create an edit icon element for a challenge
+     * @returns The edit icon element
+     */
+    static createChallengeEditIcon(): HTMLDivElement {
+        const editIcon = document.createElement(HTML_ELEMENTS.DIV);
+        editIcon.classList.add(CSS_CLASSES.CHALLENGE_EDIT_ICON);
+        editIcon.textContent = UI_ELEMENTS.EDIT_ICON;
+        editIcon.setAttribute("role", HTML_ATTRIBUTES.ROLE_BUTTON);
+        editIcon.setAttribute("aria-label", ARIA_LABELS.EDIT_CHALLENGE);
+        editIcon.setAttribute("tabindex", HTML_ATTRIBUTES.TABINDEX_ZERO);
+        return editIcon;
     }
 
     /**
@@ -105,10 +125,11 @@ export class ChallengeRenderer {
         options: {
             includeEventListeners?: boolean;
             eventHandler?: (event: Event) => void;
+            editHandler?: (event: Event) => void;
             displayPosition?: number;
         } = {}
     ): HTMLElement {
-        const challengeElement = document.createElement("li");
+        const challengeElement = document.createElement(HTML_ELEMENTS.LI);
         challengeElement.className = `${CSS_CLASSES.CHALLENGE} ${
             challenge.isComplete() ? CSS_CLASSES.DONE : ""
         }`;
@@ -119,7 +140,7 @@ export class ChallengeRenderer {
 
         // Add event listener if requested
         if (options.includeEventListeners && options.eventHandler) {
-            checkbox.addEventListener("click", options.eventHandler);
+            checkbox.addEventListener(EVENT_NAMES.CLICK, options.eventHandler);
         }
 
         // Create challenge text with optional display position
@@ -130,6 +151,14 @@ export class ChallengeRenderer {
 
         // Assemble the challenge element
         challengeElement.appendChild(checkbox);
+
+        // Create and add edit icon only if edit handler is provided (admin mode only)
+        if (options.editHandler) {
+            const editIcon = this.createChallengeEditIcon();
+            editIcon.addEventListener(EVENT_NAMES.CLICK, options.editHandler);
+            challengeElement.appendChild(editIcon);
+        }
+
         challengeElement.appendChild(textElement);
 
         return challengeElement;

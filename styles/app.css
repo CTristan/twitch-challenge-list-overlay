@@ -126,6 +126,32 @@
   transform: translate(-50%, -50%);
 }
 
+/* Edit icon styling */
+.challenge-edit-icon {
+  flex-shrink: 0;
+  width: var(--challenge-checkbox-size);
+  height: var(--challenge-checkbox-size);
+  margin-left: 0.5rem;
+  margin-right: 0.5rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: calc(var(--challenge-checkbox-size) * 0.7);
+  opacity: 0.7;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  user-select: none;
+}
+
+.challenge-edit-icon:hover {
+  opacity: 1;
+  transform: scale(1.1);
+}
+
+.challenge-edit-icon:active {
+  transform: scale(0.95);
+}
+
 .challenge-text {
   flex: 1;
   display: flex;
