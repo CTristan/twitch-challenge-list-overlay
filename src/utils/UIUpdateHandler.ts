@@ -8,6 +8,7 @@ import {
     BACKGROUND_DEFAULTS,
     COLOR_CONFIG,
 } from "../types/ConfigConstants";
+import { CSS_SELECTORS, URL_HASH } from "../types/DOMConstants";
 import ChallengeRenderer from "./ChallengeRenderer";
 import DOMHelper from "./DOMHelper";
 import Timer from "./Timer";
@@ -439,7 +440,9 @@ export default class UIUpdateHandler {
         this.invalidateCache();
 
         // Get the ordered list from the card
-        const challengeList = challengeCard.querySelector("ol.challenges");
+        const challengeList = challengeCard.querySelector(
+            CSS_SELECTORS.CHALLENGES_ORDERED_LIST
+        );
 
         if (!challengeList) {
             console.error("Challenge ordered list not found in created card");
@@ -479,13 +482,17 @@ export default class UIUpdateHandler {
         const displayPosition =
             rowIndex !== undefined ? rowIndex + 1 : undefined;
 
+        // In admin mode, we use event delegation instead of direct event listeners
+        // to avoid conflicts with the delegated click handler on ol.challenges
+        const isAdminMode = window.location.hash === URL_HASH.ADMIN;
+
         // Use shared renderer with event handling support
         const options: {
             includeEventListeners: boolean;
             eventHandler: (event: Event) => void;
             displayPosition?: number;
         } = {
-            includeEventListeners: true,
+            includeEventListeners: !isAdminMode, // Don't add direct listeners in admin mode
             eventHandler: this.handleCheckboxClick,
         };
 

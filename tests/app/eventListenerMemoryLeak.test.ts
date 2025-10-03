@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import App from "../../src/app";
+import { CSS_SELECTORS } from "../../src/types/DOMConstants";
 
 describe("Event Listener Memory Leak Prevention", () => {
     let app: App;
@@ -90,46 +91,42 @@ describe("Event Listener Memory Leak Prevention", () => {
         app.challengeList.addChallenges("Test Challenge");
         app.renderChallengeList();
 
-        // Get the challenge containers for event delegation
-        const containers = document.querySelectorAll(".challenge-container");
-        expect(containers.length).toBeGreaterThan(0);
-
-        // Spy on addEventListener and removeEventListener for containers
-        const addEventListenerSpies = Array.from(containers).map((container) =>
-            vi.spyOn(container, "addEventListener")
+        // Get the challenge list (ol.challenges) for event delegation
+        const challengeList = document.querySelector(
+            CSS_SELECTORS.CHALLENGES_ORDERED_LIST
         );
-        const removeEventListenerSpies = Array.from(containers).map(
-            (container) => vi.spyOn(container, "removeEventListener")
+        expect(challengeList).toBeTruthy();
+
+        // Spy on addEventListener and removeEventListener for the challenge list
+        const addEventListenerSpy = vi.spyOn(
+            challengeList!,
+            "addEventListener"
+        );
+        const removeEventListenerSpy = vi.spyOn(
+            challengeList!,
+            "removeEventListener"
         );
 
         // Call enableAdminCheckboxInteraction
         app.enableAdminCheckboxInteraction();
 
-        // Verify that event delegation is set up on containers
-        addEventListenerSpies.forEach((spy) => {
-            expect(spy).toHaveBeenCalledWith(
-                "click",
-                (app as any).handleDelegatedCheckboxClick
-            );
-        });
+        // Verify that event delegation is set up on the challenge list
+        expect(addEventListenerSpy).toHaveBeenCalledWith(
+            "click",
+            (app as any).handleDelegatedCheckboxClick
+        );
 
-        removeEventListenerSpies.forEach((spy) => {
-            expect(spy).toHaveBeenCalledWith(
-                "click",
-                (app as any).handleDelegatedCheckboxClick
-            );
-        });
+        expect(removeEventListenerSpy).toHaveBeenCalledWith(
+            "click",
+            (app as any).handleDelegatedCheckboxClick
+        );
 
         // Verify they use the exact same function reference
-        addEventListenerSpies.forEach((addSpy, index) => {
-            const removeSpy = removeEventListenerSpies[index];
-            expect(removeSpy).toBeDefined(); // Ensure removeSpy exists
-            const removeCall = removeSpy!.mock.calls[0];
-            const addCall = addSpy.mock.calls[0];
-            expect(removeCall).toBeDefined();
-            expect(addCall).toBeDefined();
-            expect(removeCall![1]).toBe(addCall![1]); // Same function reference
-        });
+        const removeCall = removeEventListenerSpy.mock.calls[0];
+        const addCall = addEventListenerSpy.mock.calls[0];
+        expect(removeCall).toBeDefined();
+        expect(addCall).toBeDefined();
+        expect(removeCall![1]).toBe(addCall![1]); // Same function reference
     });
 
     it("should properly handle checkbox clicks in admin mode after multiple re-enables", () => {

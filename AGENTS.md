@@ -573,6 +573,9 @@ The command system uses the Command pattern for extensibility and maintainabilit
 -   **Color configuration** for challenge rows with opacity control
 -   **Real-time configuration updates** across windows
 -   **Window refresh communication** via BroadcastChannel for automatic viewer window updates
+-   **Interactive checkboxes** - Checkboxes in admin mode are clickable and toggle challenge completion status
+-   **Checkbox styling consistency** - Admin mode checkboxes respect configured text colors from row color configuration
+-   **Clear Finished Challenges button** - Dedicated button in admin mode to remove all completed challenges from the list
 
 ## Troubleshooting Common Issues
 

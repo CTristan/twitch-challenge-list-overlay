@@ -387,13 +387,15 @@
 .challenge-checkbox.admin-interactive {
   cursor: pointer;
   transition: all 0.2s ease;
-  border: 2px solid rgba(74, 144, 226, 0.3);
+  /* Border color is inherited from configured text color via CSS custom properties */
+  /* Do not override border-color here to respect row color configuration */
 }
 
 .challenge-checkbox.admin-interactive:hover {
-  border-color: #4a90e2;
+  /* Enhance the existing border color on hover without changing it */
   transform: scale(1.05);
-  box-shadow: 0 2px 4px rgba(74, 144, 226, 0.3);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  filter: brightness(1.2);
 }
 
 .challenge-checkbox.admin-interactive:active {

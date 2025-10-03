@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import App from "../../src/app";
+import { CSS_SELECTORS } from "../../src/types/DOMConstants";
 import { setupChallengeTestDOM } from "../utils/domTestUtils";
 
 describe("Empty State Header Visibility", () => {
@@ -42,7 +43,7 @@ describe("Empty State Header Visibility", () => {
 
             // Check that challenge lists exist but are empty
             const challengeLists = document.querySelectorAll(
-                ".challenge-container .card ol.challenges"
+                `.challenge-container .card ${CSS_SELECTORS.CHALLENGES_ORDERED_LIST}`
             );
 
             expect(challengeLists.length).toBe(1);
@@ -143,7 +144,9 @@ describe("Empty State Header Visibility", () => {
             // Each card should have a header and an empty list
             emptyCards.forEach((card) => {
                 expect(card.querySelector(".username")).toBeTruthy();
-                expect(card.querySelector("ol.challenges")).toBeTruthy();
+                expect(
+                    card.querySelector(CSS_SELECTORS.CHALLENGES_ORDERED_LIST)
+                ).toBeTruthy();
             });
 
             // Add challenges and test populated state structure
@@ -159,7 +162,9 @@ describe("Empty State Header Visibility", () => {
             // Structure should be the same, just with content in the list
             populatedCards.forEach((card) => {
                 expect(card.querySelector(".username")).toBeTruthy();
-                expect(card.querySelector("ol.challenges")).toBeTruthy();
+                expect(
+                    card.querySelector(CSS_SELECTORS.CHALLENGES_ORDERED_LIST)
+                ).toBeTruthy();
             });
         });
     });

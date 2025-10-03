@@ -374,24 +374,25 @@ export default class App {
             return;
         }
 
-        // Use event delegation on containers instead of individual checkboxes
-        // This avoids re-querying and re-attaching listeners for every checkbox
-        const containers = document.querySelectorAll(
-            CSS_SELECTORS.CHALLENGE_CONTAINER
+        // Use event delegation on the challenge list for efficient handling
+        // This single listener handles all checkbox clicks
+        const challengeList = document.querySelector(
+            CSS_SELECTORS.CHALLENGES_ORDERED_LIST
         );
-        containers.forEach((container) => {
+
+        if (challengeList) {
             // Remove any existing delegated listeners to prevent duplicates
-            container.removeEventListener(
+            challengeList.removeEventListener(
                 EVENT_NAMES.CLICK,
                 this.handleDelegatedCheckboxClick
             );
 
-            // Add single delegated listener per container
-            container.addEventListener(
+            // Add single delegated listener to the challenge list
+            challengeList.addEventListener(
                 EVENT_NAMES.CLICK,
                 this.handleDelegatedCheckboxClick
             );
-        });
+        }
 
         // Add visual indication that checkboxes are clickable in admin mode
         const checkboxes = document.querySelectorAll(
@@ -429,7 +430,7 @@ export default class App {
                 buttonContainer = document.createElement(HTML_ELEMENTS.DIV);
                 buttonContainer.className = CSS_CLASSES.ADD_CHALLENGE_CONTAINER;
 
-                // Create the button
+                // Create the Add Challenge button
                 const addButton = document.createElement(HTML_ELEMENTS.BUTTON);
                 addButton.className = CSS_CLASSES.ADD_CHALLENGE_BTN;
                 addButton.textContent = BUTTON_TEXT.ADD_CHALLENGE;
@@ -442,6 +443,23 @@ export default class App {
                 );
 
                 buttonContainer.appendChild(addButton);
+
+                // Create the Clear Finished Challenges button
+                const clearFinishedButton = document.createElement(
+                    HTML_ELEMENTS.BUTTON
+                );
+                clearFinishedButton.className = CSS_CLASSES.CLEAR_FINISHED_BTN;
+                clearFinishedButton.textContent = BUTTON_TEXT.CLEAR_FINISHED;
+                clearFinishedButton.type = HTML_ATTRIBUTES.BUTTON_TYPE;
+
+                // Add click event listener
+                clearFinishedButton.addEventListener(
+                    EVENT_NAMES.CLICK,
+                    this.handleClearFinishedClick
+                );
+
+                buttonContainer.appendChild(clearFinishedButton);
+
                 card.appendChild(buttonContainer);
             }
         });
@@ -454,6 +472,30 @@ export default class App {
      */
     private handleAddChallengeClick = (): void => {
         this.openAddChallengeModal();
+    };
+
+    /**
+     * Handle clear finished challenges button click
+     * Clears all completed challenges from the list
+     * @returns {void}
+     */
+    private handleClearFinishedClick = (): void => {
+        // Get completed challenges count before clearing
+        const completedChallenges = this.challengeList.challenges.filter((c) =>
+            c.isComplete()
+        );
+        const completedCount = completedChallenges.length;
+
+        // Check if there are any completed challenges to clear
+        if (completedCount === 0) {
+            return;
+        }
+
+        // Clear completed challenges (automatically saves to localStorage)
+        this.challengeList.clearDoneChallenges();
+
+        // Re-render the challenge list to reflect the changes
+        this.renderChallengeList();
     };
 
     /**

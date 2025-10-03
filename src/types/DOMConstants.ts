@@ -30,6 +30,7 @@ export const CSS_CLASSES = {
     // Add Challenge Button classes
     ADD_CHALLENGE_BTN: "add-challenge-btn",
     ADD_CHALLENGE_CONTAINER: "add-challenge-container",
+    CLEAR_FINISHED_BTN: "clear-finished-btn",
 
     // Background customization classes
     CUSTOM_OVERLAY_BACKGROUND: "custom-overlay-background",
@@ -72,6 +73,7 @@ export const CSS_SELECTORS = {
     CHALLENGE_AMOUNT: ".challenge-amount",
     CHALLENGE: ".challenge",
     CHALLENGES_LIST: ".challenges",
+    CHALLENGES_ORDERED_LIST: "ol.challenges",
 
     // Header and text selectors
     CUSTOM_HEADER: ".custom-header",
@@ -240,6 +242,7 @@ export const HTML_ATTRIBUTES = {
  */
 export const BUTTON_TEXT = {
     ADD_CHALLENGE: "Add Challenge",
+    CLEAR_FINISHED: "Clear Finished Challenges",
 } as const;
 
 /**

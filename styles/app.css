@@ -235,6 +235,9 @@
   padding: 1rem 1.5rem 0.5rem;
   border-top: 1px solid rgba(255, 255, 255, 0.1);
   margin-top: 0.5rem;
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
 }
 
 .add-challenge-btn {
@@ -264,6 +267,40 @@
 }
 
 .add-challenge-btn:disabled {
+  background-color: #666666;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* Clear Finished Challenges Button Styles */
+.clear-finished-btn {
+  background-color: #dc3545;
+  color: #ffffff;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-family: "Roboto Mono", monospace;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  min-width: 140px;
+  box-shadow: 0 2px 4px rgba(220, 53, 69, 0.2);
+}
+
+.clear-finished-btn:hover {
+  background-color: #c82333;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(220, 53, 69, 0.3);
+}
+
+.clear-finished-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(220, 53, 69, 0.3);
+}
+
+.clear-finished-btn:disabled {
   background-color: #666666;
   cursor: not-allowed;
   transform: none;
