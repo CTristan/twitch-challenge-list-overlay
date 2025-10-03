@@ -99,50 +99,17 @@ const uiUpdate: UIUpdateData = { action: UIUpdateAction.ADD };
 -   **Centralized Organization**: Related constants grouped by purpose and functionality
 
 ```typescript
-// ✅ Usage across the application
-import {
-    BACKGROUND_CONFIG,
-    BACKGROUND_DEFAULTS,
-    COLOR_CONFIG,
-} from "../types/ConfigConstants";
+// ✅ Usage examples
+import { BACKGROUND_CONFIG, COLOR_CONFIG } from "../types/ConfigConstants";
 import { DEFAULT_COLORS } from "../types/ColorConstants";
-import {
-    CSS_CLASSES,
-    ELEMENT_IDS,
-    EVENT_NAMES,
-    HTML_ATTRIBUTES,
-    HTML_ELEMENTS,
-    MODAL_MODES,
-} from "../types/DOMConstants";
-import {
-    ARIA_LABELS,
-    ERROR_MESSAGES,
-    MODAL_TEXT,
-    UI_ELEMENTS,
-} from "../types/MessageConstants";
+import { CSS_CLASSES, ELEMENT_IDS, EVENT_NAMES } from "../types/DOMConstants";
+import { ERROR_MESSAGES, MODAL_TEXT } from "../types/MessageConstants";
 
 const backgroundColor = configManager.get(
     BACKGROUND_CONFIG.CHALLENGE_BACKGROUND_COLOR
 );
-const rowColorsOpacity =
-    configManager.get(COLOR_CONFIG.CHALLENGE_ROW_COLORS_OPACITY) ??
-    BACKGROUND_DEFAULTS.ROW_COLORS_OPACITY;
 element.classList.add(CSS_CLASSES.DONE);
-const color = DEFAULT_COLORS.PRIMARY_BACKGROUND;
-const opacitySlider = document.getElementById(ELEMENT_IDS.ROW_COLORS_OPACITY);
 window.addEventListener(EVENT_NAMES.CHALLENGE_LIST_REFRESH, handler);
-return this.createSuccessResponse(ERROR_MESSAGES.NO_CHALLENGES_TO_CLEAR);
-
-// Modal mode constants
-this.setModalMode(MODAL_MODES.ADD);
-modalTitle.textContent = MODAL_TEXT.ADD_CHALLENGE_TITLE;
-
-// HTML element and attribute constants
-const editIcon = document.createElement(HTML_ELEMENTS.DIV);
-editIcon.textContent = UI_ELEMENTS.EDIT_ICON;
-editIcon.setAttribute("role", HTML_ATTRIBUTES.ROLE_BUTTON);
-editIcon.setAttribute("aria-label", ARIA_LABELS.EDIT_CHALLENGE);
-editIcon.addEventListener(EVENT_NAMES.CLICK, handler);
 ```
 
 ### Class Structure Pattern
@@ -261,20 +228,9 @@ Configuration is managed through the **ConfigManager** class with **localStorage
 ### Configuration Access Pattern
 
 ```typescript
-// Get ConfigManager instance
 const configManager = ConfigManager.getInstance();
-
-// Get specific configuration values
 const maxChallenges = configManager.get("maxChallenges");
-const authConfig = configManager.get("auth");
-
-// Update configuration
 configManager.set("maxChallenges", 15);
-configManager.set("auth", {
-    twitch_oauth: "your_oauth_token",
-    twitch_username: "your_username",
-    twitch_channel: "your_channel",
-});
 ```
 
 ### Default Configuration Structure
@@ -290,36 +246,7 @@ The system includes built-in defaults for all configuration properties:
 
 ### ConfigDefaults Utility Module
 
-The **ConfigDefaults** utility provides modular fallback configuration creation and validation:
-
-#### Core Functions
-
--   **`createFallbackConfig()`**: Creates a complete, valid Config object with default values for error recovery
--   **`isValidFallbackConfig()`**: Validates configuration structure with comprehensive property checking
--   **`getDefaultMaxChallenges()`**: Returns the default maximum challenges value (10)
--   **`getDefaultAuthConfig()`**: Returns default auth configuration with empty credential strings
-
-#### Usage Pattern
-
-```typescript
-import { createFallbackConfig } from "./utils/ConfigDefaults";
-
-// Error recovery in configuration loading
-try {
-    configManager = ConfigManager.getInstance(userConfig);
-} catch (error) {
-    console.warn("Configuration loading failed, using fallback");
-    const fallbackConfig = createFallbackConfig();
-    configManager = ConfigManager.getInstance(fallbackConfig);
-}
-```
-
-#### Refactoring Benefits
-
--   **Improved testability**: Fallback configuration logic can be tested independently
--   **Better modularity**: Configuration creation separated from error handling
--   **Enhanced coverage**: Achieves 97.5% statement coverage with comprehensive unit tests
--   **Type safety**: Full TypeScript support with proper Config interface compliance
+Provides modular fallback configuration creation and validation with `createFallbackConfig()`, `isValidFallbackConfig()`, `getDefaultMaxChallenges()`, and `getDefaultAuthConfig()` functions for error recovery and testing.
 
 ## Testing Patterns
 
@@ -601,8 +528,9 @@ The WindowRefreshManager handles cross-window communication with two distinct me
 -   **`handleCheckboxClick()`** - Calls `notifyChallengeStateChanged()` after toggling completion
 -   **`handleClearFinishedClick()`** - Calls `notifyChallengeStateChanged()` after clearing completed challenges
 -   **`createChallengeFromForm()`** - Calls `notifyChallengeStateChanged()` after adding challenge via modal
+-   **`updateChallengeFromForm()`** - Calls `challengeList.saveToLocalStorage()` and `notifyChallengeStateChanged()` after editing challenge via modal
 
-### ChallengeList Reload Method
+### ChallengeList Persistence Methods
 
 **Location**: `src/classes/ChallengeList.ts`
 
@@ -610,6 +538,10 @@ The WindowRefreshManager handles cross-window communication with two distinct me
     -   Resets counters (`#challengesCompleted`, `#totalChallenges`)
     -   Clears challenge map (`#challengeMap`)
     -   Reloads all challenges via `#loadChallengeListFromLocalStorage()`
+-   **`saveToLocalStorage()`** - Public method to persist challenge list changes to localStorage
+    -   Used when external code modifies challenge properties directly (e.g., via setters)
+    -   Calls internal `#commitToLocalStorage()` method
+    -   Required after calling challenge setters like `setTitle()`, `setDescription()`, `setAmount()`, `setTimer()`
 
 ### DOMConstants Event Names
 
@@ -638,6 +570,7 @@ All admin panel interactions that modify challenge state trigger `notifyChalleng
 2. **Test challenge state sync**:
 
     - Add challenge in admin → appears immediately in viewer
+    - Edit challenge in admin → changes appear immediately in viewer
     - Click checkbox in admin → completion status updates immediately in viewer
     - Clear finished in admin → completed challenges removed immediately in viewer
 
@@ -719,37 +652,12 @@ All admin panel interactions that modify challenge state trigger `notifyChalleng
 ### Configuration Access
 
 ```typescript
-// Comprehensive constants usage across the application
-import {
-    BEHAVIOR_CONFIG,
-    COLOR_CONFIG,
-    BACKGROUND_CONFIG,
-    BACKGROUND_DEFAULTS,
-} from "../types/ConfigConstants";
-import { DEFAULT_COLORS, STATUS_COLORS } from "../types/ColorConstants";
-import { CSS_CLASSES, ELEMENT_IDS, EVENT_NAMES } from "../types/DOMConstants";
-import { FORM_CONSTRAINTS } from "../types/NumericConstants";
-import { CommandType, normalizeCommand } from "../types/CommandTypes";
+import { BEHAVIOR_CONFIG } from "../types/ConfigConstants";
+import { CSS_CLASSES, ELEMENT_IDS } from "../types/DOMConstants";
 
 const configManager = ConfigManager.getInstance();
 const maxChallenges = configManager.get(BEHAVIOR_CONFIG.MAX_CHALLENGES);
-const backgroundColor = configManager.get(
-    BACKGROUND_CONFIG.CHALLENGE_BACKGROUND_COLOR
-);
-const rowColorsOpacity =
-    configManager.get(COLOR_CONFIG.CHALLENGE_ROW_COLORS_OPACITY) ??
-    BACKGROUND_DEFAULTS.ROW_COLORS_OPACITY;
-
-// DOM manipulation with constants
-const element = document.getElementById(ELEMENT_IDS.CONFIG_FORM);
 element?.classList.add(CSS_CLASSES.EXPANDED);
-element?.addEventListener(EVENT_NAMES.CLICK, handler);
-
-// Color and validation with constants
-const primaryColor = DEFAULT_COLORS.PRIMARY_BACKGROUND;
-const maxValue = FORM_CONSTRAINTS.MAX_CHALLENGES_MAX;
-const opacitySlider = document.getElementById(ELEMENT_IDS.ROW_COLORS_OPACITY);
-const commandType = normalizeCommand("add"); // Returns CommandType.ADD
 ```
 
 ### Fallback Configuration Pattern
@@ -757,21 +665,11 @@ const commandType = normalizeCommand("add"); // Returns CommandType.ADD
 ```typescript
 import { createFallbackConfig } from "./utils/ConfigDefaults";
 
-// Error recovery in configuration loading
-let configManager: ConfigManager;
 try {
     configManager = ConfigManager.getInstance(userConfig);
 } catch (error) {
-    console.warn("Configuration loading failed, using fallback");
     const fallbackConfig = createFallbackConfig();
     configManager = ConfigManager.getInstance(fallbackConfig);
-}
-
-// Validation of fallback configuration
-import { isValidFallbackConfig } from "./utils/ConfigDefaults";
-const config = createFallbackConfig();
-if (isValidFallbackConfig(config)) {
-    // Configuration is valid and ready to use
 }
 ```
 
@@ -802,14 +700,40 @@ validateInput(input: string): string {
 }
 ```
 
-### Challenge Rendering with ID Prefix Pattern
+### Challenge Persistence Pattern
 
-The ChallengeRenderer utility provides centralized challenge DOM creation with optional numeric ID prefix display:
+When modifying challenge properties directly (outside of ChallengeList methods), you must manually persist changes to localStorage:
+
+```typescript
+// ✅ CORRECT: Using ChallengeList methods (auto-saves)
+this.challengeList.addChallengeObjects(challenge); // Internally calls #commitToLocalStorage()
+this.challengeList.toggleChallengeCompletion(challengeId); // Internally calls #commitToLocalStorage()
+this.challengeList.incrementChallengeProgress(challengeId); // Internally calls #commitToLocalStorage()
+
+// ✅ CORRECT: Direct property modification + manual save
+const challenge = this.challengeList.getChallengeById(challengeId);
+challenge.setTitle(newTitle);
+challenge.setDescription(newDescription);
+challenge.setAmount(newAmount);
+this.challengeList.saveToLocalStorage(); // Required to persist changes
+
+// ❌ INCORRECT: Direct property modification without save
+const challenge = this.challengeList.getChallengeById(challengeId);
+challenge.setTitle(newTitle); // Changes lost on page refresh!
+```
+
+**Key Points**:
+
+-   **ChallengeList methods** (add, delete, toggle, increment, etc.) automatically save to localStorage
+-   **Direct challenge setters** (setTitle, setDescription, setAmount, setTimer) do NOT auto-save
+-   **Always call** `challengeList.saveToLocalStorage()` after using challenge setters
+-   **Cross-window sync** requires calling `notifyChallengeStateChanged()` after persistence
+
+### Challenge Rendering with ID Prefix Pattern
 
 ```typescript
 import ChallengeRenderer from "../utils/ChallengeRenderer";
 
-// Rendering challenges with ID prefix (viewer/admin mode)
 challenges.forEach((challenge: Challenge, index: number) => {
     const listItem = ChallengeRenderer.createChallengeElement(challenge, {
         displayPosition: index + 1, // Convert 0-based index to 1-based ID
@@ -818,106 +742,21 @@ challenges.forEach((challenge: Challenge, index: number) => {
     });
     container.appendChild(listItem);
 });
-
-// Rendering without ID prefix (if needed)
-const challengeElement = ChallengeRenderer.createChallengeElement(challenge, {
-    includeEventListeners: false,
-    eventHandler: () => {},
-});
-
-// UIUpdateHandler pattern for dynamic updates
-const displayPosition = rowIndex !== undefined ? rowIndex + 1 : undefined;
-
-const options: {
-    includeEventListeners: boolean;
-    eventHandler: (event: Event) => void;
-    displayPosition?: number;
-} = {
-    includeEventListeners: true,
-    eventHandler: this.handleCheckboxClick,
-};
-
-if (displayPosition !== undefined) {
-    options.displayPosition = displayPosition;
-}
-
-const challengeElement = ChallengeRenderer.createChallengeElement(
-    challenge,
-    options
-);
 ```
 
-**Key Points**:
-
--   **displayPosition parameter**: Optional 1-based position number for ID prefix
--   **Position calculation**: Always use `index + 1` to convert array indices to user-facing IDs
--   **Conditional assignment**: Use proper TypeScript optional property handling with `exactOptionalPropertyTypes: true`
--   **Consistent formatting**: ID prefix format is `"{id}. {title}"` (e.g., "1. Complete tutorial")
+**Key Points**: Use `displayPosition: index + 1` for ID prefix. Format: `"{id}. {title}"` (e.g., "1. Complete tutorial")
 
 ### Admin Panel Template Pattern
 
-HTML templates for admin panel sections are centralized in `src/templates/AdminPanelTemplates.ts` for improved code organization and maintainability.
+HTML templates for admin panel sections are centralized in `src/templates/AdminPanelTemplates.ts`:
 
 ```typescript
-// Template definition in AdminPanelTemplates.ts
-import { ELEMENT_IDS } from "../types/DOMConstants";
-
-export interface ColorSectionParams {
-    primaryBackgroundColor: string;
-    primaryTextColor: string;
-    secondaryBackgroundColor: string;
-    secondaryTextColor: string;
-    tertiaryBackgroundColor: string;
-    tertiaryTextColor: string;
-    rowColorsOpacityPercent: number;
-    elementIds: typeof ELEMENT_IDS;
-}
-
-export const AdminPanelTemplates = {
-    colorSection: (params: ColorSectionParams): string => `
-        <div class="form-group">
-            <label>Challenge Row Colors:</label>
-            <!-- HTML template with ${params.primaryBackgroundColor} etc. -->
-        </div>
-    `,
-
-    backgroundSection: (params: BackgroundSectionParams): string => `
-        <!-- Background customization HTML -->
-    `,
-};
-
-// Usage in AdminPanel class
 import { AdminPanelTemplates } from "../templates/AdminPanelTemplates";
 
-private createColorSection(container: HTMLElement): void {
-    const colorContent = AdminPanelTemplates.colorSection({
-        primaryBackgroundColor: DEFAULT_COLORS.PRIMARY_BACKGROUND,
-        primaryTextColor: DEFAULT_COLORS.PRIMARY_TEXT,
-        secondaryBackgroundColor: DEFAULT_COLORS.SECONDARY_BACKGROUND,
-        secondaryTextColor: DEFAULT_COLORS.SECONDARY_TEXT,
-        tertiaryBackgroundColor: DEFAULT_COLORS.TERTIARY_BACKGROUND,
-        tertiaryTextColor: DEFAULT_COLORS.TERTIARY_TEXT,
-        rowColorsOpacityPercent: Math.round(
-            BACKGROUND_DEFAULTS.ROW_COLORS_OPACITY * 100
-        ),
-        elementIds: ELEMENT_IDS,
-    });
-
-    const colorSection = new CollapsibleSection({
-        id: ELEMENT_IDS.COLORS_SECTION,
-        title: ADMIN_PANEL_LABELS.COLOR_CONFIGURATION,
-        content: colorContent,
-        defaultExpanded: false,
-    });
-
-    container.appendChild(colorSection.createElement());
-}
+const colorContent = AdminPanelTemplates.colorSection({
+    primaryBackgroundColor: DEFAULT_COLORS.PRIMARY_BACKGROUND,
+    // ... other parameters
+});
 ```
 
-**Benefits**:
-
--   **Separation of concerns**: HTML templates separated from class logic
--   **Type safety**: TypeScript interfaces ensure all required parameters are provided
--   **Maintainability**: Easier to update HTML structure in centralized location
--   **Consistency**: Follows established pattern across admin panel sections
--   **Reusability**: Templates can be reused across different contexts
+**Benefits**: Separation of concerns, type safety, maintainability, reusability

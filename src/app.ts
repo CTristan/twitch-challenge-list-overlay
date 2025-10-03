@@ -1149,7 +1149,8 @@ export default class App {
             challenge.startTimer();
         }
 
-        // Changes are automatically saved to localStorage via ChallengeList
+        // Save changes to localStorage
+        this.challengeList.saveToLocalStorage();
 
         // Re-render the challenge list to reflect the changes
         this.renderChallengeList();

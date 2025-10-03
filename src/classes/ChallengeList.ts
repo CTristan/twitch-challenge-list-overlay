@@ -124,6 +124,15 @@ export default class ChallengeList {
     }
 
     /**
+     * Public method to commit challenge list changes to local storage
+     * Used when external code modifies challenge properties directly
+     * @returns {void}
+     */
+    saveToLocalStorage(): void {
+        this.#commitToLocalStorage();
+    }
+
+    /**
      * Get all challenges
      * @returns All challenges
      */
