@@ -1,9 +1,9 @@
 /**
  * Window Refresh Communication Module
- * 
+ *
  * Handles BroadcastChannel communication for automatic window refresh
  * functionality when configuration changes are saved in the admin panel.
- * 
+ *
  * @module windowRefresh
  */
 
@@ -11,25 +11,25 @@
  * Message types for BroadcastChannel communication
  */
 export interface RefreshMessage {
-  type: 'config-saved';
-  timestamp: number;
-  source: 'admin' | 'viewer';
+    type: "config-saved" | "challenge-state-changed";
+    timestamp: number;
+    source: "admin" | "viewer";
 }
 
 /**
  * Configuration for the window refresh system
  */
 interface RefreshConfig {
-  channelName: string;
-  refreshDelay: number;
+    channelName: string;
+    refreshDelay: number;
 }
 
 /**
  * Default configuration for the refresh system
  */
 const DEFAULT_CONFIG: RefreshConfig = {
-  channelName: 'twitch-overlay-config-updates',
-  refreshDelay: 500, // milliseconds to wait before refresh
+    channelName: "twitch-overlay-config-updates",
+    refreshDelay: 500, // milliseconds to wait before refresh
 };
 
 /**
@@ -38,156 +38,235 @@ const DEFAULT_CONFIG: RefreshConfig = {
  * when configuration changes are saved.
  */
 export class WindowRefreshManager {
-  private channel: BroadcastChannel | null = null;
-  private config: RefreshConfig;
-  private isAdminMode: boolean;
+    private channel: BroadcastChannel | null = null;
+    private config: RefreshConfig;
+    private isAdminMode: boolean;
 
-  /**
-   * @constructor
-   * @param config - Optional configuration overrides
-   */
-  constructor(config: Partial<RefreshConfig> = {}) {
-    this.config = { ...DEFAULT_CONFIG, ...config };
-    this.isAdminMode = window.location.hash === '#admin';
-    this.initializeBroadcastChannel();
-  }
-
-  /**
-   * Initialize the BroadcastChannel for inter-window communication
-   * @returns {void}
-   */
-  private initializeBroadcastChannel(): void {
-    try {
-      // Check if BroadcastChannel is supported
-      if (typeof BroadcastChannel === 'undefined') {
-        console.warn('BroadcastChannel is not supported in this environment');
-        return;
-      }
-
-      this.channel = new BroadcastChannel(this.config.channelName);
-      this.setupMessageListener();
-      
-      console.log(`WindowRefreshManager initialized for ${this.isAdminMode ? 'admin' : 'viewer'} mode`);
-    } catch (error) {
-      console.error('Failed to initialize BroadcastChannel:', error);
-    }
-  }
-
-  /**
-   * Set up message listener for BroadcastChannel
-   * @returns {void}
-   */
-  private setupMessageListener(): void {
-    if (!this.channel) return;
-
-    this.channel.addEventListener('message', (event: MessageEvent<RefreshMessage>) => {
-      const { type, timestamp, source } = event.data;
-
-      // Validate message structure
-      if (type !== 'config-saved' || !timestamp || !source) {
-        console.warn('Invalid refresh message received:', event.data);
-        return;
-      }
-
-      // Ignore messages from the same window type to prevent loops
-      const currentSource = this.isAdminMode ? 'admin' : 'viewer';
-      if (source === currentSource) {
-        return;
-      }
-
-      console.log(`Received config-saved message from ${source} window, refreshing...`);
-      this.performRefresh();
-    });
-  }
-
-  /**
-   * Send a configuration saved message to other windows
-   * @returns {void}
-   */
-  public notifyConfigurationSaved(): void {
-    if (!this.channel) {
-      console.warn('BroadcastChannel not available, cannot notify other windows');
-      return;
+    /**
+     * @constructor
+     * @param config - Optional configuration overrides
+     */
+    constructor(config: Partial<RefreshConfig> = {}) {
+        this.config = { ...DEFAULT_CONFIG, ...config };
+        this.isAdminMode = window.location.hash === "#admin";
+        this.initializeBroadcastChannel();
     }
 
-    const message: RefreshMessage = {
-      type: 'config-saved',
-      timestamp: Date.now(),
-      source: this.isAdminMode ? 'admin' : 'viewer',
-    };
+    /**
+     * Initialize the BroadcastChannel for inter-window communication
+     * @returns {void}
+     */
+    private initializeBroadcastChannel(): void {
+        try {
+            // Check if BroadcastChannel is supported
+            if (typeof BroadcastChannel === "undefined") {
+                console.warn(
+                    "BroadcastChannel is not supported in this environment"
+                );
+                return;
+            }
 
-    try {
-      this.channel.postMessage(message);
-      console.log('Configuration saved notification sent to other windows');
-      
-      // Also refresh the current window after a short delay
-      setTimeout(() => {
-        this.performRefresh();
-      }, this.config.refreshDelay);
-    } catch (error) {
-      console.error('Failed to send configuration saved notification:', error);
+            this.channel = new BroadcastChannel(this.config.channelName);
+            this.setupMessageListener();
+
+            console.log(
+                `WindowRefreshManager initialized for ${
+                    this.isAdminMode ? "admin" : "viewer"
+                } mode`
+            );
+        } catch (error) {
+            console.error("Failed to initialize BroadcastChannel:", error);
+        }
     }
-  }
 
-  /**
-   * Perform the actual window refresh
-   * @returns {void}
-   */
-  private performRefresh(): void {
-    try {
-      // Add a small delay to ensure any pending operations complete
-      setTimeout(() => {
-        console.log('Refreshing window to apply configuration changes...');
-        window.location.reload();
-      }, this.config.refreshDelay);
-    } catch (error) {
-      console.error('Failed to refresh window:', error);
+    /**
+     * Set up message listener for BroadcastChannel
+     * @returns {void}
+     */
+    private setupMessageListener(): void {
+        if (!this.channel) return;
+
+        this.channel.addEventListener(
+            "message",
+            (event: MessageEvent<RefreshMessage>) => {
+                const { type, timestamp, source } = event.data;
+
+                // Validate message structure
+                if (!type || !timestamp || !source) {
+                    console.warn(
+                        "Invalid refresh message received:",
+                        event.data
+                    );
+                    return;
+                }
+
+                // Ignore messages from the same window type to prevent loops
+                const currentSource = this.isAdminMode ? "admin" : "viewer";
+                if (source === currentSource) {
+                    return;
+                }
+
+                // Handle different message types
+                if (type === "config-saved") {
+                    console.log(
+                        `Received config-saved message from ${source} window, refreshing...`
+                    );
+                    this.performRefresh();
+                } else if (type === "challenge-state-changed") {
+                    console.log(
+                        `Received challenge-state-changed message from ${source} window, triggering DOM update...`
+                    );
+                    this.triggerChallengeListRefresh();
+                }
+            }
+        );
     }
-  }
 
-  /**
-   * Check if the refresh system is available and functional
-   * @returns {boolean} True if BroadcastChannel is supported and initialized
-   */
-  public isAvailable(): boolean {
-    return this.channel !== null;
-  }
+    /**
+     * Send a configuration saved message to other windows
+     * @returns {void}
+     */
+    public notifyConfigurationSaved(): void {
+        if (!this.channel) {
+            console.warn(
+                "BroadcastChannel not available, cannot notify other windows"
+            );
+            return;
+        }
 
-  /**
-   * Get the current configuration
-   * @returns {RefreshConfig} Current configuration
-   */
-  public getConfig(): RefreshConfig {
-    return { ...this.config };
-  }
+        const message: RefreshMessage = {
+            type: "config-saved",
+            timestamp: Date.now(),
+            source: this.isAdminMode ? "admin" : "viewer",
+        };
 
-  /**
-   * Update the refresh delay
-   * @param delay - New delay in milliseconds
-   * @returns {void}
-   */
-  public setRefreshDelay(delay: number): void {
-    if (delay < 0) {
-      throw new Error('Refresh delay must be non-negative');
+        try {
+            this.channel.postMessage(message);
+            console.log(
+                "Configuration saved notification sent to other windows"
+            );
+
+            // Also refresh the current window after a short delay
+            setTimeout(() => {
+                this.performRefresh();
+            }, this.config.refreshDelay);
+        } catch (error) {
+            console.error(
+                "Failed to send configuration saved notification:",
+                error
+            );
+        }
     }
-    this.config.refreshDelay = delay;
-  }
 
-  /**
-   * Clean up resources when the manager is no longer needed
-   * @returns {void}
-   */
-  public destroy(): void {
-    if (this.channel) {
-      try {
-        this.channel.close();
-        this.channel = null;
-        console.log('WindowRefreshManager destroyed');
-      } catch (error) {
-        console.error('Error destroying WindowRefreshManager:', error);
-      }
+    /**
+     * Send a challenge state changed message to other windows
+     * @returns {void}
+     */
+    public notifyChallengeStateChanged(): void {
+        if (!this.channel) {
+            console.warn(
+                "BroadcastChannel not available, cannot notify other windows"
+            );
+            return;
+        }
+
+        const message: RefreshMessage = {
+            type: "challenge-state-changed",
+            timestamp: Date.now(),
+            source: this.isAdminMode ? "admin" : "viewer",
+        };
+
+        try {
+            this.channel.postMessage(message);
+            console.log(
+                "Challenge state changed notification sent to other windows"
+            );
+        } catch (error) {
+            console.error(
+                "Failed to send challenge state changed notification:",
+                error
+            );
+        }
     }
-  }
+
+    /**
+     * Perform the actual window refresh
+     * @returns {void}
+     */
+    private performRefresh(): void {
+        try {
+            // Add a small delay to ensure any pending operations complete
+            setTimeout(() => {
+                console.log(
+                    "Refreshing window to apply configuration changes..."
+                );
+                window.location.reload();
+            }, this.config.refreshDelay);
+        } catch (error) {
+            console.error("Failed to refresh window:", error);
+        }
+    }
+
+    /**
+     * Trigger a challenge list refresh by dispatching a custom event
+     * This allows the App to handle the refresh without a full page reload
+     * @returns {void}
+     */
+    private triggerChallengeListRefresh(): void {
+        try {
+            const event = new CustomEvent("challenge-list-refresh", {
+                detail: { timestamp: Date.now() },
+            });
+            window.dispatchEvent(event);
+            console.log("Challenge list refresh event dispatched");
+        } catch (error) {
+            console.error("Failed to trigger challenge list refresh:", error);
+        }
+    }
+
+    /**
+     * Check if the refresh system is available and functional
+     * @returns {boolean} True if BroadcastChannel is supported and initialized
+     */
+    public isAvailable(): boolean {
+        return this.channel !== null;
+    }
+
+    /**
+     * Get the current configuration
+     * @returns {RefreshConfig} Current configuration
+     */
+    public getConfig(): RefreshConfig {
+        return { ...this.config };
+    }
+
+    /**
+     * Update the refresh delay
+     * @param delay - New delay in milliseconds
+     * @returns {void}
+     */
+    public setRefreshDelay(delay: number): void {
+        if (delay < 0) {
+            throw new Error("Refresh delay must be non-negative");
+        }
+        this.config.refreshDelay = delay;
+    }
+
+    /**
+     * Clean up resources when the manager is no longer needed
+     * @returns {void}
+     */
+    public destroy(): void {
+        if (this.channel) {
+            try {
+                this.channel.close();
+                this.channel = null;
+                console.log("WindowRefreshManager destroyed");
+            } catch (error) {
+                console.error("Error destroying WindowRefreshManager:", error);
+            }
+        }
+    }
 }
 
 /**
@@ -197,11 +276,13 @@ export class WindowRefreshManager {
  */
 let refreshManagerInstance: WindowRefreshManager | null = null;
 
-export function getWindowRefreshManager(config?: Partial<RefreshConfig>): WindowRefreshManager {
-  if (!refreshManagerInstance) {
-    refreshManagerInstance = new WindowRefreshManager(config);
-  }
-  return refreshManagerInstance;
+export function getWindowRefreshManager(
+    config?: Partial<RefreshConfig>
+): WindowRefreshManager {
+    if (!refreshManagerInstance) {
+        refreshManagerInstance = new WindowRefreshManager(config);
+    }
+    return refreshManagerInstance;
 }
 
 /**
@@ -209,8 +290,17 @@ export function getWindowRefreshManager(config?: Partial<RefreshConfig>): Window
  * @returns {void}
  */
 export function notifyConfigurationSaved(): void {
-  const manager = getWindowRefreshManager();
-  manager.notifyConfigurationSaved();
+    const manager = getWindowRefreshManager();
+    manager.notifyConfigurationSaved();
+}
+
+/**
+ * Convenience function to notify that challenge state has changed
+ * @returns {void}
+ */
+export function notifyChallengeStateChanged(): void {
+    const manager = getWindowRefreshManager();
+    manager.notifyChallengeStateChanged();
 }
 
 /**
@@ -218,6 +308,6 @@ export function notifyConfigurationSaved(): void {
  * @returns {boolean} True if the system is available
  */
 export function isRefreshSystemAvailable(): boolean {
-  const manager = getWindowRefreshManager();
-  return manager.isAvailable();
+    const manager = getWindowRefreshManager();
+    return manager.isAvailable();
 }

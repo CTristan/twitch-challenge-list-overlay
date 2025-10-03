@@ -92,6 +92,21 @@ export default class ChallengeList {
     }
 
     /**
+     * Reload the challenge list from local storage
+     * This is used to synchronize state when changes are made in another window
+     * @returns {void}
+     */
+    loadFromLocalStorage(): void {
+        // Reset counters and map
+        this.#challengesCompleted = 0;
+        this.#totalChallenges = 0;
+        this.#challengeMap.clear();
+
+        // Reload challenges from localStorage
+        this.challenges = this.#loadChallengeListFromLocalStorage();
+    }
+
+    /**
      * Commit challenge list changes to local storage
      */
     #commitToLocalStorage(): void {

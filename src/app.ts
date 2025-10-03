@@ -36,6 +36,7 @@ import DOMHelper from "./utils/DOMHelper";
 import TimerController from "./utils/TimerController";
 import TimerDisplayUtils from "./utils/TimerDisplayUtils";
 import UIUpdateHandler from "./utils/UIUpdateHandler";
+import { notifyChallengeStateChanged } from "./utils/windowRefresh";
 
 // Commands and responses are loaded from ConfigManager
 
@@ -72,6 +73,9 @@ export default class App {
         );
         this.#timerController = new TimerController(this.challengeList);
         loadStyles(this.#configManager.getAll());
+
+        // Setup listener for challenge list refresh events from other windows
+        this.setupChallengeListRefreshListener();
     }
 
     /**
@@ -81,6 +85,36 @@ export default class App {
     getConfigManager(): ConfigManager {
         return this.#configManager;
     }
+
+    /**
+     * Setup listener for challenge list refresh events from other windows
+     * This enables real-time synchronization when challenges are updated in admin mode
+     * @returns {void}
+     */
+    private setupChallengeListRefreshListener(): void {
+        window.addEventListener(
+            EVENT_NAMES.CHALLENGE_LIST_REFRESH,
+            this.handleChallengeListRefresh
+        );
+    }
+
+    /**
+     * Handle challenge list refresh event from other windows
+     * Reloads the challenge list from localStorage and re-renders the DOM
+     * @returns {void}
+     */
+    private handleChallengeListRefresh = (): void => {
+        // Reload the challenge list from localStorage
+        this.challengeList.loadFromLocalStorage();
+
+        // Re-render the challenge list to reflect the changes
+        this.renderChallengeList();
+
+        // Re-enable admin checkbox interaction if in admin mode
+        if (window.location.hash === URL_HASH.ADMIN) {
+            this.enableAdminCheckboxInteraction();
+        }
+    };
 
     /**
      * Initial render the components to the DOM. Should only be called once.
@@ -496,6 +530,9 @@ export default class App {
 
         // Re-render the challenge list to reflect the changes
         this.renderChallengeList();
+
+        // Notify viewer overlay about the state change
+        notifyChallengeStateChanged();
     };
 
     /**
@@ -685,6 +722,9 @@ export default class App {
             } else {
                 this.revertChallengeFromDOM(challengeId);
             }
+
+            // Notify other windows (viewer overlay) about the state change
+            notifyChallengeStateChanged();
         } catch (error) {
             console.error(
                 ERROR_MESSAGES.ERROR_TOGGLING_CHALLENGE_COMPLETION,
@@ -913,6 +953,9 @@ export default class App {
 
         // Update DOM
         this.addChallengeToDOM(challenge);
+
+        // Notify other windows (viewer overlay) about the state change
+        notifyChallengeStateChanged();
     }
 }
 
