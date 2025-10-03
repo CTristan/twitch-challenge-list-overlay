@@ -834,28 +834,56 @@ export default class AdminPanel {
                     handler: changeHandler,
                 });
 
-                // Add auto-save for color pickers
-                const bgColorHandler = () => this.autoSaveColorConfiguration();
+                // Add event listeners for color pickers
+                // Use 'input' for live preview (no save) and 'change' for final save
+                const bgColorInputHandler = () => {
+                    // Live preview only - no save
+                };
+                const bgColorChangeHandler = () =>
+                    this.autoSaveColorConfiguration();
+
                 bgColorInput.addEventListener(
                     EVENT_NAMES.INPUT,
-                    bgColorHandler
+                    bgColorInputHandler
+                );
+                bgColorInput.addEventListener(
+                    EVENT_NAMES.CHANGE,
+                    bgColorChangeHandler
                 );
                 this.#eventListeners.set(tierConstants.bgColor, {
                     element: bgColorInput,
                     event: EVENT_NAMES.INPUT,
-                    handler: bgColorHandler,
+                    handler: bgColorInputHandler,
+                });
+                this.#eventListeners.set(`${tierConstants.bgColor}-change`, {
+                    element: bgColorInput,
+                    event: EVENT_NAMES.CHANGE,
+                    handler: bgColorChangeHandler,
                 });
 
-                const textColorHandler = () =>
+                const textColorInputHandler = () => {
+                    // Live preview only - no save
+                };
+                const textColorChangeHandler = () =>
                     this.autoSaveColorConfiguration();
+
                 textColorInput.addEventListener(
                     EVENT_NAMES.INPUT,
-                    textColorHandler
+                    textColorInputHandler
+                );
+                textColorInput.addEventListener(
+                    EVENT_NAMES.CHANGE,
+                    textColorChangeHandler
                 );
                 this.#eventListeners.set(tierConstants.textColor, {
                     element: textColorInput,
                     event: EVENT_NAMES.INPUT,
-                    handler: textColorHandler,
+                    handler: textColorInputHandler,
+                });
+                this.#eventListeners.set(`${tierConstants.textColor}-change`, {
+                    element: textColorInput,
+                    event: EVENT_NAMES.CHANGE,
+                    handler: textColorChangeHandler,
                 });
             }
         });
@@ -874,16 +902,37 @@ export default class AdminPanel {
         );
 
         if (opacitySlider && opacityDisplay) {
-            const opacityHandler = () => {
+            // Use 'input' for live preview (update display only, no save)
+            const opacityInputHandler = () => {
                 opacityDisplay.textContent = `${opacitySlider.value}%`;
+            };
+            // Use 'change' for final save when user releases slider
+            const opacityChangeHandler = () => {
                 this.autoSaveColorConfiguration();
             };
-            opacitySlider.addEventListener(EVENT_NAMES.INPUT, opacityHandler);
+
+            opacitySlider.addEventListener(
+                EVENT_NAMES.INPUT,
+                opacityInputHandler
+            );
+            opacitySlider.addEventListener(
+                EVENT_NAMES.CHANGE,
+                opacityChangeHandler
+            );
+
             this.#eventListeners.set(ELEMENT_IDS.ROW_COLORS_OPACITY, {
                 element: opacitySlider,
                 event: EVENT_NAMES.INPUT,
-                handler: opacityHandler,
+                handler: opacityInputHandler,
             });
+            this.#eventListeners.set(
+                `${ELEMENT_IDS.ROW_COLORS_OPACITY}-change`,
+                {
+                    element: opacitySlider,
+                    event: EVENT_NAMES.CHANGE,
+                    handler: opacityChangeHandler,
+                }
+            );
         }
     }
 
@@ -937,20 +986,38 @@ export default class AdminPanel {
             BACKGROUND_UI_ELEMENTS.OVERLAY_BACKGROUND_COLOR_INPUT
         ) as HTMLInputElement;
         if (overlayBackgroundColorInput) {
-            const overlayColorHandler = () => {
+            // Use 'input' for live preview (update preview only, no save)
+            const overlayColorInputHandler = () => {
                 this.updateBackgroundPreview();
+            };
+            // Use 'change' for final save when user closes color picker
+            const overlayColorChangeHandler = () => {
                 this.autoSaveBackgroundConfiguration();
             };
+
             overlayBackgroundColorInput.addEventListener(
                 EVENT_NAMES.INPUT,
-                overlayColorHandler
+                overlayColorInputHandler
             );
+            overlayBackgroundColorInput.addEventListener(
+                EVENT_NAMES.CHANGE,
+                overlayColorChangeHandler
+            );
+
             this.#eventListeners.set(
                 BACKGROUND_UI_ELEMENTS.OVERLAY_BACKGROUND_COLOR_INPUT,
                 {
                     element: overlayBackgroundColorInput,
                     event: EVENT_NAMES.INPUT,
-                    handler: overlayColorHandler,
+                    handler: overlayColorInputHandler,
+                }
+            );
+            this.#eventListeners.set(
+                `${BACKGROUND_UI_ELEMENTS.OVERLAY_BACKGROUND_COLOR_INPUT}-change`,
+                {
+                    element: overlayBackgroundColorInput,
+                    event: EVENT_NAMES.CHANGE,
+                    handler: overlayColorChangeHandler,
                 }
             );
         }
@@ -963,21 +1030,39 @@ export default class AdminPanel {
             BACKGROUND_UI_ELEMENTS.OVERLAY_OPACITY_DISPLAY
         );
         if (overlayOpacitySlider && overlayOpacityDisplay) {
-            const overlayOpacityHandler = () => {
+            // Use 'input' for live preview (update display and preview, no save)
+            const overlayOpacityInputHandler = () => {
                 overlayOpacityDisplay.textContent = `${overlayOpacitySlider.value}%`;
                 this.updateBackgroundPreview();
+            };
+            // Use 'change' for final save when user releases slider
+            const overlayOpacityChangeHandler = () => {
                 this.autoSaveBackgroundConfiguration();
             };
+
             overlayOpacitySlider.addEventListener(
                 EVENT_NAMES.INPUT,
-                overlayOpacityHandler
+                overlayOpacityInputHandler
             );
+            overlayOpacitySlider.addEventListener(
+                EVENT_NAMES.CHANGE,
+                overlayOpacityChangeHandler
+            );
+
             this.#eventListeners.set(
                 BACKGROUND_UI_ELEMENTS.OVERLAY_BACKGROUND_OPACITY_SLIDER,
                 {
                     element: overlayOpacitySlider,
                     event: EVENT_NAMES.INPUT,
-                    handler: overlayOpacityHandler,
+                    handler: overlayOpacityInputHandler,
+                }
+            );
+            this.#eventListeners.set(
+                `${BACKGROUND_UI_ELEMENTS.OVERLAY_BACKGROUND_OPACITY_SLIDER}-change`,
+                {
+                    element: overlayOpacitySlider,
+                    event: EVENT_NAMES.CHANGE,
+                    handler: overlayOpacityChangeHandler,
                 }
             );
         }
@@ -990,20 +1075,38 @@ export default class AdminPanel {
             BACKGROUND_UI_ELEMENTS.APP_BACKGROUND_OPACITY_DISPLAY
         );
         if (appBackgroundOpacitySlider && appBackgroundOpacityDisplay) {
-            const appBackgroundOpacityHandler = () => {
+            // Use 'input' for live preview (update display only, no save)
+            const appBackgroundOpacityInputHandler = () => {
                 appBackgroundOpacityDisplay.textContent = `${appBackgroundOpacitySlider.value}%`;
+            };
+            // Use 'change' for final save when user releases slider
+            const appBackgroundOpacityChangeHandler = () => {
                 this.autoSaveBackgroundConfiguration();
             };
+
             appBackgroundOpacitySlider.addEventListener(
                 EVENT_NAMES.INPUT,
-                appBackgroundOpacityHandler
+                appBackgroundOpacityInputHandler
             );
+            appBackgroundOpacitySlider.addEventListener(
+                EVENT_NAMES.CHANGE,
+                appBackgroundOpacityChangeHandler
+            );
+
             this.#eventListeners.set(
                 BACKGROUND_UI_ELEMENTS.APP_BACKGROUND_OPACITY_SLIDER,
                 {
                     element: appBackgroundOpacitySlider,
                     event: EVENT_NAMES.INPUT,
-                    handler: appBackgroundOpacityHandler,
+                    handler: appBackgroundOpacityInputHandler,
+                }
+            );
+            this.#eventListeners.set(
+                `${BACKGROUND_UI_ELEMENTS.APP_BACKGROUND_OPACITY_SLIDER}-change`,
+                {
+                    element: appBackgroundOpacitySlider,
+                    event: EVENT_NAMES.CHANGE,
+                    handler: appBackgroundOpacityChangeHandler,
                 }
             );
         }
@@ -1013,20 +1116,38 @@ export default class AdminPanel {
             BACKGROUND_UI_ELEMENTS.BACKGROUND_COLOR_INPUT
         ) as HTMLInputElement;
         if (backgroundColorInput) {
-            const colorHandler = () => {
+            // Use 'input' for live preview (update preview only, no save)
+            const colorInputHandler = () => {
                 this.updateBackgroundPreview();
+            };
+            // Use 'change' for final save when user closes color picker
+            const colorChangeHandler = () => {
                 this.autoSaveBackgroundConfiguration();
             };
+
             backgroundColorInput.addEventListener(
                 EVENT_NAMES.INPUT,
-                colorHandler
+                colorInputHandler
             );
+            backgroundColorInput.addEventListener(
+                EVENT_NAMES.CHANGE,
+                colorChangeHandler
+            );
+
             this.#eventListeners.set(
                 BACKGROUND_UI_ELEMENTS.BACKGROUND_COLOR_INPUT,
                 {
                     element: backgroundColorInput,
                     event: EVENT_NAMES.INPUT,
-                    handler: colorHandler,
+                    handler: colorInputHandler,
+                }
+            );
+            this.#eventListeners.set(
+                `${BACKGROUND_UI_ELEMENTS.BACKGROUND_COLOR_INPUT}-change`,
+                {
+                    element: backgroundColorInput,
+                    event: EVENT_NAMES.CHANGE,
+                    handler: colorChangeHandler,
                 }
             );
         }
@@ -1039,18 +1160,39 @@ export default class AdminPanel {
             BACKGROUND_UI_ELEMENTS.OPACITY_DISPLAY
         );
         if (opacitySlider && opacityDisplay) {
-            const opacityHandler = () => {
+            // Use 'input' for live preview (update display and preview, no save)
+            const opacityInputHandler = () => {
                 opacityDisplay.textContent = `${opacitySlider.value}%`;
                 this.updateBackgroundPreview();
+            };
+            // Use 'change' for final save when user releases slider
+            const opacityChangeHandler = () => {
                 this.autoSaveBackgroundConfiguration();
             };
-            opacitySlider.addEventListener(EVENT_NAMES.INPUT, opacityHandler);
+
+            opacitySlider.addEventListener(
+                EVENT_NAMES.INPUT,
+                opacityInputHandler
+            );
+            opacitySlider.addEventListener(
+                EVENT_NAMES.CHANGE,
+                opacityChangeHandler
+            );
+
             this.#eventListeners.set(
                 BACKGROUND_UI_ELEMENTS.BACKGROUND_OPACITY_SLIDER,
                 {
                     element: opacitySlider,
                     event: EVENT_NAMES.INPUT,
-                    handler: opacityHandler,
+                    handler: opacityInputHandler,
+                }
+            );
+            this.#eventListeners.set(
+                `${BACKGROUND_UI_ELEMENTS.BACKGROUND_OPACITY_SLIDER}-change`,
+                {
+                    element: opacitySlider,
+                    event: EVENT_NAMES.CHANGE,
+                    handler: opacityChangeHandler,
                 }
             );
         }
@@ -1084,19 +1226,37 @@ export default class AdminPanel {
 
         // Manual text color picker
         if (textColorInput) {
-            const textColorHandler = () => {
+            // Use 'input' for live preview (update preview only, no save)
+            const textColorInputHandler = () => {
                 this.updateBackgroundPreview();
+            };
+            // Use 'change' for final save when user closes color picker
+            const textColorChangeHandler = () => {
                 this.autoSaveBackgroundConfiguration();
             };
+
             textColorInput.addEventListener(
                 EVENT_NAMES.INPUT,
-                textColorHandler
+                textColorInputHandler
             );
+            textColorInput.addEventListener(
+                EVENT_NAMES.CHANGE,
+                textColorChangeHandler
+            );
+
             this.#eventListeners.set(BACKGROUND_UI_ELEMENTS.TEXT_COLOR_INPUT, {
                 element: textColorInput,
                 event: EVENT_NAMES.INPUT,
-                handler: textColorHandler,
+                handler: textColorInputHandler,
             });
+            this.#eventListeners.set(
+                `${BACKGROUND_UI_ELEMENTS.TEXT_COLOR_INPUT}-change`,
+                {
+                    element: textColorInput,
+                    event: EVENT_NAMES.CHANGE,
+                    handler: textColorChangeHandler,
+                }
+            );
         }
 
         // Text shadow checkbox
