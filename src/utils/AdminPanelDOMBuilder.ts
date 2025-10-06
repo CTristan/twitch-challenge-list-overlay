@@ -65,11 +65,12 @@ export class AdminPanelDOMBuilder {
     }
 
     /**
-     * Create color section HTML
-     * @returns HTML string for color section
+     * Create challenge row styling section HTML
+     * Combines tier-based colors and default challenge row background settings
+     * @returns HTML string for challenge row styling section
      */
-    static createColorSection(): string {
-        return AdminPanelTemplates.colorSection({
+    static createChallengeRowStylingSection(): string {
+        return AdminPanelTemplates.challengeRowStylingSection({
             primaryBackgroundColor: DEFAULT_COLORS.PRIMARY_BACKGROUND,
             primaryTextColor: DEFAULT_COLORS.PRIMARY_TEXT,
             secondaryBackgroundColor: DEFAULT_COLORS.SECONDARY_BACKGROUND,
@@ -77,19 +78,20 @@ export class AdminPanelDOMBuilder {
             tertiaryBackgroundColor: DEFAULT_COLORS.TERTIARY_BACKGROUND,
             tertiaryTextColor: DEFAULT_COLORS.TERTIARY_TEXT,
             rowColorsOpacityPercent: 100,
+            challengeBackgroundColor: DEFAULT_COLORS.CHALLENGE_BACKGROUND,
+            challengeTextColor: DEFAULT_COLORS.WHITE_TEXT,
             elementIds: ELEMENT_IDS,
         });
     }
 
     /**
-     * Create background section HTML
-     * @returns HTML string for background section
+     * Create overlay background section HTML
+     * Controls the main container background behind all challenges
+     * @returns HTML string for overlay background section
      */
-    static createBackgroundSection(): string {
-        return AdminPanelTemplates.backgroundSection({
+    static createOverlayBackgroundSection(): string {
+        return AdminPanelTemplates.overlayBackgroundSection({
             overlayBackgroundColor: DEFAULT_COLORS.CHALLENGE_BACKGROUND,
-            challengeBackgroundColor: DEFAULT_COLORS.CHALLENGE_BACKGROUND,
-            challengeTextColor: DEFAULT_COLORS.WHITE_TEXT,
             elementIds: ELEMENT_IDS,
         });
     }

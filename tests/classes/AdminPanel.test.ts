@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import AdminPanel from "../../src/classes/AdminPanel";
 import ConfigManager from "../../src/classes/ConfigManager";
+import { ELEMENT_IDS } from "../../src/types/DOMConstants";
 import { ERROR_MESSAGES } from "../../src/types/MessageConstants";
 
 // Mock setTimeout to control timing in tests
@@ -602,30 +603,20 @@ describe("AdminPanel", () => {
             // Set background configuration
             configManager.set("overlayBackgroundColor", "rgba(255, 0, 0, 0.5)");
             configManager.set("overlayBackgroundOpacity", 0.5);
-            configManager.set(
-                "challengeBackgroundColor",
-                "rgba(0, 255, 0, 0.8)"
-            );
-            configManager.set("challengeBackgroundOpacity", 0.8);
             configManager.set("challengeTextColor", "#ff00ff");
             configManager.set("challengeAutoTextColor", false);
             configManager.set("challengeTextShadow", true);
+            configManager.set("challengeRowColorsOpacity", 0.9); // 90%
 
             // Reinitialize to populate form
             adminPanel = new AdminPanel();
 
-            // Verify form was populated
+            // Verify overlay background form was populated
             const overlayColorInput = document.getElementById(
                 "overlay-background-color"
             ) as HTMLInputElement;
             const overlayOpacitySlider = document.getElementById(
                 "overlay-background-opacity"
-            ) as HTMLInputElement;
-            const backgroundColorInput = document.getElementById(
-                "challenge-background-color"
-            ) as HTMLInputElement;
-            const opacitySlider = document.getElementById(
-                "challenge-background-opacity"
             ) as HTMLInputElement;
             const textColorInput = document.getElementById(
                 "challenge-text-color"
@@ -636,19 +627,22 @@ describe("AdminPanel", () => {
             const textShadowCheckbox = document.getElementById(
                 "challenge-text-shadow"
             ) as HTMLInputElement;
+            const rowColorsOpacitySlider = document.getElementById(
+                "row-colors-opacity"
+            ) as HTMLInputElement;
 
             expect(overlayColorInput.value).toBe("#ff0000");
             expect(overlayOpacitySlider.value).toBe("50");
-            expect(backgroundColorInput.value).toBe("#00ff00");
-            expect(opacitySlider.value).toBe("80");
             expect(textColorInput.value).toBe("#ff00ff");
             expect(autoTextColorCheckbox.checked).toBe(false);
             expect(textShadowCheckbox.checked).toBe(true);
+            expect(rowColorsOpacitySlider.value).toBe("90");
         });
 
         it("should update background preview when color changes", () => {
+            // Use Primary Color tier background picker
             const backgroundColorInput = document.getElementById(
-                "challenge-background-color"
+                ELEMENT_IDS.PRIMARY_BG_COLOR
             ) as HTMLInputElement;
             const previewChallenge = document.querySelector(
                 ".preview-challenge"
@@ -658,8 +652,10 @@ describe("AdminPanel", () => {
             backgroundColorInput.value = "#ff0000";
             backgroundColorInput.dispatchEvent(new Event("input"));
 
-            // Verify preview was updated
-            expect(previewChallenge.style.backgroundColor).toContain("rgba");
+            // Verify preview was updated (now uses hex color directly, not rgba)
+            expect(previewChallenge.style.backgroundColor).toBe(
+                "rgb(255, 0, 0)"
+            );
         });
 
         it("should update opacity display when slider changes", () => {
@@ -1101,7 +1097,8 @@ describe("AdminPanel", () => {
         it("should handle empty colors array", () => {
             const result = (adminPanel as any).convertColorsToUI([], []);
 
-            expect(result.primary.enabled).toBe(false);
+            // Primary is always enabled
+            expect(result.primary.enabled).toBe(true);
             expect(result.secondary.enabled).toBe(false);
             expect(result.tertiary.enabled).toBe(false);
         });
@@ -1224,15 +1221,6 @@ describe("AdminPanel", () => {
             expect(typeof result.challengeBackgroundOpacity).toBe("number");
             expect(typeof result.challengeAutoTextColor).toBe("boolean");
             expect(typeof result.challengeTextShadow).toBe("boolean");
-        });
-
-        it("should convert hex color to RGBA", () => {
-            const result = (adminPanel as any).convertColorToRGBA(
-                "#ff0000",
-                0.5
-            );
-
-            expect(result).toBe("rgba(255, 0, 0, 0.5)");
         });
 
         it("should store overlay background color as hex, not RGBA", () => {
@@ -1824,24 +1812,24 @@ describe("AdminPanel", () => {
             expect(container.innerHTML).toContain("Behavior");
         });
 
-        it("should create color section", () => {
+        it("should create challenge row styling section", () => {
             const container = document.createElement("div");
 
-            // Call createColorSection
-            (adminPanel as any).createColorSection(container);
+            // Call createChallengeRowStylingSection
+            (adminPanel as any).createChallengeRowStylingSection(container);
 
             // Verify section was created
-            expect(container.innerHTML).toContain("Color");
+            expect(container.innerHTML).toContain("Challenge Row Styling");
         });
 
-        it("should create background section", () => {
+        it("should create overlay background section", () => {
             const container = document.createElement("div");
 
-            // Call createBackgroundSection
-            (adminPanel as any).createBackgroundSection(container);
+            // Call createOverlayBackgroundSection
+            (adminPanel as any).createOverlayBackgroundSection(container);
 
             // Verify section was created
-            expect(container.innerHTML).toContain("Background");
+            expect(container.innerHTML).toContain("Overlay Background");
         });
 
         it("should create actions section", () => {

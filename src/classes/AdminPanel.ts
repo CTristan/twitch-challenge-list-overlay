@@ -262,12 +262,12 @@ export default class AdminPanel {
         title.textContent = ADMIN_PANEL_LABELS.CONFIGURATION_SETTINGS;
         formContainer.appendChild(title);
 
-        // Create collapsible sections
-        this.createColorSection(formContainer);
-        this.createBackgroundSection(formContainer);
-        this.createAuthenticationSection(formContainer);
+        // Create collapsible sections in desired order
         this.createBehaviorSection(formContainer);
+        this.createChallengeRowStylingSection(formContainer);
+        this.createOverlayBackgroundSection(formContainer);
         this.createActionsSection(formContainer);
+        this.createAuthenticationSection(formContainer);
         this.createDangerZoneSection(formContainer);
 
         adminContent.appendChild(formContainer);
@@ -329,43 +329,49 @@ export default class AdminPanel {
     }
 
     /**
-     * Create the Color Configuration section
+     * Create the Challenge Row Styling section
+     * Combines tier-based color configuration with default challenge row background settings
      * @param container - The parent container element
      */
-    private createColorSection(container: HTMLElement): void {
-        const colorContent = AdminPanelDOMBuilder.createColorSection();
+    private createChallengeRowStylingSection(container: HTMLElement): void {
+        const challengeRowStylingContent =
+            AdminPanelDOMBuilder.createChallengeRowStylingSection();
 
-        const colorSection = new CollapsibleSection({
-            id: ELEMENT_IDS.COLORS_SECTION,
-            title: ADMIN_PANEL_LABELS.COLOR_CONFIGURATION,
-            content: colorContent,
-            defaultExpanded: false, // Colors should be collapsed by default
-        });
-
-        this.#collapsibleSections.set(ELEMENT_IDS.COLORS_SECTION, colorSection);
-        container.appendChild(colorSection.createElement());
-    }
-
-    /**
-     * Create the Background Customization section
-     * @param container - The parent container element
-     */
-    private createBackgroundSection(container: HTMLElement): void {
-        const backgroundContent =
-            AdminPanelDOMBuilder.createBackgroundSection();
-
-        const backgroundSection = new CollapsibleSection({
-            id: ELEMENT_IDS.BACKGROUND_SECTION,
-            title: ADMIN_PANEL_LABELS.BACKGROUND_CUSTOMIZATION,
-            content: backgroundContent,
-            defaultExpanded: false,
+        const challengeRowStylingSection = new CollapsibleSection({
+            id: ELEMENT_IDS.CHALLENGE_ROW_STYLING_SECTION,
+            title: ADMIN_PANEL_LABELS.CHALLENGE_ROW_STYLING,
+            content: challengeRowStylingContent,
+            defaultExpanded: false, // Challenge row styling should be collapsed by default
         });
 
         this.#collapsibleSections.set(
-            ELEMENT_IDS.BACKGROUND_SECTION,
-            backgroundSection
+            ELEMENT_IDS.CHALLENGE_ROW_STYLING_SECTION,
+            challengeRowStylingSection
         );
-        container.appendChild(backgroundSection.createElement());
+        container.appendChild(challengeRowStylingSection.createElement());
+    }
+
+    /**
+     * Create the Overlay Background section
+     * Controls the main container background behind all challenges
+     * @param container - The parent container element
+     */
+    private createOverlayBackgroundSection(container: HTMLElement): void {
+        const overlayBackgroundContent =
+            AdminPanelDOMBuilder.createOverlayBackgroundSection();
+
+        const overlayBackgroundSection = new CollapsibleSection({
+            id: ELEMENT_IDS.OVERLAY_BACKGROUND_SECTION,
+            title: ADMIN_PANEL_LABELS.OVERLAY_BACKGROUND,
+            content: overlayBackgroundContent,
+            defaultExpanded: false, // Overlay background should be collapsed by default
+        });
+
+        this.#collapsibleSections.set(
+            ELEMENT_IDS.OVERLAY_BACKGROUND_SECTION,
+            overlayBackgroundSection
+        );
+        container.appendChild(overlayBackgroundSection.createElement());
     }
 
     /**
@@ -678,7 +684,8 @@ export default class AdminPanel {
     private setupColorTierEventListeners(): void {
         AdminPanelEventSetup.setupColorTierEventListeners(
             (tier, enabled) => this.updateColorTierState(tier, enabled),
-            () => this.autoSaveColorConfiguration()
+            () => this.autoSaveColorConfiguration(),
+            () => this.updateBackgroundPreview()
         );
     }
 
@@ -733,12 +740,9 @@ export default class AdminPanel {
 
         if (!previewChallenge || !previewText) return;
 
-        // Get current values
+        // Get current values from Primary Color tier pickers
         const backgroundColorInput = document.getElementById(
-            "challenge-background-color"
-        ) as HTMLInputElement;
-        const opacitySlider = document.getElementById(
-            "challenge-background-opacity"
+            ELEMENT_IDS.PRIMARY_BG_COLOR
         ) as HTMLInputElement;
         const autoTextColorCheckbox = document.getElementById(
             "challenge-auto-text-color"
@@ -750,16 +754,11 @@ export default class AdminPanel {
             "challenge-text-shadow"
         ) as HTMLInputElement;
 
-        if (!backgroundColorInput || !opacitySlider) return;
+        if (!backgroundColorInput) return;
 
-        // Apply background color and opacity
+        // Apply background color (no opacity - that's handled by tier colors opacity slider)
         const backgroundColor = backgroundColorInput.value;
-        const opacity = parseInt(opacitySlider.value) / 100;
-        const rgbaBackground = this.convertColorToRGBA(
-            backgroundColor,
-            opacity
-        );
-        previewChallenge.style.backgroundColor = rgbaBackground;
+        previewChallenge.style.backgroundColor = backgroundColor;
 
         // Apply text color
         let textColor: string = DEFAULT_COLORS.WHITE_TEXT;
@@ -778,21 +777,6 @@ export default class AdminPanel {
         } else {
             previewText.style.textShadow = "none";
         }
-    }
-
-    /**
-     * Convert a hex color and opacity to RGBA string
-     * @param hexColor - Hex color string
-     * @param opacity - Opacity value (0-1)
-     * @returns RGBA color string
-     */
-    private convertColorToRGBA(hexColor: string, opacity: number): string {
-        // Simple hex to RGB conversion
-        const hex = hexColor.replace("#", "");
-        const r = parseInt(hex.substring(0, 2), 16);
-        const g = parseInt(hex.substring(2, 4), 16);
-        const b = parseInt(hex.substring(4, 6), 16);
-        return `rgba(${r}, ${g}, ${b}, ${opacity})`;
     }
 
     /**

@@ -35,6 +35,7 @@ export interface ColorConfigurationUI {
 export class AdminPanelColorManager {
     /**
      * Convert arrays of background and text colors to UI format
+     * Note: Primary tier is always enabled
      * @param backgroundColors - Array of background colors
      * @param textColors - Array of text colors
      * @returns Color configuration in UI format
@@ -45,7 +46,7 @@ export class AdminPanelColorManager {
     ): ColorConfigurationUI {
         return {
             primary: {
-                enabled: backgroundColors.length > 0,
+                enabled: true, // Primary is always enabled
                 backgroundColor:
                     backgroundColors[0] || DEFAULT_COLORS.PRIMARY_BACKGROUND,
                 textColor: textColors[0] || DEFAULT_COLORS.PRIMARY_TEXT,
@@ -109,12 +110,13 @@ export class AdminPanelColorManager {
 
     /**
      * Get current color configuration from UI elements
+     * Note: Primary tier is always enabled
      * @returns Color configuration in UI format
      */
     static getCurrentColorConfigFromUI(): ColorConfigurationUI {
         const config: ColorConfigurationUI = {
             primary: {
-                enabled: false,
+                enabled: true, // Primary is always enabled
                 backgroundColor: DEFAULT_COLORS.PRIMARY_BACKGROUND,
                 textColor: DEFAULT_COLORS.PRIMARY_TEXT,
             },
@@ -130,10 +132,7 @@ export class AdminPanelColorManager {
             },
         };
 
-        // Get primary tier values
-        const primaryEnabled = document.getElementById(
-            ELEMENT_IDS.PRIMARY_COLOR_ENABLED
-        ) as HTMLInputElement;
+        // Get primary tier values (no checkbox - always enabled)
         const primaryBgColor = document.getElementById(
             ELEMENT_IDS.PRIMARY_BG_COLOR
         ) as HTMLInputElement;
@@ -141,8 +140,7 @@ export class AdminPanelColorManager {
             ELEMENT_IDS.PRIMARY_TEXT_COLOR
         ) as HTMLInputElement;
 
-        if (primaryEnabled && primaryBgColor && primaryTextColor) {
-            config.primary.enabled = primaryEnabled.checked;
+        if (primaryBgColor && primaryTextColor) {
             config.primary.backgroundColor = primaryBgColor.value;
             config.primary.textColor = primaryTextColor.value;
         }

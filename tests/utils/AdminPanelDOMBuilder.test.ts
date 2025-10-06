@@ -61,35 +61,78 @@ describe("AdminPanelDOMBuilder", () => {
         });
     });
 
-    describe("createColorSection", () => {
-        it("should create color section HTML", () => {
-            const html = AdminPanelDOMBuilder.createColorSection();
+    describe("createChallengeRowStylingSection", () => {
+        it("should create challenge row styling section HTML", () => {
+            const html =
+                AdminPanelDOMBuilder.createChallengeRowStylingSection();
 
             expect(html).toBeTruthy();
             expect(typeof html).toBe("string");
         });
 
-        it("should include color configuration elements", () => {
-            const html = AdminPanelDOMBuilder.createColorSection();
+        it("should include tier-based color configuration elements", () => {
+            const html =
+                AdminPanelDOMBuilder.createChallengeRowStylingSection();
 
-            // Should contain color-related content
-            expect(html.length).toBeGreaterThan(0);
+            // Should contain tier-based color configuration
+            expect(html).toContain("Primary Color");
+            expect(html).toContain("Secondary Color");
+            expect(html).toContain("Tertiary Color");
+        });
+
+        it("should include primary color as default (always enabled)", () => {
+            const html =
+                AdminPanelDOMBuilder.createChallengeRowStylingSection();
+
+            // Primary color should be labeled as default and always enabled
+            expect(html).toContain("Primary Color (Default)");
+            expect(html).toContain("primary-bg-color");
+            expect(html).toContain("primary-text-color");
+            // Primary should have expanded class (always visible)
+            expect(html).toContain('class="color-pickers-container expanded"');
+        });
+
+        it("should include text readability configuration", () => {
+            const html =
+                AdminPanelDOMBuilder.createChallengeRowStylingSection();
+
+            // Should contain text readability options
+            expect(html).toContain("Text Readability");
+            expect(html).toContain("challenge-auto-text-color");
+            expect(html).toContain("challenge-text-shadow");
+        });
+
+        it("should include preview section", () => {
+            const html =
+                AdminPanelDOMBuilder.createChallengeRowStylingSection();
+
+            // Should contain preview
+            expect(html).toContain("background-preview");
+            expect(html).toContain("Sample Challenge");
         });
     });
 
-    describe("createBackgroundSection", () => {
-        it("should create background section HTML", () => {
-            const html = AdminPanelDOMBuilder.createBackgroundSection();
+    describe("createOverlayBackgroundSection", () => {
+        it("should create overlay background section HTML", () => {
+            const html = AdminPanelDOMBuilder.createOverlayBackgroundSection();
 
             expect(html).toBeTruthy();
             expect(typeof html).toBe("string");
         });
 
-        it("should include background configuration elements", () => {
-            const html = AdminPanelDOMBuilder.createBackgroundSection();
+        it("should include overlay background configuration elements", () => {
+            const html = AdminPanelDOMBuilder.createOverlayBackgroundSection();
 
-            // Should contain background-related content
-            expect(html.length).toBeGreaterThan(0);
+            // Should contain overlay background configuration
+            expect(html).toContain("overlay-background-color");
+            expect(html).toContain("overlay-background-opacity");
+        });
+
+        it("should include description about main container", () => {
+            const html = AdminPanelDOMBuilder.createOverlayBackgroundSection();
+
+            // Should describe what it controls
+            expect(html).toContain("main container");
         });
     });
 
@@ -148,4 +191,3 @@ describe("AdminPanelDOMBuilder", () => {
         });
     });
 });
-

@@ -1,19 +1,18 @@
 import { ELEMENT_IDS } from "../types/DOMConstants";
 
 /**
- * Template parameters interface for background section
+ * Template parameters interface for overlay background section
  */
-export interface BackgroundSectionParams {
+export interface OverlayBackgroundSectionParams {
     overlayBackgroundColor: string;
-    challengeBackgroundColor: string;
-    challengeTextColor: string;
     elementIds: typeof ELEMENT_IDS;
 }
 
 /**
- * Template parameters interface for color section
+ * Template parameters interface for challenge row styling section
+ * Combines tier-based colors and default challenge row background settings
  */
-export interface ColorSectionParams {
+export interface ChallengeRowStylingSectionParams {
     primaryBackgroundColor: string;
     primaryTextColor: string;
     secondaryBackgroundColor: string;
@@ -21,6 +20,8 @@ export interface ColorSectionParams {
     tertiaryBackgroundColor: string;
     tertiaryTextColor: string;
     rowColorsOpacityPercent: number;
+    challengeBackgroundColor: string;
+    challengeTextColor: string;
     elementIds: typeof ELEMENT_IDS;
 }
 
@@ -34,21 +35,27 @@ export interface ColorSectionParams {
  */
 export const AdminPanelTemplates = {
     /**
-     * Color configuration section template
+     * Challenge row styling section template
+     * Combines tier-based color configuration with default challenge row background settings
      * @param params - Template parameters for dynamic content
-     * @returns HTML string for the color section
+     * @returns HTML string for the challenge row styling section
      */
-    colorSection: (params: ColorSectionParams): string => `
+    challengeRowStylingSection: (
+        params: ChallengeRowStylingSectionParams
+    ): string => `
           <div class="form-group">
-            <label>Challenge Row Colors:</label>
+            <p class="form-description">Configure styling for individual challenge containers using tier-based colors.</p>
 
-            <!-- Primary Color Configuration -->
+            <!-- Tier-Based Color Configuration -->
+            <h5 class="subsection-title">Tier-Based Colors</h5>
+            <p class="help-text">Primary color is always active and serves as the default. Secondary and Tertiary colors are optional overrides.</p>
+
+            <!-- Primary Color Configuration (Always Enabled) -->
             <div class="color-tier-section" id="primary-color-section">
               <div class="color-tier-header">
-                <input type="checkbox" id="primary-color-enabled" class="color-tier-checkbox">
-                <h5 class="color-tier-title">Primary Color</h5>
+                <h5 class="color-tier-title">Primary Color (Default)</h5>
               </div>
-              <div class="color-pickers-container" id="primary-color-pickers">
+              <div class="color-pickers-container expanded" id="primary-color-pickers">
                 <div class="color-picker-group">
                   <label class="color-picker-label">Row Background</label>
                   <input type="color" id="primary-bg-color" class="form-input" value="${params.primaryBackgroundColor}">
@@ -60,11 +67,11 @@ export const AdminPanelTemplates = {
               </div>
             </div>
 
-            <!-- Secondary Color Configuration -->
+            <!-- Secondary Color Configuration (Optional) -->
             <div class="color-tier-section" id="secondary-color-section">
               <div class="color-tier-header">
                 <input type="checkbox" id="secondary-color-enabled" class="color-tier-checkbox">
-                <h5 class="color-tier-title">Secondary Color</h5>
+                <h5 class="color-tier-title">Secondary Color (Optional)</h5>
               </div>
               <div class="color-pickers-container" id="secondary-color-pickers">
                 <div class="color-picker-group">
@@ -78,11 +85,11 @@ export const AdminPanelTemplates = {
               </div>
             </div>
 
-            <!-- Tertiary Color Configuration -->
+            <!-- Tertiary Color Configuration (Optional) -->
             <div class="color-tier-section" id="tertiary-color-section">
               <div class="color-tier-header">
                 <input type="checkbox" id="tertiary-color-enabled" class="color-tier-checkbox">
-                <h5 class="color-tier-title">Tertiary Color</h5>
+                <h5 class="color-tier-title">Tertiary Color (Optional)</h5>
               </div>
               <div class="color-pickers-container" id="tertiary-color-pickers">
                 <div class="color-picker-group">
@@ -96,10 +103,58 @@ export const AdminPanelTemplates = {
               </div>
             </div>
 
-            <!-- Row Colors Opacity Control -->
+            <!-- Text Readability Configuration -->
+            <div class="text-readability-section" style="margin-top: 1rem;">
+              <h5 class="subsection-title">Text Readability</h5>
+
+              <div class="form-row">
+                <div class="checkbox-group">
+                  <input type="checkbox" id="challenge-auto-text-color" class="form-checkbox" checked>
+                  <label for="challenge-auto-text-color" class="checkbox-label">
+                    Automatic text color adjustment
+                    <span class="help-text">Automatically choose white or black text for optimal readability</span>
+                  </label>
+                </div>
+              </div>
+
+              <div class="form-row">
+                <div class="form-column">
+                  <label class="form-label">Manual Text Color Override</label>
+                  <input type="color" id="challenge-text-color" class="form-input color-input" value="${params.challengeTextColor}" disabled>
+                  <span class="help-text">Used when automatic adjustment is disabled</span>
+                </div>
+              </div>
+
+              <div class="form-row">
+                <div class="checkbox-group">
+                  <input type="checkbox" id="challenge-text-shadow" class="form-checkbox" checked>
+                  <label for="challenge-text-shadow" class="checkbox-label">
+                    Enhanced text readability
+                    <span class="help-text">Add text shadows/outlines for better visibility on various backgrounds</span>
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            <!-- Preview Section -->
+            <div class="background-preview-section" style="margin-top: 1rem;">
+              <h5 class="subsection-title">Preview</h5>
+              <div id="background-preview" class="background-preview">
+                <div class="preview-challenge">
+                  <div class="preview-checkbox"></div>
+                  <div class="preview-text">
+                    <div class="preview-title">Sample Challenge</div>
+                    <div class="preview-description">This is how your challenges will look</div>
+                    <div class="preview-progress">Progress: 3/5</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Tier Colors Opacity Control -->
             <div class="form-row" style="margin-top: 1rem;">
               <div class="form-column">
-                <label class="form-label">Row Colors Opacity (%)</label>
+                <label class="form-label">Tier Colors Opacity (%)</label>
                 <div class="opacity-control">
                   <input type="range" id="row-colors-opacity" class="form-input opacity-slider"
                          min="0" max="100" value="${params.rowColorsOpacityPercent}" step="5">
@@ -111,100 +166,28 @@ export const AdminPanelTemplates = {
         `,
 
     /**
-     * Background customization section template
+     * Overlay background section template
+     * Controls the main container background behind all challenges
      * @param params - Template parameters for dynamic content
-     * @returns HTML string for the background section
+     * @returns HTML string for the overlay background section
      */
-    backgroundSection: (params: BackgroundSectionParams): string => `
+    overlayBackgroundSection: (
+        params: OverlayBackgroundSectionParams
+    ): string => `
           <div class="form-group">
-            <label>Background Customization:</label>
-            <p class="form-description">Configure background appearance for the overlay and individual challenge rows.</p>
+            <p class="form-description">Controls the main container background behind all challenges.</p>
 
-            <!-- Overlay Background Configuration -->
-            <div class="background-config-section">
-              <h5 class="subsection-title">Overlay Background</h5>
-              <p class="help-text">Controls the main container background behind all challenges</p>
-
-              <div class="form-row">
-                <div class="form-column">
-                  <label class="form-label">Background Color</label>
-                  <input type="color" id="overlay-background-color" class="form-input color-input" value="${params.overlayBackgroundColor}">
-                </div>
-                <div class="form-column">
-                  <label class="form-label">Opacity (%)</label>
-                  <div class="opacity-control">
-                    <input type="range" id="overlay-background-opacity" class="form-input opacity-slider"
-                           min="0" max="100" value="60" step="5">
-                    <span id="overlay-opacity-display" class="opacity-value">60%</span>
-                  </div>
-                </div>
+            <div class="form-row">
+              <div class="form-column">
+                <label class="form-label">Background Color</label>
+                <input type="color" id="overlay-background-color" class="form-input color-input" value="${params.overlayBackgroundColor}">
               </div>
-
-            <!-- Challenge Row Background Configuration -->
-            <div class="background-config-section">
-              <h5 class="subsection-title">Challenge Row Background</h5>
-              <p class="help-text">Controls individual challenge container backgrounds. These settings apply to all challenges unless overridden by row-specific colors above.</p>
-
-              <div class="form-row">
-                <div class="form-column">
-                  <label class="form-label">Background Color</label>
-                  <input type="color" id="challenge-background-color" class="form-input color-input" value="${params.challengeBackgroundColor}">
-                </div>
-                <div class="form-column">
-                  <label class="form-label">Opacity (%)</label>
-                  <div class="opacity-control">
-                    <input type="range" id="challenge-background-opacity" class="form-input opacity-slider"
-                           min="0" max="100" value="70" step="5">
-                    <span id="opacity-display" class="opacity-value">70%</span>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Text Readability Configuration -->
-              <div class="text-readability-section">
-                <h5 class="subsection-title">Text Readability</h5>
-
-                <div class="form-row">
-                  <div class="checkbox-group">
-                    <input type="checkbox" id="challenge-auto-text-color" class="form-checkbox" checked>
-                    <label for="challenge-auto-text-color" class="checkbox-label">
-                      Automatic text color adjustment
-                      <span class="help-text">Automatically choose white or black text for optimal readability</span>
-                    </label>
-                  </div>
-                </div>
-
-                <div class="form-row">
-                  <div class="form-column">
-                    <label class="form-label">Manual Text Color Override</label>
-                    <input type="color" id="challenge-text-color" class="form-input color-input" value="${params.challengeTextColor}" disabled>
-                    <span class="help-text">Used when automatic adjustment is disabled</span>
-                  </div>
-                </div>
-
-                <div class="form-row">
-                  <div class="checkbox-group">
-                    <input type="checkbox" id="challenge-text-shadow" class="form-checkbox" checked>
-                    <label for="challenge-text-shadow" class="checkbox-label">
-                      Enhanced text readability
-                      <span class="help-text">Add text shadows/outlines for better visibility on various backgrounds</span>
-                    </label>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Preview Section -->
-              <div class="background-preview-section">
-                <h5 class="subsection-title">Preview</h5>
-                <div id="background-preview" class="background-preview">
-                  <div class="preview-challenge">
-                    <div class="preview-checkbox"></div>
-                    <div class="preview-text">
-                      <div class="preview-title">Sample Challenge</div>
-                      <div class="preview-description">This is how your challenges will look</div>
-                      <div class="preview-progress">Progress: 3/5</div>
-                    </div>
-                  </div>
+              <div class="form-column">
+                <label class="form-label">Opacity (%)</label>
+                <div class="opacity-control">
+                  <input type="range" id="overlay-background-opacity" class="form-input opacity-slider"
+                         min="0" max="100" value="60" step="5">
+                  <span id="overlay-opacity-display" class="opacity-value">60%</span>
                 </div>
               </div>
             </div>

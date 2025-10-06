@@ -94,19 +94,25 @@ function getColorTierElements(tier: ColorTier) {
 function expectColorTierElementsExist(tier: ColorTier) {
     const elements = getColorTierElements(tier);
     expect(elements.section).toBeTruthy();
-    expect(elements.checkbox).toBeTruthy();
+    // Primary tier has no checkbox (always enabled)
+    if (tier !== "primary") {
+        expect(elements.checkbox).toBeTruthy();
+    }
     expect(elements.bgColorPicker).toBeTruthy();
     expect(elements.textColorPicker).toBeTruthy();
 }
 
 function expectCheckboxState(
-    checkbox: HTMLInputElement,
+    checkbox: HTMLInputElement | null,
     checked: boolean,
     bgPicker?: HTMLInputElement,
     textPicker?: HTMLInputElement,
     container?: Element | null
 ) {
-    expect(checkbox.checked).toBe(checked);
+    // Primary tier has no checkbox
+    if (checkbox) {
+        expect(checkbox.checked).toBe(checked);
+    }
 
     if (bgPicker && textPicker) {
         expect(bgPicker.disabled).toBe(!checked);
@@ -175,8 +181,7 @@ describe("AdminPanel Color Configuration", () => {
             const secondaryElements = getColorTierElements("secondary");
             const tertiaryElements = getColorTierElements("tertiary");
 
-            // Primary should be enabled with red color
-            expect(primaryElements.checkbox.checked).toBe(true);
+            // Primary is always enabled (no checkbox) with red color
             expect(primaryElements.bgColorPicker.value).toBe(TEST_COLORS.RED);
 
             // Secondary should be enabled with green color
@@ -193,28 +198,29 @@ describe("AdminPanel Color Configuration", () => {
             // Create a fresh AdminPanel with clean state
             createFreshAdminPanel(configManager, mockApp);
 
-            const primaryElements = getColorTierElements("primary");
+            // Test with secondary tier (which has a checkbox)
+            const secondaryElements = getColorTierElements("secondary");
 
             // Initially unchecked, so pickers should be disabled and collapsed
             expectCheckboxState(
-                primaryElements.checkbox,
+                secondaryElements.checkbox,
                 false,
-                primaryElements.bgColorPicker,
-                primaryElements.textColorPicker,
-                primaryElements.pickersContainer
+                secondaryElements.bgColorPicker,
+                secondaryElements.textColorPicker,
+                secondaryElements.pickersContainer
             );
 
             // Check the checkbox
-            primaryElements.checkbox.checked = true;
-            primaryElements.checkbox.dispatchEvent(new Event("change"));
+            secondaryElements.checkbox.checked = true;
+            secondaryElements.checkbox.dispatchEvent(new Event("change"));
 
             // Pickers should now be enabled and expanded
             expectCheckboxState(
-                primaryElements.checkbox,
+                secondaryElements.checkbox,
                 true,
-                primaryElements.bgColorPicker,
-                primaryElements.textColorPicker,
-                primaryElements.pickersContainer
+                secondaryElements.bgColorPicker,
+                secondaryElements.textColorPicker,
+                secondaryElements.pickersContainer
             );
         });
 
@@ -252,14 +258,15 @@ describe("AdminPanel Color Configuration", () => {
         });
 
         it("should convert UI configuration to challengeRowColors array when auto-saving", () => {
-            // Enable primary and secondary colors
+            // Primary is always enabled, just set its color
             const primaryElements = getColorTierElements("primary");
             const secondaryElements = getColorTierElements("secondary");
 
-            primaryElements.checkbox.checked = true;
+            // Primary has no checkbox - just set the color
             primaryElements.bgColorPicker.value = TEST_COLORS.RED;
-            primaryElements.checkbox.dispatchEvent(new Event("change"));
+            primaryElements.bgColorPicker.dispatchEvent(new Event("input"));
 
+            // Enable secondary color
             secondaryElements.checkbox.checked = true;
             secondaryElements.bgColorPicker.value = TEST_COLORS.GREEN;
             secondaryElements.checkbox.dispatchEvent(new Event("change"));

@@ -75,16 +75,16 @@ describe("AdminPanelEventSetup", () => {
 
     describe("setupColorTierEventListeners", () => {
         it("should setup event listeners for color tier checkboxes", () => {
-            // Create mock color tier elements for primary tier
+            // Test with secondary tier (primary has no checkbox)
             const checkbox = document.createElement("input");
             checkbox.type = "checkbox";
-            checkbox.id = ELEMENT_IDS.PRIMARY_COLOR_ENABLED;
+            checkbox.id = ELEMENT_IDS.SECONDARY_COLOR_ENABLED;
             const bgColorInput = document.createElement("input");
             bgColorInput.type = "color";
-            bgColorInput.id = ELEMENT_IDS.PRIMARY_BG_COLOR;
+            bgColorInput.id = ELEMENT_IDS.SECONDARY_BG_COLOR;
             const textColorInput = document.createElement("input");
             textColorInput.type = "color";
-            textColorInput.id = ELEMENT_IDS.PRIMARY_TEXT_COLOR;
+            textColorInput.id = ELEMENT_IDS.SECONDARY_TEXT_COLOR;
 
             document.body.appendChild(checkbox);
             document.body.appendChild(bgColorInput);
@@ -169,7 +169,8 @@ describe("AdminPanelEventSetup", () => {
             overlayColorInput.id =
                 BACKGROUND_UI_ELEMENTS.OVERLAY_BACKGROUND_COLOR_INPUT;
             const backgroundColorInput = document.createElement("input");
-            backgroundColorInput.id = BACKGROUND_UI_ELEMENTS.BACKGROUND_COLOR_INPUT;
+            backgroundColorInput.id =
+                BACKGROUND_UI_ELEMENTS.BACKGROUND_COLOR_INPUT;
 
             document.body.appendChild(overlayColorInput);
             document.body.appendChild(backgroundColorInput);
@@ -196,7 +197,8 @@ describe("AdminPanelEventSetup", () => {
                 BACKGROUND_UI_ELEMENTS.OVERLAY_BACKGROUND_OPACITY_SLIDER;
             overlayOpacitySlider.value = "60";
             const overlayOpacityDisplay = document.createElement("span");
-            overlayOpacityDisplay.id = BACKGROUND_UI_ELEMENTS.OVERLAY_OPACITY_DISPLAY;
+            overlayOpacityDisplay.id =
+                BACKGROUND_UI_ELEMENTS.OVERLAY_OPACITY_DISPLAY;
 
             const opacitySlider = document.createElement("input");
             opacitySlider.id = BACKGROUND_UI_ELEMENTS.BACKGROUND_OPACITY_SLIDER;
@@ -285,4 +287,3 @@ describe("AdminPanelEventSetup", () => {
         });
     });
 });
-

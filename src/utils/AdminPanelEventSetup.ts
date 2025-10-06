@@ -67,17 +67,21 @@ export class AdminPanelEventSetup {
 
     /**
      * Setup color tier checkbox event listeners
+     * Note: Primary tier is always enabled and has no checkbox
      * @param onTierChange - Callback when tier checkbox changes
      * @param autoSaveCallback - Callback to execute after tier change
+     * @param updatePreviewCallback - Optional callback to update preview (for Primary tier color changes)
      */
     static setupColorTierEventListeners(
         onTierChange: ColorTierCallback,
-        autoSaveCallback: AutoSaveCallback
+        autoSaveCallback: AutoSaveCallback,
+        updatePreviewCallback?: () => void
     ): void {
         const colorTiers = COLOR_TIERS;
 
         colorTiers.forEach((tier) => {
             const tierConstants = this.getColorTierConstants(tier);
+            const isPrimaryTier = tier === COLOR_TIERS[0];
             const checkbox = document.getElementById(
                 tierConstants.enabled
             ) as HTMLInputElement;
@@ -88,7 +92,8 @@ export class AdminPanelEventSetup {
                 tierConstants.textColor
             ) as HTMLInputElement;
 
-            if (checkbox) {
+            // Primary tier has no checkbox (always enabled)
+            if (checkbox && !isPrimaryTier) {
                 checkbox.addEventListener(EVENT_NAMES.CHANGE, () => {
                     const isEnabled = checkbox.checked;
                     onTierChange(tier, isEnabled);
@@ -97,17 +102,22 @@ export class AdminPanelEventSetup {
             }
 
             // Auto-save when color pickers change
+            // For Primary tier, also update preview
             if (bgColorInput) {
-                bgColorInput.addEventListener(
-                    EVENT_NAMES.INPUT,
-                    autoSaveCallback
-                );
+                bgColorInput.addEventListener(EVENT_NAMES.INPUT, () => {
+                    if (isPrimaryTier && updatePreviewCallback) {
+                        updatePreviewCallback();
+                    }
+                    autoSaveCallback();
+                });
             }
             if (textColorInput) {
-                textColorInput.addEventListener(
-                    EVENT_NAMES.INPUT,
-                    autoSaveCallback
-                );
+                textColorInput.addEventListener(EVENT_NAMES.INPUT, () => {
+                    if (isPrimaryTier && updatePreviewCallback) {
+                        updatePreviewCallback();
+                    }
+                    autoSaveCallback();
+                });
             }
         });
     }

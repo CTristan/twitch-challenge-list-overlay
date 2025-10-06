@@ -1,10 +1,10 @@
 import { beforeEach, describe, expect, it } from "vitest";
+import { DEFAULT_COLORS } from "../../src/types/ColorConstants";
+import { ELEMENT_IDS } from "../../src/types/DOMConstants";
 import {
     AdminPanelColorManager,
     type ColorConfigurationUI,
 } from "../../src/utils/AdminPanelColorManager";
-import { DEFAULT_COLORS } from "../../src/types/ColorConstants";
-import { ELEMENT_IDS } from "../../src/types/DOMConstants";
 
 function ensureTestIsolation() {
     localStorage.clear();
@@ -40,7 +40,8 @@ describe("AdminPanelColorManager", () => {
         it("should handle empty arrays with default values", () => {
             const result = AdminPanelColorManager.convertColorsToUI([], []);
 
-            expect(result.primary.enabled).toBe(false);
+            // Primary is always enabled
+            expect(result.primary.enabled).toBe(true);
             expect(result.primary.backgroundColor).toBe(
                 DEFAULT_COLORS.PRIMARY_BACKGROUND
             );
@@ -83,7 +84,8 @@ describe("AdminPanelColorManager", () => {
                 },
             };
 
-            const result = AdminPanelColorManager.convertUIToColors(colorConfig);
+            const result =
+                AdminPanelColorManager.convertUIToColors(colorConfig);
 
             expect(result).toEqual(["#ff0000", "#00ff00"]);
         });
@@ -107,7 +109,8 @@ describe("AdminPanelColorManager", () => {
                 },
             };
 
-            const result = AdminPanelColorManager.convertUIToColors(colorConfig);
+            const result =
+                AdminPanelColorManager.convertUIToColors(colorConfig);
 
             expect(result).toEqual([]);
         });
@@ -156,8 +159,7 @@ describe("AdminPanelColorManager", () => {
         });
 
         it("should get current color config from UI elements", () => {
-            const result =
-                AdminPanelColorManager.getCurrentColorConfigFromUI();
+            const result = AdminPanelColorManager.getCurrentColorConfigFromUI();
 
             expect(result.primary.enabled).toBe(true);
             expect(result.primary.backgroundColor).toBe("#ff0000");
@@ -242,8 +244,9 @@ describe("AdminPanelColorManager", () => {
         });
 
         it("should convert rgba to hex", () => {
-            const result =
-                AdminPanelColorManager.extractColorFromRGBA("rgba(255, 0, 0, 0.5)");
+            const result = AdminPanelColorManager.extractColorFromRGBA(
+                "rgba(255, 0, 0, 0.5)"
+            );
 
             expect(result).toBe("#ff0000");
         });
@@ -263,4 +266,3 @@ describe("AdminPanelColorManager", () => {
         });
     });
 });
-

@@ -190,19 +190,32 @@ describe("AdminPanel Collapsible Sections Integration", () => {
             expect(updatedConfig).toBeDefined();
         });
 
-        it("should handle color configuration UI within collapsible sections", () => {
-            // Verify that color configuration content was passed to CollapsibleSection
+        it("should handle challenge row styling configuration UI within collapsible sections", () => {
+            // Verify that challenge row styling configuration content was passed to CollapsibleSection
             const calls = MockedCollapsibleSection.mock.calls;
-            const colorSectionCall = calls.find(
-                (call) => call[0].id === "colors"
+            const challengeRowStylingSectionCall = calls.find(
+                (call) => call[0].id === "challenge-row-styling"
             );
 
-            expect(colorSectionCall).toBeTruthy();
-            expect(colorSectionCall?.[0]?.content).toContain('type="checkbox"');
-            expect(colorSectionCall?.[0]?.content).toContain('type="color"');
-            expect(colorSectionCall?.[0]?.content).toContain("Primary Color");
-            expect(colorSectionCall?.[0]?.content).toContain("Secondary Color");
-            expect(colorSectionCall?.[0]?.content).toContain("Tertiary Color");
+            expect(challengeRowStylingSectionCall).toBeTruthy();
+            expect(challengeRowStylingSectionCall?.[0]?.content).toContain(
+                'type="checkbox"'
+            );
+            expect(challengeRowStylingSectionCall?.[0]?.content).toContain(
+                'type="color"'
+            );
+            expect(challengeRowStylingSectionCall?.[0]?.content).toContain(
+                "Primary Color (Default)"
+            );
+            expect(challengeRowStylingSectionCall?.[0]?.content).toContain(
+                "Secondary Color (Optional)"
+            );
+            expect(challengeRowStylingSectionCall?.[0]?.content).toContain(
+                "Tertiary Color (Optional)"
+            );
+            expect(challengeRowStylingSectionCall?.[0]?.content).toContain(
+                "Text Readability"
+            );
         });
     });
 

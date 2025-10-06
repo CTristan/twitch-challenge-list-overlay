@@ -164,8 +164,8 @@ export const ELEMENT_IDS = {
     // Admin panel collapsible section IDs
     AUTHENTICATION_SECTION: "authentication",
     BEHAVIOR_SECTION: "behavior",
-    COLORS_SECTION: "colors",
-    BACKGROUND_SECTION: "background",
+    CHALLENGE_ROW_STYLING_SECTION: "challenge-row-styling",
+    OVERLAY_BACKGROUND_SECTION: "overlay-background",
     ACTIONS_SECTION: "actions",
     BACKUP_SECTION: "backup",
     DANGER_ZONE_SECTION: "danger-zone",
