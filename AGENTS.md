@@ -545,6 +545,31 @@ The WindowRefreshManager handles cross-window communication with two distinct me
 -   **Expected Behavior**: Regular viewers' commands are silently ignored (no response)
 -   **Authorized Users**: Only broadcasters and moderators can use bot commands
 
+### Admin Panel Slider Not Visible
+
+-   **Symptoms**: Slider controls (e.g., Color Row Opacity, Overlay Background Opacity) not visible in admin panel sections
+-   **Root Cause**: Missing `expanded` class on `.color-pickers-container` element in template
+-   **CSS Behavior**:
+    -   **Without `expanded` class**: `opacity: 0`, `max-height: 0`, `height: 0px` (hidden)
+    -   **With `expanded` class**: `opacity: 1`, `max-height: 120px`, proper height (visible)
+-   **Solution**: Add `expanded` class to `.color-pickers-container` in `AdminPanelTemplates.ts`:
+    ```html
+    <!-- CORRECT: Always-visible section -->
+    <div class="color-pickers-container expanded">
+      <!-- Slider controls here -->
+    </div>
+
+    <!-- INCORRECT: Hidden by default -->
+    <div class="color-pickers-container">
+      <!-- Slider controls here -->
+    </div>
+    ```
+-   **Pattern Rules**:
+    -   **Always-visible sections** (Primary Color, Color Row Opacity): Must have `expanded` class in template
+    -   **Collapsible sections** (Secondary/Tertiary colors): No `expanded` class in template (JavaScript adds it when checkbox is checked)
+-   **Browser Cache Note**: After fixing template, users must hard refresh (Cmd+Shift+R / Ctrl+Shift+R) or clear browser cache to see changes
+-   **Verification**: Inspect element in browser DevTools - `.color-pickers-container` should have `expanded` class and `opacity: 1`
+
 ## Development Guidelines
 
 ### Adding New Features
