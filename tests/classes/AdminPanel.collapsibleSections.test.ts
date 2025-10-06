@@ -93,12 +93,12 @@ describe("AdminPanel Collapsible Sections Integration", () => {
 
             adminPanel.initialize();
 
-            // Should create multiple collapsible sections (6 total: Auth, Behavior, Colors, Background, Actions, Danger Zone)
-            expect(MockedCollapsibleSection).toHaveBeenCalledTimes(6);
+            // Should create multiple collapsible sections (4 total: Behavior, Challenge Row Styling, Overlay Background, Authentication)
+            expect(MockedCollapsibleSection).toHaveBeenCalledTimes(4);
 
             // Verify section configurations
             const calls = MockedCollapsibleSection.mock.calls;
-            expect(calls).toHaveLength(6); // Ensure we have the expected number of calls
+            expect(calls).toHaveLength(4); // Ensure we have the expected number of calls
         });
 
         it("should append collapsible section elements to admin content", () => {
@@ -111,7 +111,7 @@ describe("AdminPanel Collapsible Sections Integration", () => {
 
             // Should call createElement for each section
             expect(mockCollapsibleInstance.createElement).toHaveBeenCalledTimes(
-                6
+                4
             );
 
             // Check that sections were added to DOM
@@ -119,7 +119,7 @@ describe("AdminPanel Collapsible Sections Integration", () => {
             const collapsibleSections = adminContent?.querySelectorAll(
                 ".collapsible-section"
             );
-            expect(collapsibleSections?.length).toBe(6);
+            expect(collapsibleSections?.length).toBe(4);
         });
 
         it("should not create sections when not in admin mode", () => {
@@ -330,9 +330,13 @@ describe("AdminPanel Collapsible Sections Integration", () => {
         });
 
         it("should maintain form accessibility within collapsible sections", () => {
-            // Check that form elements have proper labels
+            // Check that form elements have proper labels (excluding hidden file input)
             const inputs = document.querySelectorAll("input");
             inputs.forEach((input) => {
+                // Skip hidden file input which doesn't need a visible label
+                if (input.type === "file" && input.style.display === "none") {
+                    return;
+                }
                 const label =
                     document.querySelector(`label[for="${input.id}"]`) ||
                     input.closest(".form-group")?.querySelector("label");
@@ -363,7 +367,7 @@ describe("AdminPanel Collapsible Sections Integration", () => {
             const sectionTitles = document.querySelectorAll(
                 ".collapsible-section h4"
             );
-            expect(sectionTitles.length).toBe(6); // One for each section
+            expect(sectionTitles.length).toBe(4); // One for each collapsible section (Behavior, Challenge Row Styling, Overlay Background, Authentication)
         });
     });
 

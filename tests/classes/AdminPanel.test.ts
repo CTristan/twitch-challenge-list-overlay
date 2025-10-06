@@ -1832,24 +1832,19 @@ describe("AdminPanel", () => {
             expect(container.innerHTML).toContain("Overlay Background");
         });
 
-        it("should create actions section", () => {
+        it("should create bottom action buttons", () => {
             const container = document.createElement("div");
 
-            // Call createActionsSection
-            (adminPanel as any).createActionsSection(container);
+            // Call createBottomActionButtons
+            (adminPanel as any).createBottomActionButtons(container);
 
-            // Verify section was created
-            expect(container.innerHTML).toContain("Backup");
-        });
-
-        it("should create danger zone section", () => {
-            const container = document.createElement("div");
-
-            // Call createDangerZoneSection
-            (adminPanel as any).createDangerZoneSection(container);
-
-            // Verify section was created
-            expect(container.innerHTML).toContain("Danger");
+            // Verify buttons were created
+            expect(container.querySelector("#export-json-btn")).toBeTruthy();
+            expect(container.querySelector("#import-config-btn")).toBeTruthy();
+            expect(container.querySelector("#reset-config-btn")).toBeTruthy();
+            expect(
+                container.querySelector("#clear-localstorage-btn")
+            ).toBeTruthy();
         });
     });
 

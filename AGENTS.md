@@ -52,6 +52,12 @@ The AdminPanel class delegates to specialized utility classes:
 
 **Key Pattern**: All utility classes use static methods for stateless operations.
 
+**Admin Panel Structure**:
+
+-   **Collapsible Sections** (4 total): Behavior Settings, Challenge Row Styling, Overlay Background, Authentication
+-   **Bottom Action Buttons** (always visible): Configuration actions (Backup, Restore, Reset) and Danger Zone (Clear All Data)
+-   **Button Layout**: Created via `AdminPanelDOMBuilder.createBottomActionButtons()` which returns an HTMLElement with all action buttons in a static container at the bottom of the admin panel
+
 ### Technology Stack
 
 -   **TypeScript** with ES modules, **Vite** (IIFE bundle), **Vitest** (jsdom)
@@ -553,17 +559,19 @@ The WindowRefreshManager handles cross-window communication with two distinct me
     -   **Without `expanded` class**: `opacity: 0`, `max-height: 0`, `height: 0px` (hidden)
     -   **With `expanded` class**: `opacity: 1`, `max-height: 120px`, proper height (visible)
 -   **Solution**: Add `expanded` class to `.color-pickers-container` in `AdminPanelTemplates.ts`:
+
     ```html
     <!-- CORRECT: Always-visible section -->
     <div class="color-pickers-container expanded">
-      <!-- Slider controls here -->
+        <!-- Slider controls here -->
     </div>
 
     <!-- INCORRECT: Hidden by default -->
     <div class="color-pickers-container">
-      <!-- Slider controls here -->
+        <!-- Slider controls here -->
     </div>
     ```
+
 -   **Pattern Rules**:
     -   **Always-visible sections** (Primary Color, Color Row Opacity): Must have `expanded` class in template
     -   **Collapsible sections** (Secondary/Tertiary colors): No `expanded` class in template (JavaScript adds it when checkbox is checked)

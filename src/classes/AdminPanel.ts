@@ -243,7 +243,7 @@ export default class AdminPanel {
     private createConfigurationForm(): void {
         const adminContent = document.querySelector(
             CSS_SELECTORS.ADMIN_CONTENT
-        );
+        ) as HTMLElement;
         if (!adminContent) {
             return;
         }
@@ -266,11 +266,12 @@ export default class AdminPanel {
         this.createBehaviorSection(formContainer);
         this.createChallengeRowStylingSection(formContainer);
         this.createOverlayBackgroundSection(formContainer);
-        this.createActionsSection(formContainer);
         this.createAuthenticationSection(formContainer);
-        this.createDangerZoneSection(formContainer);
 
         adminContent.appendChild(formContainer);
+
+        // Add action buttons at the bottom of the admin panel (outside the form)
+        this.createBottomActionButtons(adminContent);
     }
 
     /**
@@ -375,46 +376,14 @@ export default class AdminPanel {
     }
 
     /**
-     * Create the consolidated Configuration Actions section
-     * Combines backup, restore, and reset functionality
-     * @param container - The parent container element
+     * Create action buttons at the bottom of the admin panel
+     * Includes configuration actions and danger zone buttons
+     * @param container - The parent container element (admin-content)
      */
-    private createActionsSection(container: HTMLElement): void {
-        const actionsContent = AdminPanelDOMBuilder.createActionsSection();
-
-        const actionsSection = new CollapsibleSection({
-            id: ELEMENT_IDS.ACTIONS_SECTION,
-            title: ADMIN_PANEL_LABELS.CONFIGURATION_ACTIONS,
-            content: actionsContent,
-            defaultExpanded: true, // Actions should be expanded by default
-        });
-
-        this.#collapsibleSections.set(
-            ELEMENT_IDS.ACTIONS_SECTION,
-            actionsSection
-        );
-        container.appendChild(actionsSection.createElement());
-    }
-
-    /**
-     * Create the Danger Zone section
-     * @param container - The parent container element
-     */
-    private createDangerZoneSection(container: HTMLElement): void {
-        const dangerContent = AdminPanelDOMBuilder.createDangerZoneSection();
-
-        const dangerSection = new CollapsibleSection({
-            id: ELEMENT_IDS.DANGER_ZONE_SECTION,
-            title: ADMIN_PANEL_LABELS.DANGER_ZONE,
-            content: dangerContent,
-            defaultExpanded: false, // Danger zone should be collapsed by default
-        });
-
-        this.#collapsibleSections.set(
-            ELEMENT_IDS.DANGER_ZONE_SECTION,
-            dangerSection
-        );
-        container.appendChild(dangerSection.createElement());
+    private createBottomActionButtons(container: HTMLElement): void {
+        const buttonContainer =
+            AdminPanelDOMBuilder.createBottomActionButtons();
+        container.appendChild(buttonContainer);
     }
 
     /**

@@ -97,29 +97,79 @@ export class AdminPanelDOMBuilder {
     }
 
     /**
-     * Create actions section HTML
-     * @returns HTML string for actions section
+     * Create bottom action buttons section (outside collapsible sections)
+     * Includes configuration actions and danger zone buttons
+     * @returns HTMLElement containing all action buttons
      */
-    static createActionsSection(): string {
-        return `
-          <div class="config-actions">
-            <button id="${ELEMENT_IDS.EXPORT_JSON_BTN}" class="admin-button primary">Backup Configuration</button>
-            <button id="${ELEMENT_IDS.IMPORT_CONFIG_BTN}" class="admin-button secondary">Restore Configuration</button>
-            <button id="${ELEMENT_IDS.RESET_CONFIG_BTN}" class="admin-button secondary">Reset to Defaults</button>
-          </div>
-        `;
-    }
+    static createBottomActionButtons(): HTMLElement {
+        const container = document.createElement("div");
+        container.className = "bottom-action-buttons";
+        container.style.marginTop = "30px";
+        container.style.paddingTop = "20px";
+        container.style.borderTop = "1px solid rgba(255, 255, 255, 0.1)";
 
-    /**
-     * Create danger zone section HTML
-     * @returns HTML string for danger zone section
-     */
-    static createDangerZoneSection(): string {
-        return `
-          <p class="danger-warning">The action below will permanently delete all stored configuration data. This cannot be undone.</p>
-          <div class="danger-actions">
-            <button id="${ELEMENT_IDS.CLEAR_LOCALSTORAGE_BTN}" class="admin-button danger">Clear All Data</button>
-          </div>
-        `;
+        // Configuration actions section
+        const actionsSection = document.createElement("div");
+        actionsSection.className = "config-actions";
+        actionsSection.style.marginBottom = "20px";
+
+        const backupBtn = document.createElement("button");
+        backupBtn.id = ELEMENT_IDS.EXPORT_JSON_BTN;
+        backupBtn.className = "admin-button primary";
+        backupBtn.textContent = "Backup Configuration";
+
+        const restoreBtn = document.createElement("button");
+        restoreBtn.id = ELEMENT_IDS.IMPORT_CONFIG_BTN;
+        restoreBtn.className = "admin-button secondary";
+        restoreBtn.textContent = "Restore Configuration";
+
+        const resetBtn = document.createElement("button");
+        resetBtn.id = ELEMENT_IDS.RESET_CONFIG_BTN;
+        resetBtn.className = "admin-button secondary";
+        resetBtn.textContent = "Reset to Defaults";
+
+        // Hidden file input for import functionality
+        const fileInput = document.createElement("input");
+        fileInput.type = "file";
+        fileInput.id = ELEMENT_IDS.IMPORT_FILE_INPUT;
+        fileInput.accept = ".json";
+        fileInput.style.display = "none";
+
+        actionsSection.appendChild(backupBtn);
+        actionsSection.appendChild(restoreBtn);
+        actionsSection.appendChild(resetBtn);
+        actionsSection.appendChild(fileInput);
+
+        // Danger zone section
+        const dangerSection = document.createElement("div");
+        dangerSection.className = "danger-zone-section";
+        dangerSection.style.marginTop = "20px";
+        dangerSection.style.paddingTop = "20px";
+        dangerSection.style.borderTop = "2px solid rgba(220, 53, 69, 0.3)";
+
+        const dangerWarning = document.createElement("p");
+        dangerWarning.className = "danger-warning";
+        dangerWarning.textContent =
+            "The action below will permanently delete all stored configuration data. This cannot be undone.";
+        dangerWarning.style.color = "#dc3545";
+        dangerWarning.style.marginBottom = "15px";
+
+        const dangerActions = document.createElement("div");
+        dangerActions.className = "danger-actions";
+
+        const clearBtn = document.createElement("button");
+        clearBtn.id = ELEMENT_IDS.CLEAR_LOCALSTORAGE_BTN;
+        clearBtn.className = "admin-button danger";
+        clearBtn.textContent = "Clear All Data";
+
+        dangerActions.appendChild(clearBtn);
+        dangerSection.appendChild(dangerWarning);
+        dangerSection.appendChild(dangerActions);
+
+        // Add both sections to container
+        container.appendChild(actionsSection);
+        container.appendChild(dangerSection);
+
+        return container;
     }
 }

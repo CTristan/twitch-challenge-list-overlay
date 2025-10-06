@@ -136,58 +136,79 @@ describe("AdminPanelDOMBuilder", () => {
         });
     });
 
-    describe("createActionsSection", () => {
-        it("should create actions section HTML with all buttons", () => {
-            const html = AdminPanelDOMBuilder.createActionsSection();
+    describe("createBottomActionButtons", () => {
+        it("should create bottom action buttons container element", () => {
+            const element = AdminPanelDOMBuilder.createBottomActionButtons();
 
-            expect(html).toContain(ELEMENT_IDS.EXPORT_JSON_BTN);
-            expect(html).toContain(ELEMENT_IDS.IMPORT_CONFIG_BTN);
-            expect(html).toContain(ELEMENT_IDS.RESET_CONFIG_BTN);
+            expect(element).toBeInstanceOf(HTMLElement);
+            expect(element.className).toBe("bottom-action-buttons");
         });
 
-        it("should include backup configuration button", () => {
-            const html = AdminPanelDOMBuilder.createActionsSection();
+        it("should include all configuration action buttons", () => {
+            const element = AdminPanelDOMBuilder.createBottomActionButtons();
 
-            expect(html).toContain("Backup Configuration");
+            const backupBtn = element.querySelector(
+                `#${ELEMENT_IDS.EXPORT_JSON_BTN}`
+            );
+            const restoreBtn = element.querySelector(
+                `#${ELEMENT_IDS.IMPORT_CONFIG_BTN}`
+            );
+            const resetBtn = element.querySelector(
+                `#${ELEMENT_IDS.RESET_CONFIG_BTN}`
+            );
+
+            expect(backupBtn).toBeTruthy();
+            expect(backupBtn?.textContent).toBe("Backup Configuration");
+            expect(restoreBtn).toBeTruthy();
+            expect(restoreBtn?.textContent).toBe("Restore Configuration");
+            expect(resetBtn).toBeTruthy();
+            expect(resetBtn?.textContent).toBe("Reset to Defaults");
         });
 
-        it("should include restore configuration button", () => {
-            const html = AdminPanelDOMBuilder.createActionsSection();
+        it("should include hidden file input for import", () => {
+            const element = AdminPanelDOMBuilder.createBottomActionButtons();
 
-            expect(html).toContain("Restore Configuration");
+            const fileInput = element.querySelector(
+                `#${ELEMENT_IDS.IMPORT_FILE_INPUT}`
+            ) as HTMLInputElement;
+
+            expect(fileInput).toBeTruthy();
+            expect(fileInput.type).toBe("file");
+            expect(fileInput.accept).toBe(".json");
+            expect(fileInput.style.display).toBe("none");
         });
 
-        it("should include reset to defaults button", () => {
-            const html = AdminPanelDOMBuilder.createActionsSection();
+        it("should include danger zone section with warning", () => {
+            const element = AdminPanelDOMBuilder.createBottomActionButtons();
 
-            expect(html).toContain("Reset to Defaults");
-        });
-    });
-
-    describe("createDangerZoneSection", () => {
-        it("should create danger zone section HTML", () => {
-            const html = AdminPanelDOMBuilder.createDangerZoneSection();
-
-            expect(html).toContain(ELEMENT_IDS.CLEAR_LOCALSTORAGE_BTN);
-        });
-
-        it("should include warning message", () => {
-            const html = AdminPanelDOMBuilder.createDangerZoneSection();
-
-            expect(html).toContain("permanently delete");
-            expect(html).toContain("cannot be undone");
+            const dangerWarning = element.querySelector(".danger-warning");
+            expect(dangerWarning).toBeTruthy();
+            expect(dangerWarning?.textContent).toContain("permanently delete");
+            expect(dangerWarning?.textContent).toContain("cannot be undone");
         });
 
         it("should include clear all data button", () => {
-            const html = AdminPanelDOMBuilder.createDangerZoneSection();
+            const element = AdminPanelDOMBuilder.createBottomActionButtons();
 
-            expect(html).toContain("Clear All Data");
+            const clearBtn = element.querySelector(
+                `#${ELEMENT_IDS.CLEAR_LOCALSTORAGE_BTN}`
+            );
+
+            expect(clearBtn).toBeTruthy();
+            expect(clearBtn?.textContent).toBe("Clear All Data");
+            expect(clearBtn?.className).toContain("danger");
         });
 
-        it("should include danger button class", () => {
-            const html = AdminPanelDOMBuilder.createDangerZoneSection();
+        it("should have proper styling and structure", () => {
+            const element = AdminPanelDOMBuilder.createBottomActionButtons();
 
-            expect(html).toContain("danger");
+            // Check for config actions section
+            const actionsSection = element.querySelector(".config-actions");
+            expect(actionsSection).toBeTruthy();
+
+            // Check for danger zone section
+            const dangerSection = element.querySelector(".danger-zone-section");
+            expect(dangerSection).toBeTruthy();
         });
     });
 });
