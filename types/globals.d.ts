@@ -157,9 +157,6 @@ interface Config {
     /** Enable text shadow/outline for enhanced readability (default: true) */
     challengeTextShadow?: boolean;
 
-    /** App container background opacity (0-1, default: 0.0 for fully transparent) */
-    appBackgroundOpacity?: number;
-
     /** Chat command configuration mapping command types to user-typed aliases */
     commands: ChatCommandsConfig;
 

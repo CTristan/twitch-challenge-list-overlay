@@ -35,6 +35,7 @@
 -   **CommandParser**: key=value and simple string syntax parsing
 -   **Constants**: MessageConstants, ColorConstants, ConfigConstants, DOMConstants, FileConstants, NumericConstants
 -   **ChallengeRenderer**: Centralized DOM creation with ID prefix display
+-   **UIUpdateHandler**: DOM manipulation for challenge list rendering, handles overlay background styling
 -   **WindowRefreshManager**: Cross-window BroadcastChannel communication
 -   **TwitchChat**: WebSocket IRC client with OAuth validation
 -   **Timer/TimerController**: Countdown and lifecycle management
@@ -446,13 +447,20 @@ Single challenge panel with dual-mode interface:
 -   **Configuration management** with live editing, backup/restore, reset to defaults
 -   **Challenge list controls** (clear all, clear completed)
 -   **Color configuration** for challenge rows with opacity control
--   **App background opacity control** - Configurable opacity (0-100%, default: 0%)
+-   **Overlay background opacity control** - Configurable opacity (0-100%, default: 60%) for main container (`.card` element) background transparency
+-   **Challenge row background opacity control** - Separate opacity control for individual challenge container backgrounds
 -   **Real-time configuration updates** - Config changes trigger full page reload in viewer window
 -   **Real-time challenge state synchronization** - Challenge changes trigger DOM-only updates in viewer window
 -   **Window refresh communication** via BroadcastChannel
 -   **Interactive checkboxes** - Clickable in admin mode, toggle completion with real-time sync
 -   **Add/Edit Challenge modals** - Modal interface with mode switching (MODAL_MODES.ADD / MODAL_MODES.EDIT)
 -   **Edit icon (✏️)** - Appears next to checkboxes in admin mode only
+
+**Background Opacity Configuration**:
+
+-   **Storage format**: Hex color (`#646464`) + numeric opacity (0.0-1.0) stored separately
+-   **Rendering**: Combined at render time using `combineColorWithOpacity()` utility to create RGBA string
+-   **Applied in**: `UIUpdateHandler.renderChallengeList()` method before appending challenge card to DOM
 
 ## Cross-Window Synchronization
 
@@ -519,6 +527,18 @@ The WindowRefreshManager handles cross-window communication with two distinct me
 
 -   **Symptoms**: Timer commands execute but timer doesn't appear
 -   **Solution**: Ensure Timer imports use ES module syntax: `import Timer from "../utils/Timer";`, rebuild application
+
+### Overlay Background Opacity Issues
+
+-   **Symptoms**: Overlay background opacity slider changes don't affect visual transparency
+-   **Root Cause**: Overlay background styling code missing from `UIUpdateHandler.renderChallengeList()`
+-   **Solution**: Verify that `UIUpdateHandler.renderChallengeList()` includes the overlay background styling code that:
+    1. Retrieves `overlayBackgroundColor` and `overlayBackgroundOpacity` from ConfigManager
+    2. Combines color and opacity using `combineColorWithOpacity()` utility
+    3. Applies the RGBA background color to the `challengeCard` element via `style.backgroundColor`
+    4. Adds the `custom-overlay-background` CSS class to the `challengeCard` element
+    5. Performs these operations **before** appending the card to the DOM
+-   **Verification**: Inspect the `.card` element in browser DevTools - it should have an inline `backgroundColor` style with RGBA format (e.g., `rgba(100, 100, 100, 0.5)`)
 
 ### Command Processing Issues
 
@@ -716,6 +736,55 @@ checkbox.addEventListener("change", callback);
 -   **Behavior fields** (e.g., max challenges): Use `EVENT_NAMES.CHANGE` to validate on blur/Enter
 -   **Color pickers**: Use `EVENT_NAMES.INPUT` for real-time preview
 -   **Checkboxes**: Use `EVENT_NAMES.CHANGE` for state changes
+
+### Overlay Background Styling Pattern
+
+Apply overlay background styling in `UIUpdateHandler.renderChallengeList()` before appending the challenge card to the DOM:
+
+```typescript
+import { combineColorWithOpacity } from "./ColorUtils";
+import {
+    BACKGROUND_CONFIG,
+    BACKGROUND_DEFAULTS,
+} from "../types/ConfigConstants";
+import { CSS_CLASSES } from "../types/DOMConstants";
+
+// Create challenge card
+const challengeCard = DOMHelper.createChallengeCard(
+    this.challengeList.challengesCompleted,
+    this.challengeList.totalChallenges
+);
+
+// Apply overlay background styling if configured
+// This must be done before appending to ensure styles are applied
+const overlayBackgroundColor = this.configManager.get(
+    BACKGROUND_CONFIG.OVERLAY_BACKGROUND_COLOR
+);
+if (overlayBackgroundColor) {
+    const overlayBackgroundOpacity =
+        this.configManager.get(BACKGROUND_CONFIG.OVERLAY_BACKGROUND_OPACITY) ??
+        BACKGROUND_DEFAULTS.OVERLAY_BACKGROUND_OPACITY;
+
+    // Combine color and opacity to create RGBA string
+    const overlayBackgroundRGBA = combineColorWithOpacity(
+        overlayBackgroundColor,
+        overlayBackgroundOpacity
+    );
+    challengeCard.style.backgroundColor = overlayBackgroundRGBA;
+    challengeCard.classList.add(CSS_CLASSES.CUSTOM_OVERLAY_BACKGROUND);
+}
+
+// Append card to container
+challengeContainer.appendChild(challengeCard);
+```
+
+**Key Points**:
+
+-   **Location**: Overlay background styling must be in `UIUpdateHandler.renderChallengeList()`, not `App.renderChallengeList()`
+-   **Timing**: Apply styles to `challengeCard` element before appending to DOM
+-   **Storage format**: Hex color and numeric opacity (0.0-1.0) stored separately in configuration
+-   **Rendering**: Use `combineColorWithOpacity()` utility to create RGBA string at render time
+-   **CSS class**: Add `CSS_CLASSES.CUSTOM_OVERLAY_BACKGROUND` class for styling hooks
 
 ### Admin Panel Template Pattern
 

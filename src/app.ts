@@ -35,6 +35,7 @@ import {
     VALIDATION_PATTERNS,
 } from "./types/ValidationConstants";
 import ChallengeRenderer from "./utils/ChallengeRenderer";
+import { combineColorWithOpacity } from "./utils/ColorUtils";
 import CommandHandler from "./utils/CommandHandler";
 import { getDefaultMaxChallenges } from "./utils/ConfigDefaults";
 import DOMHelper from "./utils/DOMHelper";
@@ -196,8 +197,13 @@ export default class App {
         // Apply overlay background styling if configured
         // This must be done outside the challenges.length check to ensure it's always applied
         if (backgroundConfig.overlayBackgroundColor) {
-            cardEl.style.backgroundColor =
-                backgroundConfig.overlayBackgroundColor;
+            // Combine color and opacity to create RGBA string
+            const overlayBackgroundRGBA = combineColorWithOpacity(
+                backgroundConfig.overlayBackgroundColor,
+                backgroundConfig.overlayBackgroundOpacity ??
+                    BACKGROUND_DEFAULTS.OVERLAY_BACKGROUND_OPACITY
+            );
+            cardEl.style.backgroundColor = overlayBackgroundRGBA;
             cardEl.classList.add(CSS_CLASSES.CUSTOM_OVERLAY_BACKGROUND);
         }
 

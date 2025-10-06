@@ -43,12 +43,6 @@ export function loadStyles(config: Config): void {
         [CSS_VARIABLES.CHALLENGE_TEXT_SHADOW_ENABLED]: (
             config.challengeTextShadow ?? BACKGROUND_DEFAULTS.TEXT_SHADOW
         ).toString(),
-
-        // App container background properties
-        [CSS_VARIABLES.APP_BACKGROUND_OPACITY]: (
-            config.appBackgroundOpacity ??
-            BACKGROUND_DEFAULTS.APP_BACKGROUND_OPACITY
-        ).toString(),
     };
 
     for (let [key, val] of Object.entries(configuredStyles)) {
@@ -108,10 +102,6 @@ function getDefaultStyles(): Record<string, string> {
             BACKGROUND_DEFAULTS.AUTO_TEXT_COLOR.toString(),
         [CSS_VARIABLES.CHALLENGE_TEXT_SHADOW_ENABLED]:
             BACKGROUND_DEFAULTS.TEXT_SHADOW.toString(),
-
-        // App container background defaults
-        [CSS_VARIABLES.APP_BACKGROUND_OPACITY]:
-            BACKGROUND_DEFAULTS.APP_BACKGROUND_OPACITY.toString(),
 
         // Username styling
         usernameFontSize: "2.25rem",

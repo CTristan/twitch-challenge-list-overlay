@@ -1,5 +1,8 @@
 import { beforeEach, describe, expect, it } from "vitest";
-import { BACKGROUND_DEFAULTS, BACKGROUND_UI_ELEMENTS } from "../../src/types/ConfigConstants";
+import {
+    BACKGROUND_DEFAULTS,
+    BACKGROUND_UI_ELEMENTS,
+} from "../../src/types/ConfigConstants";
 import { ELEMENT_IDS } from "../../src/types/DOMConstants";
 import { AdminPanelBackgroundManager } from "../../src/utils/AdminPanelBackgroundManager";
 
@@ -44,25 +47,28 @@ describe("AdminPanelBackgroundManager", () => {
 
     describe("calculateOptimalTextColor", () => {
         it("should return black for light backgrounds", () => {
-            const result = AdminPanelBackgroundManager.calculateOptimalTextColor(
-                "#ffffff"
-            );
+            const result =
+                AdminPanelBackgroundManager.calculateOptimalTextColor(
+                    "#ffffff"
+                );
 
             expect(result).toBe("#000000");
         });
 
         it("should return white for dark backgrounds", () => {
-            const result = AdminPanelBackgroundManager.calculateOptimalTextColor(
-                "#000000"
-            );
+            const result =
+                AdminPanelBackgroundManager.calculateOptimalTextColor(
+                    "#000000"
+                );
 
             expect(result).toBe("#ffffff");
         });
 
         it("should handle medium brightness colors", () => {
-            const result = AdminPanelBackgroundManager.calculateOptimalTextColor(
-                "#808080"
-            );
+            const result =
+                AdminPanelBackgroundManager.calculateOptimalTextColor(
+                    "#808080"
+                );
 
             expect(["#000000", "#ffffff"]).toContain(result);
         });
@@ -70,25 +76,29 @@ describe("AdminPanelBackgroundManager", () => {
 
     describe("generateTextShadow", () => {
         it("should generate light shadow for dark text", () => {
-            const result = AdminPanelBackgroundManager.generateTextShadow("#000000");
+            const result =
+                AdminPanelBackgroundManager.generateTextShadow("#000000");
 
             expect(result).toContain("rgba(255, 255, 255");
         });
 
         it("should generate dark shadow for light text", () => {
-            const result = AdminPanelBackgroundManager.generateTextShadow("#ffffff");
+            const result =
+                AdminPanelBackgroundManager.generateTextShadow("#ffffff");
 
             expect(result).toContain("rgba(0, 0, 0");
         });
 
         it("should handle black color", () => {
-            const result = AdminPanelBackgroundManager.generateTextShadow("#000000");
+            const result =
+                AdminPanelBackgroundManager.generateTextShadow("#000000");
 
             expect(result).toContain("rgba(255, 255, 255");
         });
 
         it("should handle white color", () => {
-            const result = AdminPanelBackgroundManager.generateTextShadow("#ffffff");
+            const result =
+                AdminPanelBackgroundManager.generateTextShadow("#ffffff");
 
             expect(result).toContain("rgba(0, 0, 0");
         });
@@ -99,7 +109,6 @@ describe("AdminPanelBackgroundManager", () => {
             document.body.innerHTML = `
                 <input type="color" id="${BACKGROUND_UI_ELEMENTS.OVERLAY_BACKGROUND_COLOR_INPUT}" value="#ff0000" />
                 <input type="range" id="${BACKGROUND_UI_ELEMENTS.OVERLAY_BACKGROUND_OPACITY_SLIDER}" value="50" />
-                <input type="range" id="${BACKGROUND_UI_ELEMENTS.APP_BACKGROUND_OPACITY_SLIDER}" value="75" />
                 <input type="color" id="${BACKGROUND_UI_ELEMENTS.BACKGROUND_COLOR_INPUT}" value="#00ff00" />
                 <input type="range" id="${BACKGROUND_UI_ELEMENTS.BACKGROUND_OPACITY_SLIDER}" value="80" />
                 <input type="color" id="${BACKGROUND_UI_ELEMENTS.TEXT_COLOR_INPUT}" value="#ffffff" />
@@ -114,8 +123,9 @@ describe("AdminPanelBackgroundManager", () => {
 
             expect(result.overlayBackgroundColor).toBe("rgba(255, 0, 0, 0.5)");
             expect(result.overlayBackgroundOpacity).toBe(0.5);
-            expect(result.appBackgroundOpacity).toBe(0.75);
-            expect(result.challengeBackgroundColor).toBe("rgba(0, 255, 0, 0.8)");
+            expect(result.challengeBackgroundColor).toBe(
+                "rgba(0, 255, 0, 0.8)"
+            );
             expect(result.challengeBackgroundOpacity).toBe(0.8);
             expect(result.challengeTextColor).toBe("#ffffff");
             expect(result.challengeAutoTextColor).toBe(true);
@@ -144,7 +154,6 @@ describe("AdminPanelBackgroundManager", () => {
                 <div id="${ELEMENT_IDS.BACKGROUND_PREVIEW}">Preview</div>
                 <input type="color" id="${BACKGROUND_UI_ELEMENTS.OVERLAY_BACKGROUND_COLOR_INPUT}" value="#ff0000" />
                 <input type="range" id="${BACKGROUND_UI_ELEMENTS.OVERLAY_BACKGROUND_OPACITY_SLIDER}" value="50" />
-                <input type="range" id="${BACKGROUND_UI_ELEMENTS.APP_BACKGROUND_OPACITY_SLIDER}" value="0" />
                 <input type="color" id="${BACKGROUND_UI_ELEMENTS.BACKGROUND_COLOR_INPUT}" value="#00ff00" />
                 <input type="range" id="${BACKGROUND_UI_ELEMENTS.BACKGROUND_OPACITY_SLIDER}" value="100" />
                 <input type="color" id="${BACKGROUND_UI_ELEMENTS.TEXT_COLOR_INPUT}" value="#ffffff" />
@@ -156,25 +165,35 @@ describe("AdminPanelBackgroundManager", () => {
         it("should update preview element with background color", () => {
             AdminPanelBackgroundManager.updateBackgroundPreview();
 
-            const preview = document.getElementById(ELEMENT_IDS.BACKGROUND_PREVIEW);
+            const preview = document.getElementById(
+                ELEMENT_IDS.BACKGROUND_PREVIEW
+            );
 
             // Browser normalizes rgba to rgb when opacity is 1
-            expect(preview?.style.backgroundColor).toMatch(/rgba?\(0,\s*255,\s*0/);
+            expect(preview?.style.backgroundColor).toMatch(
+                /rgba?\(0,\s*255,\s*0/
+            );
         });
 
         it("should update preview element with text color", () => {
             AdminPanelBackgroundManager.updateBackgroundPreview();
 
-            const preview = document.getElementById(ELEMENT_IDS.BACKGROUND_PREVIEW);
+            const preview = document.getElementById(
+                ELEMENT_IDS.BACKGROUND_PREVIEW
+            );
 
             // Browser may normalize hex to rgb
-            expect(preview?.style.color).toMatch(/rgb\(255,\s*255,\s*255\)|#ffffff/);
+            expect(preview?.style.color).toMatch(
+                /rgb\(255,\s*255,\s*255\)|#ffffff/
+            );
         });
 
         it("should apply text shadow when enabled", () => {
             AdminPanelBackgroundManager.updateBackgroundPreview();
 
-            const preview = document.getElementById(ELEMENT_IDS.BACKGROUND_PREVIEW);
+            const preview = document.getElementById(
+                ELEMENT_IDS.BACKGROUND_PREVIEW
+            );
 
             expect(preview?.style.textShadow).not.toBe("none");
             expect(preview?.style.textShadow).toBeTruthy();
@@ -188,7 +207,9 @@ describe("AdminPanelBackgroundManager", () => {
 
             AdminPanelBackgroundManager.updateBackgroundPreview();
 
-            const preview = document.getElementById(ELEMENT_IDS.BACKGROUND_PREVIEW);
+            const preview = document.getElementById(
+                ELEMENT_IDS.BACKGROUND_PREVIEW
+            );
 
             expect(preview?.style.textShadow).toBe("none");
         });
@@ -202,4 +223,3 @@ describe("AdminPanelBackgroundManager", () => {
         });
     });
 });
-

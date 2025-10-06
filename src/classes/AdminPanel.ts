@@ -545,25 +545,6 @@ export default class AdminPanel {
             overlayOpacityDisplay.textContent = `${overlayOpacityPercent}%`;
         }
 
-        // App background opacity
-        const appBackgroundOpacitySlider = document.getElementById(
-            BACKGROUND_UI_ELEMENTS.APP_BACKGROUND_OPACITY_SLIDER
-        ) as HTMLInputElement;
-        const appBackgroundOpacityDisplay = document.getElementById(
-            BACKGROUND_UI_ELEMENTS.APP_BACKGROUND_OPACITY_DISPLAY
-        );
-        if (appBackgroundOpacitySlider && appBackgroundOpacityDisplay) {
-            const appBackgroundOpacity =
-                config.appBackgroundOpacity ??
-                BACKGROUND_DEFAULTS.APP_BACKGROUND_OPACITY;
-            const appBackgroundOpacityPercent = Math.round(
-                appBackgroundOpacity * 100
-            );
-            appBackgroundOpacitySlider.value =
-                appBackgroundOpacityPercent.toString();
-            appBackgroundOpacityDisplay.textContent = `${appBackgroundOpacityPercent}%`;
-        }
-
         // Challenge row background color
         const backgroundColorInput = document.getElementById(
             BACKGROUND_UI_ELEMENTS.BACKGROUND_COLOR_INPUT
@@ -938,7 +919,6 @@ export default class AdminPanel {
         challengeTextColor: string;
         challengeAutoTextColor: boolean;
         challengeTextShadow: boolean;
-        appBackgroundOpacity: number;
     } {
         // Overlay background elements
         const overlayBackgroundColorInput = document.getElementById(
@@ -946,11 +926,6 @@ export default class AdminPanel {
         ) as HTMLInputElement;
         const overlayOpacitySlider = document.getElementById(
             BACKGROUND_UI_ELEMENTS.OVERLAY_BACKGROUND_OPACITY_SLIDER
-        ) as HTMLInputElement;
-
-        // App background opacity element
-        const appBackgroundOpacitySlider = document.getElementById(
-            BACKGROUND_UI_ELEMENTS.APP_BACKGROUND_OPACITY_SLIDER
         ) as HTMLInputElement;
 
         // Challenge row background elements
@@ -970,38 +945,25 @@ export default class AdminPanel {
             BACKGROUND_UI_ELEMENTS.TEXT_SHADOW_CHECKBOX
         ) as HTMLInputElement;
 
-        // Combine overlay color and opacity into RGBA format
+        // Get overlay background color and opacity (store separately, not as RGBA)
         const overlayBackgroundColor =
             overlayBackgroundColorInput?.value ||
             DEFAULT_COLORS.CHALLENGE_BACKGROUND;
         const overlayOpacity = overlayOpacitySlider
             ? parseInt(overlayOpacitySlider.value) / 100
             : BACKGROUND_DEFAULTS.OVERLAY_BACKGROUND_OPACITY;
-        const rgbaOverlayBackgroundColor = this.convertColorToRGBA(
-            overlayBackgroundColor,
-            overlayOpacity
-        );
 
-        // Get app background opacity
-        const appBackgroundOpacity = appBackgroundOpacitySlider
-            ? parseInt(appBackgroundOpacitySlider.value) / 100
-            : BACKGROUND_DEFAULTS.APP_BACKGROUND_OPACITY;
-
-        // Combine challenge row color and opacity into RGBA format
+        // Get challenge background color and opacity (store separately, not as RGBA)
         const backgroundColor =
             backgroundColorInput?.value || DEFAULT_COLORS.CHALLENGE_BACKGROUND;
         const opacity = opacitySlider
             ? parseInt(opacitySlider.value) / 100
             : BACKGROUND_DEFAULTS.BACKGROUND_OPACITY;
-        const rgbaBackgroundColor = this.convertColorToRGBA(
-            backgroundColor,
-            opacity
-        );
 
         return {
-            overlayBackgroundColor: rgbaOverlayBackgroundColor,
+            overlayBackgroundColor: overlayBackgroundColor,
             overlayBackgroundOpacity: overlayOpacity,
-            challengeBackgroundColor: rgbaBackgroundColor,
+            challengeBackgroundColor: backgroundColor,
             challengeBackgroundOpacity: opacity,
             challengeTextColor:
                 textColorInput?.value || BACKGROUND_DEFAULTS.TEXT_COLOR,
@@ -1010,7 +972,6 @@ export default class AdminPanel {
                 BACKGROUND_DEFAULTS.AUTO_TEXT_COLOR,
             challengeTextShadow:
                 textShadowCheckbox?.checked ?? BACKGROUND_DEFAULTS.TEXT_SHADOW,
-            appBackgroundOpacity: appBackgroundOpacity,
         };
     }
 
@@ -1203,10 +1164,6 @@ export default class AdminPanel {
                 BACKGROUND_CONFIG.CHALLENGE_TEXT_SHADOW,
                 backgroundConfig.challengeTextShadow
             );
-            const appBackgroundOpacitySuccess = this.#configManager.set(
-                BACKGROUND_CONFIG.APP_BACKGROUND_OPACITY,
-                backgroundConfig.appBackgroundOpacity
-            );
 
             if (
                 overlayBackgroundColorSuccess &&
@@ -1215,8 +1172,7 @@ export default class AdminPanel {
                 backgroundOpacitySuccess &&
                 textColorSuccess &&
                 autoTextColorSuccess &&
-                textShadowSuccess &&
-                appBackgroundOpacitySuccess
+                textShadowSuccess
             ) {
                 // Notify other windows to refresh after successful save
                 notifyConfigurationSaved();

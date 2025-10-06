@@ -1162,7 +1162,9 @@ describe("AdminPanel", () => {
             (adminPanel as any).updateColorTierState("primary", true);
 
             expect(pickersContainer?.classList.contains("expanded")).toBe(true);
-            expect(pickersContainer?.classList.contains("disabled")).toBe(false);
+            expect(pickersContainer?.classList.contains("disabled")).toBe(
+                false
+            );
             expect(bgColorInput.disabled).toBe(false);
             expect(textColorInput.disabled).toBe(false);
         });
@@ -1180,7 +1182,9 @@ describe("AdminPanel", () => {
 
             (adminPanel as any).updateColorTierState("primary", false);
 
-            expect(pickersContainer?.classList.contains("expanded")).toBe(false);
+            expect(pickersContainer?.classList.contains("expanded")).toBe(
+                false
+            );
             expect(pickersContainer?.classList.contains("disabled")).toBe(true);
             expect(bgColorInput.disabled).toBe(true);
             expect(textColorInput.disabled).toBe(true);
@@ -1212,13 +1216,11 @@ describe("AdminPanel", () => {
             // Verify structure and types
             expect(result).toHaveProperty("overlayBackgroundColor");
             expect(result).toHaveProperty("overlayBackgroundOpacity");
-            expect(result).toHaveProperty("appBackgroundOpacity");
             expect(result).toHaveProperty("challengeBackgroundColor");
             expect(result).toHaveProperty("challengeBackgroundOpacity");
             expect(result).toHaveProperty("challengeAutoTextColor");
             expect(result).toHaveProperty("challengeTextShadow");
             expect(typeof result.overlayBackgroundOpacity).toBe("number");
-            expect(typeof result.appBackgroundOpacity).toBe("number");
             expect(typeof result.challengeBackgroundOpacity).toBe("number");
             expect(typeof result.challengeAutoTextColor).toBe("boolean");
             expect(typeof result.challengeTextShadow).toBe("boolean");
@@ -1231,6 +1233,29 @@ describe("AdminPanel", () => {
             );
 
             expect(result).toBe("rgba(255, 0, 0, 0.5)");
+        });
+
+        it("should store overlay background color as hex, not RGBA", () => {
+            // Set up the overlay background color input
+            const overlayColorInput = document.getElementById(
+                "overlay-background-color"
+            ) as HTMLInputElement;
+            const overlayOpacitySlider = document.getElementById(
+                "overlay-background-opacity"
+            ) as HTMLInputElement;
+
+            if (overlayColorInput && overlayOpacitySlider) {
+                overlayColorInput.value = "#646464";
+                overlayOpacitySlider.value = "60";
+
+                const result = (
+                    adminPanel as any
+                ).getCurrentBackgroundConfigFromUI();
+
+                // Verify color is stored as hex, not RGBA
+                expect(result.overlayBackgroundColor).toBe("#646464");
+                expect(result.overlayBackgroundOpacity).toBe(0.6);
+            }
         });
 
         it("should calculate optimal text color for light background", () => {
@@ -1299,7 +1324,9 @@ describe("AdminPanel", () => {
             );
 
             expect(result.isValid).toBe(false);
-            expect(result.errorMessage).toContain("Auth section must be an object");
+            expect(result.errorMessage).toContain(
+                "Auth section must be an object"
+            );
         });
 
         it("should reject configuration with missing auth properties", () => {
@@ -1445,7 +1472,9 @@ describe("AdminPanel", () => {
             ) as HTMLButtonElement;
 
             // Verify error feedback
-            expect(importBtn.textContent).toBe("Failed to restore configuration!");
+            expect(importBtn.textContent).toBe(
+                "Failed to restore configuration!"
+            );
 
             // Restore
             configManager.import = originalImport;
@@ -1881,5 +1910,4 @@ describe("AdminPanel", () => {
             expect(true).toBe(true);
         });
     });
-
 });

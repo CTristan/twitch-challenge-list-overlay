@@ -75,7 +75,6 @@ export class AdminPanelBackgroundManager {
     static getCurrentBackgroundConfigFromUI(): {
         overlayBackgroundColor: string;
         overlayBackgroundOpacity: number;
-        appBackgroundOpacity: number;
         challengeBackgroundColor: string;
         challengeBackgroundOpacity: number;
         challengeTextColor: string;
@@ -101,14 +100,6 @@ export class AdminPanelBackgroundManager {
             overlayBackgroundColor,
             overlayOpacity
         );
-
-        // Get app background opacity
-        const appBackgroundOpacitySlider = document.getElementById(
-            BACKGROUND_UI_ELEMENTS.APP_BACKGROUND_OPACITY_SLIDER
-        ) as HTMLInputElement;
-        const appBackgroundOpacity = appBackgroundOpacitySlider
-            ? parseInt(appBackgroundOpacitySlider.value) / 100
-            : BACKGROUND_DEFAULTS.APP_BACKGROUND_OPACITY;
 
         // Get challenge background color and opacity
         const backgroundColorInput = document.getElementById(
@@ -152,7 +143,6 @@ export class AdminPanelBackgroundManager {
                 BACKGROUND_DEFAULTS.AUTO_TEXT_COLOR,
             challengeTextShadow:
                 textShadowCheckbox?.checked ?? BACKGROUND_DEFAULTS.TEXT_SHADOW,
-            appBackgroundOpacity: appBackgroundOpacity,
         };
     }
 

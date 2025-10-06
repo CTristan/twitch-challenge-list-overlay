@@ -64,9 +64,6 @@ export const BACKGROUND_CONFIG = {
     CHALLENGE_TEXT_COLOR: "challengeTextColor",
     CHALLENGE_AUTO_TEXT_COLOR: "challengeAutoTextColor",
     CHALLENGE_TEXT_SHADOW: "challengeTextShadow",
-
-    // App container background opacity (main overlay background)
-    APP_BACKGROUND_OPACITY: "appBackgroundOpacity",
 } as const;
 
 /**
@@ -109,9 +106,6 @@ export const BACKGROUND_DEFAULTS = {
 
     // Challenge row colors opacity default
     ROW_COLORS_OPACITY: 1.0,
-
-    // App container background opacity default (fully transparent by default)
-    APP_BACKGROUND_OPACITY: 0.0,
 } as const;
 
 /**
@@ -135,10 +129,6 @@ export const CSS_VARIABLES = {
     CHALLENGE_TEXT_COLOR_OVERRIDE: "challengeTextColorOverride",
     CHALLENGE_AUTO_TEXT_COLOR_ENABLED: "challengeAutoTextColorEnabled",
     CHALLENGE_TEXT_SHADOW_ENABLED: "challengeTextShadowEnabled",
-
-    // App container background CSS variables
-    APP_BACKGROUND_COLOR: "appBackgroundColor",
-    APP_BACKGROUND_OPACITY: "appBackgroundOpacity",
 } as const;
 
 /**

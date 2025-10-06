@@ -8,8 +8,9 @@ import {
     BACKGROUND_DEFAULTS,
     COLOR_CONFIG,
 } from "../types/ConfigConstants";
-import { CSS_SELECTORS, URL_HASH } from "../types/DOMConstants";
+import { CSS_CLASSES, CSS_SELECTORS, URL_HASH } from "../types/DOMConstants";
 import ChallengeRenderer from "./ChallengeRenderer";
+import { combineColorWithOpacity } from "./ColorUtils";
 import DOMHelper from "./DOMHelper";
 import Timer from "./Timer";
 import TimerController from "./TimerController";
@@ -459,6 +460,26 @@ export default class UIUpdateHandler {
             this.challengeList.challengesCompleted,
             this.challengeList.totalChallenges
         );
+
+        // Apply overlay background styling if configured
+        // This must be done before appending to ensure styles are applied
+        const overlayBackgroundColor = this.configManager.get(
+            BACKGROUND_CONFIG.OVERLAY_BACKGROUND_COLOR
+        );
+        if (overlayBackgroundColor) {
+            const overlayBackgroundOpacity =
+                this.configManager.get(
+                    BACKGROUND_CONFIG.OVERLAY_BACKGROUND_OPACITY
+                ) ?? BACKGROUND_DEFAULTS.OVERLAY_BACKGROUND_OPACITY;
+
+            // Combine color and opacity to create RGBA string
+            const overlayBackgroundRGBA = combineColorWithOpacity(
+                overlayBackgroundColor,
+                overlayBackgroundOpacity
+            );
+            challengeCard.style.backgroundColor = overlayBackgroundRGBA;
+            challengeCard.classList.add(CSS_CLASSES.CUSTOM_OVERLAY_BACKGROUND);
+        }
 
         // Append card to container
         challengeContainer.appendChild(challengeCard);

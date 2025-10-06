@@ -522,9 +522,9 @@ describe("App", () => {
             // This should trigger the overlay background color branch
             expect(() => app.renderChallengeList()).not.toThrow();
 
-            // Verify the background color was applied
+            // Verify the background color was applied with default opacity (0.6)
             const card = document.querySelector(".card") as HTMLElement;
-            expect(card?.style.backgroundColor).toBe("rgb(255, 0, 0)");
+            expect(card?.style.backgroundColor).toBe("rgba(255, 0, 0, 0.6)");
             expect(
                 card?.classList.contains(CSS_CLASSES.CUSTOM_OVERLAY_BACKGROUND)
             ).toBe(true);
@@ -1034,10 +1034,13 @@ describe("App", () => {
                 });
 
                 // Verify challenge was updated
-                const updatedChallenge =
-                    app.challengeList.getChallengeById(challenge.id);
+                const updatedChallenge = app.challengeList.getChallengeById(
+                    challenge.id
+                );
                 expect(updatedChallenge?.title).toBe("Updated Title");
-                expect(updatedChallenge?.description).toBe("Updated Description");
+                expect(updatedChallenge?.description).toBe(
+                    "Updated Description"
+                );
                 expect(updatedChallenge?.amount).toBe(5);
                 expect(updatedChallenge?.timer).toBeDefined();
             });
@@ -1062,8 +1065,9 @@ describe("App", () => {
                 });
 
                 // Verify challenge was updated
-                const updatedChallenge =
-                    app.challengeList.getChallengeById(challenge.id);
+                const updatedChallenge = app.challengeList.getChallengeById(
+                    challenge.id
+                );
                 expect(updatedChallenge?.title).toBe("Updated Title Only");
             });
         });
@@ -1081,7 +1085,9 @@ describe("App", () => {
         describe("Increment Button Click", () => {
             it("should increment challenge progress when button is clicked", () => {
                 // Add a challenge with amount
-                const challenge = new Challenge("Test Challenge", { amount: 5 });
+                const challenge = new Challenge("Test Challenge", {
+                    amount: 5,
+                });
                 app.challengeList.addChallengeObjects(challenge);
                 app.renderChallengeList();
 
@@ -1105,8 +1111,9 @@ describe("App", () => {
                 app["handleIncrementButtonClick"](clickEvent);
 
                 // Verify progress was incremented
-                const updatedChallenge =
-                    app.challengeList.getChallengeById(challenge.id);
+                const updatedChallenge = app.challengeList.getChallengeById(
+                    challenge.id
+                );
                 expect(updatedChallenge?.progress).toBe(1);
             });
 
@@ -1170,7 +1177,9 @@ describe("App", () => {
         describe("Decrement Button Click", () => {
             it("should decrement challenge progress when button is clicked", () => {
                 // Add a challenge with amount and progress
-                const challenge = new Challenge("Test Challenge", { amount: 5 });
+                const challenge = new Challenge("Test Challenge", {
+                    amount: 5,
+                });
                 challenge.incrementProgress(); // Set progress to 1
                 app.challengeList.addChallengeObjects(challenge);
                 app.renderChallengeList();
@@ -1195,8 +1204,9 @@ describe("App", () => {
                 app["handleDecrementButtonClick"](clickEvent);
 
                 // Verify progress was decremented
-                const updatedChallenge =
-                    app.challengeList.getChallengeById(challenge.id);
+                const updatedChallenge = app.challengeList.getChallengeById(
+                    challenge.id
+                );
                 expect(updatedChallenge?.progress).toBe(0);
             });
 

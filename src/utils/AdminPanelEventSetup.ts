@@ -166,14 +166,6 @@ export class AdminPanelEventSetup {
             BACKGROUND_UI_ELEMENTS.OPACITY_DISPLAY
         );
 
-        // App background opacity slider
-        const appBackgroundOpacitySlider = document.getElementById(
-            BACKGROUND_UI_ELEMENTS.APP_BACKGROUND_OPACITY_SLIDER
-        ) as HTMLInputElement;
-        const appBackgroundOpacityDisplay = document.getElementById(
-            BACKGROUND_UI_ELEMENTS.APP_BACKGROUND_OPACITY_DISPLAY
-        );
-
         // Text color settings
         const textColorInput = document.getElementById(
             BACKGROUND_UI_ELEMENTS.TEXT_COLOR_INPUT
@@ -218,20 +210,6 @@ export class AdminPanelEventSetup {
                 updatePreviewCallback();
                 autoSaveCallback();
             });
-        }
-
-        // App background opacity listener
-        if (appBackgroundOpacitySlider && appBackgroundOpacityDisplay) {
-            appBackgroundOpacitySlider.addEventListener(
-                EVENT_NAMES.INPUT,
-                () => {
-                    const opacityValue = parseInt(
-                        appBackgroundOpacitySlider.value
-                    );
-                    appBackgroundOpacityDisplay.textContent = `${opacityValue}${COMMON_STRINGS.PERCENT_SYMBOL}`;
-                    autoSaveCallback();
-                }
-            );
         }
 
         // Text color listeners
