@@ -103,6 +103,21 @@ export const AdminPanelTemplates = {
               </div>
             </div>
 
+            <!-- Tier Colors Opacity Control -->
+            <div class="color-tier-section" id="tier-colors-opacity-section">
+              <h5 class="color-tier-title">Color Row Opacity</h5>
+              <div class="color-pickers-container expanded">
+                <div class="color-picker-group">
+                  <label class="color-picker-label">Opacity (%)</label>
+                  <div class="opacity-control">
+                    <input type="range" id="row-colors-opacity" class="form-input opacity-slider"
+                           min="0" max="100" value="${params.rowColorsOpacityPercent}" step="1">
+                    <span id="row-colors-opacity-display" class="opacity-value">${params.rowColorsOpacityPercent}%</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
             <!-- Text Readability Configuration -->
             <div class="text-readability-section" style="margin-top: 1rem;">
               <h5 class="subsection-title">Text Readability</h5>
@@ -147,18 +162,6 @@ export const AdminPanelTemplates = {
                     <div class="preview-description">This is how your challenges will look</div>
                     <div class="preview-progress">Progress: 3/5</div>
                   </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Tier Colors Opacity Control -->
-            <div class="form-row" style="margin-top: 1rem;">
-              <div class="form-column">
-                <label class="form-label">Tier Colors Opacity (%)</label>
-                <div class="opacity-control">
-                  <input type="range" id="row-colors-opacity" class="form-input opacity-slider"
-                         min="0" max="100" value="${params.rowColorsOpacityPercent}" step="5">
-                  <span id="row-colors-opacity-display" class="opacity-value">${params.rowColorsOpacityPercent}%</span>
                 </div>
               </div>
             </div>
