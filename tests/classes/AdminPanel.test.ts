@@ -1194,7 +1194,6 @@ describe("AdminPanel", () => {
                 <div class="admin-content">
                     <input type="color" id="overlay-background-color" value="#000000">
                     <input type="range" id="overlay-background-opacity" value="80">
-                    <input type="range" id="app-background-opacity" value="50">
                     <input type="color" id="challenge-background-color" value="#333333">
                     <input type="range" id="challenge-background-opacity" value="90">
                     <input type="color" id="challenge-text-color" value="#ffffff">
@@ -1754,8 +1753,6 @@ describe("AdminPanel", () => {
                 <input type="color" id="overlay-background-color" value="#000000" />
                 <input type="range" id="overlay-background-opacity" value="60" />
                 <span id="overlay-background-opacity-display">60%</span>
-                <input type="range" id="app-background-opacity" value="0" />
-                <span id="app-background-opacity-display">0%</span>
                 <input type="color" id="challenge-background-color" value="#000000" />
                 <input type="range" id="challenge-background-opacity" value="90" />
                 <span id="challenge-background-opacity-display">90%</span>

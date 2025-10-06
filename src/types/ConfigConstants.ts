@@ -167,8 +167,4 @@ export const BACKGROUND_UI_ELEMENTS = {
     AUTO_TEXT_COLOR_CHECKBOX: "challenge-auto-text-color",
     TEXT_COLOR_INPUT: "challenge-text-color",
     TEXT_SHADOW_CHECKBOX: "challenge-text-shadow",
-
-    // App container background UI elements
-    APP_BACKGROUND_OPACITY_SLIDER: "app-background-opacity",
-    APP_BACKGROUND_OPACITY_DISPLAY: "app-background-opacity-display",
 } as const;

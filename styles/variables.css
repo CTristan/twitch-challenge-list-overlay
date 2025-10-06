@@ -7,8 +7,6 @@
   --app-border-radius: 0.5rem;
   --app-padding: 0.75rem;
   --app-background-image: url(../images/transparent-image.png);
-  --app-background-opacity: 0;
-  --app-background-color: rgba(130, 130, 130, var(--app-background-opacity));
 
   /* Header */
   --header-display: flex;
