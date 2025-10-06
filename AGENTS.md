@@ -39,6 +39,18 @@
 -   **TwitchChat**: WebSocket IRC client with OAuth validation
 -   **Timer/TimerController**: Countdown and lifecycle management
 
+### AdminPanel Architecture
+
+The AdminPanel class delegates to specialized utility classes:
+
+-   **AdminPanelColorManager** - Color configuration logic (storage/UI format conversion, tier state management)
+-   **AdminPanelBackgroundManager** - Background configuration (RGBA conversion, text color calculation, preview updates)
+-   **AdminPanelConfigValidator** - Configuration validation (max challenges, opacity values, error feedback)
+-   **AdminPanelDOMBuilder** - DOM element creation using AdminPanelTemplates (static methods)
+-   **AdminPanelEventSetup** - Event listener registration using EVENT_NAMES constants
+
+**Key Pattern**: All utility classes use static methods for stateless operations.
+
 ### Technology Stack
 
 -   **TypeScript** with ES modules, **Vite** (IIFE bundle), **Vitest** (jsdom)
@@ -89,8 +101,8 @@ const uiUpdate: UIUpdateData = { action: UIUpdateAction.ADD };
 
 -   **MessageConstants**: All message constants in `src/types/MessageConstants.ts` (ERROR_MESSAGES, SUCCESS_MESSAGES, HELP_MESSAGES, MODAL_TEXT, UI_ELEMENTS, ARIA_LABELS, etc.)
 -   **ConfigConstants**: Configuration property names in `src/types/ConfigConstants.ts` (AUTH_CONFIG, BEHAVIOR_CONFIG, BACKGROUND_CONFIG, etc.)
--   **ColorConstants**: UI colors in `src/types/ColorConstants.ts` (DEFAULT_COLORS, STATUS_COLORS, SHADOW_COLORS)
--   **DOMConstants**: CSS classes, selectors, element IDs, HTML elements, HTML attribute names, HTML attribute values in `src/types/DOMConstants.ts` (CSS_CLASSES, ELEMENT_IDS, EVENT_NAMES, HTML_ELEMENTS, HTML_ATTRIBUTE_NAMES, HTML_ATTRIBUTES, MODAL_MODES, etc.)
+-   **ColorConstants**: UI colors and color format strings in `src/types/ColorConstants.ts` (DEFAULT_COLORS, STATUS_COLORS, SHADOW_COLORS, COLOR_FORMAT)
+-   **DOMConstants**: CSS classes, selectors, element IDs, HTML elements, HTML attribute names, HTML attribute values, event names, CSS property values, common strings in `src/types/DOMConstants.ts` (CSS_CLASSES, CSS_VALUES, ELEMENT_IDS, EVENT_NAMES, COMMON_STRINGS, HTML_ELEMENTS, HTML_ATTRIBUTE_NAMES, HTML_ATTRIBUTES, MODAL_MODES, etc.)
 -   **FileConstants**: File formats and filenames in `src/types/FileConstants.ts` (FILE_FORMATS, DEFAULT_FILENAMES)
 -   **NumericConstants**: Validation constraints and calculations in `src/types/NumericConstants.ts` (FORM_CONSTRAINTS, COLOR_CONSTANTS)
 -   **UPPER_SNAKE_CASE Naming**: All constants follow established naming convention
@@ -98,17 +110,38 @@ const uiUpdate: UIUpdateData = { action: UIUpdateAction.ADD };
 -   **No Magic Values**: Never use hardcoded strings, numbers, or CSS classes
 -   **Centralized Organization**: Related constants grouped by purpose and functionality
 
+#### Key Constant Objects
+
+**ColorConstants.ts**:
+
+-   **COLOR_FORMAT**: Color format strings (HEX_PREFIX: "#", RGBA_PREFIX: "rgba(", RGBA_SEPARATOR: ",", HEX_PADDING_CHAR: "0")
+
+**DOMConstants.ts**:
+
+-   **EVENT_NAMES**: DOM event names (INPUT: "input", CHANGE: "change", CLICK: "click", etc.)
+-   **CSS_VALUES**: CSS property values (DISPLAY_FLEX: "flex", DISPLAY_NONE: "none", OPACITY_FULL: "1", OPACITY_DISABLED: "0.6", TEXT_SHADOW_NONE: "none")
+-   **COMMON_STRINGS**: Common display strings (EMPTY: "", SPACE: " ", PERCENT_SYMBOL: "%")
+
 #### DOMConstants Details
 
 **HTML Attribute Names vs Values**:
+
 -   **HTML_ATTRIBUTE_NAMES**: Attribute name strings for use in `setAttribute()` calls (ROLE, ARIA_LABEL, TABINDEX)
 -   **HTML_ATTRIBUTES**: Attribute value strings (ROLE_BUTTON = "button", TABINDEX_ZERO = "0")
 
 ```typescript
 // ✅ Usage examples
 import { BACKGROUND_CONFIG, COLOR_CONFIG } from "../types/ConfigConstants";
-import { DEFAULT_COLORS } from "../types/ColorConstants";
-import { CSS_CLASSES, ELEMENT_IDS, EVENT_NAMES, HTML_ATTRIBUTE_NAMES, HTML_ATTRIBUTES } from "../types/DOMConstants";
+import { COLOR_FORMAT, DEFAULT_COLORS } from "../types/ColorConstants";
+import {
+    CSS_CLASSES,
+    CSS_VALUES,
+    COMMON_STRINGS,
+    ELEMENT_IDS,
+    EVENT_NAMES,
+    HTML_ATTRIBUTE_NAMES,
+    HTML_ATTRIBUTES,
+} from "../types/DOMConstants";
 import { ERROR_MESSAGES, MODAL_TEXT } from "../types/MessageConstants";
 
 const backgroundColor = configManager.get(
@@ -119,8 +152,29 @@ window.addEventListener(EVENT_NAMES.CHALLENGE_LIST_REFRESH, handler);
 
 // HTML attribute usage
 element.setAttribute(HTML_ATTRIBUTE_NAMES.ROLE, HTML_ATTRIBUTES.ROLE_BUTTON);
-element.setAttribute(HTML_ATTRIBUTE_NAMES.ARIA_LABEL, ARIA_LABELS.EDIT_CHALLENGE);
-element.setAttribute(HTML_ATTRIBUTE_NAMES.TABINDEX, HTML_ATTRIBUTES.TABINDEX_ZERO);
+element.setAttribute(
+    HTML_ATTRIBUTE_NAMES.ARIA_LABEL,
+    ARIA_LABELS.EDIT_CHALLENGE
+);
+element.setAttribute(
+    HTML_ATTRIBUTE_NAMES.TABINDEX,
+    HTML_ATTRIBUTES.TABINDEX_ZERO
+);
+
+// Event listener usage
+field.addEventListener(EVENT_NAMES.INPUT, callback);
+checkbox.addEventListener(EVENT_NAMES.CHANGE, callback);
+
+// CSS property value usage
+element.style.display = CSS_VALUES.DISPLAY_FLEX;
+element.style.opacity = CSS_VALUES.OPACITY_FULL;
+
+// Display formatting usage
+displayElement.textContent = `${value}${COMMON_STRINGS.PERCENT_SYMBOL}`;
+
+// Color format usage
+const hex = n.toString(COLOR_CONSTANTS.HEX_BASE);
+return hex.length === 1 ? COLOR_FORMAT.HEX_PADDING_CHAR + hex : hex;
 ```
 
 ### Class Structure Pattern
@@ -357,156 +411,52 @@ Single challenge panel with dual-mode interface:
 
 ### Challenge Display with Numeric ID Prefixes (Implemented)
 
--   **Numeric ID prefix**: Each challenge row displays its position number at the beginning (e.g., "1. ", "2. ", "3. ")
--   **Visual format**: `"{id}. {challenge_title}"` where `{id}` is the 1-based position number
--   **Consistent display**: ID prefix appears in both viewer mode (OBS overlay) and admin mode
--   **User experience benefit**: Makes it easier for moderators to identify which numeric ID to use in chat commands
--   **Command integration**: IDs correspond to command parameters (e.g., `!ch done 1`, `!ch edit 2 title="New Title"`, `!ch delete 3`)
--   **Implementation**: ChallengeRenderer accepts optional `displayPosition` parameter for rendering ID prefix
--   **Position calculation**: Display position is calculated as `index + 1` (converting 0-based array indices to 1-based user-facing IDs)
-
-**Example output formats**:
-
--   Simple challenge: `"1. Complete the tutorial"`
--   Challenge with progress: `"2. Collect 5 items (3/5)"`
--   Challenge with timer: `"3. Speed run challenge ⏱️ 5:30"`
--   Challenge with description:
-    ```
-    1. Testing Descriptions
-    Should see a description for this challenge!
-    ```
+-   **Numeric ID prefix**: Each challenge displays position number (e.g., "1. ", "2. ", "3. ")
+-   **Visual format**: `"{id}. {challenge_title}"` where `{id}` is 1-based position
+-   **Command integration**: IDs correspond to command parameters (`!ch done 1`, `!ch edit 2`, `!ch delete 3`)
+-   **Implementation**: ChallengeRenderer accepts `displayPosition` parameter (index + 1)
 
 ### Challenge Metadata Row Layout (Implemented)
 
--   **Metadata row container**: Challenge amount and timer are positioned in a dedicated `.challenge-metadata` flexbox container
--   **Prevents text truncation**: Title and description always display fully without being cut off by timer
--   **Proper positioning**: Amount on bottom-left, timer on bottom-right, never overlapping
--   **Flexbox layout**: Uses `display: flex` with `justify-content: space-between` for automatic spacing
+-   **Metadata row container**: Amount and timer positioned in `.challenge-metadata` flexbox container
+-   **Prevents text truncation**: Title and description display fully without being cut off
+-   **Flexbox layout**: `display: flex` with `justify-content: space-between` (amount left, timer right)
 -   **Conditional rendering**: Metadata row only created when amount > 1 OR timer exists
--   **Improved readability**: Challenge description font weight increased from 300 (light) to 400 (normal) for better readability
-
-**Layout structure**:
-```
-.challenge (flex container, horizontal)
-├── .challenge-checkbox
-├── .challenge-edit-icon (admin only)
-├── .challenge-increment-button (admin only, if amount > 1)
-├── .challenge-decrement-button (admin only, if amount > 1)
-└── .challenge-text (flex container, vertical)
-    ├── .challenge-title
-    ├── .challenge-description (if different from title)
-    └── .challenge-metadata (flex container, horizontal)
-        ├── .challenge-amount (left side)
-        └── .challenge-timer (right side)
-```
 
 ### Countdown Timer Display (Implemented)
 
--   **Real-time countdown**: Timers automatically count down every second with live updates
--   **Human-readable format**: Displays time in formats like "5:30", "1:23:45", "30s"
--   **Visual state indicators**: Dynamic color and emoji changes based on remaining time
--   **Normal State**: White text with ⏱️ emoji for timers with >2 minutes remaining
--   **Warning State** (≤2 minutes): Gold color (#ffd700) with 🟡 emoji
--   **Critical State** (≤30 seconds): Red color (#ff6b6b) with 🔴 emoji
--   **Expired State**: Bright red (#ff4757) with ⏰ emoji when timer reaches zero
+-   **Real-time countdown**: Live updates every second in human-readable format ("5:30", "1:23:45", "30s")
+-   **Visual states**: Normal (⏱️ white), Warning ≤2min (🟡 gold), Critical ≤30s (🔴 red), Expired (⏰ bright red)
 
 ### Unified Command System (Implemented)
 
-Comprehensive command system with:
-
 -   **Unified "!ch" prefix** with keyword subcommands
--   **Type-safe processing** with centralized command types
+-   **Type-safe processing** with centralized command types in `CommandTypes.ts`
 -   **Command aliasing** - multiple variations resolve to canonical types
--   **Dual syntax** - key=value and simple string
+-   **Dual syntax** - key=value (`d=`, `a=`, `t=`) and simple string
 -   **Advanced management** - increment, decrement, set, multiple IDs
--   **Robust validation** and error handling
+-   **Command Pattern**: Interface, BaseCommand, individual command classes, CommandRegistry
+-   **Permission Model**: ALL commands require moderator/broadcaster permissions
 
-#### Command Type System
-
-```typescript
-// Centralized command types in src/types/CommandTypes.ts
-export const CommandType = {
-    // Challenge management commands
-    ADD: "add",
-    EDIT: "edit",
-    DONE: "done",
-    UNDONE: "undone",
-    FAIL: "fail",
-    DELETE: "delete",
-    // Progress commands
-    INCREMENT: "+",
-    DECREMENT: "-",
-    SET: "set",
-    // Information commands
-    LIST: "list",
-    SHOW: "show",
-    HELP: "help",
-    // Admin commands
-    CLEAR_ALL: "clearall",
-    CLEAR_DONE: "cleardone",
-} as const;
-
-// Command aliasing system supports multiple aliases for each command type
-// Permission Model: ALL commands require moderator/broadcaster permissions
-```
-
-#### Command Pattern Implementation
-
-The command system uses the Command pattern for extensibility and maintainability:
-
--   **Command Interface**: Defines the contract for all command implementations
--   **BaseCommand Abstract Class**: Provides common functionality and dependencies
--   **Individual Command Classes**: Specific implementations for each command type
--   **CommandRegistry**: Manages command instances and routing
--   **Type-safe Command Routing**: Uses the centralized command type system
-
-#### Current Command Processing Flow
-
-1. **Command Reception**: TwitchChat receives "!ch [keyword] [parameters]" from IRC
-2. **Command Validation**: App.chatHandler validates command format and user permissions
-3. **Command Parsing**: CommandParser extracts keyword and parameters using dual syntax support
-4. **Command Normalization**: CommandTypes.normalizeCommand() converts aliases to canonical types
-5. **Command Execution**: CommandHandler routes to CommandRegistry which delegates to appropriate Command class
-6. **Response Generation**: Formatted response returned to chat with success/error messaging
-
-#### Dual Command Syntax Support
-
-1. **Key=value parameter syntax**: `!ch add "Challenge Name" d="Description" a=5 t=10m`
-    - **Abbreviated parameters**: `d=`, `a=`, `t=` (preferred for brevity)
-    - **Full parameters**: `desc=`, `amount=`, `timer=` (also supported)
-2. **Simple string syntax**: `!ch add Challenge Name` (uses entire string as title)
-
-#### Enhanced Command Features
-
--   **Multiple Target ID Support**: Commands like "!ch done 1,3,5" can operate on multiple challenges simultaneously
--   **Parameter Validation**: Comprehensive validation for title length, timer format, amount values, etc.
--   **Timer Integration**: Full support for timer parameters in add commands with format validation
--   **Error Handling**: Detailed error messages for invalid commands, missing permissions, or malformed parameters
--   **Command Help System**: Built-in help command provides usage information for all available commands
--   **DOM Update Coordination**: Automatic completion status detection ensures real-time visual updates when progress operations trigger completion state changes
+**Processing Flow**: TwitchChat → App.chatHandler → CommandParser → CommandTypes.normalizeCommand() → CommandHandler → CommandRegistry → Command class → Response
 
 ### Admin Panel Features (Implemented)
 
--   **Auto-save configuration** - All configuration changes are automatically saved to localStorage immediately when modified
--   **Configuration management** with live editing capabilities
+-   **Auto-save configuration** - All configuration changes automatically saved to localStorage
+-   **Configuration management** with live editing, backup/restore, reset to defaults
 -   **Challenge list controls** (clear all, clear completed)
--   **Configuration backup/restore** - Export and import configuration as JSON files
--   **Reset to defaults** - Restore default configuration values
 -   **Color configuration** for challenge rows with opacity control
--   **App background opacity control** - Configurable opacity (0-100%) for the main app container background, allowing fully transparent overlays (default: 0%)
--   **Real-time configuration updates** across windows - Configuration changes trigger full page reload in viewer window
--   **Real-time challenge state synchronization** - Challenge state changes trigger DOM-only updates in viewer window
--   **Window refresh communication** via BroadcastChannel for automatic viewer window updates
--   **Interactive checkboxes** - Checkboxes in admin mode are clickable and toggle challenge completion status with real-time sync
--   **Checkbox styling consistency** - Admin mode checkboxes respect configured text colors from row color configuration
--   **Clear Finished Challenges button** - Dedicated button in admin mode to remove all completed challenges with real-time sync
--   **Add Challenge modal** - Admin panel modal for adding challenges with real-time sync to viewer window
--   **Edit Challenge modal** - Reuses Add Challenge modal infrastructure with mode switching (MODAL_MODES.ADD / MODAL_MODES.EDIT)
--   **Edit icon (✏️)** - Clickable edit icon appears next to checkboxes in admin mode only (conditionally rendered based on window.location.hash)
+-   **App background opacity control** - Configurable opacity (0-100%, default: 0%)
+-   **Real-time configuration updates** - Config changes trigger full page reload in viewer window
+-   **Real-time challenge state synchronization** - Challenge changes trigger DOM-only updates in viewer window
+-   **Window refresh communication** via BroadcastChannel
+-   **Interactive checkboxes** - Clickable in admin mode, toggle completion with real-time sync
+-   **Add/Edit Challenge modals** - Modal interface with mode switching (MODAL_MODES.ADD / MODAL_MODES.EDIT)
+-   **Edit icon (✏️)** - Appears next to checkboxes in admin mode only
 
 ## Cross-Window Synchronization
 
-The application uses **BroadcastChannel API** for real-time synchronization between admin and viewer windows, enabling automatic updates without manual browser refreshes.
+The application uses **BroadcastChannel API** for real-time synchronization between admin and viewer windows.
 
 ### WindowRefreshManager
 
@@ -534,27 +484,6 @@ The WindowRefreshManager handles cross-window communication with two distinct me
 -   **`triggerChallengeListRefresh()`** - Dispatches custom `'challenge-list-refresh'` event
 -   **`isAvailable()`** - Checks if BroadcastChannel is supported
 
-### Synchronization Flow
-
-#### Challenge State Changes (DOM-only update)
-
-1. **Admin Action**: User performs action in admin mode (checkbox click, clear finished, add challenge)
-2. **Local Update**: Challenge list updates in localStorage and local DOM updates
-3. **Broadcast**: `notifyChallengeStateChanged()` sends BroadcastChannel message
-4. **Viewer Receives**: WindowRefreshManager receives `'challenge-state-changed'` message
-5. **Custom Event**: Dispatches `'challenge-list-refresh'` event on window
-6. **App Handler**: `App.handleChallengeListRefresh()` catches event
-7. **Reload & Render**: Calls `challengeList.loadFromLocalStorage()` and re-renders DOM
-8. **Real-time Sync**: Changes appear immediately in viewer overlay
-
-#### Configuration Changes (full page reload)
-
-1. **Admin Action**: User modifies configuration in admin panel
-2. **Auto-save**: Configuration saves to localStorage
-3. **Broadcast**: `notifyConfigurationSaved()` sends BroadcastChannel message
-4. **Viewer Receives**: WindowRefreshManager receives `'config-saved'` message
-5. **Full Reload**: Triggers `window.location.reload()` in viewer window
-
 ### App Class Synchronization Methods
 
 **Location**: `src/app.ts`
@@ -579,83 +508,22 @@ The WindowRefreshManager handles cross-window communication with two distinct me
     -   Calls internal `#commitToLocalStorage()` method
     -   Required after calling challenge setters like `setTitle()`, `setDescription()`, `setAmount()`, `setTimer()`
 
-### DOMConstants Event Names
-
-**Location**: `src/types/DOMConstants.ts`
-
--   **`EVENT_NAMES.CHALLENGE_LIST_REFRESH`** - Custom event name for challenge list refresh (`'challenge-list-refresh'`)
-
-### Admin Actions with Real-Time Sync
-
-All admin panel interactions that modify challenge state trigger `notifyChallengeStateChanged()`:
-
-| Action                | Method                           | Trigger                     |
-| --------------------- | -------------------------------- | --------------------------- |
-| Checkbox click        | `App.handleCheckboxClick()`      | Toggle challenge completion |
-| Clear Finished button | `App.handleClearFinishedClick()` | Remove completed challenges |
-| Add Challenge modal   | `App.createChallengeFromForm()`  | Add new challenge           |
-| Edit Challenge modal  | `App.updateChallengeFromForm()`  | Edit existing challenge     |
-
-### Testing Cross-Window Synchronization
-
-1. **Open two browser windows**:
-
-    - Admin: `file:///path/to/index.html#admin`
-    - Viewer: `file:///path/to/index.html`
-
-2. **Test challenge state sync**:
-
-    - Add challenge in admin → appears immediately in viewer
-    - Edit challenge in admin → changes appear immediately in viewer
-    - Click checkbox in admin → completion status updates immediately in viewer
-    - Clear finished in admin → completed challenges removed immediately in viewer
-
-3. **Test configuration sync**:
-    - Change colors in admin → viewer reloads with new colors
-    - Update max challenges in admin → viewer reloads with new limit
-
 ## Troubleshooting Common Issues
 
 ### Authentication Problems
 
-**Help Commands Not Responding**
-
--   **Symptoms**: Bot doesn't respond to `!ch` or `!ch help` commands in Twitch chat, but other commands like `!ch add Test` work.
--   **Root Cause**: Invalid or missing OAuth token format causing authentication failures.
--   **Solution**:
-    1. Generate new OAuth token from https://twitchtokengenerator.com
-    2. Update `_config.js` with the new token
-    3. Ensure proper format: Token must start with `oauth:` prefix
-    4. Rebuild application: Run `pnpm run build`
-    5. Refresh overlay in OBS or browser
+-   **Symptoms**: Bot doesn't respond to `!ch` or `!ch help` commands
+-   **Solution**: Generate new OAuth token from https://twitchtokengenerator.com, update `_config.js`, ensure `oauth:` prefix, rebuild with `pnpm run build`
 
 ### Timer-Related Issues
 
-**Timer Not Displaying in Overlay**
-
--   **Symptoms**: Commands like `!ch add title="Test" timer=10s` execute successfully but timer doesn't appear in challenge rows.
--   **Root Cause**: Import/require issues in TypeScript/ES module environment causing timer validation to fail silently.
--   **Solution**:
-    1. Check import statements: Ensure all Timer imports use ES module syntax: `import Timer from "../utils/Timer";`
-    2. Rebuild application: Run `pnpm run build` after fixing imports
-    3. Test with browser console: Use Playwright or browser dev tools to verify timer creation
-    4. Check console logs: Look for timer validation errors during command processing
+-   **Symptoms**: Timer commands execute but timer doesn't appear
+-   **Solution**: Ensure Timer imports use ES module syntax: `import Timer from "../utils/Timer";`, rebuild application
 
 ### Command Processing Issues
 
-**Commands Ignored for Regular Users**
-
--   **Expected Behavior**: Regular viewers' commands are silently ignored (no response).
--   **Authorized Users**: Only broadcasters and moderators can use bot commands.
--   **Verification**: Check user permissions in Twitch chat - ensure you're testing with broadcaster or moderator account.
-
-### DOM Update Issues
-
-**Increment Commands Not Showing Completion State**
-
--   **Symptoms**: When increment commands cause a challenge to reach completion (e.g., `!ch + 1` changing 4/5 to 5/5), the backend state updates correctly but the overlay doesn't show completion styling until manual browser refresh.
--   **Solution**: This issue has been resolved in the current version through enhanced completion status detection in the `executeProgressOperation` method.
--   **Prevention**: The system now automatically detects completion status changes during all progress operations (increment, decrement, set) and applies appropriate DOM updates.
+-   **Expected Behavior**: Regular viewers' commands are silently ignored (no response)
+-   **Authorized Users**: Only broadcasters and moderators can use bot commands
 
 ## Development Guidelines
 
@@ -781,10 +649,11 @@ challenges.forEach((challenge: Challenge, index: number) => {
 ```
 
 **Key Points**:
-- Use `displayPosition: index + 1` for ID prefix
-- Format: `"{id}. {title}"` (e.g., "1. Complete tutorial")
-- Metadata row (`.challenge-metadata`) automatically created when amount > 1 OR timer exists
-- Amount and timer positioned side-by-side in metadata row (amount left, timer right)
+
+-   Use `displayPosition: index + 1` for ID prefix
+-   Format: `"{id}. {title}"` (e.g., "1. Complete tutorial")
+-   Metadata row (`.challenge-metadata`) automatically created when amount > 1 OR timer exists
+-   Amount and timer positioned side-by-side in metadata row (amount left, timer right)
 
 ### HTML Attribute Setting Pattern
 
@@ -797,10 +666,7 @@ import { ARIA_LABELS, UI_ELEMENTS } from "../types/MessageConstants";
 // ✅ CORRECT: Use constants for both attribute names and values
 const editIcon = document.createElement(HTML_ELEMENTS.DIV);
 editIcon.textContent = UI_ELEMENTS.EDIT_ICON;
-editIcon.setAttribute(
-    HTML_ATTRIBUTE_NAMES.ROLE,
-    HTML_ATTRIBUTES.ROLE_BUTTON
-);
+editIcon.setAttribute(HTML_ATTRIBUTE_NAMES.ROLE, HTML_ATTRIBUTES.ROLE_BUTTON);
 editIcon.setAttribute(
     HTML_ATTRIBUTE_NAMES.ARIA_LABEL,
     ARIA_LABELS.EDIT_CHALLENGE
@@ -816,9 +682,40 @@ editIcon.setAttribute("aria-label", ARIA_LABELS.EDIT_CHALLENGE);
 ```
 
 **Key Points**:
-- **HTML_ATTRIBUTE_NAMES**: Attribute name strings (ROLE = "role", ARIA_LABEL = "aria-label", TABINDEX = "tabindex")
-- **HTML_ATTRIBUTES**: Attribute value strings (ROLE_BUTTON = "button", TABINDEX_ZERO = "0")
-- Always use constants for both attribute names and values to eliminate magic strings
+
+-   **HTML_ATTRIBUTE_NAMES**: Attribute name strings (ROLE = "role", ARIA_LABEL = "aria-label", TABINDEX = "tabindex")
+-   **HTML_ATTRIBUTES**: Attribute value strings (ROLE_BUTTON = "button", TABINDEX_ZERO = "0")
+-   Always use constants for both attribute names and values to eliminate magic strings
+
+### Event Listener Pattern
+
+Use `EVENT_NAMES` constants for all event listener registration:
+
+```typescript
+import { EVENT_NAMES } from "../types/DOMConstants";
+
+// ✅ CORRECT: Use EVENT_NAMES constants
+field.addEventListener(EVENT_NAMES.INPUT, callback);
+checkbox.addEventListener(EVENT_NAMES.CHANGE, callback);
+button.addEventListener(EVENT_NAMES.CLICK, callback);
+
+// ❌ INCORRECT: Hardcoded event names
+field.addEventListener("input", callback);
+checkbox.addEventListener("change", callback);
+```
+
+**Event Type Guidelines**:
+
+-   **`EVENT_NAMES.INPUT`**: Use for real-time updates (text inputs, color pickers, range sliders)
+-   **`EVENT_NAMES.CHANGE`**: Use for form validation and auto-save on blur/completion (number inputs, checkboxes, select elements)
+-   **`EVENT_NAMES.CLICK`**: Use for button clicks and interactive elements
+
+**Auto-Save Pattern**:
+
+-   **Authentication fields**: Use `EVENT_NAMES.INPUT` for immediate feedback
+-   **Behavior fields** (e.g., max challenges): Use `EVENT_NAMES.CHANGE` to validate on blur/Enter
+-   **Color pickers**: Use `EVENT_NAMES.INPUT` for real-time preview
+-   **Checkboxes**: Use `EVENT_NAMES.CHANGE` for state changes
 
 ### Admin Panel Template Pattern
 
@@ -829,8 +726,28 @@ import { AdminPanelTemplates } from "../templates/AdminPanelTemplates";
 
 const colorContent = AdminPanelTemplates.colorSection({
     primaryBackgroundColor: DEFAULT_COLORS.PRIMARY_BACKGROUND,
-    // ... other parameters
+    primaryTextColor: DEFAULT_COLORS.PRIMARY_TEXT,
+    secondaryBackgroundColor: DEFAULT_COLORS.SECONDARY_BACKGROUND,
+    secondaryTextColor: DEFAULT_COLORS.SECONDARY_TEXT,
+    tertiaryBackgroundColor: DEFAULT_COLORS.TERTIARY_BACKGROUND,
+    tertiaryTextColor: DEFAULT_COLORS.TERTIARY_TEXT,
+    rowColorsOpacityPercent: 100,
+    elementIds: ELEMENT_IDS,
+});
+
+const backgroundContent = AdminPanelTemplates.backgroundSection({
+    overlayBackgroundColor: DEFAULT_COLORS.CHALLENGE_BACKGROUND,
+    challengeBackgroundColor: DEFAULT_COLORS.CHALLENGE_BACKGROUND,
+    challengeTextColor: DEFAULT_COLORS.WHITE_TEXT,
+    elementIds: ELEMENT_IDS,
 });
 ```
 
 **Benefits**: Separation of concerns, type safety, maintainability, reusability
+
+**Template Parameter Interfaces**:
+
+-   **ColorSectionParams**: Requires `rowColorsOpacityPercent` (not `rowColorsOpacity`) and `elementIds`
+-   **BackgroundSectionParams**: Requires only `overlayBackgroundColor`, `challengeBackgroundColor`, `challengeTextColor`, and `elementIds`
+-   Always pass the complete parameter object matching the interface definition
+-   Template methods handle default values and additional configuration internally

@@ -26,6 +26,7 @@ export const DEFAULT_COLORS = {
 
     // Text color calculation defaults
     BLACK_TEXT: "#000000",
+    BLACK_TEXT_SHORT: "#000",
     WHITE_TEXT: "#ffffff",
 } as const;
 
@@ -45,4 +46,14 @@ export const STATUS_COLORS = {
 export const SHADOW_COLORS = {
     WHITE_SHADOW: "rgba(255, 255, 255, 0.8)",
     BLACK_SHADOW: "rgba(0, 0, 0, 0.8)",
+} as const;
+
+/**
+ * Color format strings for parsing and conversion
+ */
+export const COLOR_FORMAT = {
+    HEX_PREFIX: "#",
+    RGBA_PREFIX: "rgba(",
+    RGBA_SEPARATOR: ",",
+    HEX_PADDING_CHAR: "0",
 } as const;

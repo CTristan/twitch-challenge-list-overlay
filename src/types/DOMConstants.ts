@@ -229,6 +229,7 @@ export const COMMAND_CONSTANTS = {
 export const COMMON_STRINGS = {
     EMPTY: "",
     SPACE: " ",
+    PERCENT_SYMBOL: "%",
     COMMAND_NOT_FOUND: "command not found",
 } as const;
 
@@ -296,3 +297,21 @@ export type HTMLAttributeValue =
     (typeof HTML_ATTRIBUTES)[keyof typeof HTML_ATTRIBUTES];
 export type ButtonTextValue = (typeof BUTTON_TEXT)[keyof typeof BUTTON_TEXT];
 export type ModalModeValue = (typeof MODAL_MODES)[keyof typeof MODAL_MODES];
+
+/**
+ * CSS property values used throughout the application
+ */
+export const CSS_VALUES = {
+    // Text shadow values
+    TEXT_SHADOW_NONE: "none",
+
+    // Display values
+    DISPLAY_FLEX: "flex",
+    DISPLAY_NONE: "none",
+
+    // Opacity values
+    OPACITY_FULL: "1",
+    OPACITY_DISABLED: "0.6",
+} as const;
+
+export type CSSValue = (typeof CSS_VALUES)[keyof typeof CSS_VALUES];

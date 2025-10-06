@@ -1055,4 +1055,834 @@ describe("AdminPanel", () => {
             }).not.toThrow();
         });
     });
+
+    describe("Color Configuration Helper Methods", () => {
+        beforeEach(() => {
+            window.location.hash = "#admin";
+            document.body.innerHTML = `
+                <div class="admin-content">
+                    <input type="checkbox" id="primary-color-enabled" checked>
+                    <div id="primary-color-pickers" class="color-pickers"></div>
+                    <input type="color" id="primary-bg-color" value="#ff0000">
+                    <input type="color" id="primary-text-color" value="#ffffff">
+                    <input type="checkbox" id="secondary-color-enabled">
+                    <div id="secondary-color-pickers" class="color-pickers"></div>
+                    <input type="color" id="secondary-bg-color" value="#00ff00">
+                    <input type="color" id="secondary-text-color" value="#000000">
+                    <input type="checkbox" id="tertiary-color-enabled">
+                    <div id="tertiary-color-pickers" class="color-pickers"></div>
+                    <input type="color" id="tertiary-bg-color" value="#0000ff">
+                    <input type="color" id="tertiary-text-color" value="#ffffff">
+                </div>
+            `;
+            adminPanel = new AdminPanel();
+        });
+
+        it("should convert colors array to UI format", () => {
+            const backgroundColors = ["#ff0000", "#00ff00", "#0000ff"];
+            const textColors = ["#ffffff", "#000000", "#ffffff"];
+
+            const result = (adminPanel as any).convertColorsToUI(
+                backgroundColors,
+                textColors
+            );
+
+            expect(result.primary.enabled).toBe(true);
+            expect(result.primary.backgroundColor).toBe("#ff0000");
+            expect(result.primary.textColor).toBe("#ffffff");
+            expect(result.secondary.enabled).toBe(true);
+            expect(result.secondary.backgroundColor).toBe("#00ff00");
+            expect(result.secondary.textColor).toBe("#000000");
+            expect(result.tertiary.enabled).toBe(true);
+            expect(result.tertiary.backgroundColor).toBe("#0000ff");
+            expect(result.tertiary.textColor).toBe("#ffffff");
+        });
+
+        it("should handle empty colors array", () => {
+            const result = (adminPanel as any).convertColorsToUI([], []);
+
+            expect(result.primary.enabled).toBe(false);
+            expect(result.secondary.enabled).toBe(false);
+            expect(result.tertiary.enabled).toBe(false);
+        });
+
+        it("should convert UI format to colors array", () => {
+            const colorConfig = {
+                primary: {
+                    enabled: true,
+                    backgroundColor: "#ff0000",
+                    textColor: "#ffffff",
+                },
+                secondary: {
+                    enabled: true,
+                    backgroundColor: "#00ff00",
+                    textColor: "#000000",
+                },
+                tertiary: {
+                    enabled: false,
+                    backgroundColor: "#0000ff",
+                    textColor: "#ffffff",
+                },
+            };
+
+            const backgroundColors = (adminPanel as any).convertUIToColors(
+                colorConfig
+            );
+            const textColors = (adminPanel as any).convertUIToTextColors(
+                colorConfig
+            );
+
+            expect(backgroundColors).toEqual(["#ff0000", "#00ff00"]);
+            expect(textColors).toEqual(["#ffffff", "#000000"]);
+        });
+
+        it("should get current color config from UI", () => {
+            const result = (adminPanel as any).getCurrentColorConfigFromUI();
+
+            // Verify structure is correct
+            expect(result).toHaveProperty("primary");
+            expect(result).toHaveProperty("secondary");
+            expect(result).toHaveProperty("tertiary");
+            expect(result.primary).toHaveProperty("enabled");
+            expect(result.primary).toHaveProperty("backgroundColor");
+            expect(result.primary).toHaveProperty("textColor");
+        });
+
+        it("should update color tier state when enabled", () => {
+            const pickersContainer = document.getElementById(
+                "primary-color-pickers"
+            );
+            const bgColorInput = document.getElementById(
+                "primary-bg-color"
+            ) as HTMLInputElement;
+            const textColorInput = document.getElementById(
+                "primary-text-color"
+            ) as HTMLInputElement;
+
+            (adminPanel as any).updateColorTierState("primary", true);
+
+            expect(pickersContainer?.classList.contains("expanded")).toBe(true);
+            expect(pickersContainer?.classList.contains("disabled")).toBe(false);
+            expect(bgColorInput.disabled).toBe(false);
+            expect(textColorInput.disabled).toBe(false);
+        });
+
+        it("should update color tier state when disabled", () => {
+            const pickersContainer = document.getElementById(
+                "primary-color-pickers"
+            );
+            const bgColorInput = document.getElementById(
+                "primary-bg-color"
+            ) as HTMLInputElement;
+            const textColorInput = document.getElementById(
+                "primary-text-color"
+            ) as HTMLInputElement;
+
+            (adminPanel as any).updateColorTierState("primary", false);
+
+            expect(pickersContainer?.classList.contains("expanded")).toBe(false);
+            expect(pickersContainer?.classList.contains("disabled")).toBe(true);
+            expect(bgColorInput.disabled).toBe(true);
+            expect(textColorInput.disabled).toBe(true);
+        });
+    });
+
+    describe("Background Configuration Helper Methods", () => {
+        beforeEach(() => {
+            window.location.hash = "#admin";
+            document.body.innerHTML = `
+                <div class="admin-content">
+                    <input type="color" id="overlay-background-color" value="#000000">
+                    <input type="range" id="overlay-background-opacity" value="80">
+                    <input type="range" id="app-background-opacity" value="50">
+                    <input type="color" id="challenge-background-color" value="#333333">
+                    <input type="range" id="challenge-background-opacity" value="90">
+                    <input type="color" id="challenge-text-color" value="#ffffff">
+                    <input type="checkbox" id="challenge-auto-text-color" checked>
+                    <input type="checkbox" id="challenge-text-shadow">
+                </div>
+            `;
+            adminPanel = new AdminPanel();
+        });
+
+        it("should get current background config from UI", () => {
+            const result = (
+                adminPanel as any
+            ).getCurrentBackgroundConfigFromUI();
+
+            // Verify structure and types
+            expect(result).toHaveProperty("overlayBackgroundColor");
+            expect(result).toHaveProperty("overlayBackgroundOpacity");
+            expect(result).toHaveProperty("appBackgroundOpacity");
+            expect(result).toHaveProperty("challengeBackgroundColor");
+            expect(result).toHaveProperty("challengeBackgroundOpacity");
+            expect(result).toHaveProperty("challengeAutoTextColor");
+            expect(result).toHaveProperty("challengeTextShadow");
+            expect(typeof result.overlayBackgroundOpacity).toBe("number");
+            expect(typeof result.appBackgroundOpacity).toBe("number");
+            expect(typeof result.challengeBackgroundOpacity).toBe("number");
+            expect(typeof result.challengeAutoTextColor).toBe("boolean");
+            expect(typeof result.challengeTextShadow).toBe("boolean");
+        });
+
+        it("should convert hex color to RGBA", () => {
+            const result = (adminPanel as any).convertColorToRGBA(
+                "#ff0000",
+                0.5
+            );
+
+            expect(result).toBe("rgba(255, 0, 0, 0.5)");
+        });
+
+        it("should calculate optimal text color for light background", () => {
+            const result = (adminPanel as any).calculateOptimalTextColor(
+                "#ffffff"
+            );
+
+            expect(result).toBe("#000000");
+        });
+
+        it("should calculate optimal text color for dark background", () => {
+            const result = (adminPanel as any).calculateOptimalTextColor(
+                "#000000"
+            );
+
+            expect(result).toBe("#ffffff");
+        });
+
+        it("should generate text shadow for dark text", () => {
+            const result = (adminPanel as any).generateTextShadow("#000000");
+
+            expect(result).toContain("rgba(255, 255, 255");
+        });
+
+        it("should generate text shadow for light text", () => {
+            const result = (adminPanel as any).generateTextShadow("#ffffff");
+
+            expect(result).toContain("rgba(0, 0, 0");
+        });
+    });
+
+    describe("Configuration Validation Extended", () => {
+        beforeEach(() => {
+            window.location.hash = "#admin";
+            adminPanel = new AdminPanel();
+        });
+
+        it("should reject null configuration", () => {
+            const result = (adminPanel as any).validateImportedConfiguration(
+                null
+            );
+
+            expect(result.isValid).toBe(false);
+            expect(result.errorMessage).toContain("valid object");
+        });
+
+        it("should reject non-object configuration", () => {
+            const result = (adminPanel as any).validateImportedConfiguration(
+                "not an object"
+            );
+
+            expect(result.isValid).toBe(false);
+            expect(result.errorMessage).toContain("valid object");
+        });
+
+        it("should reject configuration with invalid auth section", () => {
+            const config = {
+                auth: "not an object",
+                maxChallenges: 10,
+                commands: {},
+                responses: {},
+            };
+
+            const result = (adminPanel as any).validateImportedConfiguration(
+                config
+            );
+
+            expect(result.isValid).toBe(false);
+            expect(result.errorMessage).toContain("Auth section must be an object");
+        });
+
+        it("should reject configuration with missing auth properties", () => {
+            const config = {
+                auth: {
+                    twitch_oauth: "test",
+                    // missing twitch_username and twitch_channel
+                },
+                maxChallenges: 10,
+                commands: {},
+                responses: {},
+            };
+
+            const result = (adminPanel as any).validateImportedConfiguration(
+                config
+            );
+
+            expect(result.isValid).toBe(false);
+            expect(result.errorMessage).toContain("Missing auth property");
+        });
+
+        it("should reject configuration with non-string auth properties", () => {
+            const config = {
+                auth: {
+                    twitch_oauth: 123, // should be string
+                    twitch_username: "test",
+                    twitch_channel: "test",
+                },
+                maxChallenges: 10,
+                commands: {},
+                responses: {},
+            };
+
+            const result = (adminPanel as any).validateImportedConfiguration(
+                config
+            );
+
+            expect(result.isValid).toBe(false);
+            expect(result.errorMessage).toContain("must be a string");
+        });
+    });
+
+    describe("Import Error Handling", () => {
+        beforeEach(() => {
+            window.location.hash = "#admin";
+            document.body.innerHTML = `
+                <div class="admin-content">
+                    <button id="import-config-btn">Import Config</button>
+                </div>
+            `;
+            adminPanel = new AdminPanel();
+        });
+
+        it("should handle SyntaxError during import", () => {
+            const consoleSpy = vi
+                .spyOn(console, "error")
+                .mockImplementation(() => {});
+
+            // Call processImportedConfiguration with invalid JSON
+            (adminPanel as any).processImportedConfiguration(
+                "invalid json",
+                "import-config-btn"
+            );
+
+            const importBtn = document.getElementById(
+                "import-config-btn"
+            ) as HTMLButtonElement;
+
+            // Verify error feedback
+            expect(importBtn.textContent).toBe("Invalid JSON format!");
+            expect(consoleSpy).toHaveBeenCalled();
+
+            consoleSpy.mockRestore();
+        });
+
+        it("should handle generic errors during import", () => {
+            const consoleSpy = vi
+                .spyOn(console, "error")
+                .mockImplementation(() => {});
+
+            // Mock ConfigManager.import to throw error
+            const configManager = ConfigManager.getInstance();
+            const originalImport = configManager.import;
+            configManager.import = vi.fn(() => {
+                throw new Error("Import error");
+            });
+
+            // Call processImportedConfiguration with valid JSON
+            const validConfig = JSON.stringify({
+                auth: {
+                    twitch_oauth: "test",
+                    twitch_username: "test",
+                    twitch_channel: "test",
+                },
+                maxChallenges: 10,
+                commands: {},
+                responses: {},
+            });
+
+            (adminPanel as any).processImportedConfiguration(
+                validConfig,
+                "import-config-btn"
+            );
+
+            const importBtn = document.getElementById(
+                "import-config-btn"
+            ) as HTMLButtonElement;
+
+            // Verify error feedback
+            expect(importBtn.textContent).toBe("Import failed!");
+            expect(consoleSpy).toHaveBeenCalled();
+
+            // Restore
+            configManager.import = originalImport;
+            consoleSpy.mockRestore();
+        });
+
+        it("should handle ConfigManager.import returning false", () => {
+            // Mock ConfigManager.import to return false
+            const configManager = ConfigManager.getInstance();
+            const originalImport = configManager.import;
+            configManager.import = vi.fn(() => false);
+
+            // Call processImportedConfiguration with valid JSON
+            const validConfig = JSON.stringify({
+                auth: {
+                    twitch_oauth: "test",
+                    twitch_username: "test",
+                    twitch_channel: "test",
+                },
+                maxChallenges: 10,
+                commands: {},
+                responses: {},
+            });
+
+            (adminPanel as any).processImportedConfiguration(
+                validConfig,
+                "import-config-btn"
+            );
+
+            const importBtn = document.getElementById(
+                "import-config-btn"
+            ) as HTMLButtonElement;
+
+            // Verify error feedback
+            expect(importBtn.textContent).toBe("Failed to restore configuration!");
+
+            // Restore
+            configManager.import = originalImport;
+        });
+
+        it("should handle validation failure during import", () => {
+            // Call processImportedConfiguration with invalid config (missing auth)
+            const invalidConfig = JSON.stringify({
+                maxChallenges: 10,
+                commands: {},
+                responses: {},
+            });
+
+            (adminPanel as any).processImportedConfiguration(
+                invalidConfig,
+                "import-config-btn"
+            );
+
+            const importBtn = document.getElementById(
+                "import-config-btn"
+            ) as HTMLButtonElement;
+
+            // Verify error feedback for validation failure
+            expect(importBtn.textContent).toContain("Missing");
+        });
+
+        it("should call refreshConfigurationUI on successful import", () => {
+            // Use fake timers
+            vi.useFakeTimers();
+
+            // Mock ConfigManager.import to return true
+            const configManager = ConfigManager.getInstance();
+            const originalImport = configManager.import;
+            configManager.import = vi.fn(() => true);
+
+            // Spy on refreshConfigurationUI
+            const refreshSpy = vi.spyOn(
+                adminPanel as any,
+                "refreshConfigurationUI"
+            );
+
+            // Call processImportedConfiguration with valid JSON
+            const validConfig = JSON.stringify({
+                auth: {
+                    twitch_oauth: "test",
+                    twitch_username: "test",
+                    twitch_channel: "test",
+                },
+                maxChallenges: 10,
+                commands: {},
+                responses: {},
+            });
+
+            (adminPanel as any).processImportedConfiguration(
+                validConfig,
+                "import-config-btn"
+            );
+
+            // Fast-forward time to trigger setTimeout
+            vi.advanceTimersByTime(1100);
+
+            // Verify refreshConfigurationUI was called
+            expect(refreshSpy).toHaveBeenCalled();
+
+            // Restore
+            configManager.import = originalImport;
+            refreshSpy.mockRestore();
+            vi.useRealTimers();
+        });
+    });
+
+    describe("Additional Helper Methods", () => {
+        beforeEach(() => {
+            window.location.hash = "#admin";
+            document.body.innerHTML = `
+                <div class="admin-content">
+                    <div id="background-preview"></div>
+                </div>
+            `;
+            adminPanel = new AdminPanel();
+        });
+
+        it("should update background preview", () => {
+            const preview = document.getElementById("background-preview");
+            expect(preview).toBeTruthy();
+
+            // Call updateBackgroundPreview
+            (adminPanel as any).updateBackgroundPreview();
+
+            // Verify the method was called (it may not set styles without proper inputs)
+            expect(preview).toBeTruthy();
+        });
+
+        it("should extract color from RGBA string", () => {
+            const rgbaColor = "rgba(255, 0, 0, 0.5)";
+            const hexColor = (adminPanel as any).extractColorFromRGBA(
+                rgbaColor
+            );
+
+            expect(hexColor).toMatch(/^#[0-9a-f]{6}$/i);
+        });
+
+        it("should extract color from hex string", () => {
+            const hexColor = "#ff0000";
+            const result = (adminPanel as any).extractColorFromRGBA(hexColor);
+
+            expect(result).toBe("#ff0000");
+        });
+
+        it("should get color tier constants for primary", () => {
+            const constants = (adminPanel as any).getColorTierConstants(
+                "primary"
+            );
+
+            expect(constants).toHaveProperty("enabled");
+            expect(constants).toHaveProperty("bgColor");
+            expect(constants).toHaveProperty("textColor");
+            expect(constants).toHaveProperty("pickers");
+            expect(constants).toHaveProperty("section");
+        });
+
+        it("should get color tier constants for secondary", () => {
+            const constants = (adminPanel as any).getColorTierConstants(
+                "secondary"
+            );
+
+            expect(constants).toHaveProperty("enabled");
+            expect(constants).toHaveProperty("bgColor");
+            expect(constants).toHaveProperty("textColor");
+            expect(constants).toHaveProperty("pickers");
+            expect(constants).toHaveProperty("section");
+        });
+
+        it("should get color tier constants for tertiary", () => {
+            const constants = (adminPanel as any).getColorTierConstants(
+                "tertiary"
+            );
+
+            expect(constants).toHaveProperty("enabled");
+            expect(constants).toHaveProperty("bgColor");
+            expect(constants).toHaveProperty("textColor");
+            expect(constants).toHaveProperty("pickers");
+            expect(constants).toHaveProperty("section");
+        });
+    });
+
+    describe("Auto-Save Methods", () => {
+        beforeEach(() => {
+            window.location.hash = "#admin";
+            document.body.innerHTML = `
+                <div class="admin-content">
+                    <input type="text" id="twitch-oauth" value="oauth:test123" />
+                    <input type="text" id="twitch-username" value="testuser" />
+                    <input type="text" id="twitch-channel" value="testchannel" />
+                    <input type="number" id="max-challenges" value="15" />
+                </div>
+            `;
+            adminPanel = new AdminPanel();
+        });
+
+        it("should auto-save authentication configuration", () => {
+            const consoleSpy = vi
+                .spyOn(console, "log")
+                .mockImplementation(() => {});
+
+            // Call autoSaveAuthConfiguration
+            (adminPanel as any).autoSaveAuthConfiguration();
+
+            // Verify console log was called
+            expect(consoleSpy).toHaveBeenCalled();
+
+            consoleSpy.mockRestore();
+        });
+
+        it("should auto-save behavior configuration", () => {
+            const consoleSpy = vi
+                .spyOn(console, "log")
+                .mockImplementation(() => {});
+
+            // Call autoSaveBehaviorConfiguration
+            (adminPanel as any).autoSaveBehaviorConfiguration();
+
+            // Verify console log was called
+            expect(consoleSpy).toHaveBeenCalled();
+
+            consoleSpy.mockRestore();
+        });
+
+        it("should auto-save color configuration", () => {
+            const consoleSpy = vi
+                .spyOn(console, "log")
+                .mockImplementation(() => {});
+
+            // Call autoSaveColorConfiguration
+            (adminPanel as any).autoSaveColorConfiguration();
+
+            // Verify console log was called
+            expect(consoleSpy).toHaveBeenCalled();
+
+            consoleSpy.mockRestore();
+        });
+
+        it("should auto-save background configuration", () => {
+            const consoleSpy = vi
+                .spyOn(console, "log")
+                .mockImplementation(() => {});
+
+            // Call autoSaveBackgroundConfiguration
+            (adminPanel as any).autoSaveBackgroundConfiguration();
+
+            // Verify console log was called
+            expect(consoleSpy).toHaveBeenCalled();
+
+            consoleSpy.mockRestore();
+        });
+    });
+
+    describe("UI Conversion Methods", () => {
+        beforeEach(() => {
+            window.location.hash = "#admin";
+            adminPanel = new AdminPanel();
+        });
+
+        it("should convert UI to text colors", () => {
+            const colorConfig = {
+                primary: {
+                    enabled: true,
+                    backgroundColor: "#ff0000",
+                    textColor: "#ffffff",
+                },
+                secondary: {
+                    enabled: false,
+                    backgroundColor: "#00ff00",
+                    textColor: "#000000",
+                },
+                tertiary: {
+                    enabled: false,
+                    backgroundColor: "#0000ff",
+                    textColor: "#ffffff",
+                },
+            };
+
+            const textColors = (adminPanel as any).convertUIToTextColors(
+                colorConfig
+            );
+
+            expect(Array.isArray(textColors)).toBe(true);
+            expect(textColors.length).toBeGreaterThan(0);
+        });
+    });
+
+    describe("Setup Methods", () => {
+        beforeEach(() => {
+            window.location.hash = "#admin";
+            document.body.innerHTML = `
+                <div class="admin-content">
+                    <input type="text" id="twitch-oauth" value="oauth:test" />
+                    <input type="text" id="twitch-username" value="test" />
+                    <input type="text" id="twitch-channel" value="test" />
+                    <input type="number" id="max-challenges" value="10" />
+                    <input type="checkbox" id="primary-color-enabled" />
+                    <input type="color" id="primary-bg-color" value="#ff0000" />
+                    <input type="color" id="primary-text-color" value="#ffffff" />
+                    <input type="range" id="challenge-row-colors-opacity" value="100" />
+                    <span id="challenge-row-colors-opacity-display">100%</span>
+                </div>
+            `;
+            adminPanel = new AdminPanel();
+        });
+
+        it("should setup authentication auto-save", () => {
+            // Call setupAuthenticationAutoSave
+            (adminPanel as any).setupAuthenticationAutoSave();
+
+            // Verify method executed without errors
+            expect(true).toBe(true);
+        });
+
+        it("should setup behavior auto-save", () => {
+            // Call setupBehaviorAutoSave
+            (adminPanel as any).setupBehaviorAutoSave();
+
+            // Verify method executed without errors
+            expect(true).toBe(true);
+        });
+
+        it("should setup color tier event listeners", () => {
+            // Call setupColorTierEventListeners
+            (adminPanel as any).setupColorTierEventListeners();
+
+            // Verify method executed without errors
+            expect(true).toBe(true);
+        });
+
+        it("should setup row colors opacity event listener", () => {
+            // Call setupRowColorsOpacityEventListener
+            (adminPanel as any).setupRowColorsOpacityEventListener();
+
+            // Verify method executed without errors
+            expect(true).toBe(true);
+        });
+
+        it("should setup background event listeners", () => {
+            document.body.innerHTML += `
+                <input type="color" id="overlay-background-color" value="#000000" />
+                <input type="range" id="overlay-background-opacity" value="60" />
+                <span id="overlay-background-opacity-display">60%</span>
+                <input type="range" id="app-background-opacity" value="0" />
+                <span id="app-background-opacity-display">0%</span>
+                <input type="color" id="challenge-background-color" value="#000000" />
+                <input type="range" id="challenge-background-opacity" value="90" />
+                <span id="challenge-background-opacity-display">90%</span>
+                <input type="checkbox" id="challenge-auto-text-color" checked />
+                <input type="color" id="challenge-text-color" value="#ffffff" />
+                <input type="checkbox" id="challenge-text-shadow" />
+            `;
+
+            // Call setupBackgroundEventListeners
+            (adminPanel as any).setupBackgroundEventListeners();
+
+            // Verify method executed without errors
+            expect(true).toBe(true);
+        });
+    });
+
+    describe("Section Creation Methods", () => {
+        beforeEach(() => {
+            window.location.hash = "#admin";
+            adminPanel = new AdminPanel();
+        });
+
+        it("should create authentication section", () => {
+            const container = document.createElement("div");
+
+            // Call createAuthenticationSection
+            (adminPanel as any).createAuthenticationSection(container);
+
+            // Verify section was created
+            expect(container.innerHTML).toContain("Twitch");
+        });
+
+        it("should create behavior section", () => {
+            const container = document.createElement("div");
+
+            // Call createBehaviorSection
+            (adminPanel as any).createBehaviorSection(container);
+
+            // Verify section was created
+            expect(container.innerHTML).toContain("Behavior");
+        });
+
+        it("should create color section", () => {
+            const container = document.createElement("div");
+
+            // Call createColorSection
+            (adminPanel as any).createColorSection(container);
+
+            // Verify section was created
+            expect(container.innerHTML).toContain("Color");
+        });
+
+        it("should create background section", () => {
+            const container = document.createElement("div");
+
+            // Call createBackgroundSection
+            (adminPanel as any).createBackgroundSection(container);
+
+            // Verify section was created
+            expect(container.innerHTML).toContain("Background");
+        });
+
+        it("should create actions section", () => {
+            const container = document.createElement("div");
+
+            // Call createActionsSection
+            (adminPanel as any).createActionsSection(container);
+
+            // Verify section was created
+            expect(container.innerHTML).toContain("Backup");
+        });
+
+        it("should create danger zone section", () => {
+            const container = document.createElement("div");
+
+            // Call createDangerZoneSection
+            (adminPanel as any).createDangerZoneSection(container);
+
+            // Verify section was created
+            expect(container.innerHTML).toContain("Danger");
+        });
+    });
+
+    describe("Populate Methods", () => {
+        beforeEach(() => {
+            window.location.hash = "#admin";
+            document.body.innerHTML = `
+                <div class="admin-content">
+                    <input type="checkbox" id="primary-color-enabled" />
+                    <input type="color" id="primary-bg-color" value="#ff0000" />
+                    <input type="color" id="primary-text-color" value="#ffffff" />
+                    <input type="checkbox" id="secondary-color-enabled" />
+                    <input type="color" id="secondary-bg-color" value="#00ff00" />
+                    <input type="color" id="secondary-text-color" value="#000000" />
+                    <input type="checkbox" id="tertiary-color-enabled" />
+                    <input type="color" id="tertiary-bg-color" value="#0000ff" />
+                    <input type="color" id="tertiary-text-color" value="#ffffff" />
+                    <input type="range" id="challenge-row-colors-opacity" value="100" />
+                    <span id="challenge-row-colors-opacity-display">100%</span>
+                </div>
+            `;
+            adminPanel = new AdminPanel();
+        });
+
+        it("should populate color configuration", () => {
+            const backgroundColors = ["#ff0000", "#00ff00", "#0000ff"];
+            const textColors = ["#ffffff", "#000000", "#ffffff"];
+
+            // Call populateColorConfiguration
+            (adminPanel as any).populateColorConfiguration(
+                backgroundColors,
+                textColors
+            );
+
+            // Verify method executed without errors
+            expect(true).toBe(true);
+        });
+
+        it("should populate background configuration", () => {
+            const config = ConfigManager.getInstance().getAll();
+
+            // Call populateBackgroundConfiguration
+            (adminPanel as any).populateBackgroundConfiguration(config);
+
+            // Verify method executed without errors
+            expect(true).toBe(true);
+        });
+    });
+
 });

@@ -889,4 +889,372 @@ describe("App", () => {
             });
         });
     });
+
+    describe("Edit Challenge Functionality", () => {
+        beforeEach(() => {
+            // Set up admin mode
+            Object.defineProperty(window, "location", {
+                value: { hash: URL_HASH.ADMIN },
+                writable: true,
+            });
+
+            // Add modal to DOM
+            document.body.innerHTML += `
+                <div id="add-challenge-modal" class="modal hidden">
+                    <div class="modal-content">
+                        <h2 id="modal-title">Add Challenge</h2>
+                        <form id="add-challenge-form">
+                            <input type="text" id="add-challenge-title" />
+                            <textarea id="add-challenge-description"></textarea>
+                            <input type="number" id="add-challenge-amount" />
+                            <input type="text" id="add-challenge-timer" />
+                            <button type="submit" id="add-challenge-submit">Add</button>
+                            <button type="button" id="add-challenge-cancel">Cancel</button>
+                        </form>
+                    </div>
+                </div>
+            `;
+        });
+
+        describe("Edit Icon Click Handler", () => {
+            it("should open edit modal when edit icon is clicked in admin mode", () => {
+                // Add a challenge
+                app.challengeList.addChallenges("Test Challenge");
+                app.renderChallengeList();
+
+                // Get the challenge element
+                const challengeElement = document.querySelector(
+                    "[data-challenge-id]"
+                ) as HTMLElement;
+                const challengeId =
+                    challengeElement?.dataset[DATA_ATTRIBUTES.CHALLENGE_ID];
+
+                // Create edit icon
+                const editIcon = document.createElement("div");
+                editIcon.classList.add("challenge-edit-icon");
+                challengeElement?.appendChild(editIcon);
+
+                // Mock openEditChallengeModal
+                const openEditSpy = vi.spyOn(
+                    app as any,
+                    "openEditChallengeModal"
+                );
+
+                // Trigger edit icon click
+                const clickEvent = new Event("click", { bubbles: true });
+                Object.defineProperty(clickEvent, "target", {
+                    value: editIcon,
+                    enumerable: true,
+                });
+
+                app["handleEditIconClick"](clickEvent);
+
+                // Verify modal was opened with correct challenge ID
+                expect(openEditSpy).toHaveBeenCalledWith(challengeId);
+            });
+
+            it("should not handle edit icon click in viewer mode", () => {
+                // Set viewer mode
+                Object.defineProperty(window, "location", {
+                    value: { hash: "" },
+                    writable: true,
+                });
+
+                // Add a challenge
+                app.challengeList.addChallenges("Test Challenge");
+                app.renderChallengeList();
+
+                const editIcon = document.createElement("div");
+                editIcon.classList.add("challenge-edit-icon");
+
+                const clickEvent = new Event("click");
+                Object.defineProperty(clickEvent, "target", {
+                    value: editIcon,
+                    enumerable: true,
+                });
+
+                // Should return early without processing
+                expect(() =>
+                    app["handleEditIconClick"](clickEvent)
+                ).not.toThrow();
+            });
+
+            it("should handle missing challenge element in edit icon click", () => {
+                const editIcon = document.createElement("div");
+                editIcon.classList.add("challenge-edit-icon");
+                document.body.appendChild(editIcon);
+
+                const clickEvent = new Event("click");
+                Object.defineProperty(clickEvent, "target", {
+                    value: editIcon,
+                    enumerable: true,
+                });
+
+                // Should return early without error
+                expect(() =>
+                    app["handleEditIconClick"](clickEvent)
+                ).not.toThrow();
+            });
+
+            it("should handle missing challenge ID in edit icon click", () => {
+                const challengeElement = document.createElement("li");
+                challengeElement.classList.add("challenge");
+
+                const editIcon = document.createElement("div");
+                editIcon.classList.add("challenge-edit-icon");
+                challengeElement.appendChild(editIcon);
+                document.body.appendChild(challengeElement);
+
+                const clickEvent = new Event("click");
+                Object.defineProperty(clickEvent, "target", {
+                    value: editIcon,
+                    enumerable: true,
+                });
+
+                // Should return early without error
+                expect(() =>
+                    app["handleEditIconClick"](clickEvent)
+                ).not.toThrow();
+            });
+        });
+
+        describe("Update Challenge From Form", () => {
+            it("should update challenge with new data", () => {
+                // Add a challenge
+                app.challengeList.addChallenges("Original Title");
+                const challenge = app.challengeList.challenges[0];
+                if (!challenge) throw new Error("Challenge not found");
+
+                // Update the challenge
+                app["updateChallengeFromForm"](challenge.id, {
+                    title: "Updated Title",
+                    description: "Updated Description",
+                    amount: 5,
+                    timer: "10m",
+                });
+
+                // Verify challenge was updated
+                const updatedChallenge =
+                    app.challengeList.getChallengeById(challenge.id);
+                expect(updatedChallenge?.title).toBe("Updated Title");
+                expect(updatedChallenge?.description).toBe("Updated Description");
+                expect(updatedChallenge?.amount).toBe(5);
+                expect(updatedChallenge?.timer).toBeDefined();
+            });
+
+            it("should handle challenge not found error", () => {
+                expect(() =>
+                    app["updateChallengeFromForm"]("non-existent-id", {
+                        title: "Test",
+                    })
+                ).toThrow();
+            });
+
+            it("should update challenge without optional fields", () => {
+                // Add a challenge
+                app.challengeList.addChallenges("Original Title");
+                const challenge = app.challengeList.challenges[0];
+                if (!challenge) throw new Error("Challenge not found");
+
+                // Update with only title
+                app["updateChallengeFromForm"](challenge.id, {
+                    title: "Updated Title Only",
+                });
+
+                // Verify challenge was updated
+                const updatedChallenge =
+                    app.challengeList.getChallengeById(challenge.id);
+                expect(updatedChallenge?.title).toBe("Updated Title Only");
+            });
+        });
+    });
+
+    describe("Increment/Decrement Button Handlers", () => {
+        beforeEach(() => {
+            // Set up admin mode
+            Object.defineProperty(window, "location", {
+                value: { hash: URL_HASH.ADMIN },
+                writable: true,
+            });
+        });
+
+        describe("Increment Button Click", () => {
+            it("should increment challenge progress when button is clicked", () => {
+                // Add a challenge with amount
+                const challenge = new Challenge("Test Challenge", { amount: 5 });
+                app.challengeList.addChallengeObjects(challenge);
+                app.renderChallengeList();
+
+                // Get the challenge element
+                const challengeElement = document.querySelector(
+                    "[data-challenge-id]"
+                ) as HTMLElement;
+
+                // Create increment button
+                const incrementBtn = document.createElement("button");
+                incrementBtn.classList.add("challenge-increment-button");
+                challengeElement?.appendChild(incrementBtn);
+
+                // Trigger increment button click
+                const clickEvent = new Event("click", { bubbles: true });
+                Object.defineProperty(clickEvent, "target", {
+                    value: incrementBtn,
+                    enumerable: true,
+                });
+
+                app["handleIncrementButtonClick"](clickEvent);
+
+                // Verify progress was incremented
+                const updatedChallenge =
+                    app.challengeList.getChallengeById(challenge.id);
+                expect(updatedChallenge?.progress).toBe(1);
+            });
+
+            it("should not handle increment in viewer mode", () => {
+                // Set viewer mode
+                Object.defineProperty(window, "location", {
+                    value: { hash: "" },
+                    writable: true,
+                });
+
+                const incrementBtn = document.createElement("button");
+                const clickEvent = new Event("click");
+                Object.defineProperty(clickEvent, "target", {
+                    value: incrementBtn,
+                    enumerable: true,
+                });
+
+                // Should return early without processing
+                expect(() =>
+                    app["handleIncrementButtonClick"](clickEvent)
+                ).not.toThrow();
+            });
+
+            it("should handle missing challenge element in increment click", () => {
+                const incrementBtn = document.createElement("button");
+                document.body.appendChild(incrementBtn);
+
+                const clickEvent = new Event("click");
+                Object.defineProperty(clickEvent, "target", {
+                    value: incrementBtn,
+                    enumerable: true,
+                });
+
+                // Should return early without error
+                expect(() =>
+                    app["handleIncrementButtonClick"](clickEvent)
+                ).not.toThrow();
+            });
+
+            it("should handle missing challenge ID in increment click", () => {
+                const challengeElement = document.createElement("li");
+                challengeElement.classList.add("challenge");
+
+                const incrementBtn = document.createElement("button");
+                challengeElement.appendChild(incrementBtn);
+                document.body.appendChild(challengeElement);
+
+                const clickEvent = new Event("click");
+                Object.defineProperty(clickEvent, "target", {
+                    value: incrementBtn,
+                    enumerable: true,
+                });
+
+                // Should return early without error
+                expect(() =>
+                    app["handleIncrementButtonClick"](clickEvent)
+                ).not.toThrow();
+            });
+        });
+
+        describe("Decrement Button Click", () => {
+            it("should decrement challenge progress when button is clicked", () => {
+                // Add a challenge with amount and progress
+                const challenge = new Challenge("Test Challenge", { amount: 5 });
+                challenge.incrementProgress(); // Set progress to 1
+                app.challengeList.addChallengeObjects(challenge);
+                app.renderChallengeList();
+
+                // Get the challenge element
+                const challengeElement = document.querySelector(
+                    "[data-challenge-id]"
+                ) as HTMLElement;
+
+                // Create decrement button
+                const decrementBtn = document.createElement("button");
+                decrementBtn.classList.add("challenge-decrement-button");
+                challengeElement?.appendChild(decrementBtn);
+
+                // Trigger decrement button click
+                const clickEvent = new Event("click", { bubbles: true });
+                Object.defineProperty(clickEvent, "target", {
+                    value: decrementBtn,
+                    enumerable: true,
+                });
+
+                app["handleDecrementButtonClick"](clickEvent);
+
+                // Verify progress was decremented
+                const updatedChallenge =
+                    app.challengeList.getChallengeById(challenge.id);
+                expect(updatedChallenge?.progress).toBe(0);
+            });
+
+            it("should not handle decrement in viewer mode", () => {
+                // Set viewer mode
+                Object.defineProperty(window, "location", {
+                    value: { hash: "" },
+                    writable: true,
+                });
+
+                const decrementBtn = document.createElement("button");
+                const clickEvent = new Event("click");
+                Object.defineProperty(clickEvent, "target", {
+                    value: decrementBtn,
+                    enumerable: true,
+                });
+
+                // Should return early without processing
+                expect(() =>
+                    app["handleDecrementButtonClick"](clickEvent)
+                ).not.toThrow();
+            });
+
+            it("should handle missing challenge element in decrement click", () => {
+                const decrementBtn = document.createElement("button");
+                document.body.appendChild(decrementBtn);
+
+                const clickEvent = new Event("click");
+                Object.defineProperty(clickEvent, "target", {
+                    value: decrementBtn,
+                    enumerable: true,
+                });
+
+                // Should return early without error
+                expect(() =>
+                    app["handleDecrementButtonClick"](clickEvent)
+                ).not.toThrow();
+            });
+
+            it("should handle missing challenge ID in decrement click", () => {
+                const challengeElement = document.createElement("li");
+                challengeElement.classList.add("challenge");
+
+                const decrementBtn = document.createElement("button");
+                challengeElement.appendChild(decrementBtn);
+                document.body.appendChild(challengeElement);
+
+                const clickEvent = new Event("click");
+                Object.defineProperty(clickEvent, "target", {
+                    value: decrementBtn,
+                    enumerable: true,
+                });
+
+                // Should return early without error
+                expect(() =>
+                    app["handleDecrementButtonClick"](clickEvent)
+                ).not.toThrow();
+            });
+        });
+    });
 });

@@ -1,5 +1,4 @@
 import type App from "../app";
-import { AdminPanelTemplates } from "../templates/AdminPanelTemplates";
 import {
     DEFAULT_COLORS,
     SHADOW_COLORS,
@@ -32,11 +31,13 @@ import {
     ERROR_MESSAGES,
     VALIDATION_MESSAGES,
 } from "../types/MessageConstants";
+import { COLOR_CONSTANTS, TIMING_CONSTANTS } from "../types/NumericConstants";
 import {
-    COLOR_CONSTANTS,
-    FORM_CONSTRAINTS,
-    TIMING_CONSTANTS,
-} from "../types/NumericConstants";
+    AdminPanelColorManager,
+    type ColorConfigurationUI,
+} from "../utils/AdminPanelColorManager";
+import { AdminPanelDOMBuilder } from "../utils/AdminPanelDOMBuilder";
+import { AdminPanelEventSetup } from "../utils/AdminPanelEventSetup";
 import CollapsibleSection from "../utils/CollapsibleSection";
 import { notifyConfigurationSaved } from "../utils/windowRefresh";
 import ConfigExporter from "./ConfigExporter";
@@ -277,20 +278,7 @@ export default class AdminPanel {
      * @param container - The parent container element
      */
     private createAuthenticationSection(container: HTMLElement): void {
-        const authContent = `
-          <div class="form-group">
-            <label for="${ELEMENT_IDS.TWITCH_OAUTH}">Twitch OAuth Token:</label>
-            <input type="password" id="${ELEMENT_IDS.TWITCH_OAUTH}" class="${CSS_CLASSES.FORM_INPUT}" placeholder="OAuth Token">
-          </div>
-          <div class="form-group">
-            <label for="${ELEMENT_IDS.TWITCH_USERNAME}">Twitch Username:</label>
-            <input type="text" id="${ELEMENT_IDS.TWITCH_USERNAME}" class="${CSS_CLASSES.FORM_INPUT}" placeholder="Username">
-          </div>
-          <div class="form-group">
-            <label for="${ELEMENT_IDS.TWITCH_CHANNEL}">Twitch Channel:</label>
-            <input type="text" id="${ELEMENT_IDS.TWITCH_CHANNEL}" class="${CSS_CLASSES.FORM_INPUT}" placeholder="Channel">
-          </div>
-        `;
+        const authContent = AdminPanelDOMBuilder.createAuthenticationSection();
 
         try {
             const authSection = new CollapsibleSection({
@@ -324,12 +312,7 @@ export default class AdminPanel {
      * @param container - The parent container element
      */
     private createBehaviorSection(container: HTMLElement): void {
-        const behaviorContent = `
-          <div class="form-group">
-            <label for="${ELEMENT_IDS.MAX_CHALLENGES}">Max Challenges:</label>
-            <input type="number" id="${ELEMENT_IDS.MAX_CHALLENGES}" class="${CSS_CLASSES.FORM_INPUT}" min="${FORM_CONSTRAINTS.MAX_CHALLENGES_MIN}" max="${FORM_CONSTRAINTS.MAX_CHALLENGES_MAX}">
-          </div>
-        `;
+        const behaviorContent = AdminPanelDOMBuilder.createBehaviorSection();
 
         const behaviorSection = new CollapsibleSection({
             id: ELEMENT_IDS.BEHAVIOR_SECTION,
@@ -350,18 +333,7 @@ export default class AdminPanel {
      * @param container - The parent container element
      */
     private createColorSection(container: HTMLElement): void {
-        const colorContent = AdminPanelTemplates.colorSection({
-            primaryBackgroundColor: DEFAULT_COLORS.PRIMARY_BACKGROUND,
-            primaryTextColor: DEFAULT_COLORS.PRIMARY_TEXT,
-            secondaryBackgroundColor: DEFAULT_COLORS.SECONDARY_BACKGROUND,
-            secondaryTextColor: DEFAULT_COLORS.SECONDARY_TEXT,
-            tertiaryBackgroundColor: DEFAULT_COLORS.TERTIARY_BACKGROUND,
-            tertiaryTextColor: DEFAULT_COLORS.TERTIARY_TEXT,
-            rowColorsOpacityPercent: Math.round(
-                BACKGROUND_DEFAULTS.ROW_COLORS_OPACITY * 100
-            ),
-            elementIds: ELEMENT_IDS,
-        });
+        const colorContent = AdminPanelDOMBuilder.createColorSection();
 
         const colorSection = new CollapsibleSection({
             id: ELEMENT_IDS.COLORS_SECTION,
@@ -379,12 +351,8 @@ export default class AdminPanel {
      * @param container - The parent container element
      */
     private createBackgroundSection(container: HTMLElement): void {
-        const backgroundContent = AdminPanelTemplates.backgroundSection({
-            overlayBackgroundColor: DEFAULT_COLORS.CHALLENGE_BACKGROUND,
-            challengeBackgroundColor: DEFAULT_COLORS.CHALLENGE_BACKGROUND,
-            challengeTextColor: DEFAULT_COLORS.CHALLENGE_TEXT,
-            elementIds: ELEMENT_IDS,
-        });
+        const backgroundContent =
+            AdminPanelDOMBuilder.createBackgroundSection();
 
         const backgroundSection = new CollapsibleSection({
             id: ELEMENT_IDS.BACKGROUND_SECTION,
@@ -406,14 +374,7 @@ export default class AdminPanel {
      * @param container - The parent container element
      */
     private createActionsSection(container: HTMLElement): void {
-        const actionsContent = `
-          <div class="config-actions">
-            <button id="${ELEMENT_IDS.EXPORT_JSON_BTN}" class="admin-button primary">Backup Configuration</button>
-            <button id="${ELEMENT_IDS.IMPORT_CONFIG_BTN}" class="admin-button primary">Restore Configuration</button>
-            <button id="${ELEMENT_IDS.RESET_CONFIG_BTN}" class="admin-button">Reset to Defaults</button>
-            <input type="file" id="${ELEMENT_IDS.IMPORT_FILE_INPUT}" accept=".json" style="display: none;">
-          </div>
-        `;
+        const actionsContent = AdminPanelDOMBuilder.createActionsSection();
 
         const actionsSection = new CollapsibleSection({
             id: ELEMENT_IDS.ACTIONS_SECTION,
@@ -434,14 +395,7 @@ export default class AdminPanel {
      * @param container - The parent container element
      */
     private createDangerZoneSection(container: HTMLElement): void {
-        const dangerContent = `
-          <p class="danger-warning">The action below will permanently delete all stored configuration data. This cannot be undone.</p>
-          <div class="danger-actions">
-            <button id="${ELEMENT_IDS.CLEAR_LOCALSTORAGE_BTN}" class="admin-button danger">
-              Clear LocalStorage
-            </button>
-          </div>
-        `;
+        const dangerContent = AdminPanelDOMBuilder.createDangerZoneSection();
 
         const dangerSection = new CollapsibleSection({
             id: ELEMENT_IDS.DANGER_ZONE_SECTION,
@@ -680,31 +634,7 @@ export default class AdminPanel {
      * @returns Hex color string
      */
     private extractColorFromRGBA(colorString: string): string {
-        // If it's already a hex color, return it
-        if (colorString.startsWith("#")) {
-            return colorString;
-        }
-
-        // Try to extract RGB values from rgba string
-        const rgbaMatch = colorString.match(
-            /rgba?\(([^,]+),\s*([^,]+),\s*([^,)]+)/
-        );
-        if (rgbaMatch && rgbaMatch[1] && rgbaMatch[2] && rgbaMatch[3]) {
-            const r = parseInt(rgbaMatch[1].trim());
-            const g = parseInt(rgbaMatch[2].trim());
-            const b = parseInt(rgbaMatch[3].trim());
-
-            // Convert to hex
-            const toHex = (n: number) => {
-                const hex = Math.max(0, Math.min(255, n)).toString(16);
-                return hex.length === 1 ? "0" + hex : hex;
-            };
-
-            return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
-        }
-
-        // Default fallback
-        return DEFAULT_COLORS.BLACK_TEXT;
+        return AdminPanelColorManager.extractColorFromRGBA(colorString);
     }
 
     /**
@@ -745,24 +675,9 @@ export default class AdminPanel {
      * @returns {void}
      */
     private setupAuthenticationAutoSave(): void {
-        const authFields = [
-            ELEMENT_IDS.TWITCH_OAUTH,
-            ELEMENT_IDS.TWITCH_USERNAME,
-            ELEMENT_IDS.TWITCH_CHANNEL,
-        ];
-
-        authFields.forEach((fieldId) => {
-            const input = document.getElementById(fieldId) as HTMLInputElement;
-            if (input) {
-                const changeHandler = () => this.autoSaveAuthConfiguration();
-                input.addEventListener(EVENT_NAMES.CHANGE, changeHandler);
-                this.#eventListeners.set(fieldId, {
-                    element: input,
-                    event: EVENT_NAMES.CHANGE,
-                    handler: changeHandler,
-                });
-            }
-        });
+        AdminPanelEventSetup.setupAuthenticationAutoSave(() =>
+            this.autoSaveAuthConfiguration()
+        );
     }
 
     /**
@@ -770,22 +685,9 @@ export default class AdminPanel {
      * @returns {void}
      */
     private setupBehaviorAutoSave(): void {
-        const maxChallengesInput = document.getElementById(
-            ELEMENT_IDS.MAX_CHALLENGES
-        ) as HTMLInputElement;
-
-        if (maxChallengesInput) {
-            const changeHandler = () => this.autoSaveBehaviorConfiguration();
-            maxChallengesInput.addEventListener(
-                EVENT_NAMES.CHANGE,
-                changeHandler
-            );
-            this.#eventListeners.set(ELEMENT_IDS.MAX_CHALLENGES, {
-                element: maxChallengesInput,
-                event: EVENT_NAMES.CHANGE,
-                handler: changeHandler,
-            });
-        }
+        AdminPanelEventSetup.setupBehaviorAutoSave(() =>
+            this.autoSaveBehaviorConfiguration()
+        );
     }
 
     /**
@@ -793,100 +695,10 @@ export default class AdminPanel {
      * @returns {void}
      */
     private setupColorTierEventListeners(): void {
-        const colorTiers = COLOR_TIERS;
-
-        colorTiers.forEach((tier) => {
-            const tierConstants = this.getColorTierConstants(tier);
-
-            const checkbox = document.getElementById(
-                tierConstants.enabled
-            ) as HTMLInputElement;
-            const pickersContainer = document.getElementById(
-                tierConstants.pickers
-            );
-            const section = document.getElementById(tierConstants.section);
-            const bgColorInput = document.getElementById(
-                tierConstants.bgColor
-            ) as HTMLInputElement;
-            const textColorInput = document.getElementById(
-                tierConstants.textColor
-            ) as HTMLInputElement;
-
-            if (
-                checkbox &&
-                pickersContainer &&
-                section &&
-                bgColorInput &&
-                textColorInput
-            ) {
-                // Initial state setup
-                this.updateColorTierState(tier, checkbox.checked);
-
-                // Add change event listener with auto-save
-                const changeHandler = () => {
-                    this.updateColorTierState(tier, checkbox.checked);
-                    this.autoSaveColorConfiguration();
-                };
-                checkbox.addEventListener(EVENT_NAMES.CHANGE, changeHandler);
-                this.#eventListeners.set(tierConstants.enabled, {
-                    element: checkbox,
-                    event: EVENT_NAMES.CHANGE,
-                    handler: changeHandler,
-                });
-
-                // Add event listeners for color pickers
-                // Use 'input' for live preview (no save) and 'change' for final save
-                const bgColorInputHandler = () => {
-                    // Live preview only - no save
-                };
-                const bgColorChangeHandler = () =>
-                    this.autoSaveColorConfiguration();
-
-                bgColorInput.addEventListener(
-                    EVENT_NAMES.INPUT,
-                    bgColorInputHandler
-                );
-                bgColorInput.addEventListener(
-                    EVENT_NAMES.CHANGE,
-                    bgColorChangeHandler
-                );
-                this.#eventListeners.set(tierConstants.bgColor, {
-                    element: bgColorInput,
-                    event: EVENT_NAMES.INPUT,
-                    handler: bgColorInputHandler,
-                });
-                this.#eventListeners.set(`${tierConstants.bgColor}-change`, {
-                    element: bgColorInput,
-                    event: EVENT_NAMES.CHANGE,
-                    handler: bgColorChangeHandler,
-                });
-
-                const textColorInputHandler = () => {
-                    // Live preview only - no save
-                };
-                const textColorChangeHandler = () =>
-                    this.autoSaveColorConfiguration();
-
-                textColorInput.addEventListener(
-                    EVENT_NAMES.INPUT,
-                    textColorInputHandler
-                );
-                textColorInput.addEventListener(
-                    EVENT_NAMES.CHANGE,
-                    textColorChangeHandler
-                );
-                this.#eventListeners.set(tierConstants.textColor, {
-                    element: textColorInput,
-                    event: EVENT_NAMES.INPUT,
-                    handler: textColorInputHandler,
-                });
-                this.#eventListeners.set(`${tierConstants.textColor}-change`, {
-                    element: textColorInput,
-                    event: EVENT_NAMES.CHANGE,
-                    handler: textColorChangeHandler,
-                });
-            }
-        });
+        AdminPanelEventSetup.setupColorTierEventListeners(
+            (tier, enabled) => this.updateColorTierState(tier, enabled),
+            () => this.autoSaveColorConfiguration()
+        );
     }
 
     /**
@@ -894,46 +706,9 @@ export default class AdminPanel {
      * @returns {void}
      */
     private setupRowColorsOpacityEventListener(): void {
-        const opacitySlider = document.getElementById(
-            ELEMENT_IDS.ROW_COLORS_OPACITY
-        ) as HTMLInputElement;
-        const opacityDisplay = document.getElementById(
-            ELEMENT_IDS.ROW_COLORS_OPACITY_DISPLAY
+        AdminPanelEventSetup.setupRowColorsOpacityEventListener(() =>
+            this.autoSaveColorConfiguration()
         );
-
-        if (opacitySlider && opacityDisplay) {
-            // Use 'input' for live preview (update display only, no save)
-            const opacityInputHandler = () => {
-                opacityDisplay.textContent = `${opacitySlider.value}%`;
-            };
-            // Use 'change' for final save when user releases slider
-            const opacityChangeHandler = () => {
-                this.autoSaveColorConfiguration();
-            };
-
-            opacitySlider.addEventListener(
-                EVENT_NAMES.INPUT,
-                opacityInputHandler
-            );
-            opacitySlider.addEventListener(
-                EVENT_NAMES.CHANGE,
-                opacityChangeHandler
-            );
-
-            this.#eventListeners.set(ELEMENT_IDS.ROW_COLORS_OPACITY, {
-                element: opacitySlider,
-                event: EVENT_NAMES.INPUT,
-                handler: opacityInputHandler,
-            });
-            this.#eventListeners.set(
-                `${ELEMENT_IDS.ROW_COLORS_OPACITY}-change`,
-                {
-                    element: opacitySlider,
-                    event: EVENT_NAMES.CHANGE,
-                    handler: opacityChangeHandler,
-                }
-            );
-        }
     }
 
     /**
@@ -948,32 +723,7 @@ export default class AdminPanel {
         bgColor: string;
         textColor: string;
     } {
-        switch (tier) {
-            case COLOR_TIERS[0]: // "primary"
-                return {
-                    enabled: ELEMENT_IDS.PRIMARY_COLOR_ENABLED,
-                    pickers: ELEMENT_IDS.PRIMARY_COLOR_PICKERS,
-                    section: ELEMENT_IDS.PRIMARY_COLOR_SECTION,
-                    bgColor: ELEMENT_IDS.PRIMARY_BG_COLOR,
-                    textColor: ELEMENT_IDS.PRIMARY_TEXT_COLOR,
-                };
-            case COLOR_TIERS[1]: // "secondary"
-                return {
-                    enabled: ELEMENT_IDS.SECONDARY_COLOR_ENABLED,
-                    pickers: ELEMENT_IDS.SECONDARY_COLOR_PICKERS,
-                    section: ELEMENT_IDS.SECONDARY_COLOR_SECTION,
-                    bgColor: ELEMENT_IDS.SECONDARY_BG_COLOR,
-                    textColor: ELEMENT_IDS.SECONDARY_TEXT_COLOR,
-                };
-            case COLOR_TIERS[2]: // "tertiary"
-                return {
-                    enabled: ELEMENT_IDS.TERTIARY_COLOR_ENABLED,
-                    pickers: ELEMENT_IDS.TERTIARY_COLOR_PICKERS,
-                    section: ELEMENT_IDS.TERTIARY_COLOR_SECTION,
-                    bgColor: ELEMENT_IDS.TERTIARY_BG_COLOR,
-                    textColor: ELEMENT_IDS.TERTIARY_TEXT_COLOR,
-                };
-        }
+        return AdminPanelColorManager.getColorTierConstants(tier);
     }
 
     /**
@@ -981,309 +731,10 @@ export default class AdminPanel {
      * @returns {void}
      */
     private setupBackgroundEventListeners(): void {
-        // Overlay background color picker
-        const overlayBackgroundColorInput = document.getElementById(
-            BACKGROUND_UI_ELEMENTS.OVERLAY_BACKGROUND_COLOR_INPUT
-        ) as HTMLInputElement;
-        if (overlayBackgroundColorInput) {
-            // Use 'input' for live preview (update preview only, no save)
-            const overlayColorInputHandler = () => {
-                this.updateBackgroundPreview();
-            };
-            // Use 'change' for final save when user closes color picker
-            const overlayColorChangeHandler = () => {
-                this.autoSaveBackgroundConfiguration();
-            };
-
-            overlayBackgroundColorInput.addEventListener(
-                EVENT_NAMES.INPUT,
-                overlayColorInputHandler
-            );
-            overlayBackgroundColorInput.addEventListener(
-                EVENT_NAMES.CHANGE,
-                overlayColorChangeHandler
-            );
-
-            this.#eventListeners.set(
-                BACKGROUND_UI_ELEMENTS.OVERLAY_BACKGROUND_COLOR_INPUT,
-                {
-                    element: overlayBackgroundColorInput,
-                    event: EVENT_NAMES.INPUT,
-                    handler: overlayColorInputHandler,
-                }
-            );
-            this.#eventListeners.set(
-                `${BACKGROUND_UI_ELEMENTS.OVERLAY_BACKGROUND_COLOR_INPUT}-change`,
-                {
-                    element: overlayBackgroundColorInput,
-                    event: EVENT_NAMES.CHANGE,
-                    handler: overlayColorChangeHandler,
-                }
-            );
-        }
-
-        // Overlay opacity slider
-        const overlayOpacitySlider = document.getElementById(
-            BACKGROUND_UI_ELEMENTS.OVERLAY_BACKGROUND_OPACITY_SLIDER
-        ) as HTMLInputElement;
-        const overlayOpacityDisplay = document.getElementById(
-            BACKGROUND_UI_ELEMENTS.OVERLAY_OPACITY_DISPLAY
+        AdminPanelEventSetup.setupBackgroundEventListeners(
+            () => this.autoSaveBackgroundConfiguration(),
+            () => this.updateBackgroundPreview()
         );
-        if (overlayOpacitySlider && overlayOpacityDisplay) {
-            // Use 'input' for live preview (update display and preview, no save)
-            const overlayOpacityInputHandler = () => {
-                overlayOpacityDisplay.textContent = `${overlayOpacitySlider.value}%`;
-                this.updateBackgroundPreview();
-            };
-            // Use 'change' for final save when user releases slider
-            const overlayOpacityChangeHandler = () => {
-                this.autoSaveBackgroundConfiguration();
-            };
-
-            overlayOpacitySlider.addEventListener(
-                EVENT_NAMES.INPUT,
-                overlayOpacityInputHandler
-            );
-            overlayOpacitySlider.addEventListener(
-                EVENT_NAMES.CHANGE,
-                overlayOpacityChangeHandler
-            );
-
-            this.#eventListeners.set(
-                BACKGROUND_UI_ELEMENTS.OVERLAY_BACKGROUND_OPACITY_SLIDER,
-                {
-                    element: overlayOpacitySlider,
-                    event: EVENT_NAMES.INPUT,
-                    handler: overlayOpacityInputHandler,
-                }
-            );
-            this.#eventListeners.set(
-                `${BACKGROUND_UI_ELEMENTS.OVERLAY_BACKGROUND_OPACITY_SLIDER}-change`,
-                {
-                    element: overlayOpacitySlider,
-                    event: EVENT_NAMES.CHANGE,
-                    handler: overlayOpacityChangeHandler,
-                }
-            );
-        }
-
-        // App background opacity slider
-        const appBackgroundOpacitySlider = document.getElementById(
-            BACKGROUND_UI_ELEMENTS.APP_BACKGROUND_OPACITY_SLIDER
-        ) as HTMLInputElement;
-        const appBackgroundOpacityDisplay = document.getElementById(
-            BACKGROUND_UI_ELEMENTS.APP_BACKGROUND_OPACITY_DISPLAY
-        );
-        if (appBackgroundOpacitySlider && appBackgroundOpacityDisplay) {
-            // Use 'input' for live preview (update display only, no save)
-            const appBackgroundOpacityInputHandler = () => {
-                appBackgroundOpacityDisplay.textContent = `${appBackgroundOpacitySlider.value}%`;
-            };
-            // Use 'change' for final save when user releases slider
-            const appBackgroundOpacityChangeHandler = () => {
-                this.autoSaveBackgroundConfiguration();
-            };
-
-            appBackgroundOpacitySlider.addEventListener(
-                EVENT_NAMES.INPUT,
-                appBackgroundOpacityInputHandler
-            );
-            appBackgroundOpacitySlider.addEventListener(
-                EVENT_NAMES.CHANGE,
-                appBackgroundOpacityChangeHandler
-            );
-
-            this.#eventListeners.set(
-                BACKGROUND_UI_ELEMENTS.APP_BACKGROUND_OPACITY_SLIDER,
-                {
-                    element: appBackgroundOpacitySlider,
-                    event: EVENT_NAMES.INPUT,
-                    handler: appBackgroundOpacityInputHandler,
-                }
-            );
-            this.#eventListeners.set(
-                `${BACKGROUND_UI_ELEMENTS.APP_BACKGROUND_OPACITY_SLIDER}-change`,
-                {
-                    element: appBackgroundOpacitySlider,
-                    event: EVENT_NAMES.CHANGE,
-                    handler: appBackgroundOpacityChangeHandler,
-                }
-            );
-        }
-
-        // Challenge row background color picker
-        const backgroundColorInput = document.getElementById(
-            BACKGROUND_UI_ELEMENTS.BACKGROUND_COLOR_INPUT
-        ) as HTMLInputElement;
-        if (backgroundColorInput) {
-            // Use 'input' for live preview (update preview only, no save)
-            const colorInputHandler = () => {
-                this.updateBackgroundPreview();
-            };
-            // Use 'change' for final save when user closes color picker
-            const colorChangeHandler = () => {
-                this.autoSaveBackgroundConfiguration();
-            };
-
-            backgroundColorInput.addEventListener(
-                EVENT_NAMES.INPUT,
-                colorInputHandler
-            );
-            backgroundColorInput.addEventListener(
-                EVENT_NAMES.CHANGE,
-                colorChangeHandler
-            );
-
-            this.#eventListeners.set(
-                BACKGROUND_UI_ELEMENTS.BACKGROUND_COLOR_INPUT,
-                {
-                    element: backgroundColorInput,
-                    event: EVENT_NAMES.INPUT,
-                    handler: colorInputHandler,
-                }
-            );
-            this.#eventListeners.set(
-                `${BACKGROUND_UI_ELEMENTS.BACKGROUND_COLOR_INPUT}-change`,
-                {
-                    element: backgroundColorInput,
-                    event: EVENT_NAMES.CHANGE,
-                    handler: colorChangeHandler,
-                }
-            );
-        }
-
-        // Challenge row opacity slider
-        const opacitySlider = document.getElementById(
-            BACKGROUND_UI_ELEMENTS.BACKGROUND_OPACITY_SLIDER
-        ) as HTMLInputElement;
-        const opacityDisplay = document.getElementById(
-            BACKGROUND_UI_ELEMENTS.OPACITY_DISPLAY
-        );
-        if (opacitySlider && opacityDisplay) {
-            // Use 'input' for live preview (update display and preview, no save)
-            const opacityInputHandler = () => {
-                opacityDisplay.textContent = `${opacitySlider.value}%`;
-                this.updateBackgroundPreview();
-            };
-            // Use 'change' for final save when user releases slider
-            const opacityChangeHandler = () => {
-                this.autoSaveBackgroundConfiguration();
-            };
-
-            opacitySlider.addEventListener(
-                EVENT_NAMES.INPUT,
-                opacityInputHandler
-            );
-            opacitySlider.addEventListener(
-                EVENT_NAMES.CHANGE,
-                opacityChangeHandler
-            );
-
-            this.#eventListeners.set(
-                BACKGROUND_UI_ELEMENTS.BACKGROUND_OPACITY_SLIDER,
-                {
-                    element: opacitySlider,
-                    event: EVENT_NAMES.INPUT,
-                    handler: opacityInputHandler,
-                }
-            );
-            this.#eventListeners.set(
-                `${BACKGROUND_UI_ELEMENTS.BACKGROUND_OPACITY_SLIDER}-change`,
-                {
-                    element: opacitySlider,
-                    event: EVENT_NAMES.CHANGE,
-                    handler: opacityChangeHandler,
-                }
-            );
-        }
-
-        // Auto text color checkbox
-        const autoTextColorCheckbox = document.getElementById(
-            BACKGROUND_UI_ELEMENTS.AUTO_TEXT_COLOR_CHECKBOX
-        ) as HTMLInputElement;
-        const textColorInput = document.getElementById(
-            BACKGROUND_UI_ELEMENTS.TEXT_COLOR_INPUT
-        ) as HTMLInputElement;
-        if (autoTextColorCheckbox && textColorInput) {
-            const autoTextHandler = () => {
-                textColorInput.disabled = autoTextColorCheckbox.checked;
-                this.updateBackgroundPreview();
-                this.autoSaveBackgroundConfiguration();
-            };
-            autoTextColorCheckbox.addEventListener(
-                EVENT_NAMES.CHANGE,
-                autoTextHandler
-            );
-            this.#eventListeners.set(
-                BACKGROUND_UI_ELEMENTS.AUTO_TEXT_COLOR_CHECKBOX,
-                {
-                    element: autoTextColorCheckbox,
-                    event: EVENT_NAMES.CHANGE,
-                    handler: autoTextHandler,
-                }
-            );
-        }
-
-        // Manual text color picker
-        if (textColorInput) {
-            // Use 'input' for live preview (update preview only, no save)
-            const textColorInputHandler = () => {
-                this.updateBackgroundPreview();
-            };
-            // Use 'change' for final save when user closes color picker
-            const textColorChangeHandler = () => {
-                this.autoSaveBackgroundConfiguration();
-            };
-
-            textColorInput.addEventListener(
-                EVENT_NAMES.INPUT,
-                textColorInputHandler
-            );
-            textColorInput.addEventListener(
-                EVENT_NAMES.CHANGE,
-                textColorChangeHandler
-            );
-
-            this.#eventListeners.set(BACKGROUND_UI_ELEMENTS.TEXT_COLOR_INPUT, {
-                element: textColorInput,
-                event: EVENT_NAMES.INPUT,
-                handler: textColorInputHandler,
-            });
-            this.#eventListeners.set(
-                `${BACKGROUND_UI_ELEMENTS.TEXT_COLOR_INPUT}-change`,
-                {
-                    element: textColorInput,
-                    event: EVENT_NAMES.CHANGE,
-                    handler: textColorChangeHandler,
-                }
-            );
-        }
-
-        // Text shadow checkbox
-        const textShadowCheckbox = document.getElementById(
-            BACKGROUND_UI_ELEMENTS.TEXT_SHADOW_CHECKBOX
-        ) as HTMLInputElement;
-        if (textShadowCheckbox) {
-            const shadowHandler = () => {
-                this.updateBackgroundPreview();
-                this.autoSaveBackgroundConfiguration();
-            };
-            textShadowCheckbox.addEventListener(
-                EVENT_NAMES.CHANGE,
-                shadowHandler
-            );
-            this.#eventListeners.set(
-                BACKGROUND_UI_ELEMENTS.TEXT_SHADOW_CHECKBOX,
-                {
-                    element: textShadowCheckbox,
-                    event: EVENT_NAMES.CHANGE,
-                    handler: shadowHandler,
-                }
-            );
-        }
-
-        // Initial preview update
-        this.updateBackgroundPreview();
     }
 
     /**
@@ -1443,46 +894,10 @@ export default class AdminPanel {
         backgroundColors: string[],
         textColors: string[] = []
     ): ColorConfigurationUI {
-        const defaultConfig: ColorConfigurationUI = {
-            primary: {
-                enabled: false,
-                backgroundColor: DEFAULT_COLORS.PRIMARY_BACKGROUND,
-                textColor: DEFAULT_COLORS.PRIMARY_TEXT,
-            },
-            secondary: {
-                enabled: false,
-                backgroundColor: DEFAULT_COLORS.SECONDARY_BACKGROUND,
-                textColor: DEFAULT_COLORS.SECONDARY_TEXT,
-            },
-            tertiary: {
-                enabled: false,
-                backgroundColor: DEFAULT_COLORS.TERTIARY_BACKGROUND,
-                textColor: DEFAULT_COLORS.TERTIARY_TEXT,
-            },
-        };
-
-        if (!backgroundColors || backgroundColors.length === 0) {
-            return defaultConfig;
-        }
-
-        // Multiple colors rotate through the tiers
-        const tiers = COLOR_TIERS;
-
-        backgroundColors.forEach((backgroundColor, index) => {
-            if (index < tiers.length) {
-                const tier = tiers[index];
-                if (tier && defaultConfig[tier]) {
-                    const textColor =
-                        textColors[index] || DEFAULT_COLORS.WHITE_TEXT; // Use corresponding text color or default
-                    defaultConfig[tier].enabled = true;
-                    defaultConfig[tier].backgroundColor =
-                        backgroundColor.trim();
-                    defaultConfig[tier].textColor = textColor.trim();
-                }
-            }
-        });
-
-        return defaultConfig;
+        return AdminPanelColorManager.convertColorsToUI(
+            backgroundColors,
+            textColors
+        );
     }
 
     /**
@@ -1491,16 +906,7 @@ export default class AdminPanel {
      * @returns Array of background color strings
      */
     private convertUIToColors(colorConfig: ColorConfigurationUI): string[] {
-        const colors: string[] = [];
-        const tiers = COLOR_TIERS;
-
-        tiers.forEach((tier) => {
-            if (colorConfig[tier].enabled) {
-                colors.push(colorConfig[tier].backgroundColor);
-            }
-        });
-
-        return colors;
+        return AdminPanelColorManager.convertUIToColors(colorConfig);
     }
 
     /**
@@ -1509,16 +915,7 @@ export default class AdminPanel {
      * @returns Array of text color strings
      */
     private convertUIToTextColors(colorConfig: ColorConfigurationUI): string[] {
-        const colors: string[] = [];
-        const tiers = COLOR_TIERS;
-
-        tiers.forEach((tier) => {
-            if (colorConfig[tier].enabled) {
-                colors.push(colorConfig[tier].textColor);
-            }
-        });
-
-        return colors;
+        return AdminPanelColorManager.convertUIToTextColors(colorConfig);
     }
 
     /**
@@ -1526,70 +923,7 @@ export default class AdminPanel {
      * @returns ColorConfigurationUI object
      */
     private getCurrentColorConfigFromUI(): ColorConfigurationUI {
-        const config: ColorConfigurationUI = {
-            primary: {
-                enabled:
-                    (
-                        document.getElementById(
-                            ELEMENT_IDS.PRIMARY_COLOR_ENABLED
-                        ) as HTMLInputElement
-                    )?.checked || false,
-                backgroundColor:
-                    (
-                        document.getElementById(
-                            ELEMENT_IDS.PRIMARY_BG_COLOR
-                        ) as HTMLInputElement
-                    )?.value || DEFAULT_COLORS.PRIMARY_BACKGROUND,
-                textColor:
-                    (
-                        document.getElementById(
-                            ELEMENT_IDS.PRIMARY_TEXT_COLOR
-                        ) as HTMLInputElement
-                    )?.value || DEFAULT_COLORS.PRIMARY_TEXT,
-            },
-            secondary: {
-                enabled:
-                    (
-                        document.getElementById(
-                            ELEMENT_IDS.SECONDARY_COLOR_ENABLED
-                        ) as HTMLInputElement
-                    )?.checked || false,
-                backgroundColor:
-                    (
-                        document.getElementById(
-                            ELEMENT_IDS.SECONDARY_BG_COLOR
-                        ) as HTMLInputElement
-                    )?.value || DEFAULT_COLORS.SECONDARY_BACKGROUND,
-                textColor:
-                    (
-                        document.getElementById(
-                            ELEMENT_IDS.SECONDARY_TEXT_COLOR
-                        ) as HTMLInputElement
-                    )?.value || DEFAULT_COLORS.SECONDARY_TEXT,
-            },
-            tertiary: {
-                enabled:
-                    (
-                        document.getElementById(
-                            ELEMENT_IDS.TERTIARY_COLOR_ENABLED
-                        ) as HTMLInputElement
-                    )?.checked || false,
-                backgroundColor:
-                    (
-                        document.getElementById(
-                            ELEMENT_IDS.TERTIARY_BG_COLOR
-                        ) as HTMLInputElement
-                    )?.value || DEFAULT_COLORS.TERTIARY_BACKGROUND,
-                textColor:
-                    (
-                        document.getElementById(
-                            ELEMENT_IDS.TERTIARY_TEXT_COLOR
-                        ) as HTMLInputElement
-                    )?.value || DEFAULT_COLORS.TERTIARY_TEXT,
-            },
-        };
-
-        return config;
+        return AdminPanelColorManager.getCurrentColorConfigFromUI();
     }
 
     /**
