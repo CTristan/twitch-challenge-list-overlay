@@ -1,9 +1,14 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { MessageVariant } from "../src/types/MessageVariant";
+import { RefreshMessageType } from "../src/types/RefreshMessageType";
+import { WindowMode } from "../src/types/WindowMode";
 import {
     WindowRefreshManager,
     getWindowRefreshManager,
     isRefreshSystemAvailable,
+    notifyChallengeStateChanged,
     notifyConfigurationSaved,
+    notifyConfigurationSavedViewerOnly,
 } from "../src/utils/windowRefresh";
 
 // Import the module to access the singleton instance
@@ -65,6 +70,15 @@ class MockBroadcastChannel {
         const index = MockBroadcastChannel.instances.indexOf(this);
         if (index > -1) {
             MockBroadcastChannel.instances.splice(index, 1);
+        }
+    }
+
+    simulateMessage(data: any): void {
+        // Simulate receiving a message on this instance
+        const event = new MessageEvent("message", { data });
+        this.listeners.get("message")?.forEach((listener) => listener(event));
+        if (this.onmessage) {
+            this.onmessage(event);
         }
     }
 
@@ -159,9 +173,9 @@ describe("WindowRefreshManager", () => {
             manager.notifyConfigurationSaved();
 
             expect(postMessageSpy).toHaveBeenCalledWith({
-                type: "config-saved",
+                type: RefreshMessageType.CONFIG_SAVED,
                 timestamp: expect.any(Number),
-                source: "viewer",
+                source: WindowMode.VIEWER,
             });
         });
 
@@ -176,10 +190,42 @@ describe("WindowRefreshManager", () => {
             manager.notifyConfigurationSaved();
 
             expect(postMessageSpy).toHaveBeenCalledWith({
-                type: "config-saved",
+                type: RefreshMessageType.CONFIG_SAVED,
                 timestamp: expect.any(Number),
-                source: "admin",
+                source: WindowMode.ADMIN,
             });
+        });
+
+        it("should send viewer-only configuration saved notification", () => {
+            window.location.hash = "#admin";
+            const manager = new WindowRefreshManager();
+            const postMessageSpy = vi.spyOn(
+                MockBroadcastChannel.prototype,
+                "postMessage"
+            );
+
+            manager.notifyConfigurationSavedViewerOnly();
+
+            expect(postMessageSpy).toHaveBeenCalledWith({
+                type: RefreshMessageType.CONFIG_SAVED,
+                variant: MessageVariant.VIEWER_ONLY,
+                timestamp: expect.any(Number),
+                source: WindowMode.ADMIN,
+            });
+        });
+
+        it("should not schedule refresh timeout for viewer-only notification", () => {
+            const manager = new WindowRefreshManager();
+            const setTimeoutSpy = vi.spyOn(global, "setTimeout");
+
+            manager.notifyConfigurationSavedViewerOnly();
+
+            // Should not schedule a refresh timeout (only message sending)
+            // The setTimeout spy will be called for internal operations but not for performRefresh
+            const refreshCalls = setTimeoutSpy.mock.calls.filter(
+                (call) => call[1] === 500
+            );
+            expect(refreshCalls.length).toBe(0);
         });
 
         it("should receive and process valid messages from other windows", async () => {
@@ -217,6 +263,31 @@ describe("WindowRefreshManager", () => {
 
             // Only the sender should refresh, receiver should ignore the message
             expect(mockReload).toHaveBeenCalledTimes(1);
+        });
+
+        it("should not refresh admin window when receiving viewer-only message", async () => {
+            window.location.hash = "#admin";
+            new WindowRefreshManager({ refreshDelay: 50 });
+
+            // Simulate receiving a viewer-only message from another admin window
+            const channel = MockBroadcastChannel.instances[0];
+            if (!channel) throw new Error("Channel not found");
+
+            const viewerOnlyMessage = {
+                type: RefreshMessageType.CONFIG_SAVED,
+                variant: MessageVariant.VIEWER_ONLY,
+                timestamp: Date.now(),
+                source: WindowMode.ADMIN,
+            };
+
+            // Trigger message event
+            channel.simulateMessage(viewerOnlyMessage);
+
+            // Wait for async operations
+            await new Promise((resolve) => setTimeout(resolve, 100));
+
+            // Admin should NOT refresh when receiving viewer-only message
+            expect(mockReload).not.toHaveBeenCalled();
         });
 
         it("should ignore invalid messages", () => {
@@ -344,6 +415,301 @@ describe("WindowRefreshManager", () => {
             expect(mockConsoleError).toHaveBeenCalledWith(
                 "Failed to send configuration saved notification:",
                 expect.any(Error)
+            );
+        });
+
+        it("should handle postMessage errors in notifyConfigurationSavedViewerOnly", () => {
+            const manager = new WindowRefreshManager();
+
+            // Mock postMessage to throw
+            vi.spyOn(
+                MockBroadcastChannel.prototype,
+                "postMessage"
+            ).mockImplementation(() => {
+                throw new Error("postMessage error");
+            });
+
+            manager.notifyConfigurationSavedViewerOnly();
+
+            expect(mockConsoleError).toHaveBeenCalledWith(
+                "Failed to send configuration saved notification:",
+                expect.any(Error)
+            );
+        });
+
+        it("should handle postMessage errors in notifyChallengeStateChanged", () => {
+            const manager = new WindowRefreshManager();
+
+            // Mock postMessage to throw
+            vi.spyOn(
+                MockBroadcastChannel.prototype,
+                "postMessage"
+            ).mockImplementation(() => {
+                throw new Error("postMessage error");
+            });
+
+            manager.notifyChallengeStateChanged();
+
+            expect(mockConsoleError).toHaveBeenCalledWith(
+                "Failed to send challenge state changed notification:",
+                expect.any(Error)
+            );
+        });
+
+        it("should handle destroy errors", () => {
+            const manager = new WindowRefreshManager();
+
+            // Mock close to throw
+            vi.spyOn(
+                MockBroadcastChannel.prototype,
+                "close"
+            ).mockImplementation(() => {
+                throw new Error("close error");
+            });
+
+            manager.destroy();
+
+            expect(mockConsoleError).toHaveBeenCalledWith(
+                "Error destroying WindowRefreshManager:",
+                expect.any(Error)
+            );
+        });
+
+        it("should handle triggerChallengeListRefresh errors", () => {
+            window.location.hash = "";
+            new WindowRefreshManager();
+
+            // Mock window.dispatchEvent to throw
+            const originalDispatchEvent = window.dispatchEvent;
+            window.dispatchEvent = vi.fn().mockImplementation(() => {
+                throw new Error("dispatchEvent error");
+            });
+
+            // Simulate receiving a challenge-state-changed message
+            const channel = MockBroadcastChannel.instances[0];
+            if (!channel) throw new Error("Channel not found");
+
+            const message = {
+                type: RefreshMessageType.CHALLENGE_STATE_CHANGED,
+                timestamp: Date.now(),
+                source: WindowMode.ADMIN,
+            };
+
+            channel.simulateMessage(message);
+
+            expect(mockConsoleError).toHaveBeenCalledWith(
+                "Failed to trigger challenge list refresh:",
+                expect.any(Error)
+            );
+
+            // Restore original
+            window.dispatchEvent = originalDispatchEvent;
+        });
+    });
+
+    describe("challenge state changed notifications", () => {
+        it("should send challenge state changed notification", () => {
+            const manager = new WindowRefreshManager();
+            const postMessageSpy = vi.spyOn(
+                MockBroadcastChannel.prototype,
+                "postMessage"
+            );
+
+            manager.notifyChallengeStateChanged();
+
+            expect(postMessageSpy).toHaveBeenCalledWith({
+                type: RefreshMessageType.CHALLENGE_STATE_CHANGED,
+                timestamp: expect.any(Number),
+                source: WindowMode.VIEWER,
+            });
+        });
+
+        it("should send challenge state changed notification from admin mode", () => {
+            window.location.hash = "#admin";
+            const manager = new WindowRefreshManager();
+            const postMessageSpy = vi.spyOn(
+                MockBroadcastChannel.prototype,
+                "postMessage"
+            );
+
+            manager.notifyChallengeStateChanged();
+
+            expect(postMessageSpy).toHaveBeenCalledWith({
+                type: RefreshMessageType.CHALLENGE_STATE_CHANGED,
+                timestamp: expect.any(Number),
+                source: WindowMode.ADMIN,
+            });
+        });
+
+        it("should trigger challenge list refresh event when receiving message", () => {
+            window.location.hash = "";
+            new WindowRefreshManager();
+
+            const dispatchEventSpy = vi.spyOn(window, "dispatchEvent");
+
+            // Simulate receiving a challenge-state-changed message from admin
+            const channel = MockBroadcastChannel.instances[0];
+            if (!channel) throw new Error("Channel not found");
+
+            const message = {
+                type: RefreshMessageType.CHALLENGE_STATE_CHANGED,
+                timestamp: Date.now(),
+                source: WindowMode.ADMIN,
+            };
+
+            channel.simulateMessage(message);
+
+            expect(dispatchEventSpy).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    type: "challenge-list-refresh",
+                    detail: expect.objectContaining({
+                        timestamp: expect.any(Number),
+                    }),
+                })
+            );
+        });
+
+        it("should warn when channel not available for challenge state changed", () => {
+            // Remove BroadcastChannel support
+            delete (global as any).BroadcastChannel;
+
+            const manager = new WindowRefreshManager();
+
+            manager.notifyChallengeStateChanged();
+
+            expect(mockConsoleWarn).toHaveBeenCalledWith(
+                "BroadcastChannel not available, cannot notify other windows"
+            );
+        });
+    });
+
+    describe("convenience functions", () => {
+        it("should call notifyConfigurationSavedViewerOnly through convenience function", () => {
+            const manager = getWindowRefreshManager();
+            const notifySpy = vi.spyOn(
+                manager,
+                "notifyConfigurationSavedViewerOnly"
+            );
+
+            notifyConfigurationSavedViewerOnly();
+
+            expect(notifySpy).toHaveBeenCalled();
+        });
+
+        it("should call notifyChallengeStateChanged through convenience function", () => {
+            const manager = getWindowRefreshManager();
+            const notifySpy = vi.spyOn(manager, "notifyChallengeStateChanged");
+
+            notifyChallengeStateChanged();
+
+            expect(notifySpy).toHaveBeenCalled();
+        });
+    });
+
+    describe("message validation and filtering", () => {
+        it("should ignore messages with missing type", () => {
+            new WindowRefreshManager();
+
+            const channel = MockBroadcastChannel.instances[0];
+            if (!channel) throw new Error("Channel not found");
+
+            const invalidMessage = {
+                timestamp: Date.now(),
+                source: WindowMode.ADMIN,
+            };
+
+            channel.simulateMessage(invalidMessage);
+
+            expect(mockConsoleWarn).toHaveBeenCalledWith(
+                "Invalid refresh message received:",
+                invalidMessage
+            );
+        });
+
+        it("should ignore messages with missing timestamp", () => {
+            new WindowRefreshManager();
+
+            const channel = MockBroadcastChannel.instances[0];
+            if (!channel) throw new Error("Channel not found");
+
+            const invalidMessage = {
+                type: RefreshMessageType.CONFIG_SAVED,
+                source: WindowMode.ADMIN,
+            };
+
+            channel.simulateMessage(invalidMessage);
+
+            expect(mockConsoleWarn).toHaveBeenCalledWith(
+                "Invalid refresh message received:",
+                invalidMessage
+            );
+        });
+
+        it("should ignore messages with missing source", () => {
+            new WindowRefreshManager();
+
+            const channel = MockBroadcastChannel.instances[0];
+            if (!channel) throw new Error("Channel not found");
+
+            const invalidMessage = {
+                type: RefreshMessageType.CONFIG_SAVED,
+                timestamp: Date.now(),
+            };
+
+            channel.simulateMessage(invalidMessage);
+
+            expect(mockConsoleWarn).toHaveBeenCalledWith(
+                "Invalid refresh message received:",
+                invalidMessage
+            );
+        });
+
+        it("should process viewer-only message in viewer mode", async () => {
+            window.location.hash = "";
+            new WindowRefreshManager({ refreshDelay: 50 });
+
+            const channel = MockBroadcastChannel.instances[0];
+            if (!channel) throw new Error("Channel not found");
+
+            const viewerOnlyMessage = {
+                type: RefreshMessageType.CONFIG_SAVED,
+                variant: MessageVariant.VIEWER_ONLY,
+                timestamp: Date.now(),
+                source: WindowMode.ADMIN,
+            };
+
+            channel.simulateMessage(viewerOnlyMessage);
+
+            // Wait for async operations
+            await new Promise((resolve) => setTimeout(resolve, 100));
+
+            // Viewer should refresh when receiving viewer-only message
+            expect(mockReload).toHaveBeenCalled();
+        });
+    });
+
+    describe("channel availability checks", () => {
+        it("should warn when notifyConfigurationSaved called without channel", () => {
+            delete (global as any).BroadcastChannel;
+
+            const manager = new WindowRefreshManager();
+
+            manager.notifyConfigurationSaved();
+
+            expect(mockConsoleWarn).toHaveBeenCalledWith(
+                "BroadcastChannel not available, cannot notify other windows"
+            );
+        });
+
+        it("should warn when notifyConfigurationSavedViewerOnly called without channel", () => {
+            delete (global as any).BroadcastChannel;
+
+            const manager = new WindowRefreshManager();
+
+            manager.notifyConfigurationSavedViewerOnly();
+
+            expect(mockConsoleWarn).toHaveBeenCalledWith(
+                "BroadcastChannel not available, cannot notify other windows"
             );
         });
     });

@@ -11,6 +11,7 @@ import {
     COLOR_CONFIG,
     CORE_CONFIG,
 } from "../types/ConfigConstants";
+import { ConfigType } from "../types/ConfigType";
 import {
     COLOR_TIERS,
     CSS_CLASSES,
@@ -30,6 +31,7 @@ import {
     ADMIN_PANEL_LABELS,
     ERROR_MESSAGES,
     VALIDATION_MESSAGES,
+    WARNING_MESSAGES,
 } from "../types/MessageConstants";
 import { COLOR_CONSTANTS, TIMING_CONSTANTS } from "../types/NumericConstants";
 import {
@@ -39,7 +41,11 @@ import {
 import { AdminPanelDOMBuilder } from "../utils/AdminPanelDOMBuilder";
 import { AdminPanelEventSetup } from "../utils/AdminPanelEventSetup";
 import CollapsibleSection from "../utils/CollapsibleSection";
-import { notifyConfigurationSaved } from "../utils/windowRefresh";
+import { combineColorWithOpacity } from "../utils/ColorUtils";
+import {
+    notifyConfigurationSaved,
+    notifyConfigurationSavedViewerOnly,
+} from "../utils/windowRefresh";
 import ConfigExporter from "./ConfigExporter";
 import ConfigManager from "./ConfigManager";
 
@@ -62,6 +68,12 @@ export default class AdminPanel {
         { element: Element; event: string; handler: EventListener }
     > = new Map();
     #collapsibleSections: Map<string, CollapsibleSection> = new Map();
+
+    /**
+     * Timer for debouncing viewer refresh notifications
+     * Prevents quick refreshes while moving the slider
+     */
+    private viewerNotifyTimer?: number | undefined;
 
     /**
      * @constructor
@@ -725,9 +737,21 @@ export default class AdminPanel {
 
         if (!backgroundColorInput) return;
 
-        // Apply background color (no opacity - that's handled by tier colors opacity slider)
+        // Get row colors opacity slider value
+        const rowColorsOpacitySlider = document.getElementById(
+            ELEMENT_IDS.ROW_COLORS_OPACITY
+        ) as HTMLInputElement;
+        const rowColorsOpacity = rowColorsOpacitySlider
+            ? parseInt(rowColorsOpacitySlider.value) / 100
+            : BACKGROUND_DEFAULTS.ROW_COLORS_OPACITY;
+
+        // Apply background color with opacity
         const backgroundColor = backgroundColorInput.value;
-        previewChallenge.style.backgroundColor = backgroundColor;
+        const backgroundColorWithOpacity = combineColorWithOpacity(
+            backgroundColor,
+            rowColorsOpacity
+        );
+        previewChallenge.style.backgroundColor = backgroundColorWithOpacity;
 
         // Apply text color
         let textColor: string = DEFAULT_COLORS.WHITE_TEXT;
@@ -981,6 +1005,75 @@ export default class AdminPanel {
     }
 
     /**
+     * Debounced viewer notification to prevent rapid-fire refreshes
+     * Waits for user to pause slider drag before notifying viewer window
+     * @param delay - Debounce delay in milliseconds
+     * @returns {void}
+     */
+    private notifyViewerDebounced(delay: number = 200): void {
+        if (this.viewerNotifyTimer) {
+            clearTimeout(this.viewerNotifyTimer);
+        }
+        this.viewerNotifyTimer = window.setTimeout(() => {
+            notifyConfigurationSavedViewerOnly();
+            this.viewerNotifyTimer = undefined;
+        }, delay);
+    }
+
+    /**
+     * Update admin panel UI to reflect slider changes without page refresh
+     * This is called during slider interaction to provide immediate visual feedback
+     * @param configType - Type of configuration being updated (ConfigType.COLOR or ConfigType.BACKGROUND)
+     * @returns {void}
+     */
+    private updateAdminUIForSliderChange(configType: ConfigType): void {
+        if (configType === ConfigType.BACKGROUND) {
+            // Update background preview
+            this.updateBackgroundPreview();
+
+            // If overlay background opacity changed, update the main challenge card
+            this.updateOverlayBackgroundInDOM();
+        } else if (configType === ConfigType.COLOR) {
+            // Update challenge row color preview to reflect new colors and opacity
+            this.updateBackgroundPreview();
+        }
+    }
+
+    /**
+     * Update overlay background styling in the DOM without page refresh
+     * Applies current overlay background color and opacity to the challenge card
+     * @returns {void}
+     */
+    private updateOverlayBackgroundInDOM(): void {
+        // Target the specific challenge card in the challenge container
+        const challengeCard = document.querySelector(
+            CSS_SELECTORS.CHALLENGE_CONTAINER_CARD
+        ) as HTMLElement;
+
+        if (!challengeCard) {
+            console.warn(
+                WARNING_MESSAGES.CHALLENGE_CARD_NOT_FOUND_FOR_OVERLAY_UPDATE
+            );
+            return;
+        }
+
+        const overlayBackgroundColor = this.#configManager.get(
+            BACKGROUND_CONFIG.OVERLAY_BACKGROUND_COLOR
+        );
+        const overlayBackgroundOpacity = this.#configManager.get(
+            BACKGROUND_CONFIG.OVERLAY_BACKGROUND_OPACITY
+        );
+
+        if (overlayBackgroundColor && overlayBackgroundOpacity !== undefined) {
+            const overlayBackgroundRGBA = combineColorWithOpacity(
+                overlayBackgroundColor,
+                overlayBackgroundOpacity
+            );
+            challengeCard.style.backgroundColor = overlayBackgroundRGBA;
+        }
+    }
+
+    /**
      * Auto-save authentication configuration
      * @returns {void}
      */
@@ -1071,8 +1164,11 @@ export default class AdminPanel {
             );
 
             if (colorsSuccess && textColorsSuccess && rowColorsOpacitySuccess) {
-                // Notify other windows to refresh after successful save
-                notifyConfigurationSaved();
+                // Update admin UI directly (no refresh) - IMMEDIATE
+                this.updateAdminUIForSliderChange(ConfigType.COLOR);
+
+                // Notify viewer window to refresh - DEBOUNCED (prevents flicker)
+                this.notifyViewerDebounced();
             }
         } catch (error) {
             console.error(ERROR_MESSAGES.ERROR_AUTO_SAVING_COLOR_CONFIG, error);
@@ -1127,8 +1223,11 @@ export default class AdminPanel {
                 autoTextColorSuccess &&
                 textShadowSuccess
             ) {
-                // Notify other windows to refresh after successful save
-                notifyConfigurationSaved();
+                // Update admin UI directly (no refresh) - IMMEDIATE
+                this.updateAdminUIForSliderChange(ConfigType.BACKGROUND);
+
+                // Notify viewer window to refresh - DEBOUNCED (prevents flicker)
+                this.notifyViewerDebounced();
             }
         } catch (error) {
             console.error(

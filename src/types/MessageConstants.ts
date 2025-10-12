@@ -79,6 +79,15 @@ export const ERROR_MESSAGES = {
 } as const;
 
 /**
+ * Warning messages for non-critical issues
+ */
+export const WARNING_MESSAGES = {
+    // DOM-related warnings
+    CHALLENGE_CARD_NOT_FOUND_FOR_OVERLAY_UPDATE:
+        "Challenge card not found for overlay background update",
+} as const;
+
+/**
  * Success messages for various operations
  */
 export const SUCCESS_MESSAGES = {
@@ -335,3 +344,5 @@ export type AdminFeedbackMessageValue =
     (typeof ADMIN_FEEDBACK_MESSAGES)[keyof typeof ADMIN_FEEDBACK_MESSAGES];
 export type ValidationMessageValue =
     (typeof VALIDATION_MESSAGES)[keyof typeof VALIDATION_MESSAGES];
+export type WarningMessageValue =
+    (typeof WARNING_MESSAGES)[keyof typeof WARNING_MESSAGES];

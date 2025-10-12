@@ -97,6 +97,7 @@ export const CSS_SELECTORS = {
     // Combined selectors
     CHALLENGE_BY_ID: (challengeId: string) =>
         `[data-challenge-id="${challengeId}"]`,
+    CHALLENGE_CONTAINER_CARD: ".challenge-container > .card",
 } as const;
 
 /**
@@ -214,6 +215,13 @@ export const URL_HASH = {
 } as const;
 
 /**
+ * BroadcastChannel names for cross-window communication
+ */
+export const BROADCAST_CHANNEL_NAMES = {
+    CONFIG_UPDATES: "twitch-overlay-config-updates",
+} as const;
+
+/**
  * Command-related constants
  */
 export const COMMAND_CONSTANTS = {
@@ -297,6 +305,8 @@ export type HTMLAttributeValue =
     (typeof HTML_ATTRIBUTES)[keyof typeof HTML_ATTRIBUTES];
 export type ButtonTextValue = (typeof BUTTON_TEXT)[keyof typeof BUTTON_TEXT];
 export type ModalModeValue = (typeof MODAL_MODES)[keyof typeof MODAL_MODES];
+export type BroadcastChannelNameValue =
+    (typeof BROADCAST_CHANNEL_NAMES)[keyof typeof BROADCAST_CHANNEL_NAMES];
 
 /**
  * CSS property values used throughout the application

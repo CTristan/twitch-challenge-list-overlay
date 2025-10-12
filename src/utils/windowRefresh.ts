@@ -7,13 +7,19 @@
  * @module windowRefresh
  */
 
+import { BROADCAST_CHANNEL_NAMES, URL_HASH } from "../types/DOMConstants";
+import { MessageVariant } from "../types/MessageVariant";
+import { RefreshMessageType } from "../types/RefreshMessageType";
+import { WindowMode } from "../types/WindowMode";
+
 /**
  * Message types for BroadcastChannel communication
  */
 export interface RefreshMessage {
-    type: "config-saved" | "challenge-state-changed";
+    type: RefreshMessageType;
+    variant?: MessageVariant;
     timestamp: number;
-    source: "admin" | "viewer";
+    source: WindowMode;
 }
 
 /**
@@ -28,7 +34,7 @@ interface RefreshConfig {
  * Default configuration for the refresh system
  */
 const DEFAULT_CONFIG: RefreshConfig = {
-    channelName: "twitch-overlay-config-updates",
+    channelName: BROADCAST_CHANNEL_NAMES.CONFIG_UPDATES,
     refreshDelay: 500, // milliseconds to wait before refresh
 };
 
@@ -48,7 +54,7 @@ export class WindowRefreshManager {
      */
     constructor(config: Partial<RefreshConfig> = {}) {
         this.config = { ...DEFAULT_CONFIG, ...config };
-        this.isAdminMode = window.location.hash === "#admin";
+        this.isAdminMode = window.location.hash === URL_HASH.ADMIN;
         this.initializeBroadcastChannel();
     }
 
@@ -68,12 +74,6 @@ export class WindowRefreshManager {
 
             this.channel = new BroadcastChannel(this.config.channelName);
             this.setupMessageListener();
-
-            console.log(
-                `WindowRefreshManager initialized for ${
-                    this.isAdminMode ? "admin" : "viewer"
-                } mode`
-            );
         } catch (error) {
             console.error("Failed to initialize BroadcastChannel:", error);
         }
@@ -101,21 +101,30 @@ export class WindowRefreshManager {
                 }
 
                 // Ignore messages from the same window type to prevent loops
-                const currentSource = this.isAdminMode ? "admin" : "viewer";
+                const currentSource = this.isAdminMode
+                    ? WindowMode.ADMIN
+                    : WindowMode.VIEWER;
                 if (source === currentSource) {
                     return;
                 }
 
                 // Handle different message types
-                if (type === "config-saved") {
-                    console.log(
-                        `Received config-saved message from ${source} window, refreshing...`
-                    );
+                if (type === RefreshMessageType.CONFIG_SAVED) {
+                    // Skip refresh if this is admin mode and message is viewer-only
+                    if (
+                        this.isAdminMode &&
+                        event.data.variant === MessageVariant.VIEWER_ONLY
+                    ) {
+                        // Admin mode: ignoring viewer-only config-saved message"
+                        return;
+                    }
+
+                    // Received config-saved message from source window, refreshing...`
                     this.performRefresh();
-                } else if (type === "challenge-state-changed") {
-                    console.log(
-                        `Received challenge-state-changed message from ${source} window, triggering DOM update...`
-                    );
+                } else if (
+                    type === RefreshMessageType.CHALLENGE_STATE_CHANGED
+                ) {
+                    // Received challenge-state-changed message from source window, triggering DOM update...`
                     this.triggerChallengeListRefresh();
                 }
             }
@@ -135,9 +144,9 @@ export class WindowRefreshManager {
         }
 
         const message: RefreshMessage = {
-            type: "config-saved",
+            type: RefreshMessageType.CONFIG_SAVED,
             timestamp: Date.now(),
-            source: this.isAdminMode ? "admin" : "viewer",
+            source: this.isAdminMode ? WindowMode.ADMIN : WindowMode.VIEWER,
         };
 
         try {
@@ -159,6 +168,39 @@ export class WindowRefreshManager {
     }
 
     /**
+     * Send a configuration saved message to viewer windows only
+     * Admin window will NOT refresh - it updates UI directly
+     * @returns {void}
+     */
+    public notifyConfigurationSavedViewerOnly(): void {
+        if (!this.channel) {
+            console.warn(
+                "BroadcastChannel not available, cannot notify other windows"
+            );
+            return;
+        }
+
+        const message: RefreshMessage = {
+            type: RefreshMessageType.CONFIG_SAVED,
+            variant: MessageVariant.VIEWER_ONLY,
+            timestamp: Date.now(),
+            source: this.isAdminMode ? WindowMode.ADMIN : WindowMode.VIEWER,
+        };
+
+        try {
+            this.channel.postMessage(message);
+
+            // NOTE: We do NOT call this.performRefresh() here
+            // Admin window updates UI directly without refresh
+        } catch (error) {
+            console.error(
+                "Failed to send configuration saved notification:",
+                error
+            );
+        }
+    }
+
+    /**
      * Send a challenge state changed message to other windows
      * @returns {void}
      */
@@ -171,9 +213,9 @@ export class WindowRefreshManager {
         }
 
         const message: RefreshMessage = {
-            type: "challenge-state-changed",
+            type: RefreshMessageType.CHALLENGE_STATE_CHANGED,
             timestamp: Date.now(),
-            source: this.isAdminMode ? "admin" : "viewer",
+            source: this.isAdminMode ? WindowMode.ADMIN : WindowMode.VIEWER,
         };
 
         try {
@@ -292,6 +334,15 @@ export function getWindowRefreshManager(
 export function notifyConfigurationSaved(): void {
     const manager = getWindowRefreshManager();
     manager.notifyConfigurationSaved();
+}
+
+/**
+ * Convenience function to notify viewer windows only (no admin refresh)
+ * @returns {void}
+ */
+export function notifyConfigurationSavedViewerOnly(): void {
+    const manager = getWindowRefreshManager();
+    manager.notifyConfigurationSavedViewerOnly();
 }
 
 /**
