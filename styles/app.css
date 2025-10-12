@@ -279,6 +279,36 @@ body {
   opacity: 0.6;
 }
 
+/* Failed Challenge Styles */
+.challenge.failed .challenge-text {
+  font-style: var(--challenge-failed-font-style, normal);
+}
+
+.challenge.failed .challenge-title {
+  text-decoration-line: var(--challenge-failed-text-decoration, line-through);
+  text-decoration-color: var(--challenge-failed-strikethrough-color, #ff6b6b);
+}
+
+.challenge.failed .challenge-description {
+  text-decoration-line: var(--challenge-failed-text-decoration, line-through);
+  text-decoration-color: var(--challenge-failed-strikethrough-color, #ff6b6b);
+  opacity: 0.7;
+}
+
+.challenge.failed .challenge-amount {
+  text-decoration-line: var(--challenge-failed-text-decoration, line-through);
+  text-decoration-color: var(--challenge-failed-strikethrough-color, #ff6b6b);
+  opacity: 0.6;
+}
+
+.challenge.failed .challenge-checkbox::after {
+  content: "✗";
+  color: var(--challenge-failed-checkbox-color, #ff6b6b);
+  font-size: var(--challenge-checkbox-checkmark-size);
+  font-weight: 900;
+  line-height: 1;
+}
+
 /* Background Customization Styles */
 .challenge.custom-background {
   background-color: var(--challenge-background-color);

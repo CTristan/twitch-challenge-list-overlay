@@ -1,3 +1,4 @@
+import { CHALLENGE_STATES } from "../types/DOMConstants";
 import { StorageManager } from "../utils/StorageManager";
 import Challenge from "./Challenge";
 
@@ -390,6 +391,39 @@ export default class ChallengeList {
                 challenge.timer.stop();
             }
         }
+
+        this.#commitToLocalStorage();
+        return challenge;
+    }
+
+    /**
+     * Cycle through challenge states: in-progress → done → failed → in-progress
+     * Handles timer start/stop logic and automatically updates counters and persists
+     * @param challengeId - The ID of the challenge to cycle
+     * @returns The cycled challenge or null if not found
+     */
+    cycleChallengeState(challengeId: string): Challenge | null {
+        const challenge = this.#challengeMap.get(challengeId);
+        if (!challenge) {
+            return null;
+        }
+
+        const previousState = challenge.getState();
+        const newState = challenge.cycleState();
+
+        // Update completion counter based on state transitions
+        if (
+            previousState === CHALLENGE_STATES.IN_PROGRESS &&
+            newState === CHALLENGE_STATES.DONE
+        ) {
+            this.#challengesCompleted++;
+        } else if (
+            previousState === CHALLENGE_STATES.DONE &&
+            newState === CHALLENGE_STATES.FAILED
+        ) {
+            this.#challengesCompleted--;
+        }
+        // No counter change for failed → in-progress transition
 
         this.#commitToLocalStorage();
         return challenge;

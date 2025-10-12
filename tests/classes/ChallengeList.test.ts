@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import Challenge from "../../src/classes/Challenge";
 import ChallengeList from "../../src/classes/ChallengeList";
+import { CHALLENGE_STATES } from "../../src/types/DOMConstants";
 
 describe("ChallengeList", () => {
     let challengeList: ChallengeList;
@@ -438,6 +439,92 @@ describe("ChallengeList", () => {
                 // Note: Timer restart logic depends on remaining time > 0 and timer not being expired
                 // This test verifies the toggle functionality works with map lookup
                 expect(timerChallenge.timer).toBeDefined();
+            });
+        });
+
+        describe("cycleChallengeState", () => {
+            it("should cycle challenge state from in-progress to done", () => {
+                expect(challenge1.getState()).toBe(
+                    CHALLENGE_STATES.IN_PROGRESS
+                );
+                expect(challengeList.challengesCompleted).toBe(0);
+
+                const result = challengeList.cycleChallengeState(challenge1.id);
+                expect(result).toBe(challenge1);
+                expect(challenge1.getState()).toBe(CHALLENGE_STATES.DONE);
+                expect(challenge1.isComplete()).toBe(true);
+                expect(challengeList.challengesCompleted).toBe(1);
+            });
+
+            it("should cycle challenge state from done to failed", () => {
+                challenge1.setCompletionStatus(true);
+                challengeList.saveToLocalStorage();
+                const initialCompleted = challengeList.challengesCompleted;
+
+                const result = challengeList.cycleChallengeState(challenge1.id);
+                expect(result).toBe(challenge1);
+                expect(challenge1.getState()).toBe(CHALLENGE_STATES.FAILED);
+                expect(challenge1.isFailed()).toBe(true);
+                expect(challenge1.isComplete()).toBe(false);
+                expect(challengeList.challengesCompleted).toBe(
+                    initialCompleted - 1
+                );
+            });
+
+            it("should cycle challenge state from failed to in-progress", () => {
+                challenge1.setFailureStatus(true);
+                const initialCompleted = challengeList.challengesCompleted;
+
+                const result = challengeList.cycleChallengeState(challenge1.id);
+                expect(result).toBe(challenge1);
+                expect(challenge1.getState()).toBe(
+                    CHALLENGE_STATES.IN_PROGRESS
+                );
+                expect(challenge1.isFailed()).toBe(false);
+                expect(challenge1.isComplete()).toBe(false);
+                expect(challengeList.challengesCompleted).toBe(
+                    initialCompleted
+                );
+            });
+
+            it("should complete a full state cycle", () => {
+                expect(challenge1.getState()).toBe(
+                    CHALLENGE_STATES.IN_PROGRESS
+                );
+                expect(challengeList.challengesCompleted).toBe(0);
+
+                // in-progress → done
+                challengeList.cycleChallengeState(challenge1.id);
+                expect(challenge1.getState()).toBe(CHALLENGE_STATES.DONE);
+                expect(challengeList.challengesCompleted).toBe(1);
+
+                // done → failed
+                challengeList.cycleChallengeState(challenge1.id);
+                expect(challenge1.getState()).toBe(CHALLENGE_STATES.FAILED);
+                expect(challengeList.challengesCompleted).toBe(0);
+
+                // failed → in-progress
+                challengeList.cycleChallengeState(challenge1.id);
+                expect(challenge1.getState()).toBe(
+                    CHALLENGE_STATES.IN_PROGRESS
+                );
+                expect(challengeList.challengesCompleted).toBe(0);
+            });
+
+            it("should return null for non-existent challenge ID", () => {
+                const result =
+                    challengeList.cycleChallengeState("non-existent-id");
+                expect(result).toBeNull();
+            });
+
+            it("should persist state changes to localStorage", () => {
+                challengeList.cycleChallengeState(challenge1.id);
+                expect(challenge1.getState()).toBe(CHALLENGE_STATES.DONE);
+
+                // Create new instance to verify persistence
+                const newList = new ChallengeList();
+                const loadedChallenge = newList.challenges[0];
+                expect(loadedChallenge?.getState()).toBe(CHALLENGE_STATES.DONE);
             });
         });
 

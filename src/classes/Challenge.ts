@@ -1,3 +1,4 @@
+import { CHALLENGE_STATES } from "../types/DOMConstants";
 import Timer from "../utils/Timer";
 import { ValidationUtils } from "../utils/ValidationUtils";
 
@@ -271,10 +272,53 @@ export default class Challenge {
         }
         this.failureStatus = status;
 
-        // Stop timer when failed
-        if (status && this.timer) {
-            this.timer.stop();
+        // Note: Timer continues running even after failure to show expired state
+        // This provides visual feedback that the challenge failed due to timer expiration
+
+        // Clear completion status when setting failure status
+        if (status && this.completionStatus) {
+            this.completionStatus = false;
         }
+    }
+
+    /**
+     * Cycle through challenge states: in-progress → done → failed → in-progress
+     * @returns The new state as a string ("in-progress", "done", or "failed")
+     */
+    cycleState(): string {
+        if (!this.completionStatus && !this.failureStatus) {
+            // Currently in-progress → transition to done
+            this.setCompletionStatus(true);
+            return CHALLENGE_STATES.DONE;
+        } else if (this.completionStatus && !this.failureStatus) {
+            // Currently done → transition to failed
+            this.completionStatus = false;
+            this.setFailureStatus(true);
+            return CHALLENGE_STATES.FAILED;
+        } else {
+            // Currently failed → transition to in-progress
+            this.failureStatus = false;
+            this.completionStatus = false;
+            // Restart timer if it exists and has remaining time
+            if (
+                this.timer &&
+                !this.timer.isActive &&
+                this.timer.getRemainingTime() > 0
+            ) {
+                this.timer.start();
+            }
+            return CHALLENGE_STATES.IN_PROGRESS;
+        }
+    }
+
+    /**
+     * Get the current state of the challenge
+     * @returns The current state as a string ("in-progress", "done", or "failed")
+     */
+    getState(): string {
+        if (this.failureStatus) return CHALLENGE_STATES.FAILED;
+        if (this.completionStatus) return CHALLENGE_STATES.DONE;
+        return CHALLENGE_STATES.IN_PROGRESS;
     }
 
     /**

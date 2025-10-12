@@ -8,7 +8,12 @@ import {
     BACKGROUND_DEFAULTS,
     COLOR_CONFIG,
 } from "../types/ConfigConstants";
-import { CSS_CLASSES, CSS_SELECTORS, URL_HASH } from "../types/DOMConstants";
+import {
+    CHALLENGE_STATES,
+    CSS_CLASSES,
+    CSS_SELECTORS,
+    URL_HASH,
+} from "../types/DOMConstants";
 import ChallengeRenderer from "./ChallengeRenderer";
 import { combineColorWithOpacity } from "./ColorUtils";
 import DOMHelper from "./DOMHelper";
@@ -375,8 +380,9 @@ export default class UIUpdateHandler {
                 );
 
                 // Handle timer display - remove existing timer and add new one if needed
-                const existingTimer =
-                    challengeElement.querySelector(".challenge-timer");
+                const existingTimer = challengeElement.querySelector(
+                    CSS_SELECTORS.CHALLENGE_TIMER
+                );
                 if (existingTimer) {
                     existingTimer.remove();
                 }
@@ -682,18 +688,22 @@ export default class UIUpdateHandler {
         }
 
         try {
-            // Toggle the challenge completion using the encapsulated method
+            // Cycle through challenge states: in-progress → done → failed → in-progress
             const challenge =
-                this.challengeList.toggleChallengeCompletion(challengeId);
+                this.challengeList.cycleChallengeState(challengeId);
             if (!challenge) {
                 console.error("Could not find challenge with ID:", challengeId);
                 return;
             }
 
-            // Update DOM to reflect the new status
-            if (challenge.isComplete()) {
+            // Update DOM to reflect the new state
+            const state = challenge.getState();
+            if (state === CHALLENGE_STATES.DONE) {
                 DOMHelper.completeChallengeFromDOM(challengeId);
+            } else if (state === CHALLENGE_STATES.FAILED) {
+                DOMHelper.failChallengeFromDOM(challengeId);
             } else {
+                // in-progress
                 DOMHelper.revertChallengeFromDOM(challengeId);
             }
 
@@ -701,7 +711,7 @@ export default class UIUpdateHandler {
             this.updateChallengeCount();
             this.timerController.updateTimerDisplays();
         } catch (error) {
-            console.error("Error toggling challenge completion:", error);
+            console.error("Error cycling challenge state:", error);
         }
     };
 

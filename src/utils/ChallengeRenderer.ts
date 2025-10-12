@@ -4,6 +4,7 @@ import {
     CSS_CUSTOM_PROPERTIES,
 } from "../types/ConfigConstants";
 import {
+    CHALLENGE_STATES,
     CSS_CLASSES,
     CSS_SELECTORS,
     DATA_ATTRIBUTES,
@@ -201,9 +202,17 @@ export class ChallengeRenderer {
         } = {}
     ): HTMLElement {
         const challengeElement = document.createElement(HTML_ELEMENTS.LI);
-        challengeElement.className = `${CSS_CLASSES.CHALLENGE} ${
-            challenge.isComplete() ? CSS_CLASSES.DONE : ""
-        }`;
+
+        // Apply appropriate state class based on challenge state
+        const state = challenge.getState();
+        let stateClass = "";
+        if (state === CHALLENGE_STATES.DONE) {
+            stateClass = CSS_CLASSES.DONE;
+        } else if (state === CHALLENGE_STATES.FAILED) {
+            stateClass = CSS_CLASSES.FAILED;
+        }
+
+        challengeElement.className = `${CSS_CLASSES.CHALLENGE} ${stateClass}`;
         challengeElement.dataset[DATA_ATTRIBUTES.CHALLENGE_ID] = challenge.id;
 
         // Create checkbox

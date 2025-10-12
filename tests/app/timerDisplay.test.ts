@@ -163,13 +163,29 @@ describe("Timer Display in Challenge Rows", () => {
             // Render the challenge list
             app.renderChallengeList();
 
+            // Verify timer element exists before expiration
+            let timerElement = document.querySelector(".challenge-timer");
+            expect(timerElement).toBeTruthy();
+
             // Advance time past expiration
             vi.advanceTimersByTime(35000); // 35 seconds passed, timer expired
 
             // Manually trigger timer display update
             app.updateTimerDisplays();
 
-            const timerElement = document.querySelector(".challenge-timer");
+            // Challenge should now be automatically failed
+            expect(challenge.isFailed()).toBe(true);
+            expect(challenge.isComplete()).toBe(false);
+
+            // Check that the challenge element has the failed class
+            const challengeElement = document.querySelector(
+                `[data-challenge-id="${challenge.id}"]`
+            );
+            expect(challengeElement?.classList.contains("failed")).toBe(true);
+
+            // Timer should still be visible with expired class
+            timerElement = document.querySelector(".challenge-timer");
+            expect(timerElement).toBeTruthy();
             expect(timerElement?.classList.contains("expired")).toBe(true);
             expect(timerElement?.textContent).toContain("⏰");
         });

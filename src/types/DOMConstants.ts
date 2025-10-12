@@ -20,10 +20,12 @@ export const CSS_CLASSES = {
     CHALLENGE_DESCRIPTION: "challenge-description",
     CHALLENGE_METADATA: "challenge-metadata",
     CHALLENGE_AMOUNT: "challenge-amount",
+    CHALLENGE_TIMER: "challenge-timer",
     CHALLENGES: "challenges",
 
     // State classes
     DONE: "done",
+    FAILED: "failed",
     CHECKED: "checked",
     HIDDEN: "hidden",
     ADMIN_INTERACTIVE: "admin-interactive",
@@ -79,6 +81,7 @@ export const CSS_SELECTORS = {
     CHALLENGE_DESCRIPTION: ".challenge-description",
     CHALLENGE_METADATA: ".challenge-metadata",
     CHALLENGE_AMOUNT: ".challenge-amount",
+    CHALLENGE_TIMER: ".challenge-timer",
     CHALLENGE: ".challenge",
     CHALLENGES_LIST: ".challenges",
     CHALLENGES_ORDERED_LIST: "ol.challenges",
@@ -325,3 +328,16 @@ export const CSS_VALUES = {
 } as const;
 
 export type CSSValue = (typeof CSS_VALUES)[keyof typeof CSS_VALUES];
+
+/**
+ * Challenge state values returned by Challenge.getState()
+ * Used for state comparison and conditional logic
+ */
+export const CHALLENGE_STATES = {
+    IN_PROGRESS: "in-progress",
+    DONE: "done",
+    FAILED: "failed",
+} as const;
+
+export type ChallengeState =
+    (typeof CHALLENGE_STATES)[keyof typeof CHALLENGE_STATES];

@@ -13,6 +13,7 @@ import {
 } from "./types/ConfigConstants";
 import {
     BUTTON_TEXT,
+    CHALLENGE_STATES,
     COMMAND_CONSTANTS,
     COMMON_STRINGS,
     CSS_CLASSES,
@@ -876,9 +877,8 @@ export default class App {
         // Mark this challenge as being processed
         this.processingCheckboxClicks.add(challengeId);
 
-        // Toggle the challenge completion using the encapsulated method
-        const challenge =
-            this.challengeList.toggleChallengeCompletion(challengeId);
+        // Cycle through challenge states: in-progress → done → failed → in-progress
+        const challenge = this.challengeList.cycleChallengeState(challengeId);
         if (!challenge) {
             console.error(
                 ERROR_MESSAGES.CHALLENGE_NOT_FOUND_BY_ID.replace(
@@ -891,10 +891,14 @@ export default class App {
         }
 
         try {
-            // Update DOM to reflect the new status
-            if (challenge.isComplete()) {
+            // Update DOM to reflect the new state
+            const state = challenge.getState();
+            if (state === CHALLENGE_STATES.DONE) {
                 this.completeChallengeFromDOM(challengeId);
+            } else if (state === CHALLENGE_STATES.FAILED) {
+                this.failChallengeFromDOM(challengeId);
             } else {
+                // in-progress
                 this.revertChallengeFromDOM(challengeId);
             }
 
@@ -928,7 +932,18 @@ export default class App {
     };
 
     /**
-     * Revert a completed challenge back to active status in the DOM
+     * Mark a challenge as failed in the DOM
+     * @param {string} challengeId
+     * @returns {void}
+     */
+    failChallengeFromDOM(challengeId: string): void {
+        DOMHelper.failChallengeFromDOM(challengeId);
+        this.updateChallengeCount();
+        this.updateTimerDisplays();
+    }
+
+    /**
+     * Revert a challenge back to active (in-progress) status in the DOM
      * @param {string} challengeId
      * @returns {void}
      */

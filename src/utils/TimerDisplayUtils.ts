@@ -1,5 +1,7 @@
 import ChallengeList from "../classes/ChallengeList";
+import { CSS_CLASSES, CSS_SELECTORS } from "../types/DOMConstants";
 import Timer from "./Timer";
+import { notifyChallengeStateChanged } from "./windowRefresh";
 
 /**
  * @class TimerDisplayUtils
@@ -15,7 +17,7 @@ export class TimerDisplayUtils {
      */
     static createTimerElement(timer: Timer, challengeId: string): HTMLElement {
         const timerElement = document.createElement("div");
-        timerElement.classList.add("challenge-timer");
+        timerElement.classList.add(CSS_CLASSES.CHALLENGE_TIMER);
         timerElement.dataset["challengeId"] = challengeId;
 
         // Initialize timer content using standardized update method
@@ -55,12 +57,16 @@ export class TimerDisplayUtils {
     /**
      * Update all timer displays in the DOM using optimized challenge lookup
      * Uses ChallengeList's internal challenge map for quick access
+     * Automatically fails challenges when their timers expire
      * @param challengeList - ChallengeList instance containing challenges
      * @returns boolean indicating if any active timers remain
      */
     static updateAllTimerDisplays(challengeList: ChallengeList): boolean {
-        const timerElements = document.querySelectorAll(".challenge-timer");
+        const timerElements = document.querySelectorAll(
+            CSS_SELECTORS.CHALLENGE_TIMER
+        );
         let hasActiveTimers = false;
+        let stateChanged = false;
 
         timerElements.forEach((element) => {
             const challengeId = element.getAttribute("data-challenge-id");
@@ -72,6 +78,33 @@ export class TimerDisplayUtils {
 
             if (challenge.timer.isActive) {
                 hasActiveTimers = true;
+
+                // Check if timer has expired and challenge is not already failed/completed
+                if (
+                    challenge.timer.isExpired() &&
+                    !challenge.isFailed() &&
+                    !challenge.isComplete()
+                ) {
+                    // Automatically fail the challenge
+                    challenge.setFailureStatus(true);
+                    stateChanged = true;
+
+                    // Update DOM to reflect failed state
+                    const challengeElements = document.querySelectorAll(
+                        `[data-challenge-id="${challengeId}"]`
+                    );
+                    challengeElements.forEach((el) => {
+                        el.classList.remove(CSS_CLASSES.DONE);
+                        el.classList.add(CSS_CLASSES.FAILED);
+                        const checkbox = el.querySelector(
+                            CSS_SELECTORS.CHALLENGE_CHECKBOX
+                        );
+                        if (checkbox) {
+                            checkbox.classList.remove(CSS_CLASSES.CHECKED);
+                        }
+                    });
+                }
+
                 // Use standardized update method for consistent behavior
                 this.updateTimerElement(
                     element as HTMLElement,
@@ -82,6 +115,14 @@ export class TimerDisplayUtils {
                 element.remove();
             }
         });
+
+        // If any challenge state changed, persist to localStorage and notify other windows
+        if (stateChanged) {
+            challengeList.saveToLocalStorage();
+
+            // Notify other windows about the state change
+            notifyChallengeStateChanged();
+        }
 
         return hasActiveTimers;
     }
