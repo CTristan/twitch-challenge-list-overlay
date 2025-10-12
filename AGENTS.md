@@ -28,12 +28,17 @@ src/
 -   **ConfigManager**: Singleton configuration with localStorage
 -   **CommandHandler/CommandRegistry**: Command execution and routing
 -   **CommandParser**: key=value and simple string syntax parsing
--   **Constants**: MessageConstants, ColorConstants, ConfigConstants, DOMConstants, FileConstants, NumericConstants
+-   **Constants**: MessageConstants, ColorConstants, ConfigConstants, DOMConstants, FileConstants, NumericConstants, StorageConstants, ValidationConstants
 -   **ChallengeRenderer**: Centralized DOM creation with ID prefix display
 -   **UIUpdateHandler**: DOM manipulation for challenge list rendering, handles overlay background styling
 -   **WindowRefreshManager**: Cross-window BroadcastChannel communication
 -   **TwitchChat**: WebSocket IRC client with OAuth validation
 -   **Timer/TimerController**: Countdown and lifecycle management
+-   **TimerDisplayUtils**: Timer display formatting and DOM creation utilities
+-   **StorageManager**: Centralized localStorage management with error handling and fallback strategies
+-   **ErrorHandler**: Singleton error handler for storage, export, and validation errors
+-   **PositionUtils**: Utility functions for position-based challenge references
+-   **CollapsibleSection**: Utility class for collapsible sections with localStorage persistence
 
 ### AdminPanel Architecture
 
@@ -72,13 +77,19 @@ Delegates to specialized utility classes (all use static methods):
 -   **Import Requirement**: Explicitly import: `import { EnumName } from "../types/EnumName"`
 
 ```typescript
-// ✅ src/types/UIUpdateAction.ts
+// ✅ Examples: UIUpdateAction, RefreshMessageType, MessageVariant, WindowMode, ConfigType
 export enum UIUpdateAction {
     ADD = "add",
     EDIT = "edit",
     COMPLETE = "complete",
 }
-// ✅ Usage
+
+export enum RefreshMessageType {
+    CONFIG_SAVED = "config-saved",
+    CHALLENGE_STATE_CHANGED = "challenge-state-changed",
+}
+
+// Usage
 import { UIUpdateAction } from "../types/UIUpdateAction";
 const uiUpdate: UIUpdateData = { action: UIUpdateAction.ADD };
 ```
@@ -90,34 +101,20 @@ const uiUpdate: UIUpdateData = { action: UIUpdateAction.ADD };
 #### Comprehensive Constants System
 
 -   **MessageConstants**: `src/types/MessageConstants.ts` (ERROR_MESSAGES, SUCCESS_MESSAGES, HELP_MESSAGES, MODAL_TEXT, UI_ELEMENTS, ARIA_LABELS, CONFIG_EXPORT_MESSAGES, CONFIG_EXPORT_ERRORS, CONFIG_VALIDATION_ERRORS, CONFIG_EXPORT_TEMPLATES)
--   **ConfigConstants**: `src/types/ConfigConstants.ts` (AUTH_CONFIG, BEHAVIOR_CONFIG, BACKGROUND_CONFIG, EXPORT_METADATA_KEYS, EXPORT_METADATA_VALUES, EXPORT_PLACEHOLDERS)
+-   **ConfigConstants**: `src/types/ConfigConstants.ts` (AUTH_CONFIG, BEHAVIOR_CONFIG, BACKGROUND_CONFIG, EXPORT_METADATA_KEYS, EXPORT_METADATA_VALUES, EXPORT_PLACEHOLDERS, NETWORK_URLS, URL_PARAMS, GLOBAL_PROPERTIES, TWITCH_EVENTS)
 -   **ColorConstants**: `src/types/ColorConstants.ts` (DEFAULT_COLORS, STATUS_COLORS, SHADOW_COLORS, COLOR_FORMAT)
--   **DOMConstants**: `src/types/DOMConstants.ts` (CSS_CLASSES, CSS_VALUES, CSS_PROPERTY_NAMES, ELEMENT_IDS, EVENT_NAMES, COMMON_STRINGS, HTML_ELEMENTS, HTML_ATTRIBUTE_NAMES, HTML_ATTRIBUTES, MODAL_MODES, DOM_COMMANDS)
+-   **DOMConstants**: `src/types/DOMConstants.ts` (CSS_CLASSES, CSS_VALUES, CSS_PROPERTY_NAMES, ELEMENT_IDS, EVENT_NAMES, COMMON_STRINGS, HTML_ELEMENTS, HTML_ATTRIBUTE_NAMES, HTML_ATTRIBUTES, MODAL_MODES, DOM_COMMANDS, BROADCAST_CHANNEL_NAMES, COMMAND_CONSTANTS, KEYBOARD_KEYS, BUTTON_TEXT)
 -   **FileConstants**: `src/types/FileConstants.ts` (FILE_FORMATS, DEFAULT_FILENAMES, FILENAME_PATTERNS, MIME_TYPES)
--   **NumericConstants**: `src/types/NumericConstants.ts` (FORM_CONSTRAINTS, COLOR_CONSTANTS)
-
-#### Key Constant Objects
-
-**ColorConstants.ts**: COLOR_FORMAT (HEX_PREFIX: "#", RGBA_PREFIX: "rgba(", RGBA_SEPARATOR: ",", HEX_PADDING_CHAR: "0")
-**ConfigConstants.ts**: EXPORT_METADATA_KEYS, EXPORT_METADATA_VALUES, EXPORT_PLACEHOLDERS
-**DOMConstants.ts**: EVENT_NAMES (INPUT, CHANGE, CLICK), CSS_VALUES (DISPLAY_FLEX, DISPLAY_NONE, OPACITY_FULL), CSS_PROPERTY_NAMES (DISPLAY, POSITION, OPACITY), DOM_COMMANDS (COPY), COMMON_STRINGS (EMPTY, SPACE, PERCENT_SYMBOL), HTML_ATTRIBUTE_NAMES (ROLE, ARIA_LABEL, TABINDEX), HTML_ATTRIBUTES (ROLE_BUTTON, TABINDEX_ZERO)
-**FileConstants.ts**: FILENAME_PATTERNS, MIME_TYPES
-**MessageConstants.ts**: CONFIG_EXPORT_MESSAGES, CONFIG_EXPORT_ERRORS, CONFIG_VALIDATION_ERRORS, CONFIG_EXPORT_TEMPLATES, ADMIN_PANEL_LABELS, ARIA_LABELS
+-   **NumericConstants**: `src/types/NumericConstants.ts` (FORM_CONSTRAINTS, COLOR_CONSTANTS, TIMING_CONSTANTS)
+-   **StorageConstants**: `src/types/StorageConstants.ts` (LOCALSTORAGE_PREFIX, STORAGE_KEYS, getAllStorageKeys())
+-   **ValidationConstants**: `src/types/ValidationConstants.ts` (VALIDATION_PATTERNS, VALIDATION_DEFAULTS, VALIDATION_CONSTRAINTS)
 
 ```typescript
-// Usage examples
+// Usage
 import { BACKGROUND_CONFIG } from "../types/ConfigConstants";
-import {
-    CSS_CLASSES,
-    EVENT_NAMES,
-    HTML_ATTRIBUTE_NAMES,
-    HTML_ATTRIBUTES,
-} from "../types/DOMConstants";
-const backgroundColor = configManager.get(
-    BACKGROUND_CONFIG.CHALLENGE_BACKGROUND_COLOR
-);
+import { CSS_CLASSES, EVENT_NAMES } from "../types/DOMConstants";
+const backgroundColor = configManager.get(BACKGROUND_CONFIG.CHALLENGE_BACKGROUND_COLOR);
 element.classList.add(CSS_CLASSES.DONE);
-element.setAttribute(HTML_ATTRIBUTE_NAMES.ROLE, HTML_ATTRIBUTES.ROLE_BUTTON);
 field.addEventListener(EVENT_NAMES.INPUT, callback);
 ```
 
@@ -130,9 +127,7 @@ export default class ClassName {
     constructor(param: type) {
         this.publicProperty = this.validateParam(param);
     }
-    methodName(param: type): returnType {
-        /* Implementation */
-    }
+    methodName(param: type): returnType { /* Implementation */ }
 }
 ```
 
@@ -190,19 +185,24 @@ Configuration is managed through the **ConfigManager** class with **localStorage
 All application localStorage keys use a consistent prefix for easy identification and cleanup:
 
 -   **Prefix**: `"twitch-overlay-"` (defined in `StorageConstants.LOCALSTORAGE_PREFIX`)
--   **Configuration**: `"twitch-overlay-config"` (main configuration data)
--   **Challenge list**: `"twitch-overlay-challenge-list"` (challenge persistence)
--   **UI state**: `"twitch-overlay-behavior-section"`, `"twitch-overlay-challenge-row-styling-section"`, etc. (collapsible section states)
 -   **Centralized management**: All keys defined in `src/types/StorageConstants.ts`
 -   **Clear All Data**: Removes all keys with the prefix, preserving non-application data
--   **STORAGE_KEYS constant**: Uses prefixed keys (`StorageConstants.STORAGE_KEYS.CHALLENGE_LIST = "twitch-overlay-challenge-list"`)
+
+**STORAGE_KEYS**: CONFIG, CHALLENGE_LIST, CHALLENGE_LIST_TEST, CONFIG_SETTINGS_COLLAPSED, BEHAVIOR_SECTION_COLLAPSED, CHALLENGE_ROW_STYLING_SECTION_COLLAPSED, OVERLAY_BACKGROUND_SECTION_COLLAPSED, AUTHENTICATION_SECTION_COLLAPSED
+
+```typescript
+import { STORAGE_KEYS } from "../types/StorageConstants";
+const config = localStorage.getItem(STORAGE_KEYS.CONFIG);
+const challenges = localStorage.getItem(STORAGE_KEYS.CHALLENGE_LIST);
+```
 
 ### Configuration Access Pattern
 
 ```typescript
+import { BEHAVIOR_CONFIG } from "../types/ConfigConstants";
 const configManager = ConfigManager.getInstance();
-const maxChallenges = configManager.get("maxChallenges");
-configManager.set("maxChallenges", 15);
+const maxChallenges = configManager.get(BEHAVIOR_CONFIG.MAX_CHALLENGES);
+configManager.set(BEHAVIOR_CONFIG.MAX_CHALLENGES, 15);
 ```
 
 ### Default Configuration Structure
@@ -387,7 +387,6 @@ The WindowRefreshManager handles cross-window communication with two distinct me
 #### Message Types
 
 1. **`'config-saved'`** - Configuration changes (triggers full page reload)
-
     - Used when: Auth settings, behavior config, colors, or background settings change
     - Action: Full `window.location.reload()` in viewer window
     - Called via: `notifyConfigurationSaved()`
@@ -419,66 +418,38 @@ The WindowRefreshManager handles cross-window communication with two distinct me
 
 **Location**: `src/classes/ChallengeList.ts`
 
--   **`loadFromLocalStorage()`** - Public method to reload challenges from localStorage
-    -   Resets counters (`#challengesCompleted`, `#totalChallenges`)
-    -   Clears challenge map (`#challengeMap`)
-    -   Reloads all challenges via `#loadChallengeListFromLocalStorage()`
--   **`saveToLocalStorage()`** - Public method to persist challenge list changes to localStorage
-    -   Used when external code modifies challenge properties directly (e.g., via setters)
-    -   Calls internal `#commitToLocalStorage()` method
-    -   Required after calling challenge setters like `setTitle()`, `setDescription()`, `setAmount()`, `setTimer()`
+-   **`loadFromLocalStorage()`** - Public method to reload challenges from localStorage (resets counters, clears challenge map, reloads all challenges)
+-   **`saveToLocalStorage()`** - Public method to persist challenge list changes to localStorage (used when external code modifies challenge properties directly, calls internal `#commitToLocalStorage()` method, required after calling challenge setters)
 
 ## Troubleshooting Common Issues
 
 ### Authentication Problems
-
 -   **Symptoms**: Bot doesn't respond to `!ch` or `!ch help` commands
 -   **Solution**: Generate new OAuth token from https://twitchtokengenerator.com, update `_config.js`, ensure `oauth:` prefix, rebuild with `pnpm run build`
 
 ### Timer-Related Issues
-
 -   **Symptoms**: Timer commands execute but timer doesn't appear
 -   **Solution**: Ensure Timer imports use ES module syntax: `import Timer from "../utils/Timer";`, rebuild application
 
 ### Overlay Background Opacity Issues
-
 -   **Symptoms**: Overlay background opacity slider changes don't affect visual transparency
--   **Root Cause**: Overlay background styling code missing from `UIUpdateHandler.renderChallengeList()`
--   **Solution**: Verify that `UIUpdateHandler.renderChallengeList()` includes the overlay background styling code that:
-    1. Retrieves `overlayBackgroundColor` and `overlayBackgroundOpacity` from ConfigManager
-    2. Combines color and opacity using `combineColorWithOpacity()` utility
-    3. Applies the RGBA background color to the `challengeCard` element via `style.backgroundColor`
-    4. Adds the `custom-overlay-background` CSS class to the `challengeCard` element
-    5. Performs these operations **before** appending the card to the DOM
--   **Verification**: Inspect the `.card` element in browser DevTools - it should have an inline `backgroundColor` style with RGBA format (e.g., `rgba(100, 100, 100, 0.5)`)
+-   **Solution**: Verify `UIUpdateHandler.renderChallengeList()` retrieves `overlayBackgroundColor` and `overlayBackgroundOpacity`, combines using `combineColorWithOpacity()`, applies RGBA to `challengeCard.style.backgroundColor`, adds `custom-overlay-background` class, performs before appending to DOM
 
 ### Clear All Data Not Removing Challenges
-
--   **Symptoms**: "Clear All Data" button doesn't remove challenges, clicking again shows "Error!"
--   **Root Cause**: Application using hardcoded localStorage keys instead of prefixed constants
--   **Solution**: Ensure `STORAGE_KEYS.CHALLENGE_LIST` uses the prefixed key: `"twitch-overlay-challenge-list"` (not `"challengeList"`)
--   **Verification**: Add a challenge via admin panel, check localStorage keys in browser DevTools - should see `"twitch-overlay-challenge-list"`, click "Clear All Data" and confirm, verify localStorage is empty and challenges are cleared
--   **Key Requirement**: ALL localStorage keys must use `"twitch-overlay-"` prefix for Clear All Data to work properly
+-   **Symptoms**: "Clear All Data" button doesn't remove challenges
+-   **Solution**: Ensure `STORAGE_KEYS.CHALLENGE_LIST` uses prefixed key: `"twitch-overlay-challenge-list"` (not `"challengeList"`)
 
 ### Command Processing Issues
-
 -   **Expected Behavior**: Regular viewers' commands are silently ignored (no response)
 -   **Authorized Users**: Only broadcasters and moderators can use bot commands
 
 ### Admin Panel Slider Not Visible
-
--   **Symptoms**: Slider controls (e.g., Color Row Opacity, Overlay Background Opacity) not visible in admin panel sections
--   **Root Cause**: Missing `expanded` class on `.color-pickers-container` element in template
--   **CSS Behavior**: Without `expanded` class: `opacity: 0`, `max-height: 0`, `height: 0px` (hidden); With `expanded` class: `opacity: 1`, `max-height: 120px`, proper height (visible)
+-   **Symptoms**: Slider controls not visible in admin panel sections
 -   **Solution**: Add `expanded` class to `.color-pickers-container` in `AdminPanelTemplates.ts` for always-visible sections
--   **Pattern Rules**: Always-visible sections (Primary Color, Color Row Opacity): Must have `expanded` class in template; Collapsible sections (Secondary/Tertiary colors): No `expanded` class in template (JavaScript adds it when checkbox is checked)
--   **Browser Cache Note**: After fixing template, users must hard refresh (Cmd+Shift+R / Ctrl+Shift+R) or clear browser cache to see changes
--   **Verification**: Inspect element in browser DevTools - `.color-pickers-container` should have `expanded` class and `opacity: 1`
 
 ## Development Guidelines
 
 ### Adding New Features
-
 1. **Write in TypeScript** - All new files must use `.ts` extension
 2. **Define types** in TypeScript interfaces or `types/globals.d.ts` if needed
 3. **Create classes** following established patterns with explicit type annotations
@@ -487,7 +458,6 @@ The WindowRefreshManager handles cross-window communication with two distinct me
 6. **Update documentation** and configuration comments
 
 ### Modifying Existing Code
-
 1. **No backward compatibility or legacy code** - Remove any legacy parameters, deprecated methods, or backward compatibility code
 2. **Follow existing naming conventions**
 3. **Update tests** for changed behavior
@@ -495,7 +465,6 @@ The WindowRefreshManager handles cross-window communication with two distinct me
 5. **Test with OBS Browser Source**
 
 ### Performance Considerations
-
 -   **Lightweight bundle** - avoid heavy dependencies
 -   **Efficient DOM updates** - use DocumentFragment for batch operations
 -   **Animation optimization** - use Web Animations API
@@ -504,270 +473,139 @@ The WindowRefreshManager handles cross-window communication with two distinct me
 ## Common Patterns
 
 ### Configuration Access
-
 ```typescript
 import { BEHAVIOR_CONFIG } from "../types/ConfigConstants";
-import { CSS_CLASSES, ELEMENT_IDS } from "../types/DOMConstants";
-
 const configManager = ConfigManager.getInstance();
 const maxChallenges = configManager.get(BEHAVIOR_CONFIG.MAX_CHALLENGES);
-element?.classList.add(CSS_CLASSES.EXPANDED);
 ```
 
 ### Fallback Configuration Pattern
-
 ```typescript
 import { createFallbackConfig } from "./utils/ConfigDefaults";
-
 try {
     configManager = ConfigManager.getInstance(userConfig);
 } catch (error) {
-    const fallbackConfig = createFallbackConfig();
-    configManager = ConfigManager.getInstance(fallbackConfig);
+    configManager = ConfigManager.getInstance(createFallbackConfig());
 }
 ```
 
 ### DOM Manipulation
-
 ```typescript
-// Fragment-based updates for performance
 const fragment = document.createDocumentFragment();
 items.forEach((item: Challenge) => {
-    const element = createElement(item);
-    fragment.appendChild(element);
+    fragment.appendChild(createElement(item));
 });
 container.appendChild(fragment);
 ```
 
-### Validation Pattern
-
+### StorageManager Pattern
 ```typescript
-validateInput(input: string): string {
-    if (typeof input !== "string") {
-        throw new Error("Input must be of type string");
-    }
-    input = input.trim();
-    if (input.length === 0) {
-        throw new Error("Input invalid");
-    }
-    return input;
-}
+import { StorageManager } from "../utils/StorageManager";
+import { STORAGE_KEYS } from "../types/StorageConstants";
+
+const result = StorageManager.save(STORAGE_KEYS.CONFIG, config, {
+    version: "1.0.0", timestamp: true, fallbackToMemory: true, retryOnQuotaExceeded: true
+});
+
+const loadResult = StorageManager.load(STORAGE_KEYS.CONFIG, defaultConfig,
+    (data): data is Config => isValidConfiguration(data)
+);
+```
+
+**Key Points**: Automatic fallback to memory-only mode, error handling with structured results, validation support, quota management, transparent fallback
+
+### Validation Pattern
+```typescript
+import { ValidationUtils } from "../utils/ValidationUtils";
+import { VALIDATION_CONSTRAINTS } from "../types/ValidationConstants";
+
+const title = ValidationUtils.validateChallengeTitle(userInput);
+const description = ValidationUtils.validateChallengeDescription(descInput, { allowEmpty: true });
+const amount = ValidationUtils.validateChallengeAmount(amountInput);
+const validated = ValidationUtils.validateNumber(value, "amount", {
+    min: VALIDATION_CONSTRAINTS.AMOUNT_MIN,
+    max: VALIDATION_CONSTRAINTS.AMOUNT_MAX,
+    integer: true
+});
 ```
 
 ### Challenge Persistence Pattern
-
-When modifying challenge properties directly (outside of ChallengeList methods), you must manually persist changes to localStorage:
-
 ```typescript
 // ✅ CORRECT: Using ChallengeList methods (auto-saves)
-this.challengeList.addChallengeObjects(challenge); // Internally calls #commitToLocalStorage()
-this.challengeList.toggleChallengeCompletion(challengeId); // Internally calls #commitToLocalStorage()
-this.challengeList.incrementChallengeProgress(challengeId); // Internally calls #commitToLocalStorage()
+this.challengeList.addChallengeObjects(challenge);
+this.challengeList.toggleChallengeCompletion(challengeId);
 
 // ✅ CORRECT: Direct property modification + manual save
 const challenge = this.challengeList.getChallengeById(challengeId);
 challenge.setTitle(newTitle);
-challenge.setDescription(newDescription);
-challenge.setAmount(newAmount);
-this.challengeList.saveToLocalStorage(); // Required to persist changes
-
-// ❌ INCORRECT: Direct property modification without save
-const challenge = this.challengeList.getChallengeById(challengeId);
-challenge.setTitle(newTitle); // Changes lost on page refresh!
+this.challengeList.saveToLocalStorage(); // Required
 ```
 
-**Key Points**:
-
--   **ChallengeList methods** (add, delete, toggle, increment, etc.) automatically save to localStorage
--   **Direct challenge setters** (setTitle, setDescription, setAmount, setTimer) do NOT auto-save
--   **Always call** `challengeList.saveToLocalStorage()` after using challenge setters
--   **Cross-window sync** requires calling `notifyChallengeStateChanged()` after persistence
+**Key Points**: ChallengeList methods auto-save, direct challenge setters do NOT auto-save, always call `saveToLocalStorage()` after setters, cross-window sync requires `notifyChallengeStateChanged()`
 
 ### Challenge Rendering with ID Prefix Pattern
-
 ```typescript
 import ChallengeRenderer from "../utils/ChallengeRenderer";
 
 challenges.forEach((challenge: Challenge, index: number) => {
     const listItem = ChallengeRenderer.createChallengeElement(challenge, {
-        displayPosition: index + 1, // Convert 0-based index to 1-based ID
+        displayPosition: index + 1,
         includeEventListeners: true,
-        eventHandler: handleCheckboxClick,
+        eventHandler: handleCheckboxClick
     });
     container.appendChild(listItem);
 });
 ```
 
-**Key Points**:
-
--   Use `displayPosition: index + 1` for ID prefix
--   Format: `"{id}. {title}"` (e.g., "1. Complete tutorial")
--   Metadata row (`.challenge-metadata`) automatically created when amount > 1 OR timer exists
--   Amount and timer positioned side-by-side in metadata row (amount left, timer right)
-
 ### HTML Attribute Setting Pattern
-
-Use `HTML_ATTRIBUTE_NAMES` constants for attribute names in `setAttribute()` calls:
-
 ```typescript
 import { HTML_ATTRIBUTE_NAMES, HTML_ATTRIBUTES } from "../types/DOMConstants";
-import { ARIA_LABELS, UI_ELEMENTS } from "../types/MessageConstants";
-
-// ✅ CORRECT: Use constants for both attribute names and values
-const editIcon = document.createElement(HTML_ELEMENTS.DIV);
-editIcon.textContent = UI_ELEMENTS.EDIT_ICON;
 editIcon.setAttribute(HTML_ATTRIBUTE_NAMES.ROLE, HTML_ATTRIBUTES.ROLE_BUTTON);
-editIcon.setAttribute(
-    HTML_ATTRIBUTE_NAMES.ARIA_LABEL,
-    ARIA_LABELS.EDIT_CHALLENGE
-);
-editIcon.setAttribute(
-    HTML_ATTRIBUTE_NAMES.TABINDEX,
-    HTML_ATTRIBUTES.TABINDEX_ZERO
-);
-
-// ❌ INCORRECT: Hardcoded attribute names
-editIcon.setAttribute("role", HTML_ATTRIBUTES.ROLE_BUTTON);
-editIcon.setAttribute("aria-label", ARIA_LABELS.EDIT_CHALLENGE);
+editIcon.setAttribute(HTML_ATTRIBUTE_NAMES.ARIA_LABEL, ARIA_LABELS.EDIT_CHALLENGE);
 ```
-
-**Key Points**:
-
--   **HTML_ATTRIBUTE_NAMES**: Attribute name strings (ROLE = "role", ARIA_LABEL = "aria-label", TABINDEX = "tabindex")
--   **HTML_ATTRIBUTES**: Attribute value strings (ROLE_BUTTON = "button", TABINDEX_ZERO = "0")
--   Always use constants for both attribute names and values to eliminate magic strings
 
 ### Event Listener Pattern
-
-Use `EVENT_NAMES` constants for all event listener registration:
-
 ```typescript
 import { EVENT_NAMES } from "../types/DOMConstants";
-
-// ✅ CORRECT: Use EVENT_NAMES constants
 field.addEventListener(EVENT_NAMES.INPUT, callback);
 checkbox.addEventListener(EVENT_NAMES.CHANGE, callback);
-button.addEventListener(EVENT_NAMES.CLICK, callback);
-
-// ❌ INCORRECT: Hardcoded event names
-field.addEventListener("input", callback);
-checkbox.addEventListener("change", callback);
 ```
 
-**Event Type Guidelines**:
-
--   **`EVENT_NAMES.INPUT`**: Use for real-time updates (text inputs, color pickers, range sliders)
--   **`EVENT_NAMES.CHANGE`**: Use for form validation and auto-save on blur/completion (number inputs, checkboxes, select elements)
--   **`EVENT_NAMES.CLICK`**: Use for button clicks and interactive elements
-
-**Auto-Save Pattern**:
-
--   **Authentication fields**: Use `EVENT_NAMES.INPUT` for immediate feedback
--   **Behavior fields** (e.g., max challenges): Use `EVENT_NAMES.CHANGE` to validate on blur/Enter
--   **Color pickers**: Use `EVENT_NAMES.INPUT` for real-time preview
--   **Checkboxes**: Use `EVENT_NAMES.CHANGE` for state changes
+**Event Type Guidelines**: `INPUT` for real-time updates, `CHANGE` for form validation/auto-save on blur, `CLICK` for button clicks
 
 ### Overlay Background Styling Pattern
-
-Apply overlay background styling in `UIUpdateHandler.renderChallengeList()` before appending the challenge card to the DOM:
-
 ```typescript
 import { combineColorWithOpacity } from "./ColorUtils";
-import {
-    BACKGROUND_CONFIG,
-    BACKGROUND_DEFAULTS,
-} from "../types/ConfigConstants";
-import { CSS_CLASSES } from "../types/DOMConstants";
+import { BACKGROUND_CONFIG, BACKGROUND_DEFAULTS } from "../types/ConfigConstants";
 
-// Create challenge card
-const challengeCard = DOMHelper.createChallengeCard(
-    this.challengeList.challengesCompleted,
-    this.challengeList.totalChallenges
-);
-
-// Apply overlay background styling if configured
-// This must be done before appending to ensure styles are applied
-const overlayBackgroundColor = this.configManager.get(
-    BACKGROUND_CONFIG.OVERLAY_BACKGROUND_COLOR
-);
+const overlayBackgroundColor = this.configManager.get(BACKGROUND_CONFIG.OVERLAY_BACKGROUND_COLOR);
 if (overlayBackgroundColor) {
-    const overlayBackgroundOpacity =
-        this.configManager.get(BACKGROUND_CONFIG.OVERLAY_BACKGROUND_OPACITY) ??
-        BACKGROUND_DEFAULTS.OVERLAY_BACKGROUND_OPACITY;
-
-    // Combine color and opacity to create RGBA string
-    const overlayBackgroundRGBA = combineColorWithOpacity(
-        overlayBackgroundColor,
-        overlayBackgroundOpacity
-    );
+    const overlayBackgroundOpacity = this.configManager.get(BACKGROUND_CONFIG.OVERLAY_BACKGROUND_OPACITY) ?? BACKGROUND_DEFAULTS.OVERLAY_BACKGROUND_OPACITY;
+    const overlayBackgroundRGBA = combineColorWithOpacity(overlayBackgroundColor, overlayBackgroundOpacity);
     challengeCard.style.backgroundColor = overlayBackgroundRGBA;
     challengeCard.classList.add(CSS_CLASSES.CUSTOM_OVERLAY_BACKGROUND);
 }
-
-// Append card to container
-challengeContainer.appendChild(challengeCard);
 ```
 
-**Key Points**:
-
--   **Location**: Overlay background styling must be in `UIUpdateHandler.renderChallengeList()`, not `App.renderChallengeList()`
--   **Timing**: Apply styles to `challengeCard` element before appending to DOM
--   **Storage format**: Hex color and numeric opacity (0.0-1.0) stored separately in configuration
--   **Rendering**: Use `combineColorWithOpacity()` utility to create RGBA string at render time
--   **CSS class**: Add `CSS_CLASSES.CUSTOM_OVERLAY_BACKGROUND` class for styling hooks
+**Key Points**: Apply in `UIUpdateHandler.renderChallengeList()`, apply before appending to DOM, hex color + numeric opacity stored separately, use `combineColorWithOpacity()` utility
 
 ### Admin Panel Template Pattern
-
-HTML templates for admin panel sections are centralized in `src/templates/AdminPanelTemplates.ts`:
-
 ```typescript
 import { AdminPanelTemplates } from "../templates/AdminPanelTemplates";
 
 const colorContent = AdminPanelTemplates.colorSection({
     primaryBackgroundColor: DEFAULT_COLORS.PRIMARY_BACKGROUND,
     primaryTextColor: DEFAULT_COLORS.PRIMARY_TEXT,
-    secondaryBackgroundColor: DEFAULT_COLORS.SECONDARY_BACKGROUND,
-    secondaryTextColor: DEFAULT_COLORS.SECONDARY_TEXT,
-    tertiaryBackgroundColor: DEFAULT_COLORS.TERTIARY_BACKGROUND,
-    tertiaryTextColor: DEFAULT_COLORS.TERTIARY_TEXT,
     rowColorsOpacityPercent: 100,
-    elementIds: ELEMENT_IDS,
-});
-
-const backgroundContent = AdminPanelTemplates.backgroundSection({
-    overlayBackgroundColor: DEFAULT_COLORS.CHALLENGE_BACKGROUND,
-    challengeBackgroundColor: DEFAULT_COLORS.CHALLENGE_BACKGROUND,
-    challengeTextColor: DEFAULT_COLORS.WHITE_TEXT,
-    elementIds: ELEMENT_IDS,
+    elementIds: ELEMENT_IDS
 });
 ```
 
 **Benefits**: Separation of concerns, type safety, maintainability, reusability
 
-**Template Parameter Interfaces**:
-
--   **ColorSectionParams**: Requires `rowColorsOpacityPercent` (not `rowColorsOpacity`) and `elementIds`
--   **BackgroundSectionParams**: Requires only `overlayBackgroundColor`, `challengeBackgroundColor`, `challengeTextColor`, and `elementIds`
--   Always pass the complete parameter object matching the interface definition
--   Template methods handle default values and additional configuration internally
-
 ### Collapsible Section Pattern
 
-Individual configuration sections use the CollapsibleSection pattern with localStorage persistence:
+**CSS Classes**: `.collapsible-section`, `.collapsible-header`, `.collapsible-title`, `.collapsible-icon`, `.collapsible-content`, `.expanded`
 
-**CSS Classes** (defined in `styles/admin.css`):
+**Implementation**: Each section independently collapsible, state persisted to localStorage with section-specific keys, keyboard accessible (Enter/Space), smooth CSS transitions, proper ARIA attributes
 
--   **`.collapsible-section`** - Container for collapsible content
--   **`.collapsible-header`** - Clickable header with toggle functionality
--   **`.collapsible-title`** - Section title text
--   **`.collapsible-icon`** - Arrow icon (▼/▶) showing current state
--   **`.collapsible-content`** - Content wrapper with smooth transitions
--   **`.expanded`** - Applied when section is expanded
-
-**Implementation**:
-
--   Each section (Behavior Settings, Challenge Row Styling, Overlay Background, Authentication) is independently collapsible
--   State persisted to localStorage with section-specific keys (e.g., `"twitch-overlay-behavior-section"`)
--   Keyboard accessible with Enter and Space key support
--   Smooth CSS transitions on max-height for expand/collapse animations
--   Proper ARIA attributes for accessibility (aria-expanded, aria-hidden)
