@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import TwitchChat from "../../src/twitch/TwitchChat";
+import { TWITCH_EVENTS } from "../../src/types/ConfigConstants";
 
 // Mock WebSocket interface for testing
 interface MockWebSocket {
@@ -66,7 +67,7 @@ describe("TwitchChat", () => {
             },
             mockWebSocket
         );
-        twitchChat.on("command", chatEvent);
+        twitchChat.on(TWITCH_EVENTS.COMMAND, chatEvent);
     });
 
     afterEach(() => {
@@ -174,7 +175,7 @@ describe("TwitchChat", () => {
 
         it("should handle JOIN message and emit oauthSuccess event", () => {
             const oauthSuccessSpy = vi.fn();
-            twitchChat.on("oauthSuccess", oauthSuccessSpy);
+            twitchChat.on(TWITCH_EVENTS.OAUTH_SUCCESS, oauthSuccessSpy);
 
             mockWsInstance.onmessage?.({
                 data: ":username!username@username.tmi.twitch.tv JOIN #channel",
@@ -210,7 +211,7 @@ describe("TwitchChat", () => {
 
         it("should handle NOTICE message and emit oauthError event", () => {
             const oauthErrorSpy = vi.fn();
-            twitchChat.on("oauthError", oauthErrorSpy);
+            twitchChat.on(TWITCH_EVENTS.OAUTH_ERROR, oauthErrorSpy);
 
             mockWsInstance.onmessage?.({
                 data: ":tmi.twitch.tv NOTICE * :Login authentication failed",
@@ -225,7 +226,7 @@ describe("TwitchChat", () => {
 
         it("should emit command event for PRIVMSG with bot command", () => {
             const commandSpy = vi.fn();
-            twitchChat.on("command", commandSpy);
+            twitchChat.on(TWITCH_EVENTS.COMMAND, commandSpy);
 
             mockWsInstance.onmessage?.({
                 data: "@badge-info=;badges=broadcaster/1;color=#FF0000;display-name=TestUser;emotes=;id=test-id;mod=0;room-id=12345;subscriber=0;tmi-sent-ts=1234567890;turbo=0;user-id=12345;user-type= :testuser!testuser@testuser.tmi.twitch.tv PRIVMSG #channel :!test command",
@@ -240,7 +241,7 @@ describe("TwitchChat", () => {
 
         it("should not emit command event for PRIVMSG without bot command", () => {
             const commandSpy = vi.fn();
-            twitchChat.on("command", commandSpy);
+            twitchChat.on(TWITCH_EVENTS.COMMAND, commandSpy);
 
             mockWsInstance.onmessage?.({
                 data: "@badge-info=;badges=broadcaster/1;color=#FF0000;display-name=TestUser;emotes=;id=test-id;mod=0;room-id=12345;subscriber=0;tmi-sent-ts=1234567890;turbo=0;user-id=12345;user-type= :testuser!testuser@testuser.tmi.twitch.tv PRIVMSG #channel :regular message",
@@ -272,7 +273,7 @@ describe("TwitchChat", () => {
 
         it("should extract broadcaster flag from badges", () => {
             const commandSpy = vi.fn();
-            twitchChat.on("command", commandSpy);
+            twitchChat.on(TWITCH_EVENTS.COMMAND, commandSpy);
 
             mockWsInstance.onmessage?.({
                 data: "@badge-info=;badges=broadcaster/1;color=#FF0000;display-name=TestUser;emotes=;id=test-id;mod=0;room-id=12345;subscriber=0;tmi-sent-ts=1234567890;turbo=0;user-id=12345;user-type= :testuser!testuser@testuser.tmi.twitch.tv PRIVMSG #channel :!test",
@@ -284,7 +285,7 @@ describe("TwitchChat", () => {
 
         it("should extract moderator flag from badges", () => {
             const commandSpy = vi.fn();
-            twitchChat.on("command", commandSpy);
+            twitchChat.on(TWITCH_EVENTS.COMMAND, commandSpy);
 
             mockWsInstance.onmessage?.({
                 data: "@badge-info=;badges=moderator/1;color=#FF0000;display-name=TestUser;emotes=;id=test-id;mod=1;room-id=12345;subscriber=0;tmi-sent-ts=1234567890;turbo=0;user-id=12345;user-type= :testuser!testuser@testuser.tmi.twitch.tv PRIVMSG #channel :!test",
@@ -296,7 +297,7 @@ describe("TwitchChat", () => {
 
         it("should extract user color and message ID from tags", () => {
             const commandSpy = vi.fn();
-            twitchChat.on("command", commandSpy);
+            twitchChat.on(TWITCH_EVENTS.COMMAND, commandSpy);
 
             mockWsInstance.onmessage?.({
                 data: "@badge-info=;badges=broadcaster/1;color=#FF0000;display-name=TestUser;emotes=;id=test-message-id;mod=0;room-id=12345;subscriber=0;tmi-sent-ts=1234567890;turbo=0;user-id=12345;user-type= :testuser!testuser@testuser.tmi.twitch.tv PRIVMSG #channel :!test",

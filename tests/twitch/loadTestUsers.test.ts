@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { loadTestUsers } from "../../src/twitch/loadTestUsers";
 import TwitchChat from "../../src/twitch/TwitchChat";
+import { TWITCH_EVENTS } from "../../src/types/ConfigConstants";
 
 // ============================================================================
 // TEST CONSTANTS
@@ -157,7 +158,7 @@ const assertCommandEmitted = (
 ): void => {
     const call = emitSpy.mock.calls[callIndex];
     expect(call).toBeDefined();
-    expect(call?.[0]).toBe("command");
+    expect(call?.[0]).toBe(TWITCH_EVENTS.COMMAND);
 
     const data = call?.[1] as CommandData;
     expect(data).toBeDefined();
@@ -606,7 +607,7 @@ describe("loadTestUsers", () => {
             const messageIds = new Set<string>();
 
             emitSpy.mock.calls.forEach((call) => {
-                if (call[0] === "command") {
+                if (call[0] === TWITCH_EVENTS.COMMAND) {
                     const data = call[1] as CommandData;
                     messageIds.add(data.extra.messageId);
                 }
@@ -622,7 +623,7 @@ describe("loadTestUsers", () => {
             vi.runAllTimers();
 
             emitSpy.mock.calls.forEach((call) => {
-                if (call[0] === "command") {
+                if (call[0] === TWITCH_EVENTS.COMMAND) {
                     const data = call[1] as CommandData;
                     const messageId = data.extra.messageId;
                     expect(typeof messageId).toBe("string");

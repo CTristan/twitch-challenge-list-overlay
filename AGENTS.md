@@ -106,11 +106,11 @@ const uiUpdate: UIUpdateData = { action: UIUpdateAction.ADD };
 
 #### Comprehensive Constants System
 
--   **MessageConstants**: All message constants in `src/types/MessageConstants.ts` (ERROR_MESSAGES, SUCCESS_MESSAGES, HELP_MESSAGES, MODAL_TEXT, UI_ELEMENTS, ARIA_LABELS, etc.)
--   **ConfigConstants**: Configuration property names in `src/types/ConfigConstants.ts` (AUTH_CONFIG, BEHAVIOR_CONFIG, BACKGROUND_CONFIG, etc.)
+-   **MessageConstants**: All message constants in `src/types/MessageConstants.ts` (ERROR_MESSAGES, SUCCESS_MESSAGES, HELP_MESSAGES, MODAL_TEXT, UI_ELEMENTS, ARIA_LABELS, CONFIG_EXPORT_MESSAGES, CONFIG_EXPORT_ERRORS, CONFIG_VALIDATION_ERRORS, CONFIG_EXPORT_TEMPLATES, etc.)
+-   **ConfigConstants**: Configuration property names in `src/types/ConfigConstants.ts` (AUTH_CONFIG, BEHAVIOR_CONFIG, BACKGROUND_CONFIG, EXPORT_METADATA_KEYS, EXPORT_METADATA_VALUES, EXPORT_PLACEHOLDERS, etc.)
 -   **ColorConstants**: UI colors and color format strings in `src/types/ColorConstants.ts` (DEFAULT_COLORS, STATUS_COLORS, SHADOW_COLORS, COLOR_FORMAT)
--   **DOMConstants**: CSS classes, selectors, element IDs, HTML elements, HTML attribute names, HTML attribute values, event names, CSS property values, common strings in `src/types/DOMConstants.ts` (CSS_CLASSES, CSS_VALUES, ELEMENT_IDS, EVENT_NAMES, COMMON_STRINGS, HTML_ELEMENTS, HTML_ATTRIBUTE_NAMES, HTML_ATTRIBUTES, MODAL_MODES, etc.)
--   **FileConstants**: File formats and filenames in `src/types/FileConstants.ts` (FILE_FORMATS, DEFAULT_FILENAMES)
+-   **DOMConstants**: CSS classes, selectors, element IDs, HTML elements, HTML attribute names, HTML attribute values, event names, CSS property values, CSS property names, DOM commands, common strings in `src/types/DOMConstants.ts` (CSS_CLASSES, CSS_VALUES, CSS_PROPERTY_NAMES, ELEMENT_IDS, EVENT_NAMES, COMMON_STRINGS, HTML_ELEMENTS, HTML_ATTRIBUTE_NAMES, HTML_ATTRIBUTES, MODAL_MODES, DOM_COMMANDS, etc.)
+-   **FileConstants**: File formats, filenames, and filename patterns in `src/types/FileConstants.ts` (FILE_FORMATS, DEFAULT_FILENAMES, FILENAME_PATTERNS, MIME_TYPES)
 -   **NumericConstants**: Validation constraints and calculations in `src/types/NumericConstants.ts` (FORM_CONSTRAINTS, COLOR_CONSTANTS)
 -   **UPPER_SNAKE_CASE Naming**: All constants follow established naming convention
 -   **Type Safety**: Use appropriate types for type-safe constant access
@@ -123,11 +123,31 @@ const uiUpdate: UIUpdateData = { action: UIUpdateAction.ADD };
 
 -   **COLOR_FORMAT**: Color format strings (HEX_PREFIX: "#", RGBA_PREFIX: "rgba(", RGBA_SEPARATOR: ",", HEX_PADDING_CHAR: "0")
 
+**ConfigConstants.ts**:
+
+-   **EXPORT_METADATA_KEYS**: Property names for export metadata (METADATA: "\_metadata", EXPORTED_AT: "exportedAt", VERSION: "version", SOURCE: "source", DESCRIPTION: "description", CONFIG: "config")
+-   **EXPORT_METADATA_VALUES**: Metadata values (VERSION: "1.0.0", SOURCE: "Twitch Challenge Overlay Admin Panel", DESCRIPTION: "Configuration backup for Twitch Challenge Overlay")
+-   **EXPORT_PLACEHOLDERS**: Sanitized placeholder values (OAUTH_TOKEN: "YOUR_OAUTH_TOKEN_HERE", USERNAME: "YOUR_USERNAME_HERE", CHANNEL: "YOUR_CHANNEL_HERE")
+
 **DOMConstants.ts**:
 
 -   **EVENT_NAMES**: DOM event names (INPUT: "input", CHANGE: "change", CLICK: "click", etc.)
--   **CSS_VALUES**: CSS property values (DISPLAY_FLEX: "flex", DISPLAY_NONE: "none", OPACITY_FULL: "1", OPACITY_DISABLED: "0.6", TEXT_SHADOW_NONE: "none")
+-   **CSS_VALUES**: CSS property values (DISPLAY_FLEX: "flex", DISPLAY_NONE: "none", OPACITY_FULL: "1", OPACITY_DISABLED: "0.6", OPACITY_ZERO: "0", POSITION_FIXED: "fixed", TEXT_SHADOW_NONE: "none")
+-   **CSS_PROPERTY_NAMES**: CSS property names (DISPLAY: "display", POSITION: "position", OPACITY: "opacity", POINTER_EVENTS: "pointerEvents")
+-   **DOM_COMMANDS**: DOM command names for document.execCommand (COPY: "copy")
 -   **COMMON_STRINGS**: Common display strings (EMPTY: "", SPACE: " ", PERCENT_SYMBOL: "%")
+
+**FileConstants.ts**:
+
+-   **FILENAME_PATTERNS**: Filename components (PREFIX: "twitch-overlay-config*", TIMESTAMP_SEPARATOR: "*", EXTENSION_SEPARATOR: ".")
+-   **MIME_TYPES**: MIME type strings (JSON: "application/json", JAVASCRIPT: "text/javascript")
+
+**MessageConstants.ts**:
+
+-   **CONFIG_EXPORT_MESSAGES**: Console error messages for configuration export operations (ERROR_EXPORTING_JSON, ERROR_EXPORTING_JAVASCRIPT, ERROR_DOWNLOADING_JSON, ERROR_COPYING_TO_CLIPBOARD, etc.)
+-   **CONFIG_EXPORT_ERRORS**: Error messages thrown during configuration export operations (FAILED_BACKUP_JSON, FAILED_BACKUP_JAVASCRIPT, FAILED_BACKUP_TEMPLATE, etc.)
+-   **CONFIG_VALIDATION_ERRORS**: Validation error messages for configuration export (CONFIG_NULL_OR_UNDEFINED, MISSING_AUTH_CONFIG, OAUTH_TOKEN_MUST_BE_STRING, CIRCULAR_REFERENCES, etc.)
+-   **CONFIG_EXPORT_TEMPLATES**: Multi-line template strings for file headers (JAVASCRIPT_HEADER_LINE_1, JAVASCRIPT_CONFIG_DECLARATION, TEMPLATE_HEADER_DESCRIPTION_LINE_1, etc.)
 
 #### DOMConstants Details
 
@@ -138,18 +158,31 @@ const uiUpdate: UIUpdateData = { action: UIUpdateAction.ADD };
 
 ```typescript
 // ✅ Usage examples
-import { BACKGROUND_CONFIG, COLOR_CONFIG } from "../types/ConfigConstants";
+import {
+    BACKGROUND_CONFIG,
+    COLOR_CONFIG,
+    EXPORT_METADATA_KEYS,
+    EXPORT_PLACEHOLDERS,
+} from "../types/ConfigConstants";
 import { COLOR_FORMAT, DEFAULT_COLORS } from "../types/ColorConstants";
 import {
     CSS_CLASSES,
     CSS_VALUES,
+    CSS_PROPERTY_NAMES,
     COMMON_STRINGS,
+    DOM_COMMANDS,
     ELEMENT_IDS,
     EVENT_NAMES,
     HTML_ATTRIBUTE_NAMES,
     HTML_ATTRIBUTES,
 } from "../types/DOMConstants";
-import { ERROR_MESSAGES, MODAL_TEXT } from "../types/MessageConstants";
+import { FILENAME_PATTERNS, MIME_TYPES } from "../types/FileConstants";
+import {
+    CONFIG_EXPORT_MESSAGES,
+    CONFIG_VALIDATION_ERRORS,
+    ERROR_MESSAGES,
+    MODAL_TEXT,
+} from "../types/MessageConstants";
 
 const backgroundColor = configManager.get(
     BACKGROUND_CONFIG.CHALLENGE_BACKGROUND_COLOR
@@ -176,12 +209,34 @@ checkbox.addEventListener(EVENT_NAMES.CHANGE, callback);
 element.style.display = CSS_VALUES.DISPLAY_FLEX;
 element.style.opacity = CSS_VALUES.OPACITY_FULL;
 
+// CSS property name usage
+element.style[CSS_PROPERTY_NAMES.DISPLAY] = CSS_VALUES.DISPLAY_NONE;
+
 // Display formatting usage
 displayElement.textContent = `${value}${COMMON_STRINGS.PERCENT_SYMBOL}`;
 
 // Color format usage
 const hex = n.toString(COLOR_CONSTANTS.HEX_BASE);
 return hex.length === 1 ? COLOR_FORMAT.HEX_PADDING_CHAR + hex : hex;
+
+// Configuration export usage
+const exportData = {
+    [EXPORT_METADATA_KEYS.METADATA]: {
+        [EXPORT_METADATA_KEYS.VERSION]: EXPORT_METADATA_VALUES.VERSION,
+    },
+};
+sanitized.auth.twitch_oauth = EXPORT_PLACEHOLDERS.OAUTH_TOKEN;
+
+// File operations usage
+const filename = `${FILENAME_PATTERNS.PREFIX}${timestamp}${FILENAME_PATTERNS.EXTENSION_SEPARATOR}${extension}`;
+const blob = new Blob([content], { type: MIME_TYPES.JSON });
+
+// Error handling usage
+console.error(CONFIG_EXPORT_MESSAGES.ERROR_EXPORTING_JSON, error);
+throw new Error(CONFIG_VALIDATION_ERRORS.CONFIG_NULL_OR_UNDEFINED);
+
+// DOM command usage (deprecated but documented)
+const success = (document as any).execCommand(DOM_COMMANDS.COPY);
 ```
 
 ### Class Structure Pattern

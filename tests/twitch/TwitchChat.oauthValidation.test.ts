@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import TwitchChat from "../../src/twitch/TwitchChat";
+import { NETWORK_URLS } from "../../src/types/ConfigConstants";
 
 describe("TwitchChat OAuth Token Validation", () => {
     let mockWebSocket: any;
@@ -32,7 +33,7 @@ describe("TwitchChat OAuth Token Validation", () => {
     describe("Valid OAuth Token Handling", () => {
         it("should accept token with correct oauth: prefix", () => {
             const client = new TwitchChat(
-                "wss://irc-ws.chat.twitch.tv:443",
+                NETWORK_URLS.TWITCH_IRC,
                 {
                     username: "testuser",
                     authToken: "oauth:example_token_123",
@@ -47,7 +48,7 @@ describe("TwitchChat OAuth Token Validation", () => {
 
         it("should auto-correct token missing oauth: prefix", () => {
             const client = new TwitchChat(
-                "wss://irc-ws.chat.twitch.tv:443",
+                NETWORK_URLS.TWITCH_IRC,
                 {
                     username: "testuser",
                     authToken: "example_token_123",
@@ -67,7 +68,7 @@ describe("TwitchChat OAuth Token Validation", () => {
 
         it("should handle token with extra whitespace", () => {
             const client = new TwitchChat(
-                "wss://irc-ws.chat.twitch.tv:443",
+                NETWORK_URLS.TWITCH_IRC,
                 {
                     username: "testuser",
                     authToken: "  oauth:example_token_123  ",
@@ -81,7 +82,7 @@ describe("TwitchChat OAuth Token Validation", () => {
 
         it("should auto-correct token with whitespace and missing prefix", () => {
             const client = new TwitchChat(
-                "wss://irc-ws.chat.twitch.tv:443",
+                NETWORK_URLS.TWITCH_IRC,
                 {
                     username: "testuser",
                     authToken: "  example_token_123  ",
@@ -101,7 +102,7 @@ describe("TwitchChat OAuth Token Validation", () => {
         it("should throw error for null token", () => {
             expect(() => {
                 new TwitchChat(
-                    "wss://irc-ws.chat.twitch.tv:443",
+                    NETWORK_URLS.TWITCH_IRC,
                     {
                         username: "testuser",
                         authToken: null as any,
@@ -119,7 +120,7 @@ describe("TwitchChat OAuth Token Validation", () => {
         it("should throw error for undefined token", () => {
             expect(() => {
                 new TwitchChat(
-                    "wss://irc-ws.chat.twitch.tv:443",
+                    NETWORK_URLS.TWITCH_IRC,
                     {
                         username: "testuser",
                         authToken: undefined as any,
@@ -133,7 +134,7 @@ describe("TwitchChat OAuth Token Validation", () => {
         it("should throw error for empty string token", () => {
             expect(() => {
                 new TwitchChat(
-                    "wss://irc-ws.chat.twitch.tv:443",
+                    NETWORK_URLS.TWITCH_IRC,
                     {
                         username: "testuser",
                         authToken: "",
@@ -151,7 +152,7 @@ describe("TwitchChat OAuth Token Validation", () => {
         it("should throw error for whitespace-only token", () => {
             expect(() => {
                 new TwitchChat(
-                    "wss://irc-ws.chat.twitch.tv:443",
+                    NETWORK_URLS.TWITCH_IRC,
                     {
                         username: "testuser",
                         authToken: "   ",
@@ -165,7 +166,7 @@ describe("TwitchChat OAuth Token Validation", () => {
         it("should throw error for oauth: prefix with no content", () => {
             expect(() => {
                 new TwitchChat(
-                    "wss://irc-ws.chat.twitch.tv:443",
+                    NETWORK_URLS.TWITCH_IRC,
                     {
                         username: "testuser",
                         authToken: "oauth:",
@@ -185,7 +186,7 @@ describe("TwitchChat OAuth Token Validation", () => {
         it("should throw error for non-string token", () => {
             expect(() => {
                 new TwitchChat(
-                    "wss://irc-ws.chat.twitch.tv:443",
+                    NETWORK_URLS.TWITCH_IRC,
                     {
                         username: "testuser",
                         authToken: 123 as any,
@@ -200,7 +201,7 @@ describe("TwitchChat OAuth Token Validation", () => {
     describe("Real-world OAuth Token Scenarios", () => {
         it("should handle typical Twitch OAuth token format", () => {
             const client = new TwitchChat(
-                "wss://irc-ws.chat.twitch.tv:443",
+                NETWORK_URLS.TWITCH_IRC,
                 {
                     username: "testuser",
                     authToken: "anonymized_token_example_30chars",
@@ -219,7 +220,7 @@ describe("TwitchChat OAuth Token Validation", () => {
 
         it("should handle token that already has oauth: prefix", () => {
             const client = new TwitchChat(
-                "wss://irc-ws.chat.twitch.tv:443",
+                NETWORK_URLS.TWITCH_IRC,
                 {
                     username: "testuser",
                     authToken: "oauth:anonymized_token_example_30chars",
@@ -237,7 +238,7 @@ describe("TwitchChat OAuth Token Validation", () => {
         it("should handle case-sensitive oauth: prefix validation", () => {
             // Should NOT match "OAuth:" or "OAUTH:" - only "oauth:"
             const client = new TwitchChat(
-                "wss://irc-ws.chat.twitch.tv:443",
+                NETWORK_URLS.TWITCH_IRC,
                 {
                     username: "testuser",
                     authToken: "OAuth:anonymized_token_example_30chars",

@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import ConfigExporter from "../../src/classes/ConfigExporter";
+import { EXPORT_PLACEHOLDERS } from "../../src/types/ConfigConstants";
 import { ErrorHandler } from "../../src/utils/errorHandler";
 import { ensureTestIsolation } from "../utils/chatHandlerTestUtils";
 
@@ -610,40 +611,94 @@ describe("ConfigExporter", () => {
             );
         });
 
-        it("should detect missing OAuth token", () => {
-            const invalidConfig = {
+        it("should allow empty OAuth token (optional Twitch integration)", () => {
+            const validConfig = {
                 ...testConfig,
                 auth: { ...testConfig.auth, twitch_oauth: "" },
             };
-            const invalidExporter = new ConfigExporter(invalidConfig);
-            const result = invalidExporter.validateForExport();
+            const validExporter = new ConfigExporter(validConfig);
+            const result = validExporter.validateForExport();
 
-            expect(result.valid).toBe(false);
-            expect(result.errors).toContain("Missing Twitch OAuth token");
+            expect(result.valid).toBe(true);
+            expect(result.errors).toHaveLength(0);
         });
 
-        it("should detect missing username", () => {
-            const invalidConfig = {
+        it("should allow empty username (optional Twitch integration)", () => {
+            const validConfig = {
                 ...testConfig,
                 auth: { ...testConfig.auth, twitch_username: "" },
             };
-            const invalidExporter = new ConfigExporter(invalidConfig);
-            const result = invalidExporter.validateForExport();
+            const validExporter = new ConfigExporter(validConfig);
+            const result = validExporter.validateForExport();
 
-            expect(result.valid).toBe(false);
-            expect(result.errors).toContain("Missing Twitch username");
+            expect(result.valid).toBe(true);
+            expect(result.errors).toHaveLength(0);
         });
 
-        it("should detect missing channel", () => {
-            const invalidConfig = {
+        it("should allow empty channel (optional Twitch integration)", () => {
+            const validConfig = {
                 ...testConfig,
                 auth: { ...testConfig.auth, twitch_channel: "" },
+            };
+            const validExporter = new ConfigExporter(validConfig);
+            const result = validExporter.validateForExport();
+
+            expect(result.valid).toBe(true);
+            expect(result.errors).toHaveLength(0);
+        });
+
+        it("should allow all empty auth fields (optional Twitch integration)", () => {
+            const validConfig = {
+                ...testConfig,
+                auth: {
+                    twitch_oauth: "",
+                    twitch_username: "",
+                    twitch_channel: "",
+                },
+            };
+            const validExporter = new ConfigExporter(validConfig);
+            const result = validExporter.validateForExport();
+
+            expect(result.valid).toBe(true);
+            expect(result.errors).toHaveLength(0);
+        });
+
+        it("should detect non-string OAuth token", () => {
+            const invalidConfig = {
+                ...testConfig,
+                auth: { ...testConfig.auth, twitch_oauth: 123 as any },
             };
             const invalidExporter = new ConfigExporter(invalidConfig);
             const result = invalidExporter.validateForExport();
 
             expect(result.valid).toBe(false);
-            expect(result.errors).toContain("Missing Twitch channel");
+            expect(result.errors).toContain(
+                "Twitch OAuth token must be a string"
+            );
+        });
+
+        it("should detect non-string username", () => {
+            const invalidConfig = {
+                ...testConfig,
+                auth: { ...testConfig.auth, twitch_username: null as any },
+            };
+            const invalidExporter = new ConfigExporter(invalidConfig);
+            const result = invalidExporter.validateForExport();
+
+            expect(result.valid).toBe(false);
+            expect(result.errors).toContain("Twitch username must be a string");
+        });
+
+        it("should detect non-string channel", () => {
+            const invalidConfig = {
+                ...testConfig,
+                auth: { ...testConfig.auth, twitch_channel: undefined as any },
+            };
+            const invalidExporter = new ConfigExporter(invalidConfig);
+            const result = invalidExporter.validateForExport();
+
+            expect(result.valid).toBe(false);
+            expect(result.errors).toContain("Twitch channel must be a string");
         });
 
         it("should detect missing commands section", () => {
@@ -794,7 +849,9 @@ describe("ConfigExporter", () => {
         it("should replace OAuth token with placeholder", () => {
             const sanitized = exporter.createSanitizedExport();
 
-            expect(sanitized.auth.twitch_oauth).toBe("YOUR_OAUTH_TOKEN_HERE");
+            expect(sanitized.auth.twitch_oauth).toBe(
+                EXPORT_PLACEHOLDERS.OAUTH_TOKEN
+            );
             expect(sanitized.auth.twitch_oauth).not.toBe(
                 testConfig.auth.twitch_oauth
             );
@@ -803,7 +860,9 @@ describe("ConfigExporter", () => {
         it("should replace username with placeholder", () => {
             const sanitized = exporter.createSanitizedExport();
 
-            expect(sanitized.auth.twitch_username).toBe("YOUR_USERNAME_HERE");
+            expect(sanitized.auth.twitch_username).toBe(
+                EXPORT_PLACEHOLDERS.USERNAME
+            );
             expect(sanitized.auth.twitch_username).not.toBe(
                 testConfig.auth.twitch_username
             );
@@ -812,7 +871,9 @@ describe("ConfigExporter", () => {
         it("should replace channel with placeholder", () => {
             const sanitized = exporter.createSanitizedExport();
 
-            expect(sanitized.auth.twitch_channel).toBe("YOUR_CHANNEL_HERE");
+            expect(sanitized.auth.twitch_channel).toBe(
+                EXPORT_PLACEHOLDERS.CHANNEL
+            );
             expect(sanitized.auth.twitch_channel).not.toBe(
                 testConfig.auth.twitch_channel
             );
@@ -857,9 +918,9 @@ describe("ConfigExporter", () => {
             const result = exporter.exportAsTemplate();
 
             expect(result).toContain("Configuration Template");
-            expect(result).toContain("YOUR_OAUTH_TOKEN_HERE");
-            expect(result).toContain("YOUR_USERNAME_HERE");
-            expect(result).toContain("YOUR_CHANNEL_HERE");
+            expect(result).toContain(EXPORT_PLACEHOLDERS.OAUTH_TOKEN);
+            expect(result).toContain(EXPORT_PLACEHOLDERS.USERNAME);
+            expect(result).toContain(EXPORT_PLACEHOLDERS.CHANNEL);
         });
 
         it("should include template-specific header comments", () => {

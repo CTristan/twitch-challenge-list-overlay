@@ -9,6 +9,8 @@
  */
 export const FILE_FORMATS = {
     JSON: "json",
+    JAVASCRIPT: "js",
+    TEMPLATE: "template.js",
 } as const;
 
 /**
@@ -16,6 +18,7 @@ export const FILE_FORMATS = {
  */
 export const FILE_EXTENSIONS = {
     JSON: ".json",
+    JAVASCRIPT: ".js",
 } as const;
 
 /**
@@ -30,4 +33,22 @@ export const DEFAULT_FILENAMES = {
  */
 export const FILE_FORMAT_VALUES = {
     JSON: "json",
+    JAVASCRIPT: "javascript",
+} as const;
+
+/**
+ * MIME types for file downloads
+ */
+export const MIME_TYPES = {
+    JSON: "application/json",
+    JAVASCRIPT: "text/javascript",
+} as const;
+
+/**
+ * Filename pattern components
+ */
+export const FILENAME_PATTERNS = {
+    PREFIX: "twitch-overlay-config_",
+    TIMESTAMP_SEPARATOR: "_",
+    EXTENSION_SEPARATOR: ".",
 } as const;

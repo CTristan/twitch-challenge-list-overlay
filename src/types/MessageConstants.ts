@@ -337,6 +337,103 @@ export type PermissionMessageValue =
     (typeof PERMISSION_MESSAGES)[keyof typeof PERMISSION_MESSAGES];
 export type StorageMessageValue =
     (typeof STORAGE_MESSAGES)[keyof typeof STORAGE_MESSAGES];
+/**
+ * Console log messages for Twitch integration status
+ */
+export const TWITCH_INTEGRATION_MESSAGES = {
+    ENABLED: "[TwitchChat] Twitch integration enabled",
+    DISABLED:
+        "[TwitchChat] Twitch integration disabled - no credentials configured",
+    ADMIN_PANEL_AVAILABLE:
+        "[TwitchChat] Admin panel is available for challenge management",
+} as const;
+
+/**
+ * Console log messages for test mode
+ */
+export const TEST_MODE_MESSAGES = {
+    ENABLED: "Test mode enabled",
+} as const;
+
+/**
+ * Console log messages for command handler errors
+ */
+export const COMMAND_HANDLER_MESSAGES = {
+    ERROR_PREFIX: "[CommandHandler] Error: ",
+} as const;
+
+/**
+ * Console error messages for configuration export operations
+ */
+export const CONFIG_EXPORT_MESSAGES = {
+    ERROR_EXPORTING_JSON: "Error exporting configuration as JSON:",
+    ERROR_EXPORTING_JSON_WITH_METADATA:
+        "Error exporting configuration as JSON with metadata:",
+    ERROR_EXPORTING_JAVASCRIPT: "Error exporting configuration as JavaScript:",
+    ERROR_DOWNLOADING_JSON: "Error downloading JSON configuration:",
+    ERROR_DOWNLOADING_JAVASCRIPT: "Error downloading JavaScript configuration:",
+    ERROR_COPYING_TO_CLIPBOARD: "Error copying configuration to clipboard:",
+    ERROR_TRIGGERING_DOWNLOAD: "Error triggering download:",
+    ERROR_FALLBACK_CLIPBOARD_COPY: "Error in fallback clipboard copy:",
+    ERROR_CALCULATING_STATS: "Error calculating export stats:",
+    ERROR_EXPORTING_TEMPLATE: "Error exporting configuration template:",
+    ERROR_DOWNLOADING_TEMPLATE: "Error downloading configuration template:",
+} as const;
+
+/**
+ * Error messages thrown during configuration export operations
+ */
+export const CONFIG_EXPORT_ERRORS = {
+    FAILED_BACKUP_JSON: "Failed to backup configuration as JSON",
+    FAILED_BACKUP_JSON_WITH_METADATA:
+        "Failed to backup configuration as JSON with metadata",
+    FAILED_BACKUP_JAVASCRIPT: "Failed to backup configuration as JavaScript",
+    FAILED_BACKUP_TEMPLATE: "Failed to backup configuration template",
+} as const;
+
+/**
+ * Validation error messages for configuration export
+ */
+export const CONFIG_VALIDATION_ERRORS = {
+    CONFIG_NULL_OR_UNDEFINED: "Configuration object is null or undefined",
+    MISSING_AUTH_CONFIG: "Missing authentication configuration",
+    OAUTH_TOKEN_MUST_BE_STRING: "Twitch OAuth token must be a string",
+    USERNAME_MUST_BE_STRING: "Twitch username must be a string",
+    CHANNEL_MUST_BE_STRING: "Twitch channel must be a string",
+    MISSING_COMMANDS_CONFIG: "Missing commands configuration",
+    MISSING_RESPONSES_CONFIG: "Missing responses configuration",
+    CIRCULAR_REFERENCES:
+        "Configuration contains circular references or non-serializable data",
+} as const;
+
+/**
+ * Template strings for configuration export file headers
+ */
+export const CONFIG_EXPORT_TEMPLATES = {
+    JAVASCRIPT_HEADER_LINE_1: "// ========================================",
+    JAVASCRIPT_HEADER_LINE_2: "// Twitch Challenge Overlay Configuration",
+    JAVASCRIPT_HEADER_LINE_3: "// ========================================",
+    JAVASCRIPT_HEADER_GENERATED: "// Generated on: ",
+    JAVASCRIPT_HEADER_DESCRIPTION_LINE_1:
+        "// This file contains the complete configuration for the",
+    JAVASCRIPT_HEADER_DESCRIPTION_LINE_2:
+        "// Twitch Challenge Overlay. It can be used as a drop-in",
+    JAVASCRIPT_HEADER_DESCRIPTION_LINE_3:
+        "// replacement for the original _config.js file.",
+    JAVASCRIPT_CONFIG_DECLARATION: "/** @type {Config} */",
+    JAVASCRIPT_CONFIG_VARIABLE: "const _config = ",
+
+    TEMPLATE_HEADER_LINE_1: "// ========================================",
+    TEMPLATE_HEADER_LINE_2:
+        "// Twitch Challenge Overlay Configuration Template",
+    TEMPLATE_HEADER_LINE_3: "// ========================================",
+    TEMPLATE_HEADER_GENERATED: "// Generated on: ",
+    TEMPLATE_HEADER_DESCRIPTION_LINE_1:
+        "// This is a template file with placeholder values.",
+    TEMPLATE_HEADER_DESCRIPTION_LINE_2:
+        "// Replace the placeholder values with your actual settings.",
+} as const;
+
 export type ModalTextValue = (typeof MODAL_TEXT)[keyof typeof MODAL_TEXT];
 export type AdminPanelLabelValue =
     (typeof ADMIN_PANEL_LABELS)[keyof typeof ADMIN_PANEL_LABELS];
@@ -346,3 +443,17 @@ export type ValidationMessageValue =
     (typeof VALIDATION_MESSAGES)[keyof typeof VALIDATION_MESSAGES];
 export type WarningMessageValue =
     (typeof WARNING_MESSAGES)[keyof typeof WARNING_MESSAGES];
+export type TwitchIntegrationMessageValue =
+    (typeof TWITCH_INTEGRATION_MESSAGES)[keyof typeof TWITCH_INTEGRATION_MESSAGES];
+export type TestModeMessageValue =
+    (typeof TEST_MODE_MESSAGES)[keyof typeof TEST_MODE_MESSAGES];
+export type CommandHandlerMessageValue =
+    (typeof COMMAND_HANDLER_MESSAGES)[keyof typeof COMMAND_HANDLER_MESSAGES];
+export type ConfigExportMessageValue =
+    (typeof CONFIG_EXPORT_MESSAGES)[keyof typeof CONFIG_EXPORT_MESSAGES];
+export type ConfigExportErrorValue =
+    (typeof CONFIG_EXPORT_ERRORS)[keyof typeof CONFIG_EXPORT_ERRORS];
+export type ConfigValidationErrorValue =
+    (typeof CONFIG_VALIDATION_ERRORS)[keyof typeof CONFIG_VALIDATION_ERRORS];
+export type ConfigExportTemplateValue =
+    (typeof CONFIG_EXPORT_TEMPLATES)[keyof typeof CONFIG_EXPORT_TEMPLATES];

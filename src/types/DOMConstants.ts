@@ -251,6 +251,8 @@ export const HTML_ELEMENTS = {
     DIV: "div",
     BUTTON: "button",
     LI: "li",
+    ANCHOR: "a",
+    TEXTAREA: "textarea",
 } as const;
 
 /**
@@ -260,6 +262,10 @@ export const HTML_ATTRIBUTE_NAMES = {
     ROLE: "role",
     ARIA_LABEL: "aria-label",
     TABINDEX: "tabindex",
+    HREF: "href",
+    DOWNLOAD: "download",
+    STYLE: "style",
+    VALUE: "value",
 } as const;
 
 /**
@@ -325,9 +331,30 @@ export const CSS_VALUES = {
     // Opacity values
     OPACITY_FULL: "1",
     OPACITY_DISABLED: "0.6",
+    OPACITY_ZERO: "0",
+
+    // Position values
+    POSITION_FIXED: "fixed",
 } as const;
 
 export type CSSValue = (typeof CSS_VALUES)[keyof typeof CSS_VALUES];
+
+/**
+ * CSS property names
+ */
+export const CSS_PROPERTY_NAMES = {
+    DISPLAY: "display",
+    POSITION: "position",
+    OPACITY: "opacity",
+    POINTER_EVENTS: "pointerEvents",
+} as const;
+
+/**
+ * DOM command names for document.execCommand
+ */
+export const DOM_COMMANDS = {
+    COPY: "copy",
+} as const;
 
 /**
  * Challenge state values returned by Challenge.getState()

@@ -5,6 +5,19 @@ import { setupDualWindow } from "./dualWindow";
 import { closeModal, openModal } from "./modal";
 import TwitchChat from "./twitch/TwitchChat";
 import { loadTestUsers } from "./twitch/loadTestUsers";
+import {
+    AUTH_CONFIG,
+    GLOBAL_PROPERTIES,
+    NETWORK_URLS,
+    STORAGE_NAMES,
+    TWITCH_EVENTS,
+    URL_PARAMS,
+} from "./types/ConfigConstants";
+import {
+    COMMAND_HANDLER_MESSAGES,
+    TEST_MODE_MESSAGES,
+    TWITCH_INTEGRATION_MESSAGES,
+} from "./types/MessageConstants";
 import { createFallbackConfig } from "./utils/ConfigDefaults";
 import { getWindowRefreshManager } from "./utils/windowRefresh";
 
@@ -35,26 +48,55 @@ try {
     configManager = ConfigManager.getInstance(minimalConfig);
 }
 
-const twitch_channel = configManager.get("auth.twitch_channel");
-const twitch_oauth = configManager.get("auth.twitch_oauth");
-const twitch_username = configManager.get("auth.twitch_username");
+/**
+ * Check if Twitch credentials are configured
+ * @returns {boolean} True if all Twitch auth fields are non-empty
+ */
+function hasTwitchCredentials(): boolean {
+    const twitch_channel = configManager.get(AUTH_CONFIG.TWITCH_CHANNEL);
+    const twitch_oauth = configManager.get(AUTH_CONFIG.TWITCH_OAUTH);
+    const twitch_username = configManager.get(AUTH_CONFIG.TWITCH_USERNAME);
 
-const twitchIRC = "wss://irc-ws.chat.twitch.tv:443";
-const client = new TwitchChat(twitchIRC, {
-    username: twitch_username,
-    authToken: twitch_oauth,
-    channel: twitch_channel,
-});
+    return (
+        typeof twitch_channel === "string" &&
+        twitch_channel.trim().length > 0 &&
+        typeof twitch_oauth === "string" &&
+        twitch_oauth.trim().length > 0 &&
+        typeof twitch_username === "string" &&
+        twitch_username.trim().length > 0
+    );
+}
+
+// Initialize TwitchChat only if credentials are configured
+let client: TwitchChat | null = null;
+
+if (hasTwitchCredentials()) {
+    const twitch_channel = configManager.get(AUTH_CONFIG.TWITCH_CHANNEL);
+    const twitch_oauth = configManager.get(AUTH_CONFIG.TWITCH_OAUTH);
+    const twitch_username = configManager.get(AUTH_CONFIG.TWITCH_USERNAME);
+
+    client = new TwitchChat(NETWORK_URLS.TWITCH_IRC, {
+        username: twitch_username,
+        authToken: twitch_oauth,
+        channel: twitch_channel,
+    });
+    console.log(TWITCH_INTEGRATION_MESSAGES.ENABLED);
+} else {
+    console.log(TWITCH_INTEGRATION_MESSAGES.DISABLED);
+    console.log(TWITCH_INTEGRATION_MESSAGES.ADMIN_PANEL_AVAILABLE);
+}
 
 window.addEventListener("load", () => {
-    let storeName = "challengeList";
+    let storeName: string = STORAGE_NAMES.DEFAULT_STORE;
     // Test mode can be enabled via URL parameter: ?test=true
     const urlParams = new URLSearchParams(window.location.search);
-    const testMode = urlParams.get("test") === "true";
+    const testMode =
+        urlParams.get(URL_PARAMS.TEST_MODE_PARAM) ===
+        URL_PARAMS.TEST_MODE_VALUE;
 
     if (testMode) {
-        console.log("Test mode enabled");
-        storeName = "testChallengeList";
+        console.log(TEST_MODE_MESSAGES.ENABLED);
+        storeName = STORAGE_NAMES.TEST_STORE;
     }
 
     const app = new App(storeName);
@@ -63,38 +105,49 @@ window.addEventListener("load", () => {
     // Initialize admin panel functionality with App instance for interactive features
     new AdminPanel(app);
 
-    client.on("command", (data: CommandData) => {
-        const { user, command, message, flags, extra } = data;
+    // Set up TwitchChat event handlers only if client is initialized
+    if (client) {
+        client.on(TWITCH_EVENTS.COMMAND, (data: CommandData) => {
+            const { user, command, message, flags, extra } = data;
 
-        const response = app.chatHandler(user, command, message, flags, extra);
+            const response = app.chatHandler(
+                user,
+                command,
+                message,
+                flags,
+                extra
+            );
 
-        if (!response.error) {
-            client.say(response.message, extra.messageId);
-        } else {
-            // error logs also are added to OBS logs
-            if (response.message) {
-                console.error(`[CommandHandler] Error: ${response.message}`);
+            if (!response.error) {
+                client!.say(response.message, extra.messageId);
+            } else {
+                // error logs also are added to OBS logs
+                if (response.message) {
+                    console.error(
+                        `${COMMAND_HANDLER_MESSAGES.ERROR_PREFIX}${response.message}`
+                    );
+                }
+                // Note: Silent ignores (empty error messages) are not logged here to avoid spam
             }
-            // Note: Silent ignores (empty error messages) are not logged here to avoid spam
-        }
-    });
+        });
 
-    client.on("oauthError", () => {
-        openModal();
-    });
+        client.on(TWITCH_EVENTS.OAUTH_ERROR, () => {
+            openModal();
+        });
 
-    client.on("oauthSuccess", () => {
-        closeModal();
-    });
+        client.on(TWITCH_EVENTS.OAUTH_SUCCESS, () => {
+            closeModal();
+        });
 
-    client.connect();
-    if (testMode) loadTestUsers(client);
+        client.connect();
+        if (testMode) loadTestUsers(client);
+    }
 
     // Expose components globally for debugging
-    (window as any).challengeBot = {
-        app,
-        client,
-        configManager,
-        version: "1.0.0",
+    (window as any)[GLOBAL_PROPERTIES.CHALLENGE_BOT] = {
+        [GLOBAL_PROPERTIES.APP]: app,
+        [GLOBAL_PROPERTIES.CLIENT]: client ?? null, // Expose null if TwitchChat is not initialized
+        [GLOBAL_PROPERTIES.CONFIG_MANAGER]: configManager,
+        [GLOBAL_PROPERTIES.VERSION]: "1.0.0",
     };
 });

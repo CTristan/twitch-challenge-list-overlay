@@ -158,3 +158,76 @@ export const BACKGROUND_UI_ELEMENTS = {
     TEXT_COLOR_INPUT: "challenge-text-color",
     TEXT_SHADOW_CHECKBOX: "challenge-text-shadow",
 } as const;
+
+/**
+ * Network URLs for external services
+ */
+export const NETWORK_URLS = {
+    TWITCH_IRC: "wss://irc-ws.chat.twitch.tv:443",
+} as const;
+
+/**
+ * LocalStorage store names
+ */
+export const STORAGE_NAMES = {
+    DEFAULT_STORE: "challengeList",
+    TEST_STORE: "testChallengeList",
+} as const;
+
+/**
+ * URL parameter names and values
+ */
+export const URL_PARAMS = {
+    TEST_MODE_PARAM: "test",
+    TEST_MODE_VALUE: "true",
+} as const;
+
+/**
+ * Global object property names
+ */
+export const GLOBAL_PROPERTIES = {
+    CHALLENGE_BOT: "challengeBot",
+    VERSION: "version",
+    APP: "app",
+    CLIENT: "client",
+    CONFIG_MANAGER: "configManager",
+} as const;
+
+/**
+ * TwitchChat event names
+ */
+export const TWITCH_EVENTS = {
+    COMMAND: "command",
+    OAUTH_ERROR: "oauthError",
+    OAUTH_SUCCESS: "oauthSuccess",
+} as const;
+
+/**
+ * Configuration export metadata property names
+ */
+export const EXPORT_METADATA_KEYS = {
+    METADATA: "_metadata",
+    EXPORTED_AT: "exportedAt",
+    VERSION: "version",
+    SOURCE: "source",
+    DESCRIPTION: "description",
+    CONFIG: "config",
+} as const;
+
+/**
+ * Configuration export metadata values
+ */
+export const EXPORT_METADATA_VALUES = {
+    VERSION: "1.0.0",
+    SOURCE: "Twitch Challenge Overlay Admin Panel",
+    DESCRIPTION: "Configuration backup for Twitch Challenge Overlay",
+} as const;
+
+/**
+ * Placeholder values for sanitized configuration exports
+ */
+export const EXPORT_PLACEHOLDERS = {
+    OAUTH_TOKEN: "YOUR_OAUTH_TOKEN_HERE",
+    USERNAME: "YOUR_USERNAME_HERE",
+    CHANNEL: "YOUR_CHANNEL_HERE",
+} as const;
