@@ -1,28 +1,23 @@
-# AGENTS.md - Development Reference Guide
-
-## Project Overview
+# AGENTS.md - Development Reference
 
 **Twitch Challenge Overlay** - Browser-based single-streamer challenge management with dual-mode architecture (admin/viewer). OBS Browser Source with Twitch IRC, zero-server deployment.
 
-### Core Architecture
+## Core Architecture
 
--   **Frontend-only** - No backend/database
--   **Event-driven** - Custom EventEmitter pattern
--   **Modular class-based** - Clear separation of concerns
--   **Configuration-driven** - External config files
+-   **Frontend-only** - No backend/database, event-driven, modular class-based, configuration-driven
+-   **Tech Stack**: TypeScript, Vite (IIFE bundle), Vitest (jsdom), CSS Custom Properties, WebSocket, LocalStorage
 
 ### Directory Structure
 
 ```
-├── src/                    # TypeScript source
-│   ├── classes/           # AdminPanel, Challenge, ChallengeList, ConfigManager, ConfigExporter
-│   ├── commands/          # Command pattern (15+ classes)
-│   ├── twitch/            # TwitchChat, EventEmitter, message-parsers
-│   ├── utils/             # CommandHandler, Timer, UIUpdateHandler, ConfigDefaults, ChallengeRenderer
-│   ├── types/             # Type definitions and constants
-│   ├── templates/         # AdminPanelTemplates
-│   ├── animations/        # UI animations
-├── styles/, tests/, types/globals.d.ts, _config.js, dist/, tsconfig.json, vite.config.ts
+src/
+├── classes/    # AdminPanel, Challenge, ChallengeList, ConfigManager, ConfigExporter
+├── commands/   # Command pattern (15+ classes)
+├── twitch/     # TwitchChat, EventEmitter, message-parsers
+├── utils/      # CommandHandler, Timer, UIUpdateHandler, ConfigDefaults, ChallengeRenderer
+├── types/      # Type definitions and constants
+├── templates/  # AdminPanelTemplates
+└── animations/ # UI animations
 ```
 
 ### Key Classes
@@ -42,36 +37,24 @@
 
 ### AdminPanel Architecture
 
-The AdminPanel class delegates to specialized utility classes:
+Delegates to specialized utility classes (all use static methods):
 
--   **AdminPanelColorManager** - Color configuration logic (storage/UI format conversion, tier state management)
--   **AdminPanelBackgroundManager** - Background configuration (RGBA conversion, text color calculation, preview updates)
--   **AdminPanelConfigValidator** - Configuration validation (max challenges, opacity values, error feedback)
--   **AdminPanelDOMBuilder** - DOM element creation using AdminPanelTemplates (static methods)
--   **AdminPanelEventSetup** - Event listener registration using EVENT_NAMES constants
+-   **AdminPanelColorManager** - Color configuration logic
+-   **AdminPanelBackgroundManager** - Background configuration
+-   **AdminPanelConfigValidator** - Configuration validation
+-   **AdminPanelDOMBuilder** - DOM element creation using AdminPanelTemplates
+-   **AdminPanelEventSetup** - Event listener registration
 
-**Key Pattern**: All utility classes use static methods for stateless operations.
-
-**Admin Panel Structure**:
-
--   **Collapsible Sections** (4 total): Behavior Settings, Challenge Row Styling, Overlay Background, Authentication
--   **Bottom Action Buttons** (always visible): Configuration actions (Backup, Restore, Reset) and Danger Zone (Clear All Data)
--   **Button Layout**: Created via `AdminPanelDOMBuilder.createBottomActionButtons()` which returns an HTMLElement with all action buttons in a static container at the bottom of the admin panel
-
-### Technology Stack
-
--   **TypeScript** with ES modules, **Vite** (IIFE bundle), **Vitest** (jsdom)
--   **CSS Custom Properties**, **WebSocket**, **LocalStorage**
--   **No runtime dependencies** - completely self-contained
+**Admin Panel Structure**: Header (always visible), 4 Collapsible Sections (Behavior Settings, Challenge Row Styling, Overlay Background, Twitch Chat Integration), Bottom Action Buttons (Backup, Restore, Reset, Clear All Data)
 
 ## Coding Standards & Patterns
 
 ### Naming Conventions
 
--   **Classes**: PascalCase (`Challenge`, `ChallengeList`, `TwitchChat`)
+-   **Classes**: PascalCase (`Challenge`, `ChallengeList`)
 -   **Methods/Functions**: camelCase (`addChallenge`, `validateDescription`)
 -   **Private fields**: `#` prefix (`#ws`, `#localStoreName`)
--   **Constants**: UPPER_SNAKE_CASE for config objects
+-   **Constants**: UPPER_SNAKE_CASE
 -   **CSS Variables**: kebab-case with `--` prefix (`--header-font-size`)
 
 ### Type Safety & Enum Usage
@@ -106,137 +89,36 @@ const uiUpdate: UIUpdateData = { action: UIUpdateAction.ADD };
 
 #### Comprehensive Constants System
 
--   **MessageConstants**: All message constants in `src/types/MessageConstants.ts` (ERROR_MESSAGES, SUCCESS_MESSAGES, HELP_MESSAGES, MODAL_TEXT, UI_ELEMENTS, ARIA_LABELS, CONFIG_EXPORT_MESSAGES, CONFIG_EXPORT_ERRORS, CONFIG_VALIDATION_ERRORS, CONFIG_EXPORT_TEMPLATES, etc.)
--   **ConfigConstants**: Configuration property names in `src/types/ConfigConstants.ts` (AUTH_CONFIG, BEHAVIOR_CONFIG, BACKGROUND_CONFIG, EXPORT_METADATA_KEYS, EXPORT_METADATA_VALUES, EXPORT_PLACEHOLDERS, etc.)
--   **ColorConstants**: UI colors and color format strings in `src/types/ColorConstants.ts` (DEFAULT_COLORS, STATUS_COLORS, SHADOW_COLORS, COLOR_FORMAT)
--   **DOMConstants**: CSS classes, selectors, element IDs, HTML elements, HTML attribute names, HTML attribute values, event names, CSS property values, CSS property names, DOM commands, common strings in `src/types/DOMConstants.ts` (CSS_CLASSES, CSS_VALUES, CSS_PROPERTY_NAMES, ELEMENT_IDS, EVENT_NAMES, COMMON_STRINGS, HTML_ELEMENTS, HTML_ATTRIBUTE_NAMES, HTML_ATTRIBUTES, MODAL_MODES, DOM_COMMANDS, etc.)
--   **FileConstants**: File formats, filenames, and filename patterns in `src/types/FileConstants.ts` (FILE_FORMATS, DEFAULT_FILENAMES, FILENAME_PATTERNS, MIME_TYPES)
--   **NumericConstants**: Validation constraints and calculations in `src/types/NumericConstants.ts` (FORM_CONSTRAINTS, COLOR_CONSTANTS)
--   **UPPER_SNAKE_CASE Naming**: All constants follow established naming convention
--   **Type Safety**: Use appropriate types for type-safe constant access
--   **No Magic Values**: Never use hardcoded strings, numbers, or CSS classes
--   **Centralized Organization**: Related constants grouped by purpose and functionality
+-   **MessageConstants**: `src/types/MessageConstants.ts` (ERROR_MESSAGES, SUCCESS_MESSAGES, HELP_MESSAGES, MODAL_TEXT, UI_ELEMENTS, ARIA_LABELS, CONFIG_EXPORT_MESSAGES, CONFIG_EXPORT_ERRORS, CONFIG_VALIDATION_ERRORS, CONFIG_EXPORT_TEMPLATES)
+-   **ConfigConstants**: `src/types/ConfigConstants.ts` (AUTH_CONFIG, BEHAVIOR_CONFIG, BACKGROUND_CONFIG, EXPORT_METADATA_KEYS, EXPORT_METADATA_VALUES, EXPORT_PLACEHOLDERS)
+-   **ColorConstants**: `src/types/ColorConstants.ts` (DEFAULT_COLORS, STATUS_COLORS, SHADOW_COLORS, COLOR_FORMAT)
+-   **DOMConstants**: `src/types/DOMConstants.ts` (CSS_CLASSES, CSS_VALUES, CSS_PROPERTY_NAMES, ELEMENT_IDS, EVENT_NAMES, COMMON_STRINGS, HTML_ELEMENTS, HTML_ATTRIBUTE_NAMES, HTML_ATTRIBUTES, MODAL_MODES, DOM_COMMANDS)
+-   **FileConstants**: `src/types/FileConstants.ts` (FILE_FORMATS, DEFAULT_FILENAMES, FILENAME_PATTERNS, MIME_TYPES)
+-   **NumericConstants**: `src/types/NumericConstants.ts` (FORM_CONSTRAINTS, COLOR_CONSTANTS)
 
 #### Key Constant Objects
 
-**ColorConstants.ts**:
-
--   **COLOR_FORMAT**: Color format strings (HEX_PREFIX: "#", RGBA_PREFIX: "rgba(", RGBA_SEPARATOR: ",", HEX_PADDING_CHAR: "0")
-
-**ConfigConstants.ts**:
-
--   **EXPORT_METADATA_KEYS**: Property names for export metadata (METADATA: "\_metadata", EXPORTED_AT: "exportedAt", VERSION: "version", SOURCE: "source", DESCRIPTION: "description", CONFIG: "config")
--   **EXPORT_METADATA_VALUES**: Metadata values (VERSION: "1.0.0", SOURCE: "Twitch Challenge Overlay Admin Panel", DESCRIPTION: "Configuration backup for Twitch Challenge Overlay")
--   **EXPORT_PLACEHOLDERS**: Sanitized placeholder values (OAUTH_TOKEN: "YOUR_OAUTH_TOKEN_HERE", USERNAME: "YOUR_USERNAME_HERE", CHANNEL: "YOUR_CHANNEL_HERE")
-
-**DOMConstants.ts**:
-
--   **EVENT_NAMES**: DOM event names (INPUT: "input", CHANGE: "change", CLICK: "click", etc.)
--   **CSS_VALUES**: CSS property values (DISPLAY_FLEX: "flex", DISPLAY_NONE: "none", OPACITY_FULL: "1", OPACITY_DISABLED: "0.6", OPACITY_ZERO: "0", POSITION_FIXED: "fixed", TEXT_SHADOW_NONE: "none")
--   **CSS_PROPERTY_NAMES**: CSS property names (DISPLAY: "display", POSITION: "position", OPACITY: "opacity", POINTER_EVENTS: "pointerEvents")
--   **DOM_COMMANDS**: DOM command names for document.execCommand (COPY: "copy")
--   **COMMON_STRINGS**: Common display strings (EMPTY: "", SPACE: " ", PERCENT_SYMBOL: "%")
-
-**FileConstants.ts**:
-
--   **FILENAME_PATTERNS**: Filename components (PREFIX: "twitch-overlay-config*", TIMESTAMP_SEPARATOR: "*", EXTENSION_SEPARATOR: ".")
--   **MIME_TYPES**: MIME type strings (JSON: "application/json", JAVASCRIPT: "text/javascript")
-
-**MessageConstants.ts**:
-
--   **CONFIG_EXPORT_MESSAGES**: Console error messages for configuration export operations (ERROR_EXPORTING_JSON, ERROR_EXPORTING_JAVASCRIPT, ERROR_DOWNLOADING_JSON, ERROR_COPYING_TO_CLIPBOARD, etc.)
--   **CONFIG_EXPORT_ERRORS**: Error messages thrown during configuration export operations (FAILED_BACKUP_JSON, FAILED_BACKUP_JAVASCRIPT, FAILED_BACKUP_TEMPLATE, etc.)
--   **CONFIG_VALIDATION_ERRORS**: Validation error messages for configuration export (CONFIG_NULL_OR_UNDEFINED, MISSING_AUTH_CONFIG, OAUTH_TOKEN_MUST_BE_STRING, CIRCULAR_REFERENCES, etc.)
--   **CONFIG_EXPORT_TEMPLATES**: Multi-line template strings for file headers (JAVASCRIPT_HEADER_LINE_1, JAVASCRIPT_CONFIG_DECLARATION, TEMPLATE_HEADER_DESCRIPTION_LINE_1, etc.)
-
-#### DOMConstants Details
-
-**HTML Attribute Names vs Values**:
-
--   **HTML_ATTRIBUTE_NAMES**: Attribute name strings for use in `setAttribute()` calls (ROLE, ARIA_LABEL, TABINDEX)
--   **HTML_ATTRIBUTES**: Attribute value strings (ROLE_BUTTON = "button", TABINDEX_ZERO = "0")
+**ColorConstants.ts**: COLOR_FORMAT (HEX_PREFIX: "#", RGBA_PREFIX: "rgba(", RGBA_SEPARATOR: ",", HEX_PADDING_CHAR: "0")
+**ConfigConstants.ts**: EXPORT_METADATA_KEYS, EXPORT_METADATA_VALUES, EXPORT_PLACEHOLDERS
+**DOMConstants.ts**: EVENT_NAMES (INPUT, CHANGE, CLICK), CSS_VALUES (DISPLAY_FLEX, DISPLAY_NONE, OPACITY_FULL), CSS_PROPERTY_NAMES (DISPLAY, POSITION, OPACITY), DOM_COMMANDS (COPY), COMMON_STRINGS (EMPTY, SPACE, PERCENT_SYMBOL), HTML_ATTRIBUTE_NAMES (ROLE, ARIA_LABEL, TABINDEX), HTML_ATTRIBUTES (ROLE_BUTTON, TABINDEX_ZERO)
+**FileConstants.ts**: FILENAME_PATTERNS, MIME_TYPES
+**MessageConstants.ts**: CONFIG_EXPORT_MESSAGES, CONFIG_EXPORT_ERRORS, CONFIG_VALIDATION_ERRORS, CONFIG_EXPORT_TEMPLATES, ADMIN_PANEL_LABELS, ARIA_LABELS
 
 ```typescript
-// ✅ Usage examples
-import {
-    BACKGROUND_CONFIG,
-    COLOR_CONFIG,
-    EXPORT_METADATA_KEYS,
-    EXPORT_PLACEHOLDERS,
-} from "../types/ConfigConstants";
-import { COLOR_FORMAT, DEFAULT_COLORS } from "../types/ColorConstants";
+// Usage examples
+import { BACKGROUND_CONFIG } from "../types/ConfigConstants";
 import {
     CSS_CLASSES,
-    CSS_VALUES,
-    CSS_PROPERTY_NAMES,
-    COMMON_STRINGS,
-    DOM_COMMANDS,
-    ELEMENT_IDS,
     EVENT_NAMES,
     HTML_ATTRIBUTE_NAMES,
     HTML_ATTRIBUTES,
 } from "../types/DOMConstants";
-import { FILENAME_PATTERNS, MIME_TYPES } from "../types/FileConstants";
-import {
-    CONFIG_EXPORT_MESSAGES,
-    CONFIG_VALIDATION_ERRORS,
-    ERROR_MESSAGES,
-    MODAL_TEXT,
-} from "../types/MessageConstants";
-
 const backgroundColor = configManager.get(
     BACKGROUND_CONFIG.CHALLENGE_BACKGROUND_COLOR
 );
 element.classList.add(CSS_CLASSES.DONE);
-window.addEventListener(EVENT_NAMES.CHALLENGE_LIST_REFRESH, handler);
-
-// HTML attribute usage
 element.setAttribute(HTML_ATTRIBUTE_NAMES.ROLE, HTML_ATTRIBUTES.ROLE_BUTTON);
-element.setAttribute(
-    HTML_ATTRIBUTE_NAMES.ARIA_LABEL,
-    ARIA_LABELS.EDIT_CHALLENGE
-);
-element.setAttribute(
-    HTML_ATTRIBUTE_NAMES.TABINDEX,
-    HTML_ATTRIBUTES.TABINDEX_ZERO
-);
-
-// Event listener usage
 field.addEventListener(EVENT_NAMES.INPUT, callback);
-checkbox.addEventListener(EVENT_NAMES.CHANGE, callback);
-
-// CSS property value usage
-element.style.display = CSS_VALUES.DISPLAY_FLEX;
-element.style.opacity = CSS_VALUES.OPACITY_FULL;
-
-// CSS property name usage
-element.style[CSS_PROPERTY_NAMES.DISPLAY] = CSS_VALUES.DISPLAY_NONE;
-
-// Display formatting usage
-displayElement.textContent = `${value}${COMMON_STRINGS.PERCENT_SYMBOL}`;
-
-// Color format usage
-const hex = n.toString(COLOR_CONSTANTS.HEX_BASE);
-return hex.length === 1 ? COLOR_FORMAT.HEX_PADDING_CHAR + hex : hex;
-
-// Configuration export usage
-const exportData = {
-    [EXPORT_METADATA_KEYS.METADATA]: {
-        [EXPORT_METADATA_KEYS.VERSION]: EXPORT_METADATA_VALUES.VERSION,
-    },
-};
-sanitized.auth.twitch_oauth = EXPORT_PLACEHOLDERS.OAUTH_TOKEN;
-
-// File operations usage
-const filename = `${FILENAME_PATTERNS.PREFIX}${timestamp}${FILENAME_PATTERNS.EXTENSION_SEPARATOR}${extension}`;
-const blob = new Blob([content], { type: MIME_TYPES.JSON });
-
-// Error handling usage
-console.error(CONFIG_EXPORT_MESSAGES.ERROR_EXPORTING_JSON, error);
-throw new Error(CONFIG_VALIDATION_ERRORS.CONFIG_NULL_OR_UNDEFINED);
-
-// DOM command usage (deprecated but documented)
-const success = (document as any).execCommand(DOM_COMMANDS.COPY);
 ```
 
 ### Class Structure Pattern
@@ -245,13 +127,11 @@ const success = (document as any).execCommand(DOM_COMMANDS.COPY);
 export default class ClassName {
     #privateField: type | null = null;
     public publicProperty: type;
-
     constructor(param: type) {
         this.publicProperty = this.validateParam(param);
     }
-
     methodName(param: type): returnType {
-        // Implementation
+        /* Implementation */
     }
 }
 ```
@@ -276,66 +156,19 @@ export default class ClassName {
 -   **Type safety over convenience**: Use proper type annotations and assertions rather than suppressing errors with `any` or `@ts-ignore` unless absolutely necessary
 -   **Deprecated API handling**: Replace or properly document deprecated API usage with appropriate comments explaining why it's needed
 
-#### Common Fixes for IDE Issues:
-
--   **Undefined values**: Use optional chaining (`?.`) and nullish coalescing (`??`) operators
--   **Type assertions**: Prefer explicit type guards over `as any` type assertions
--   **Mock types**: Use `any` type for complex mock objects where proper typing is impractical
--   **Deprecated APIs**: Add explanatory comments when deprecated APIs must be used for backward compatibility or testing
-
-```typescript
-// ✅ Good: Proper null handling
-const value = mockFunction.mock.calls[0]?.[0];
-if (value) {
-    processValue(value);
-}
-
-// ✅ Good: Documented use of any for complex mocks
-let createElementSpy: any; // Complex DOM mock with overloaded signatures
-
-// ✅ Good: Documented deprecated API usage
-// Note: execCommand is deprecated but still used as a fallback in the implementation
-(document as any).execCommand = execCommandMock;
-
-// ❌ Bad: Ignoring type errors
-// @ts-ignore
-const value = mockFunction.mock.calls[0][0];
-```
-
 ### Authentication & OAuth Token Handling
 
-OAuth tokens are automatically validated and formatted by the TwitchChat class:
-
--   **Auto-correction**: Missing "oauth:" prefix is automatically added with console warning
--   **Validation**: Comprehensive null/undefined protection and format checking
--   **Error handling**: Clear feedback for invalid token scenarios
-
-Generate tokens from **https://twitchtokengenerator.com** - the system will auto-correct format if needed.
+OAuth tokens are automatically validated and formatted by the TwitchChat class with auto-correction for missing "oauth:" prefix. Generate tokens from **https://twitchtokengenerator.com**.
 
 ## TypeScript Development Guidelines
-
-### Development Requirements
 
 -   **All new files** must be written in TypeScript (`.ts` extension)
 -   **Type annotations** must be explicit for all public methods, properties, and function parameters
 -   **Interface definitions** should be created for complex object types and reused across the codebase
 -   **Strict TypeScript configuration** enforced for all development
-
-### Build Process Integration
-
--   **Vite TypeScript support**: Automatic TypeScript compilation during development and build
--   **Type checking**: Run `pnpm run type-check` for standalone type validation
--   **Watch mode**: Use `pnpm run type-check:watch` for continuous type checking during development
--   **Single bundle output**: TypeScript files compile to the same `dist/challengeBot.iife.js` bundle
--   **No runtime overhead**: TypeScript types are stripped during compilation
-
-### Type Safety Best Practices
-
--   **Explicit return types**: Always specify return types for public methods
--   **Interface over type**: Prefer `interface` declarations for object shapes that may be extended
--   **Strict null checks**: Handle `null` and `undefined` explicitly with optional chaining and nullish coalescing
--   **Generic constraints**: Use generic type parameters with constraints for reusable components
--   **Enum usage**: Prefer `const enum` for compile-time constants to reduce bundle size
+-   **Build Process**: Vite TypeScript support with automatic compilation, `pnpm run type-check` for validation
+-   **Single bundle output**: TypeScript files compile to `dist/challengeBot.iife.js` bundle
+-   **Type Safety**: Explicit return types, prefer `interface` over `type`, strict null checks with optional chaining, prefer `const enum` for compile-time constants
 
 ## Configuration System
 
@@ -351,6 +184,18 @@ Configuration is managed through the **ConfigManager** class with **localStorage
 -   **Default configuration**: Built-in fallback values for all settings
 -   **Admin panel interface**: User-friendly configuration editing
 -   **Import/export functionality**: Backup and restore configuration
+
+### localStorage Key Naming Convention
+
+All application localStorage keys use a consistent prefix for easy identification and cleanup:
+
+-   **Prefix**: `"twitch-overlay-"` (defined in `StorageConstants.LOCALSTORAGE_PREFIX`)
+-   **Configuration**: `"twitch-overlay-config"` (main configuration data)
+-   **Challenge list**: `"twitch-overlay-challenge-list"` (challenge persistence)
+-   **UI state**: `"twitch-overlay-behavior-section"`, `"twitch-overlay-challenge-row-styling-section"`, etc. (collapsible section states)
+-   **Centralized management**: All keys defined in `src/types/StorageConstants.ts`
+-   **Clear All Data**: Removes all keys with the prefix, preserving non-application data
+-   **STORAGE_KEYS constant**: Uses prefixed keys (`StorageConstants.STORAGE_KEYS.CHALLENGE_LIST = "twitch-overlay-challenge-list"`)
 
 ### Configuration Access Pattern
 
@@ -389,6 +234,7 @@ Provides modular fallback configuration creation and validation with `createFall
 
 Key components maintain 80%+ coverage across all metrics. Major components include:
 
+-   **index.ts** (28 tests): 100% coverage across all metrics (statements, branches, functions, lines)
 -   **App** (27 tests): 92.59% statement, 88.46% branch
 -   **AdminPanel** (35 tests): 89.92% statement, 82.22% branch
 -   **CommandRegistry** (34 tests): 100% coverage across all metrics
@@ -404,13 +250,10 @@ import ClassName from "../src/path/ClassName";
 
 describe("ClassName", () => {
     let instance: ClassName;
-
     beforeEach(() => {
-        // Simple test isolation - clear localStorage for consistent test state
         ensureTestIsolation();
         instance = new ClassName("param");
     });
-
     describe("methodName", () => {
         it("should describe expected behavior", () => {
             expect(instance.methodName()).toBe(expected);
@@ -460,37 +303,34 @@ pnpm run type-check:watch # Continuous type checking
 
 ## Current Features
 
-### Dual-Mode Architecture (Implemented)
+### Dual-Mode Architecture
 
 Single challenge panel with dual-mode interface:
 
 -   **Single HTML file** - Zero-server deployment
--   **URL fragment routing**:
-    -   `file:///path/to/index.html` - Viewer Mode (OBS Browser Source)
-    -   `file:///path/to/index.html#admin` - Admin Mode (overlay + admin panel)
+-   **URL fragment routing**: `file:///path/to/index.html` (Viewer Mode), `file:///path/to/index.html#admin` (Admin Mode)
 -   **Permission Model**: Streamer/moderators only, no viewer interaction
--   **Command filtering**: Rejects unauthorized attempts
 
-### Challenge Display with Numeric ID Prefixes (Implemented)
+### Challenge Display with Numeric ID Prefixes
 
 -   **Numeric ID prefix**: Each challenge displays position number (e.g., "1. ", "2. ", "3. ")
 -   **Visual format**: `"{id}. {challenge_title}"` where `{id}` is 1-based position
 -   **Command integration**: IDs correspond to command parameters (`!ch done 1`, `!ch edit 2`, `!ch delete 3`)
 -   **Implementation**: ChallengeRenderer accepts `displayPosition` parameter (index + 1)
 
-### Challenge Metadata Row Layout (Implemented)
+### Challenge Metadata Row Layout
 
 -   **Metadata row container**: Amount and timer positioned in `.challenge-metadata` flexbox container
 -   **Prevents text truncation**: Title and description display fully without being cut off
 -   **Flexbox layout**: `display: flex` with `justify-content: space-between` (amount left, timer right)
 -   **Conditional rendering**: Metadata row only created when amount > 1 OR timer exists
 
-### Countdown Timer Display (Implemented)
+### Countdown Timer Display
 
 -   **Real-time countdown**: Live updates every second in human-readable format ("5:30", "1:23:45", "30s")
 -   **Visual states**: Normal (⏱️ white), Warning ≤2min (🟡 gold), Critical ≤30s (🔴 red), Expired (⏰ bright red)
 
-### Unified Command System (Implemented)
+### Unified Command System
 
 -   **Unified "!ch" prefix** with keyword subcommands
 -   **Type-safe processing** with centralized command types in `CommandTypes.ts`
@@ -499,10 +339,9 @@ Single challenge panel with dual-mode interface:
 -   **Advanced management** - increment, decrement, set, multiple IDs
 -   **Command Pattern**: Interface, BaseCommand, individual command classes, CommandRegistry
 -   **Permission Model**: ALL commands require moderator/broadcaster permissions
+    **Processing Flow**: TwitchChat → App.chatHandler → CommandParser → CommandTypes.normalizeCommand() → CommandHandler → CommandRegistry → Command class → Response
 
-**Processing Flow**: TwitchChat → App.chatHandler → CommandParser → CommandTypes.normalizeCommand() → CommandHandler → CommandRegistry → Command class → Response
-
-### Admin Panel Features (Implemented)
+### Admin Panel Features
 
 -   **Auto-save configuration** - All configuration changes automatically saved to localStorage
 -   **Configuration management** with live editing, backup/restore, reset to defaults
@@ -516,12 +355,24 @@ Single challenge panel with dual-mode interface:
 -   **Interactive checkboxes** - Clickable in admin mode, toggle completion with real-time sync
 -   **Add/Edit Challenge modals** - Modal interface with mode switching (MODAL_MODES.ADD / MODAL_MODES.EDIT)
 -   **Edit icon (✏️)** - Appears next to checkboxes in admin mode only
+-   **Clear All Data with confirmation** - Confirmation dialog before clearing all application data, refreshes both admin and viewer windows after clearing
 
 **Background Opacity Configuration**:
 
 -   **Storage format**: Hex color (`#646464`) + numeric opacity (0.0-1.0) stored separately
 -   **Rendering**: Combined at render time using `combineColorWithOpacity()` utility to create RGBA string
 -   **Applied in**: `UIUpdateHandler.renderChallengeList()` method before appending challenge card to DOM
+
+**Clear All Data Functionality**:
+
+-   **Confirmation dialog**: Shows warning with list of data to be deleted before proceeding
+-   **Comprehensive cleanup**: Removes ALL localStorage keys with `twitch-overlay-` prefix
+-   **Preserves non-application data**: Only removes application-specific keys, leaves other localStorage data intact
+-   **Cross-window refresh**: After clearing, broadcasts `notifyConfigurationSaved()` to refresh viewer window, then reloads admin window
+-   **Visual feedback**: Button shows success message with count of removed keys (e.g., "Cleared! (1 keys)")
+-   **Error handling**: Shows "Error!" if no keys are removed or if an exception occurs
+-   **Implementation**: `AdminPanel.clearLocalStorage()` method with inline localStorage iteration to avoid tree-shaking issues
+-   **Key requirement**: All application localStorage keys MUST use the `"twitch-overlay-"` prefix (defined in `LOCALSTORAGE_PREFIX` constant in `StorageConstants.ts`) for proper cleanup
 
 ## Cross-Window Synchronization
 
@@ -601,6 +452,14 @@ The WindowRefreshManager handles cross-window communication with two distinct me
     5. Performs these operations **before** appending the card to the DOM
 -   **Verification**: Inspect the `.card` element in browser DevTools - it should have an inline `backgroundColor` style with RGBA format (e.g., `rgba(100, 100, 100, 0.5)`)
 
+### Clear All Data Not Removing Challenges
+
+-   **Symptoms**: "Clear All Data" button doesn't remove challenges, clicking again shows "Error!"
+-   **Root Cause**: Application using hardcoded localStorage keys instead of prefixed constants
+-   **Solution**: Ensure `STORAGE_KEYS.CHALLENGE_LIST` uses the prefixed key: `"twitch-overlay-challenge-list"` (not `"challengeList"`)
+-   **Verification**: Add a challenge via admin panel, check localStorage keys in browser DevTools - should see `"twitch-overlay-challenge-list"`, click "Clear All Data" and confirm, verify localStorage is empty and challenges are cleared
+-   **Key Requirement**: ALL localStorage keys must use `"twitch-overlay-"` prefix for Clear All Data to work properly
+
 ### Command Processing Issues
 
 -   **Expected Behavior**: Regular viewers' commands are silently ignored (no response)
@@ -610,26 +469,9 @@ The WindowRefreshManager handles cross-window communication with two distinct me
 
 -   **Symptoms**: Slider controls (e.g., Color Row Opacity, Overlay Background Opacity) not visible in admin panel sections
 -   **Root Cause**: Missing `expanded` class on `.color-pickers-container` element in template
--   **CSS Behavior**:
-    -   **Without `expanded` class**: `opacity: 0`, `max-height: 0`, `height: 0px` (hidden)
-    -   **With `expanded` class**: `opacity: 1`, `max-height: 120px`, proper height (visible)
--   **Solution**: Add `expanded` class to `.color-pickers-container` in `AdminPanelTemplates.ts`:
-
-    ```html
-    <!-- CORRECT: Always-visible section -->
-    <div class="color-pickers-container expanded">
-        <!-- Slider controls here -->
-    </div>
-
-    <!-- INCORRECT: Hidden by default -->
-    <div class="color-pickers-container">
-        <!-- Slider controls here -->
-    </div>
-    ```
-
--   **Pattern Rules**:
-    -   **Always-visible sections** (Primary Color, Color Row Opacity): Must have `expanded` class in template
-    -   **Collapsible sections** (Secondary/Tertiary colors): No `expanded` class in template (JavaScript adds it when checkbox is checked)
+-   **CSS Behavior**: Without `expanded` class: `opacity: 0`, `max-height: 0`, `height: 0px` (hidden); With `expanded` class: `opacity: 1`, `max-height: 120px`, proper height (visible)
+-   **Solution**: Add `expanded` class to `.color-pickers-container` in `AdminPanelTemplates.ts` for always-visible sections
+-   **Pattern Rules**: Always-visible sections (Primary Color, Color Row Opacity): Must have `expanded` class in template; Collapsible sections (Secondary/Tertiary colors): No `expanded` class in template (JavaScript adds it when checkbox is checked)
 -   **Browser Cache Note**: After fixing template, users must hard refresh (Cmd+Shift+R / Ctrl+Shift+R) or clear browser cache to see changes
 -   **Verification**: Inspect element in browser DevTools - `.color-pickers-container` should have `expanded` class and `opacity: 1`
 
@@ -908,3 +750,24 @@ const backgroundContent = AdminPanelTemplates.backgroundSection({
 -   **BackgroundSectionParams**: Requires only `overlayBackgroundColor`, `challengeBackgroundColor`, `challengeTextColor`, and `elementIds`
 -   Always pass the complete parameter object matching the interface definition
 -   Template methods handle default values and additional configuration internally
+
+### Collapsible Section Pattern
+
+Individual configuration sections use the CollapsibleSection pattern with localStorage persistence:
+
+**CSS Classes** (defined in `styles/admin.css`):
+
+-   **`.collapsible-section`** - Container for collapsible content
+-   **`.collapsible-header`** - Clickable header with toggle functionality
+-   **`.collapsible-title`** - Section title text
+-   **`.collapsible-icon`** - Arrow icon (▼/▶) showing current state
+-   **`.collapsible-content`** - Content wrapper with smooth transitions
+-   **`.expanded`** - Applied when section is expanded
+
+**Implementation**:
+
+-   Each section (Behavior Settings, Challenge Row Styling, Overlay Background, Authentication) is independently collapsible
+-   State persisted to localStorage with section-specific keys (e.g., `"twitch-overlay-behavior-section"`)
+-   Keyboard accessible with Enter and Space key support
+-   Smooth CSS transitions on max-height for expand/collapse animations
+-   Proper ARIA attributes for accessibility (aria-expanded, aria-hidden)

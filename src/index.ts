@@ -9,7 +9,6 @@ import {
     AUTH_CONFIG,
     GLOBAL_PROPERTIES,
     NETWORK_URLS,
-    STORAGE_NAMES,
     TWITCH_EVENTS,
     URL_PARAMS,
 } from "./types/ConfigConstants";
@@ -18,6 +17,7 @@ import {
     TEST_MODE_MESSAGES,
     TWITCH_INTEGRATION_MESSAGES,
 } from "./types/MessageConstants";
+import { STORAGE_KEYS } from "./types/StorageConstants";
 import { createFallbackConfig } from "./utils/ConfigDefaults";
 import { getWindowRefreshManager } from "./utils/windowRefresh";
 
@@ -87,7 +87,7 @@ if (hasTwitchCredentials()) {
 }
 
 window.addEventListener("load", () => {
-    let storeName: string = STORAGE_NAMES.DEFAULT_STORE;
+    let storeName: string = STORAGE_KEYS.CHALLENGE_LIST;
     // Test mode can be enabled via URL parameter: ?test=true
     const urlParams = new URLSearchParams(window.location.search);
     const testMode =
@@ -96,7 +96,7 @@ window.addEventListener("load", () => {
 
     if (testMode) {
         console.log(TEST_MODE_MESSAGES.ENABLED);
-        storeName = STORAGE_NAMES.TEST_STORE;
+        storeName = STORAGE_KEYS.CHALLENGE_LIST_TEST;
     }
 
     const app = new App(storeName);

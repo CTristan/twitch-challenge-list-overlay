@@ -110,7 +110,7 @@ describe("ConfigManager", () => {
                 maxChallenges: 20,
             };
             localStorage.setItem(
-                "overlay_config",
+                "twitch-overlay-config",
                 JSON.stringify(partialConfig)
             );
 
@@ -125,7 +125,7 @@ describe("ConfigManager", () => {
         });
 
         it("should fall back to defaults when localStorage contains invalid data", () => {
-            localStorage.setItem("overlay_config", "invalid json");
+            localStorage.setItem("twitch-overlay-config", "invalid json");
 
             (ConfigManager as any).instance = null;
             const newInstance = ConfigManager.getInstance(defaultConfig);
@@ -181,7 +181,7 @@ describe("ConfigManager", () => {
         it("should persist changes to localStorage", () => {
             configManager.set("maxChallenges", 20);
 
-            const stored = localStorage.getItem("overlay_config");
+            const stored = localStorage.getItem("twitch-overlay-config");
             expect(stored).toBeTruthy();
             const parsed = JSON.parse(stored!);
             expect(parsed.maxChallenges).toBe(20);
@@ -276,7 +276,7 @@ describe("ConfigManager", () => {
 
             configManager.setAll(newConfig);
 
-            const stored = localStorage.getItem("overlay_config");
+            const stored = localStorage.getItem("twitch-overlay-config");
             const parsed = JSON.parse(stored!);
             expect(parsed.maxChallenges).toBe(30);
         });
@@ -312,7 +312,7 @@ describe("ConfigManager", () => {
             configManager.set("maxChallenges", 50);
             configManager.reset();
 
-            const stored = localStorage.getItem("overlay_config");
+            const stored = localStorage.getItem("twitch-overlay-config");
             const parsed = JSON.parse(stored!);
             expect(parsed.maxChallenges).toBe(10);
         });
@@ -408,7 +408,7 @@ describe("ConfigManager", () => {
 
             configManager.import(importConfig);
 
-            const stored = localStorage.getItem("overlay_config");
+            const stored = localStorage.getItem("twitch-overlay-config");
             const parsed = JSON.parse(stored!);
             expect(parsed.maxChallenges).toBe(45);
         });
@@ -427,7 +427,7 @@ describe("ConfigManager", () => {
             });
 
             configManager.set("maxChallenges", 50);
-            expect(localStorage.getItem("overlay_config")).toBeTruthy();
+            expect(localStorage.getItem("twitch-overlay-config")).toBeTruthy();
 
             // Now mock remove to actually remove from localStorage
             vi.spyOn(StorageManager, "remove").mockImplementation((key) => {
@@ -437,7 +437,7 @@ describe("ConfigManager", () => {
 
             const result = configManager.clearStorage();
             expect(result).toBe(true);
-            expect(localStorage.getItem("overlay_config")).toBeNull();
+            expect(localStorage.getItem("twitch-overlay-config")).toBeNull();
         });
 
         it("should reset config to defaults after clearing storage", () => {

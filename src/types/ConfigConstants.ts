@@ -167,14 +167,6 @@ export const NETWORK_URLS = {
 } as const;
 
 /**
- * LocalStorage store names
- */
-export const STORAGE_NAMES = {
-    DEFAULT_STORE: "challengeList",
-    TEST_STORE: "testChallengeList",
-} as const;
-
-/**
  * URL parameter names and values
  */
 export const URL_PARAMS = {

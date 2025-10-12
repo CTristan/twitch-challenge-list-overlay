@@ -242,6 +242,8 @@ export const UI_ELEMENTS = {
  * ARIA label constants for accessibility
  */
 export const ARIA_LABELS = {
+    TOGGLE_ADMIN_PANEL: "Toggle admin panel visibility",
+    TOGGLE_CONFIG_SETTINGS: "Toggle configuration settings visibility",
     EDIT_CHALLENGE: "Edit challenge",
     INCREMENT_PROGRESS: "Increment challenge progress",
     DECREMENT_PROGRESS: "Decrement challenge progress",
@@ -267,6 +269,7 @@ export const MODAL_TEXT = {
  * Admin panel section titles and labels
  */
 export const ADMIN_PANEL_LABELS = {
+    ADMIN_PANEL_TITLE: "Challenges Overlay Admin Panel",
     CONFIGURATION_SETTINGS: "Configuration Settings",
     AUTHENTICATION_SETTINGS: "Twitch Chat Integration Settings",
     AUTHENTICATION: "Authentication",
@@ -363,6 +366,26 @@ export const COMMAND_HANDLER_MESSAGES = {
 } as const;
 
 /**
+ * Console warning messages for AdminPanel operations
+ */
+export const ADMIN_PANEL_CONSOLE_MESSAGES = {
+    FAILED_TO_LOAD_COLLAPSED_STATE:
+        "[AdminPanel] Failed to load collapsed state:",
+    FAILED_TO_SAVE_COLLAPSED_STATE:
+        "[AdminPanel] Failed to save collapsed state:",
+} as const;
+
+/**
+ * Console messages for configuration settings collapsible section
+ */
+export const CONFIG_SETTINGS_CONSOLE_MESSAGES = {
+    FAILED_TO_LOAD_COLLAPSED_STATE:
+        "[ConfigSettings] Failed to load collapsed state:",
+    FAILED_TO_SAVE_COLLAPSED_STATE:
+        "[ConfigSettings] Failed to save collapsed state:",
+} as const;
+
+/**
  * Console error messages for configuration export operations
  */
 export const CONFIG_EXPORT_MESSAGES = {
@@ -449,6 +472,10 @@ export type TestModeMessageValue =
     (typeof TEST_MODE_MESSAGES)[keyof typeof TEST_MODE_MESSAGES];
 export type CommandHandlerMessageValue =
     (typeof COMMAND_HANDLER_MESSAGES)[keyof typeof COMMAND_HANDLER_MESSAGES];
+export type AdminPanelConsoleMessageValue =
+    (typeof ADMIN_PANEL_CONSOLE_MESSAGES)[keyof typeof ADMIN_PANEL_CONSOLE_MESSAGES];
+export type ConfigSettingsConsoleMessageValue =
+    (typeof CONFIG_SETTINGS_CONSOLE_MESSAGES)[keyof typeof CONFIG_SETTINGS_CONSOLE_MESSAGES];
 export type ConfigExportMessageValue =
     (typeof CONFIG_EXPORT_MESSAGES)[keyof typeof CONFIG_EXPORT_MESSAGES];
 export type ConfigExportErrorValue =

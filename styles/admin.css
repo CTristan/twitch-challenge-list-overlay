@@ -13,6 +13,17 @@
   box-sizing: border-box;
   border: 1px solid rgba(255, 255, 255, 0.1);
   flex: 0 0 auto;
+  transition: padding 0.3s ease;
+}
+
+/* Collapsed state for admin panel */
+.admin-panel.admin-panel-collapsed {
+  padding: 0;
+  overflow: hidden;
+}
+
+.admin-panel.admin-panel-collapsed .admin-content {
+  padding: 0;
 }
 
 .admin-content {
@@ -23,6 +34,35 @@
   color: #ffffff;
   font-family: "Roboto Mono", monospace;
   border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: padding 0.3s ease;
+}
+
+/* Admin panel header styles */
+.admin-panel-header {
+  margin: 0;
+  padding: 20px 25px;
+  background-color: #4a4a4a;
+  border-radius: 6px 6px 0 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.admin-panel-header h2 {
+  margin: 0;
+  color: #4a90e2;
+  font-size: 20px;
+  font-weight: 600;
+}
+
+/* Admin panel collapsible content */
+.admin-panel-content {
+  padding: 25px;
+  transition: max-height 0.3s ease-out, padding 0.3s ease-out;
+}
+
+.admin-panel-collapsed .admin-panel-content {
+  max-height: 0;
+  padding: 0 25px;
+  overflow: hidden;
 }
 
 .admin-content h2 {
@@ -532,7 +572,7 @@
 }
 
 .collapsible-section.expanded .collapsible-content {
-  max-height: 1300px;
+  max-height: 1400px;
   padding: 20px;
   transition: max-height 0.3s ease-in, padding 0.3s ease-in;
 }

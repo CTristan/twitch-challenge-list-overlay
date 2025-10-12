@@ -23,8 +23,8 @@ import {
 } from "../types/DOMConstants";
 import {
     DEFAULT_FILENAMES,
-    FILE_FORMATS,
     FILE_FORMAT_VALUES,
+    FILE_FORMATS,
 } from "../types/FileConstants";
 import {
     ADMIN_FEEDBACK_MESSAGES,
@@ -34,6 +34,7 @@ import {
     WARNING_MESSAGES,
 } from "../types/MessageConstants";
 import { COLOR_CONSTANTS, TIMING_CONSTANTS } from "../types/NumericConstants";
+import { LOCALSTORAGE_PREFIX, STORAGE_KEYS } from "../types/StorageConstants";
 import {
     AdminPanelColorManager,
     type ColorConfigurationUI,
@@ -98,8 +99,10 @@ export default class AdminPanel {
         // Clean up existing listeners before setting up new ones
         this.cleanup();
 
-        this.setupBasicControls();
         this.setupConfigurationUI();
+
+        // Setup controls after UI is created
+        this.setupBasicControls();
         this.setupExportControls();
         this.setupImportControls();
         this.setupHashChangeListener();
@@ -270,10 +273,6 @@ export default class AdminPanel {
         formContainer.id = ELEMENT_IDS.CONFIG_FORM;
         formContainer.className = CSS_CLASSES.CONFIG_FORM;
 
-        const title = document.createElement("h3");
-        title.textContent = ADMIN_PANEL_LABELS.CONFIGURATION_SETTINGS;
-        formContainer.appendChild(title);
-
         // Create collapsible sections in desired order
         this.createBehaviorSection(formContainer);
         this.createChallengeRowStylingSection(formContainer);
@@ -298,7 +297,8 @@ export default class AdminPanel {
                 id: ELEMENT_IDS.AUTHENTICATION_SECTION,
                 title: ADMIN_PANEL_LABELS.AUTHENTICATION_SETTINGS,
                 content: authContent,
-                defaultExpanded: true, // Authentication should be expanded by default
+                defaultExpanded: false,
+                storageKey: STORAGE_KEYS.AUTHENTICATION_SECTION_COLLAPSED,
             });
 
             this.#collapsibleSections.set(
@@ -331,7 +331,8 @@ export default class AdminPanel {
             id: ELEMENT_IDS.BEHAVIOR_SECTION,
             title: ADMIN_PANEL_LABELS.BEHAVIOR_SETTINGS,
             content: behaviorContent,
-            defaultExpanded: true, // Behavior should be expanded by default
+            defaultExpanded: false,
+            storageKey: STORAGE_KEYS.BEHAVIOR_SECTION_COLLAPSED,
         });
 
         this.#collapsibleSections.set(
@@ -354,7 +355,8 @@ export default class AdminPanel {
             id: ELEMENT_IDS.CHALLENGE_ROW_STYLING_SECTION,
             title: ADMIN_PANEL_LABELS.CHALLENGE_ROW_STYLING,
             content: challengeRowStylingContent,
-            defaultExpanded: false, // Challenge row styling should be collapsed by default
+            defaultExpanded: false,
+            storageKey: STORAGE_KEYS.CHALLENGE_ROW_STYLING_SECTION_COLLAPSED,
         });
 
         this.#collapsibleSections.set(
@@ -377,7 +379,8 @@ export default class AdminPanel {
             id: ELEMENT_IDS.OVERLAY_BACKGROUND_SECTION,
             title: ADMIN_PANEL_LABELS.OVERLAY_BACKGROUND,
             content: overlayBackgroundContent,
-            defaultExpanded: false, // Overlay background should be collapsed by default
+            defaultExpanded: false,
+            storageKey: STORAGE_KEYS.OVERLAY_BACKGROUND_SECTION_COLLAPSED,
         });
 
         this.#collapsibleSections.set(
@@ -954,11 +957,48 @@ export default class AdminPanel {
 
     /**
      * Clear all localStorage data and update the UI
+     * Removes ALL application-specific localStorage keys including:
+     * - Configuration data
+     * - Challenge list data
+     * - UI state (collapsed panel states)
      * @returns {void}
      */
     clearLocalStorage(): void {
+        // Show confirmation dialog
+        const confirmed = window.confirm(
+            "Are you sure you want to clear all data?\n\n" +
+                "This will permanently delete:\n" +
+                "• All configuration settings\n" +
+                "• All challenges\n" +
+                "• All UI preferences\n\n" +
+                "This action cannot be undone."
+        );
+
+        if (!confirmed) {
+            return; // User cancelled
+        }
+
         try {
-            const success = this.#configManager.clearStorage();
+            // Clear all application localStorage data
+            // Inline implementation to avoid tree-shaking issues
+            let removedCount = 0;
+            const keysToRemove: string[] = [];
+
+            // Collect all application keys with the prefix
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                if (key && key.startsWith(LOCALSTORAGE_PREFIX)) {
+                    keysToRemove.push(key);
+                }
+            }
+
+            // Remove all collected keys
+            keysToRemove.forEach((key) => {
+                localStorage.removeItem(key);
+                removedCount++;
+            });
+
+            const success = removedCount > 0;
 
             const button = document.getElementById(
                 ELEMENT_IDS.CLEAR_LOCALSTORAGE_BTN
@@ -968,24 +1008,33 @@ export default class AdminPanel {
 
                 if (success) {
                     // Visual feedback for success
-                    button.textContent = ADMIN_FEEDBACK_MESSAGES.CLEARED;
+                    button.textContent = `${ADMIN_FEEDBACK_MESSAGES.CLEARED} (${removedCount} keys)`;
                     button.style.backgroundColor = STATUS_COLORS.SUCCESS;
 
-                    // Refresh the form with default values
-                    this.populateConfigurationForm();
+                    // Reset configuration to defaults
+                    this.#configManager.clearStorage();
+
+                    // Refresh both admin and viewer overlays after a short delay
+                    setTimeout(() => {
+                        // Notify viewer window to refresh
+                        notifyConfigurationSaved();
+
+                        // Refresh admin window
+                        window.location.reload();
+                    }, 1000);
                 } else {
                     // Visual feedback for failure
                     button.textContent = ADMIN_FEEDBACK_MESSAGES.ERROR;
                     button.style.backgroundColor = STATUS_COLORS.ERROR;
-                }
 
-                setTimeout(() => {
-                    button.textContent = originalText;
-                    button.style.backgroundColor = "";
-                }, TIMING_CONSTANTS.FEEDBACK_TIMEOUT);
+                    setTimeout(() => {
+                        button.textContent = originalText;
+                        button.style.backgroundColor = "";
+                    }, TIMING_CONSTANTS.FEEDBACK_TIMEOUT);
+                }
             }
         } catch (error) {
-            console.error("Error clearing localStorage:", error);
+            console.error("[AdminPanel] Error clearing localStorage:", error);
 
             // Visual feedback for error
             const button = document.getElementById(

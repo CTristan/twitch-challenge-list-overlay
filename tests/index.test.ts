@@ -22,14 +22,15 @@ import {
     AUTH_CONFIG,
     GLOBAL_PROPERTIES,
     NETWORK_URLS,
-    STORAGE_NAMES,
     TWITCH_EVENTS,
     URL_PARAMS,
 } from "../src/types/ConfigConstants";
 import {
     COMMAND_HANDLER_MESSAGES,
     TEST_MODE_MESSAGES,
+    TWITCH_INTEGRATION_MESSAGES,
 } from "../src/types/MessageConstants";
+import { STORAGE_KEYS } from "../src/types/StorageConstants";
 import { getWindowRefreshManager } from "../src/utils/windowRefresh";
 
 describe("index.ts", () => {
@@ -421,7 +422,7 @@ describe("index.ts", () => {
             const loadEvent = new Event("load");
             window.dispatchEvent(loadEvent);
 
-            expect(App).toHaveBeenCalledWith(STORAGE_NAMES.DEFAULT_STORE);
+            expect(App).toHaveBeenCalledWith(STORAGE_KEYS.CHALLENGE_LIST);
             expect(mockApp.render).toHaveBeenCalled();
         });
 
@@ -438,7 +439,7 @@ describe("index.ts", () => {
             const loadEvent = new Event("load");
             window.dispatchEvent(loadEvent);
 
-            expect(App).toHaveBeenCalledWith(STORAGE_NAMES.TEST_STORE);
+            expect(App).toHaveBeenCalledWith(STORAGE_KEYS.CHALLENGE_LIST_TEST);
             expect(consoleLogSpy).toHaveBeenCalledWith(
                 TEST_MODE_MESSAGES.ENABLED
             );
@@ -720,6 +721,232 @@ describe("index.ts", () => {
         it("should handle oauthSuccess event", () => {
             oauthSuccessHandler();
             expect(closeModal).toHaveBeenCalled();
+        });
+    });
+
+    describe("Configuration Error Handling - Error Path Coverage", () => {
+        it("should handle ConfigManager.getInstance failure and use fallback configuration", async () => {
+            // Clear all mocks and reset module state
+            vi.resetModules();
+            vi.clearAllMocks();
+
+            // Mock ConfigManager.getInstance to throw an error on first call
+            const mockError = new Error("Configuration loading failed");
+            const consoleWarnSpy = vi
+                .spyOn(console, "warn")
+                .mockImplementation(() => {});
+
+            // Create a fresh mock that throws on first call, succeeds on second
+            let callCount = 0;
+            (ConfigManager.getInstance as any).mockImplementation(() => {
+                callCount++;
+                if (callCount === 1) {
+                    throw mockError;
+                }
+                return mockConfigManager;
+            });
+
+            // Set up invalid _config to trigger error
+            vi.stubGlobal("_config", undefined);
+
+            // Import the module to trigger the error path
+            await import("../src/index");
+
+            // Verify error handling console.warn calls
+            expect(consoleWarnSpy).toHaveBeenCalledWith(
+                "Failed to load configuration from _config.js, using minimal fallback configuration:",
+                mockError
+            );
+            expect(consoleWarnSpy).toHaveBeenCalledWith(
+                "Please configure the application through the admin panel (#admin)"
+            );
+
+            // Verify ConfigManager.getInstance was called twice (once failed, once with fallback)
+            expect(ConfigManager.getInstance).toHaveBeenCalledTimes(2);
+
+            consoleWarnSpy.mockRestore();
+        });
+    });
+
+    describe("Twitch Integration - Missing Credentials Path Coverage", () => {
+        it("should not initialize TwitchChat when credentials are missing", async () => {
+            // Clear all mocks and reset module state
+            vi.resetModules();
+            vi.clearAllMocks();
+
+            // Mock ConfigManager to return empty credentials
+            const mockConfigManagerNoAuth = {
+                get: vi.fn().mockImplementation((path: string) => {
+                    switch (path) {
+                        case AUTH_CONFIG.TWITCH_CHANNEL:
+                            return "";
+                        case AUTH_CONFIG.TWITCH_OAUTH:
+                            return "";
+                        case AUTH_CONFIG.TWITCH_USERNAME:
+                            return "";
+                        default:
+                            return undefined;
+                    }
+                }),
+            };
+
+            (ConfigManager.getInstance as any).mockReturnValue(
+                mockConfigManagerNoAuth
+            );
+
+            const consoleLogSpy = vi
+                .spyOn(console, "log")
+                .mockImplementation(() => {});
+
+            // Set up valid _config but with empty auth
+            vi.stubGlobal("_config", {
+                auth: {
+                    twitch_oauth: "",
+                    twitch_username: "",
+                    twitch_channel: "",
+                },
+                maxChallenges: 10,
+                commands: {},
+                responses: {},
+            });
+
+            // Import the module
+            await import("../src/index");
+
+            // Verify TwitchChat was NOT initialized
+            expect(TwitchChat).not.toHaveBeenCalled();
+
+            // Verify console.log messages for disabled Twitch integration
+            expect(consoleLogSpy).toHaveBeenCalledWith(
+                TWITCH_INTEGRATION_MESSAGES.DISABLED
+            );
+            expect(consoleLogSpy).toHaveBeenCalledWith(
+                TWITCH_INTEGRATION_MESSAGES.ADMIN_PANEL_AVAILABLE
+            );
+
+            // Trigger window load event
+            const loadEvent = new Event("load");
+            window.dispatchEvent(loadEvent);
+
+            // Verify global object has null client
+            expect((window as any)[GLOBAL_PROPERTIES.CHALLENGE_BOT]).toEqual({
+                [GLOBAL_PROPERTIES.APP]: expect.any(Object),
+                [GLOBAL_PROPERTIES.CLIENT]: null,
+                [GLOBAL_PROPERTIES.CONFIG_MANAGER]: mockConfigManagerNoAuth,
+                [GLOBAL_PROPERTIES.VERSION]: "1.0.0",
+            });
+
+            consoleLogSpy.mockRestore();
+        });
+
+        it("should not initialize TwitchChat when channel is whitespace only", async () => {
+            // Clear all mocks and reset module state
+            vi.resetModules();
+            vi.clearAllMocks();
+
+            // Mock ConfigManager to return whitespace credentials
+            const mockConfigManagerWhitespace = {
+                get: vi.fn().mockImplementation((path: string) => {
+                    switch (path) {
+                        case AUTH_CONFIG.TWITCH_CHANNEL:
+                            return "   ";
+                        case AUTH_CONFIG.TWITCH_OAUTH:
+                            return "test_oauth";
+                        case AUTH_CONFIG.TWITCH_USERNAME:
+                            return "test_username";
+                        default:
+                            return undefined;
+                    }
+                }),
+            };
+
+            (ConfigManager.getInstance as any).mockReturnValue(
+                mockConfigManagerWhitespace
+            );
+
+            const consoleLogSpy = vi
+                .spyOn(console, "log")
+                .mockImplementation(() => {});
+
+            // Set up _config with whitespace channel
+            vi.stubGlobal("_config", {
+                auth: {
+                    twitch_oauth: "test_oauth",
+                    twitch_username: "test_username",
+                    twitch_channel: "   ",
+                },
+                maxChallenges: 10,
+                commands: {},
+                responses: {},
+            });
+
+            // Import the module
+            await import("../src/index");
+
+            // Verify TwitchChat was NOT initialized
+            expect(TwitchChat).not.toHaveBeenCalled();
+
+            // Verify console.log messages for disabled Twitch integration
+            expect(consoleLogSpy).toHaveBeenCalledWith(
+                TWITCH_INTEGRATION_MESSAGES.DISABLED
+            );
+
+            consoleLogSpy.mockRestore();
+        });
+
+        it("should not initialize TwitchChat when credentials are non-string types", async () => {
+            // Clear all mocks and reset module state
+            vi.resetModules();
+            vi.clearAllMocks();
+
+            // Mock ConfigManager to return non-string credentials
+            const mockConfigManagerNonString = {
+                get: vi.fn().mockImplementation((path: string) => {
+                    switch (path) {
+                        case AUTH_CONFIG.TWITCH_CHANNEL:
+                            return null; // Non-string type
+                        case AUTH_CONFIG.TWITCH_OAUTH:
+                            return "test_oauth";
+                        case AUTH_CONFIG.TWITCH_USERNAME:
+                            return "test_username";
+                        default:
+                            return undefined;
+                    }
+                }),
+            };
+
+            (ConfigManager.getInstance as any).mockReturnValue(
+                mockConfigManagerNonString
+            );
+
+            const consoleLogSpy = vi
+                .spyOn(console, "log")
+                .mockImplementation(() => {});
+
+            // Set up _config with null channel
+            vi.stubGlobal("_config", {
+                auth: {
+                    twitch_oauth: "test_oauth",
+                    twitch_username: "test_username",
+                    twitch_channel: null,
+                },
+                maxChallenges: 10,
+                commands: {},
+                responses: {},
+            });
+
+            // Import the module
+            await import("../src/index");
+
+            // Verify TwitchChat was NOT initialized
+            expect(TwitchChat).not.toHaveBeenCalled();
+
+            // Verify console.log messages for disabled Twitch integration
+            expect(consoleLogSpy).toHaveBeenCalledWith(
+                TWITCH_INTEGRATION_MESSAGES.DISABLED
+            );
+
+            consoleLogSpy.mockRestore();
         });
     });
 });

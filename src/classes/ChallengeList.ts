@@ -1,4 +1,5 @@
 import { CHALLENGE_STATES } from "../types/DOMConstants";
+import { STORAGE_KEYS } from "../types/StorageConstants";
 import { StorageManager } from "../utils/StorageManager";
 import Challenge from "./Challenge";
 
@@ -30,9 +31,9 @@ export default class ChallengeList {
 
     /**
      * @constructor
-     * @param localStoreName - The name of the local storage key
+     * @param localStoreName - The name of the local storage key. Defaults to application standard key.
      */
-    constructor(localStoreName: string = "challengeList") {
+    constructor(localStoreName: string = STORAGE_KEYS.CHALLENGE_LIST) {
         this.#localStoreName = localStoreName;
         this.#challengesCompleted = 0;
         this.#totalChallenges = 0;

@@ -74,7 +74,7 @@ describe("CollapsibleSection", () => {
             new CollapsibleSection(testConfig);
 
             expect(mockStorageManager.load).toHaveBeenCalledWith(
-                "collapsible-section-test-section",
+                "twitch-overlay-test-section",
                 false
             );
         });
@@ -231,7 +231,7 @@ describe("CollapsibleSection", () => {
             header.click();
 
             expect(mockStorageManager.save).toHaveBeenCalledWith(
-                "collapsible-section-test-section",
+                "twitch-overlay-test-section",
                 true
             );
         });
@@ -255,7 +255,7 @@ describe("CollapsibleSection", () => {
             expect(section.getExpandedState()).toBe(true);
             expect(element.classList.contains("expanded")).toBe(true);
             expect(mockStorageManager.save).toHaveBeenCalledWith(
-                "collapsible-section-test-section",
+                "twitch-overlay-test-section",
                 true
             );
         });
@@ -371,7 +371,7 @@ describe("CollapsibleSection", () => {
             section1.expand();
 
             expect(mockStorageManager.save).toHaveBeenCalledWith(
-                "collapsible-section-test-section",
+                "twitch-overlay-test-section",
                 true
             );
 
@@ -414,11 +414,11 @@ describe("CollapsibleSection", () => {
 
             // Verify that each section uses its own storage key
             expect(mockStorageManager.load).toHaveBeenCalledWith(
-                "collapsible-section-section-1",
+                "twitch-overlay-section-1",
                 false
             );
             expect(mockStorageManager.load).toHaveBeenCalledWith(
-                "collapsible-section-section-2",
+                "twitch-overlay-section-2",
                 false
             );
 
@@ -443,17 +443,17 @@ describe("CollapsibleSection", () => {
             expect(mockStorageManager.save).toHaveBeenCalledTimes(3);
             expect(mockStorageManager.save).toHaveBeenNthCalledWith(
                 1,
-                "collapsible-section-test-section",
+                "twitch-overlay-test-section",
                 true
             );
             expect(mockStorageManager.save).toHaveBeenNthCalledWith(
                 2,
-                "collapsible-section-test-section",
+                "twitch-overlay-test-section",
                 false
             );
             expect(mockStorageManager.save).toHaveBeenNthCalledWith(
                 3,
-                "collapsible-section-test-section",
+                "twitch-overlay-test-section",
                 true
             );
         });

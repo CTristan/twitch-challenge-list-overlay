@@ -1,3 +1,4 @@
+import { LOCALSTORAGE_PREFIX } from "../types/StorageConstants";
 import { StorageManager } from "./StorageManager";
 
 /**
@@ -18,7 +19,7 @@ interface CollapsibleSectionConfig {
  * and accessibility features.
  */
 export default class CollapsibleSection {
-    private static readonly STORAGE_PREFIX = "collapsible-section-";
+    private static readonly STORAGE_PREFIX = LOCALSTORAGE_PREFIX;
     private static instances: Map<string, CollapsibleSection> = new Map();
 
     private id: string;

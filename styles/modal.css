@@ -1,39 +1,252 @@
+/* ========================================
+   Modal Styles - Matching Admin Panel Theme
+   ======================================== */
+
 .modal {
   top: 0;
   left: 0;
   width: 100vw;
   height: 100vh;
-  background-color: rgba(0, 0, 0, 0.6);
+  background-color: rgba(0, 0, 0, 0.75);
   z-index: 10;
-  font-family: monospace, Courier;
+  font-family: "Roboto Mono", monospace;
 }
 
 .modal-content {
   width: 72%;
-  background: white;
+  max-width: 600px;
+  background-color: rgba(45, 45, 45, 0.95);
   border-radius: 6px;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
-  padding: 22px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+  padding: 0;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  overflow: hidden;
 }
 
 .modal-header {
-  font-size: 24px;
-  border-radius: 6px;
-  padding: 10px;
-  background-color: rgb(0, 0, 0, 0.8);
-  color: white;
+  font-size: 20px;
+  font-weight: 600;
+  border-radius: 0;
+  padding: 20px 25px;
+  background-color: #4a4a4a;
+  color: #4a90e2;
+  margin: 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .modal-body {
-  font-size: 24px;
-  background-color: white;
-  color: black;
+  font-size: 14px;
+  background-color: rgba(45, 45, 45, 0.8);
+  color: #ffffff;
+  padding: 25px;
 }
 
 .modal-body > * {
-  margin-top: 12px;
+  margin-top: 15px;
+}
+
+.modal-body > *:first-child {
+  margin-top: 0;
 }
 
 .modal-list {
-  padding-left: 22px;
+  padding-left: 25px;
+  color: #cccccc;
+  line-height: 1.6;
+}
+
+.modal-list li {
+  margin-bottom: 8px;
+}
+
+/* Modal Form Elements */
+.modal-body label {
+  display: block;
+  margin-bottom: 5px;
+  color: #cccccc;
+  font-weight: 500;
+  font-size: 14px;
+}
+
+.modal-body input[type="text"],
+.modal-body input[type="number"],
+.modal-body textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border: 2px solid #555555;
+  border-radius: 4px;
+  background-color: #2d2d2d;
+  color: #ffffff;
+  font-family: "Roboto Mono", monospace;
+  font-size: 14px;
+  transition: border-color 0.3s ease;
+  box-sizing: border-box;
+}
+
+.modal-body input[type="text"]:focus,
+.modal-body input[type="number"]:focus,
+.modal-body textarea:focus {
+  outline: none;
+  border-color: #4a90e2;
+  box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.1);
+}
+
+.modal-body input::placeholder,
+.modal-body textarea::placeholder {
+  color: #888888;
+}
+
+.modal-body textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+/* Modal Buttons */
+.modal-body button,
+.modal-button {
+  background-color: #4a90e2;
+  color: #ffffff;
+  border: none;
+  padding: 12px 20px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-family: "Roboto Mono", monospace;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  margin-right: 10px;
+  min-width: 100px;
+}
+
+.modal-body button:hover,
+.modal-button:hover {
+  background-color: #357abd;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(74, 144, 226, 0.3);
+}
+
+.modal-body button:active,
+.modal-button:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(74, 144, 226, 0.3);
+}
+
+.modal-body button:disabled,
+.modal-button:disabled {
+  background-color: #666666;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* Secondary/Cancel Button Variant */
+.modal-body button.secondary,
+.modal-button.secondary {
+  background-color: #555555;
+}
+
+.modal-body button.secondary:hover,
+.modal-button.secondary:hover {
+  background-color: #666666;
+  box-shadow: 0 4px 8px rgba(85, 85, 85, 0.3);
+}
+
+/* Success Button Variant */
+.modal-body button.success,
+.modal-button.success {
+  background-color: #28a745;
+}
+
+.modal-body button.success:hover,
+.modal-button.success:hover {
+  background-color: #218838;
+  box-shadow: 0 4px 8px rgba(40, 167, 69, 0.3);
+}
+
+/* Danger Button Variant */
+.modal-body button.danger,
+.modal-button.danger {
+  background-color: #dc3545;
+}
+
+.modal-body button.danger:hover,
+.modal-button.danger:hover {
+  background-color: #c82333;
+  box-shadow: 0 4px 8px rgba(220, 53, 69, 0.3);
+}
+
+/* Modal Actions Container */
+.modal-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 20px;
+  justify-content: flex-end;
+}
+
+/* Modal Text Styles */
+.modal-body p {
+  color: #cccccc;
+  line-height: 1.6;
+  margin: 10px 0;
+}
+
+.modal-body h3 {
+  color: #ffffff;
+  margin-top: 20px;
+  margin-bottom: 10px;
+  font-size: 16px;
+}
+
+.modal-body .help-text {
+  font-size: 12px;
+  color: #aaaaaa;
+  font-style: italic;
+  margin-top: 5px;
+}
+
+.modal-body .error-message {
+  color: #dc3545;
+  font-size: 12px;
+  margin-top: 5px;
+  display: block;
+}
+
+.modal-body .success-message {
+  color: #28a745;
+  font-size: 12px;
+  margin-top: 5px;
+  display: block;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .modal-content {
+    width: 90%;
+    max-width: none;
+  }
+
+  .modal-header {
+    padding: 15px 20px;
+    font-size: 18px;
+  }
+
+  .modal-body {
+    padding: 20px;
+  }
+
+  .modal-actions {
+    flex-direction: column;
+  }
+
+  .modal-body button,
+  .modal-button {
+    width: 100%;
+    margin-right: 0;
+    margin-bottom: 10px;
+  }
+
+  .modal-body button:last-child,
+  .modal-button:last-child {
+    margin-bottom: 0;
+  }
 }

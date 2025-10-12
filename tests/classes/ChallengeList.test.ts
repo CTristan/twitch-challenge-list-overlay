@@ -23,7 +23,7 @@ describe("ChallengeList", () => {
 
         it("should load challenge list if localStorage contains challengeList", () => {
             localStorage.setItem(
-                "challengeList",
+                "twitch-overlay-challenge-list",
                 JSON.stringify([
                     {
                         title: "Challenge 1",
@@ -49,7 +49,7 @@ describe("ChallengeList", () => {
         it("should correctly restore completed challenge counts from localStorage", () => {
             // Set up localStorage with mixed completed/incomplete challenges
             localStorage.setItem(
-                "challengeList",
+                "twitch-overlay-challenge-list",
                 JSON.stringify([
                     {
                         title: "Challenge 1",

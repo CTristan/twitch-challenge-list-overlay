@@ -1,3 +1,4 @@
+import { STORAGE_KEYS } from "../types/StorageConstants";
 import { ErrorHandler } from "../utils/errorHandler";
 import { StorageManager } from "../utils/StorageManager";
 import { ValidationUtils } from "../utils/ValidationUtils";
@@ -11,7 +12,7 @@ export default class ConfigManager {
     private static instance: ConfigManager | null = null;
     private config: Config;
     private defaultConfig: Config;
-    private readonly storageKey = "overlay_config";
+    private readonly storageKey = STORAGE_KEYS.CONFIG;
     private readonly configVersion = "1.0.0";
     private errorHandler: ErrorHandler;
     private memoryOnlyMode = false;

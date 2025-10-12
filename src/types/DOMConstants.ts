@@ -8,6 +8,11 @@
  * CSS class names used throughout the application
  */
 export const CSS_CLASSES = {
+    // Admin panel classes
+    ADMIN_PANEL_COLLAPSED: "admin-panel-collapsed",
+    ADMIN_PANEL_HEADER: "admin-panel-header",
+    ADMIN_PANEL_CONTENT: "admin-panel-content",
+
     // Challenge-related classes
     CHALLENGE: "challenge",
     CHALLENGE_CONTAINER: "challenge-container",
@@ -64,6 +69,13 @@ export const CSS_CLASSES = {
     COLOR_PICKER_LABEL: "color-picker-label",
     PREVIEW_CHALLENGE: "preview-challenge",
     PREVIEW_TEXT: "preview-text",
+
+    // Collapsible section classes
+    COLLAPSIBLE_SECTION: "collapsible-section",
+    COLLAPSIBLE_HEADER: "collapsible-header",
+    COLLAPSIBLE_TITLE: "collapsible-title",
+    COLLAPSIBLE_ICON: "collapsible-icon",
+    COLLAPSIBLE_CONTENT: "collapsible-content",
 } as const;
 
 /**
@@ -107,6 +119,13 @@ export const CSS_SELECTORS = {
  * DOM element IDs used throughout the application
  */
 export const ELEMENT_IDS = {
+    // Admin panel elements
+    ADMIN_PANEL: "admin-panel",
+    ADMIN_PANEL_TOGGLE_HEADER: "admin-panel-toggle-header",
+    ADMIN_PANEL_COLLAPSIBLE_CONTENT: "admin-panel-collapsible-content",
+    CONFIG_SETTINGS_TOGGLE_HEADER: "config-settings-toggle-header",
+    CONFIG_SETTINGS_COLLAPSIBLE_CONTENT: "config-settings-collapsible-content",
+
     // Admin panel form elements
     CONFIG_FORM: "config-form",
     CLEAR_LOCALSTORAGE_BTN: "clear-localstorage-btn",
@@ -242,6 +261,9 @@ export const COMMON_STRINGS = {
     SPACE: " ",
     PERCENT_SYMBOL: "%",
     COMMAND_NOT_FOUND: "command not found",
+    HYPHEN: "-",
+    EVENT_SUFFIX_CLICK: "-click",
+    EVENT_SUFFIX_KEYDOWN: "-keydown",
 } as const;
 
 /**
@@ -250,6 +272,7 @@ export const COMMON_STRINGS = {
 export const HTML_ELEMENTS = {
     DIV: "div",
     BUTTON: "button",
+    H2: "h2",
     LI: "li",
     ANCHOR: "a",
     TEXTAREA: "textarea",
@@ -261,6 +284,8 @@ export const HTML_ELEMENTS = {
 export const HTML_ATTRIBUTE_NAMES = {
     ROLE: "role",
     ARIA_LABEL: "aria-label",
+    ARIA_EXPANDED: "aria-expanded",
+    ARIA_HIDDEN: "aria-hidden",
     TABINDEX: "tabindex",
     HREF: "href",
     DOWNLOAD: "download",
@@ -275,6 +300,16 @@ export const HTML_ATTRIBUTES = {
     BUTTON_TYPE: "button",
     ROLE_BUTTON: "button",
     TABINDEX_ZERO: "0",
+    ARIA_TRUE: "true",
+    ARIA_FALSE: "false",
+} as const;
+
+/**
+ * Keyboard key constants
+ */
+export const KEYBOARD_KEYS = {
+    ENTER: "Enter",
+    SPACE: " ",
 } as const;
 
 /**
@@ -312,6 +347,8 @@ export type HTMLAttributeNameValue =
     (typeof HTML_ATTRIBUTE_NAMES)[keyof typeof HTML_ATTRIBUTE_NAMES];
 export type HTMLAttributeValue =
     (typeof HTML_ATTRIBUTES)[keyof typeof HTML_ATTRIBUTES];
+export type KeyboardKeyValue =
+    (typeof KEYBOARD_KEYS)[keyof typeof KEYBOARD_KEYS];
 export type ButtonTextValue = (typeof BUTTON_TEXT)[keyof typeof BUTTON_TEXT];
 export type ModalModeValue = (typeof MODAL_MODES)[keyof typeof MODAL_MODES];
 export type BroadcastChannelNameValue =
