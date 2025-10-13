@@ -482,6 +482,15 @@ The WindowRefreshManager handles cross-window communication with two distinct me
 -   **Symptoms**: Warning doesn't appear in viewer mode when BroadcastChannel is unavailable
 -   **Solution**: Check `WindowRefreshManager.isAvailable()` returns false, verify periodic check interval (10 seconds) is running, ensure warning element has correct ID (`connection-warning`)
 
+### Primary Color Picker Showing Incorrect Default Value (FIXED)
+
+-   **Symptoms**: Admin panel's Primary Color (challenge row background color) picker displays red (#FF0000) on page load instead of the stored configuration value
+-   **Root Cause**: `AdminPanel.populateColorConfiguration()` was checking for a checkbox element that doesn't exist for the primary tier (primary is always enabled and has no checkbox)
+-   **Fix**: Modified `populateColorConfiguration()` to handle the primary tier specially - checks only for color inputs (not checkbox) when populating primary tier values
+-   **Location**: `src/classes/AdminPanel.ts` lines 448-492
+-   **Test Coverage**: Regression tests added in `tests/classes/AdminPanel.colorConfig.test.ts` (4 new tests in "Primary Color Picker Population Bug" suite)
+-   **Prevention**: Tests verify primary color picker is populated correctly on initial load, after refresh, and when no checkbox exists
+
 ## Development Guidelines
 
 ### Adding New Features

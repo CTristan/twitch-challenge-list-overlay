@@ -468,11 +468,19 @@ export default class AdminPanel {
                 tierConstants.textColor
             ) as HTMLInputElement;
 
-            if (checkbox && bgColorInput && textColorInput) {
+            // Primary tier has no checkbox (always enabled), so only check color inputs
+            const isPrimaryTier = tier === COLOR_TIERS[0];
+            const hasRequiredElements = isPrimaryTier
+                ? bgColorInput && textColorInput
+                : checkbox && bgColorInput && textColorInput;
+
+            if (hasRequiredElements) {
                 const tierConfig = colorConfig[tier];
 
-                // Set checkbox state
-                checkbox.checked = tierConfig.enabled;
+                // Set checkbox state (only for non-primary tiers)
+                if (checkbox) {
+                    checkbox.checked = tierConfig.enabled;
+                }
 
                 // Set color values
                 bgColorInput.value = tierConfig.backgroundColor;

@@ -276,4 +276,107 @@ describe("AdminPanel Color Configuration", () => {
             expect(savedColors).toEqual([TEST_COLORS.RED, TEST_COLORS.GREEN]);
         });
     });
+
+    describe("Primary Color Picker Population Bug (Regression Test)", () => {
+        it("should populate primary color picker with stored value on initial load", () => {
+            // This test prevents regression of the bug where primary color picker
+            // always showed red (#ff0000) on page load instead of the stored value.
+            // Bug cause: populateColorConfiguration() was checking for a checkbox
+            // element that doesn't exist for the primary tier (it's always enabled).
+
+            // Set a non-default color in configuration
+            const customColor = "#3498db"; // Blue color
+            setColorConfiguration(configManager, [customColor]);
+
+            // Create a new AdminPanel to simulate page load
+            new AdminPanel();
+
+            // Get the primary color picker element
+            const primaryElements = getColorTierElements("primary");
+
+            // CRITICAL: The color picker should show the stored value, NOT the template default
+            expect(primaryElements.bgColorPicker.value).toBe(customColor);
+            expect(primaryElements.bgColorPicker.value).not.toBe(
+                TEST_COLORS.RED
+            );
+        });
+
+        it("should populate primary color picker even when no checkbox exists", () => {
+            // Verify that the primary tier (which has no checkbox) still gets populated
+            const customColor = "#2ecc71"; // Green color
+            setColorConfiguration(configManager, [customColor]);
+
+            // Create a new AdminPanel
+            new AdminPanel();
+
+            const primaryElements = getColorTierElements("primary");
+
+            // Primary tier should not have a checkbox
+            expect(primaryElements.checkbox).toBeNull();
+
+            // But the color picker should still be populated with the stored value
+            expect(primaryElements.bgColorPicker.value).toBe(customColor);
+        });
+
+        it("should populate primary color picker after manual browser refresh simulation", () => {
+            // Simulate a scenario where user sets a color, refreshes the page
+            const userSelectedColor = "#e74c3c"; // Red-orange color
+
+            // User sets the color
+            setColorConfiguration(configManager, [userSelectedColor]);
+
+            // Simulate page refresh by destroying and recreating AdminPanel
+            const firstPanel = new AdminPanel();
+            firstPanel.destroy();
+
+            // Clear DOM and recreate (simulating refresh)
+            document.body.innerHTML = `
+                <div id="app">
+                    <div class="admin-panel">
+                        <div class="admin-content"></div>
+                    </div>
+                </div>
+            `;
+
+            // Create new AdminPanel (simulating page reload)
+            new AdminPanel();
+
+            const primaryElements = getColorTierElements("primary");
+
+            // After "refresh", the color picker should still show the user's color
+            expect(primaryElements.bgColorPicker.value).toBe(userSelectedColor);
+        });
+
+        it("should populate all color tiers correctly including primary", () => {
+            // Test that all three tiers are populated correctly
+            const colors = [
+                TEST_COLORS.RED,
+                TEST_COLORS.GREEN,
+                TEST_COLORS.BLUE,
+            ];
+            setColorConfiguration(configManager, colors);
+
+            new AdminPanel();
+
+            const primaryElements = getColorTierElements("primary");
+            const secondaryElements = getColorTierElements("secondary");
+            const tertiaryElements = getColorTierElements("tertiary");
+
+            // All tiers should have their correct colors
+            expect(primaryElements.bgColorPicker.value).toBe(TEST_COLORS.RED);
+            expect(secondaryElements.bgColorPicker.value).toBe(
+                TEST_COLORS.GREEN
+            );
+            expect(tertiaryElements.bgColorPicker.value).toBe(TEST_COLORS.BLUE);
+
+            // Primary has no checkbox, but others do
+            expect(primaryElements.checkbox).toBeNull();
+            expect(secondaryElements.checkbox).toBeTruthy();
+            expect(tertiaryElements.checkbox).toBeTruthy();
+
+            // Secondary and tertiary should be enabled (checked)
+            expect(secondaryElements.checkbox.checked).toBe(true);
+            expect(tertiaryElements.checkbox.checked).toBe(true);
+        });
+    });
 });
