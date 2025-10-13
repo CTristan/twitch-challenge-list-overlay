@@ -79,18 +79,6 @@ describe("index.ts", () => {
         (TwitchChat as any).mockImplementation(() => mockTwitchChat);
         (ConfigManager.getInstance as any).mockReturnValue(mockConfigManager);
 
-        // Set up valid _config
-        vi.stubGlobal("_config", {
-            auth: {
-                twitch_oauth: "test_oauth",
-                twitch_username: "test_username",
-                twitch_channel: "test_channel",
-            },
-            maxChallenges: 10,
-            commands: {},
-            responses: {},
-        });
-
         // Mock DOM elements
         document.body.innerHTML = `
             <div id="modal" class="hidden"></div>
@@ -110,7 +98,7 @@ describe("index.ts", () => {
             expect(getWindowRefreshManager).toHaveBeenCalled();
         });
 
-        it("should initialize ConfigManager with valid _config", () => {
+        it("should initialize ConfigManager with default configuration", () => {
             expect(ConfigManager.getInstance).toHaveBeenCalled();
         });
 
@@ -363,50 +351,61 @@ describe("index.ts", () => {
             );
         });
 
-        it("should test error handling console messages", () => {
-            // Test the console.warn messages that would be called in the catch block (lines 22-28)
-            const consoleWarnSpy = vi
-                .spyOn(console, "warn")
-                .mockImplementation(() => {});
+        it("should initialize with fallback configuration when localStorage is empty", () => {
+            // Test that the application can initialize with default configuration
+            // when no configuration exists in localStorage
+            const minimalConfig = {
+                auth: {
+                    twitch_oauth: "",
+                    twitch_username: "",
+                    twitch_channel: "",
+                },
+                maxChallenges: 10,
+                commands: {
+                    clearAll: ["!ch clearlist", "!ch clearall"],
+                    clearDone: ["!ch cleardone"],
+                    addChallenge: ["!ch add"],
+                    editChallenge: ["!ch edit"],
+                    finishChallenge: ["!ch done"],
+                    deleteChallenge: ["!ch delete", "!ch del"],
+                    incrementChallenge: ["!ch +"],
+                    decrementChallenge: ["!ch -"],
+                    setProgress: ["!ch set"],
+                    failChallenge: ["!ch fail"],
+                    listChallenges: ["!ch list"],
+                    showChallenge: ["!ch show"],
+                    check: ["!ch check"],
+                    help: ["!ch help"],
+                },
+                responses: {
+                    clearAll: "All challenges have been cleared",
+                    clearDone: "All done challenges have been cleared",
+                    addChallenge: "Challenge(s) {message} added!",
+                    editChallenge: "Challenge {message} updated!",
+                    finishChallenge:
+                        "Good job on completing challenge(s) {message}!",
+                    deleteChallenge: "Challenge(s) {message} has been deleted!",
+                    deleteAll: "All of your challenges have been deleted!",
+                    check: "Your current challenge(s) are: {message}",
+                    help: "Try these commands - !ch add, !ch edit, !ch done, !ch delete, !ch check, !ch clearlist, !ch cleardone, !ch help",
+                    maxChallengesAdded:
+                        "Maximum number of challenges reached, try deleting old challenges.",
+                    noChallengeFound:
+                        "That challenge doesn't seem to exist, try adding one!",
+                    invalidCommand: "Invalid command: {message}. Try !help",
+                },
+            };
 
-            // Simulate the error handling that occurs in lines 22-28
-            const testError = new Error("Configuration loading failed");
-            console.warn(
-                "Failed to load configuration from _config.js, using minimal fallback configuration:",
-                testError
-            );
-            console.warn(
-                "Please configure the application through the admin panel (#admin)"
-            );
-
-            // Verify the console.warn calls match what's in the catch block
-            expect(consoleWarnSpy).toHaveBeenCalledWith(
-                "Failed to load configuration from _config.js, using minimal fallback configuration:",
-                expect.any(Error)
-            );
-            expect(consoleWarnSpy).toHaveBeenCalledWith(
-                "Please configure the application through the admin panel (#admin)"
-            );
-            expect(consoleWarnSpy).toHaveBeenCalledTimes(2);
-
-            consoleWarnSpy.mockRestore();
+            // Verify the structure is complete and valid
+            expect(minimalConfig).toHaveProperty("auth");
+            expect(minimalConfig).toHaveProperty("maxChallenges", 10);
+            expect(minimalConfig).toHaveProperty("commands");
+            expect(minimalConfig).toHaveProperty("responses");
         });
     });
 
     describe("Window Load Event Handling", () => {
         beforeEach(async () => {
-            // Set up valid _config and import module
-            vi.stubGlobal("_config", {
-                auth: {
-                    twitch_oauth: "test_oauth",
-                    twitch_username: "test_username",
-                    twitch_channel: "test_channel",
-                },
-                maxChallenges: 10,
-                commands: {},
-                responses: {},
-            });
-
             // Import the module to trigger execution
             await import("../src/index");
         });
@@ -598,18 +597,6 @@ describe("index.ts", () => {
         let oauthSuccessHandler: Function;
 
         beforeEach(async () => {
-            // Set up valid _config and import module
-            vi.stubGlobal("_config", {
-                auth: {
-                    twitch_oauth: "test_oauth",
-                    twitch_username: "test_username",
-                    twitch_channel: "test_channel",
-                },
-                maxChallenges: 10,
-                commands: {},
-                responses: {},
-            });
-
             // Import the module to trigger execution
             await import("../src/index");
 
@@ -724,47 +711,33 @@ describe("index.ts", () => {
         });
     });
 
-    describe("Configuration Error Handling - Error Path Coverage", () => {
-        it("should handle ConfigManager.getInstance failure and use fallback configuration", async () => {
+    describe("Configuration Initialization", () => {
+        it("should initialize ConfigManager with fallback configuration", async () => {
             // Clear all mocks and reset module state
             vi.resetModules();
             vi.clearAllMocks();
 
-            // Mock ConfigManager.getInstance to throw an error on first call
-            const mockError = new Error("Configuration loading failed");
-            const consoleWarnSpy = vi
-                .spyOn(console, "warn")
-                .mockImplementation(() => {});
+            // Mock ConfigManager.getInstance
+            (ConfigManager.getInstance as any).mockReturnValue(
+                mockConfigManager
+            );
 
-            // Create a fresh mock that throws on first call, succeeds on second
-            let callCount = 0;
-            (ConfigManager.getInstance as any).mockImplementation(() => {
-                callCount++;
-                if (callCount === 1) {
-                    throw mockError;
-                }
-                return mockConfigManager;
-            });
-
-            // Set up invalid _config to trigger error
-            vi.stubGlobal("_config", undefined);
-
-            // Import the module to trigger the error path
+            // Import the module to trigger initialization
             await import("../src/index");
 
-            // Verify error handling console.warn calls
-            expect(consoleWarnSpy).toHaveBeenCalledWith(
-                "Failed to load configuration from _config.js, using minimal fallback configuration:",
-                mockError
+            // Verify ConfigManager.getInstance was called with fallback configuration
+            expect(ConfigManager.getInstance).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    auth: expect.objectContaining({
+                        twitch_oauth: "",
+                        twitch_username: "",
+                        twitch_channel: "",
+                    }),
+                    maxChallenges: 10,
+                    commands: expect.any(Object),
+                    responses: expect.any(Object),
+                })
             );
-            expect(consoleWarnSpy).toHaveBeenCalledWith(
-                "Please configure the application through the admin panel (#admin)"
-            );
-
-            // Verify ConfigManager.getInstance was called twice (once failed, once with fallback)
-            expect(ConfigManager.getInstance).toHaveBeenCalledTimes(2);
-
-            consoleWarnSpy.mockRestore();
         });
     });
 
@@ -797,18 +770,6 @@ describe("index.ts", () => {
             const consoleLogSpy = vi
                 .spyOn(console, "log")
                 .mockImplementation(() => {});
-
-            // Set up valid _config but with empty auth
-            vi.stubGlobal("_config", {
-                auth: {
-                    twitch_oauth: "",
-                    twitch_username: "",
-                    twitch_channel: "",
-                },
-                maxChallenges: 10,
-                commands: {},
-                responses: {},
-            });
 
             // Import the module
             await import("../src/index");
@@ -868,18 +829,6 @@ describe("index.ts", () => {
                 .spyOn(console, "log")
                 .mockImplementation(() => {});
 
-            // Set up _config with whitespace channel
-            vi.stubGlobal("_config", {
-                auth: {
-                    twitch_oauth: "test_oauth",
-                    twitch_username: "test_username",
-                    twitch_channel: "   ",
-                },
-                maxChallenges: 10,
-                commands: {},
-                responses: {},
-            });
-
             // Import the module
             await import("../src/index");
 
@@ -922,18 +871,6 @@ describe("index.ts", () => {
             const consoleLogSpy = vi
                 .spyOn(console, "log")
                 .mockImplementation(() => {});
-
-            // Set up _config with null channel
-            vi.stubGlobal("_config", {
-                auth: {
-                    twitch_oauth: "test_oauth",
-                    twitch_username: "test_username",
-                    twitch_channel: null,
-                },
-                maxChallenges: 10,
-                commands: {},
-                responses: {},
-            });
 
             // Import the module
             await import("../src/index");

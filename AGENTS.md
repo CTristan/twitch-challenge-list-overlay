@@ -175,7 +175,7 @@ OAuth tokens are automatically validated and formatted by the TwitchChat class w
 
 ### Configuration Management
 
-Configuration is managed through the **ConfigManager** class with **localStorage persistence** and **fallback configuration support**. The system uses `_config.js` as a fallback when localStorage is unavailable or for initial setup.
+Configuration is managed through the **ConfigManager** class with **100% localStorage-based persistence**. On first run, default configuration is automatically created and saved to localStorage.
 
 ### Configuration Architecture
 
@@ -444,7 +444,7 @@ The WindowRefreshManager handles cross-window communication with two distinct me
 ### Authentication Problems
 
 -   **Symptoms**: Bot doesn't respond to `!ch` or `!ch help` commands
--   **Solution**: Generate new OAuth token from https://twitchtokengenerator.com, update `_config.js`, ensure `oauth:` prefix, rebuild with `pnpm run build`
+-   **Solution**: Generate new OAuth token from https://twitchtokengenerator.com, configure via admin panel (#admin), ensure `oauth:` prefix is automatically added by TwitchChat class
 
 ### Timer-Related Issues
 

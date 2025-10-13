@@ -28,25 +28,10 @@ setupDualWindow();
 getWindowRefreshManager();
 
 // Initialize configuration management system
-// Note: _config is loaded from _config.js via script tag in index.html
-let configManager: ConfigManager;
-try {
-    configManager = ConfigManager.getInstance(_config);
-} catch (error) {
-    console.warn(
-        "Failed to load configuration from _config.js, using minimal fallback configuration:",
-        error
-    );
-    console.warn(
-        "Please configure the application through the admin panel (#admin)"
-    );
-
-    // Create minimal default configuration for fallback
-    const minimalConfig: Config = createFallbackConfig();
-
-    // Create ConfigManager instance with minimal fallback configuration
-    configManager = ConfigManager.getInstance(minimalConfig);
-}
+// Configuration is loaded from localStorage with fallback to defaults
+const configManager: ConfigManager = ConfigManager.getInstance(
+    createFallbackConfig()
+);
 
 /**
  * Check if Twitch credentials are configured

@@ -79,6 +79,10 @@ export function createFallbackConfig(): Config {
                 "That challenge doesn't seem to exist, try adding one!",
             invalidCommand: "Invalid command: {message}. Try !help",
         },
+        // Challenge row styling - single black background with white text
+        challengeRowColors: ["#000000"],
+        challengeRowTextColors: ["#ffffff"],
+        challengeRowColorsOpacity: 1.0,
     };
 }
 

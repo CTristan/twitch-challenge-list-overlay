@@ -46,6 +46,7 @@ export default class ConfigManager {
 
     /**
      * Load configuration from localStorage with fallback to defaults
+     * If no configuration exists in localStorage, saves defaults immediately
      * @returns Complete configuration object
      */
     private loadConfiguration(): Config {
@@ -60,8 +61,26 @@ export default class ConfigManager {
             return this.deepMerge(this.defaultConfig, result.data);
         }
 
-        // Return defaults if loading fails or validation fails
-        return this.deepClone(this.defaultConfig);
+        // No valid configuration found in localStorage - use defaults and save them
+        const defaultConfigClone = this.deepClone(this.defaultConfig);
+
+        // Save defaults to localStorage for first-run initialization
+        const saveResult = StorageManager.save(
+            this.storageKey,
+            defaultConfigClone,
+            {
+                version: this.configVersion,
+                timestamp: true,
+                fallbackToMemory: true,
+                retryOnQuotaExceeded: true,
+            }
+        );
+
+        if (saveResult.success && saveResult.fallbackUsed === "memory-only") {
+            this.memoryOnlyMode = true;
+        }
+
+        return defaultConfigClone;
     }
 
     /**

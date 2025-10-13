@@ -486,13 +486,3 @@ interface IConfigExporter {
     /** Download configuration template file */
     downloadTemplate(filename?: string): boolean;
 }
-
-// ========================================
-// GLOBAL DECLARATIONS
-// ========================================
-
-/**
- * Global configuration object loaded via script tag in index.html
- * Contains all user-configurable settings for the application
- */
-declare const _config: Config;

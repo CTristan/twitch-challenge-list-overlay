@@ -442,9 +442,9 @@ export const CONFIG_EXPORT_TEMPLATES = {
     JAVASCRIPT_HEADER_DESCRIPTION_LINE_1:
         "// This file contains the complete configuration for the",
     JAVASCRIPT_HEADER_DESCRIPTION_LINE_2:
-        "// Twitch Challenge Overlay. It can be used as a drop-in",
+        "// Twitch Challenge Overlay. Import this configuration via",
     JAVASCRIPT_HEADER_DESCRIPTION_LINE_3:
-        "// replacement for the original _config.js file.",
+        "// the admin panel's 'Restore Configuration' feature.",
     JAVASCRIPT_CONFIG_DECLARATION: "/** @type {Config} */",
     JAVASCRIPT_CONFIG_VARIABLE: "const _config = ",
 
