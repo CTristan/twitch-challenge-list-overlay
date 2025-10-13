@@ -1,0 +1,245 @@
+================================================================================
+TWITCH CHALLENGE LIST OVERLAY - INSTALLATION GUIDE
+================================================================================
+
+This overlay displays a list of challenges on your stream with an admin panel
+for managing them. All challenge management (adding, editing, deleting, and
+configuring settings) happens in the admin view.
+
+================================================================================
+INITIAL INSTALLATION
+================================================================================
+
+STEP 1: ADD VIEWER OVERLAY TO OBS
+----------------------------------
+This is the overlay that appears on your stream.
+
+1. In OBS Studio, go to: Sources panel
+2. Click the "+" button
+3. Select "Browser" from the list
+4. Name it "Challenge List Overlay" (or any name you prefer)
+5. Click "OK"
+6. In the properties window, configure:
+
+   IMPORTANT: DO NOT use the "Local file" checkbox option!
+   Instead, use the URL field with file:/// protocol syntax.
+
+   - In the "URL" field, enter the FULL file path using file:/// protocol:
+
+     Example (Windows):
+     file:///C:/Users/YourName/path/to/twitch-challenge-list-overlay/index.html
+
+     Example (macOS):
+     file:///Users/YourName/path/to/twitch-challenge-list-overlay/index.html
+
+     Example (Linux):
+     file:///home/YourName/path/to/twitch-challenge-list-overlay/index.html
+
+   - Set Width: 800 (or your preference)
+   - Set Height: 600 (or your preference)
+
+   (Optional)
+   - Check "Shutdown source when not visible" (recommended)
+   - Check "Refresh browser when scene becomes active" (recommended)
+
+7. Click "OK"
+
+The overlay should now appear in your scene. You can resize and position it
+as needed.
+
+IMPORTANT NOTE: Using the "Local file" checkbox instead of the file:/// URL
+syntax will break the ability to use the Admin panel. Always use the file:/// URL syntax in the URL field.
+
+
+STEP 2: ADD ADMIN PANEL TO OBS
+-------------------------------
+This is where you manage all challenges and configure settings.
+
+1. In OBS Studio, go to: Docks → Custom Browser Docks
+2. In the "Dock Name" field, name it "Challenge List Admin" (or any name you prefer)
+3. In the "URL" field, enter the FULL file path with #admin at the end:
+
+   IMPORTANT: Use the same file:/// URL syntax as the viewer overlay,
+   but add "#admin" at the end to enable admin mode.
+
+   Example (Windows):
+   file:///C:/Users/YourName/path/to/twitch-challenge-list-overlay/index.html#admin
+
+   Example (macOS):
+   file:///Users/YourName/path/to/twitch-challenge-list-overlay/index.html#admin
+
+   Example (Linux):
+   file:///home/YourName/path/to/twitch-challenge-list-overlay/index.html#admin
+
+   IMPORTANT: The "#admin" hash fragment at the end is required to enable
+   admin mode! Without it, you'll see the viewer overlay instead.
+
+4. Click "Apply"
+5. Click "Close"
+
+A new dock panel labeled "Challenge List Admin" should appear in OBS. You can
+drag it to dock it wherever you prefer in your OBS layout.
+
+
+USING THE ADMIN PANEL
+----------------------
+The admin panel is where ALL challenge configuration happens:
+
+- Add new challenges using the "Add Challenge" button
+- Edit existing challenges by clicking the pencil icon (✏️)
+- Mark challenges complete by clicking the checkbox
+- Delete challenges using chat commands or by editing
+- Configure all settings in the collapsible sections:
+  * Behavior Settings (max challenges, etc.)
+  * Challenge Row Styling (colors, opacity)
+  * Overlay Background (background color, opacity)
+  * Twitch Chat Integration (see optional section below)
+
+All changes are automatically saved and will update the viewer overlay
+in real-time.
+
+
+================================================================================
+OPTIONAL: TWITCH CHAT INTEGRATION
+================================================================================
+
+If you want to allow moderators to manage challenges via Twitch chat commands
+(like !ch add, !ch done, etc.), follow these steps:
+
+
+STEP 1: GENERATE OAUTH TOKEN
+-----------------------------
+1. Go to: https://twitchtokengenerator.com
+2. Click "Custom Scope Token"
+3. Under "Scopes", select:
+   - chat:read
+   - chat:edit
+4. Click "Generate Token"
+5. Click "Authorize" on the Twitch authorization page
+6. Copy the "Access Token" that appears (starts with "oauth:")
+   
+   IMPORTANT: Keep this token private! Do not share it with anyone.
+
+
+STEP 2: CONFIGURE TWITCH SETTINGS IN ADMIN PANEL
+-------------------------------------------------
+1. In the OBS "Challenge Admin" dock, scroll to the "Twitch Chat Integration"
+   section
+2. Click to expand it if it's collapsed
+3. Fill in the three fields:
+   
+   - Twitch OAuth Token: Paste the token from Step 1
+     (Should start with "oauth:" - if it doesn't, add "oauth:" at the beginning)
+   
+   - Bot Username: Your Twitch username (the account that will send messages)
+     Example: your_twitch_username
+   
+   - Channel Name: The channel where the bot will listen for commands
+     Example: your_channel_name
+     (Usually the same as your username)
+
+4. The settings are automatically saved when you change them
+
+The bot will now connect to your Twitch chat and respond to commands.
+
+
+AVAILABLE CHAT COMMANDS
+------------------------
+All commands require moderator or broadcaster permissions.
+
+Challenge Management:
+  !ch add d=Description [a=Amount] [t=Minutes]
+    Example: !ch add d=Beat the game
+    Example: !ch add d=No damage run a=5 t=30
+
+  !ch done <ID>
+    Example: !ch done 1
+
+  !ch edit <ID> [d=New Description] [a=New Amount] [t=New Minutes]
+    Example: !ch edit 1 d=Updated description
+    Example: !ch edit 2 a=10
+
+  !ch delete <ID>
+    Example: !ch delete 1
+
+Progress Commands:
+  !ch + <ID>        - Increment progress
+  !ch - <ID>        - Decrement progress
+  !ch set <ID> <N>  - Set progress to N
+  !ch fail <ID>     - Mark as failed
+
+List Commands:
+  !ch list          - Show all challenges
+  !ch show <ID>     - Show specific challenge
+  !ch check         - Show completion status
+
+Admin Commands:
+  !ch clearall      - Remove all challenges
+  !ch cleardone     - Remove completed challenges
+
+Help:
+  !ch help          - Show command list
+
+
+================================================================================
+TROUBLESHOOTING
+================================================================================
+
+OVERLAY NOT SHOWING IN OBS
+---------------------------
+- Make sure you're using the file:/// URL syntax in the URL field
+- DO NOT use the "Local file" checkbox option - it breaks the application
+- Verify the file path is correct and uses forward slashes (/)
+- Ensure the path starts with "file:///" (three slashes)
+- Verify the index.html and challengeBot.iife.js files are in the same folder
+- Try refreshing the browser source (right-click → Refresh)
+
+
+ADMIN PANEL NOT SHOWING
+------------------------
+- Verify the URL ends with "#admin" (including the # symbol)
+- Make sure you're using the full file path starting with "file:///"
+- Ensure you're using the URL field with file:/// syntax, not "Local file" option
+- Try closing and reopening the custom dock
+
+
+APPLICATION NOT WORKING CORRECTLY / FEATURES BROKEN
+----------------------------------------------------
+If the overlay appears but features don't work (no cross-window sync, admin
+panel shows viewer mode, etc.):
+
+- MOST COMMON CAUSE: You used the "Local file" checkbox instead of file:/// URL
+- Solution: Remove the browser source and custom dock, then recreate them using
+  the file:/// URL syntax in the URL field (see STEP 1 and STEP 2 above)
+- The "Local file" checkbox breaks the URL fragment routing system (#admin)
+  and prevents the dual-mode architecture from working correctly
+- Always use file:/// protocol URLs in the URL field for both viewer overlay
+  and admin panel
+
+
+TWITCH CHAT COMMANDS NOT WORKING
+---------------------------------
+- Verify your OAuth token is correct and starts with "oauth:"
+- Check that the bot username and channel name are correct (no @ symbol)
+- Make sure you're a moderator or broadcaster in the channel
+- Try generating a new OAuth token if the old one expired
+
+
+CHANGES NOT APPEARING ON STREAM
+--------------------------------
+- The viewer overlay updates automatically when you make changes in the admin
+  panel
+- If changes don't appear, try refreshing the browser source in OBS
+- Make sure both the viewer overlay and admin panel are using the same
+  index.html file
+
+
+================================================================================
+SUPPORT
+================================================================================
+
+For issues, questions, or feature requests, please visit:
+https://github.com/CTristan/twitch-challenge-list-overlay
+
+================================================================================
+
