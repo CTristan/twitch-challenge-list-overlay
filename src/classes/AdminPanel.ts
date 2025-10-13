@@ -41,6 +41,7 @@ import {
 } from "../utils/AdminPanelColorManager";
 import { AdminPanelDOMBuilder } from "../utils/AdminPanelDOMBuilder";
 import { AdminPanelEventSetup } from "../utils/AdminPanelEventSetup";
+import ChallengeRenderer from "../utils/ChallengeRenderer";
 import CollapsibleSection from "../utils/CollapsibleSection";
 import { combineColorWithOpacity } from "../utils/ColorUtils";
 import {
@@ -1085,6 +1086,9 @@ export default class AdminPanel {
         } else if (configType === ConfigType.COLOR) {
             // Update challenge row color preview to reflect new colors and opacity
             this.updateBackgroundPreview();
+
+            // Update challenge row colors in the DOM to reflect new opacity
+            this.updateChallengeRowColorsInDOM();
         }
     }
 
@@ -1120,6 +1124,64 @@ export default class AdminPanel {
             );
             challengeCard.style.backgroundColor = overlayBackgroundRGBA;
         }
+    }
+
+    /**
+     * Update challenge row colors in the DOM without page refresh
+     * Re-applies background customization to all challenge elements with updated opacity
+     * @returns {void}
+     */
+    private updateChallengeRowColorsInDOM(): void {
+        // Query all challenge list items
+        const challengeElements = document.querySelectorAll(
+            CSS_SELECTORS.CHALLENGE
+        ) as NodeListOf<HTMLElement>;
+
+        if (challengeElements.length === 0) {
+            return;
+        }
+
+        // Get current color configuration
+        const rowColors =
+            this.#configManager.get(COLOR_CONFIG.CHALLENGE_ROW_COLORS) || [];
+        const rowTextColors =
+            this.#configManager.get(COLOR_CONFIG.CHALLENGE_ROW_TEXT_COLORS) ||
+            [];
+        const rowColorsOpacity =
+            this.#configManager.get(
+                COLOR_CONFIG.CHALLENGE_ROW_COLORS_OPACITY
+            ) ?? BACKGROUND_DEFAULTS.ROW_COLORS_OPACITY;
+
+        // Get background customization configuration
+        const backgroundConfig = {
+            challengeBackgroundColor: this.#configManager.get(
+                BACKGROUND_CONFIG.CHALLENGE_BACKGROUND_COLOR
+            ),
+            challengeBackgroundOpacity: this.#configManager.get(
+                BACKGROUND_CONFIG.CHALLENGE_BACKGROUND_OPACITY
+            ),
+            challengeTextColor: this.#configManager.get(
+                BACKGROUND_CONFIG.CHALLENGE_TEXT_COLOR
+            ),
+            challengeAutoTextColor: this.#configManager.get(
+                BACKGROUND_CONFIG.CHALLENGE_AUTO_TEXT_COLOR
+            ),
+            challengeTextShadow: this.#configManager.get(
+                BACKGROUND_CONFIG.CHALLENGE_TEXT_SHADOW
+            ),
+        };
+
+        // Re-apply background customization to each challenge element
+        challengeElements.forEach((challengeElement, index) => {
+            ChallengeRenderer.applyBackgroundCustomization(
+                challengeElement,
+                backgroundConfig,
+                index,
+                rowColors,
+                rowTextColors,
+                rowColorsOpacity
+            );
+        });
     }
 
     /**

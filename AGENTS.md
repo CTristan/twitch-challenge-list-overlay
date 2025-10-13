@@ -52,6 +52,8 @@ Delegates to specialized utility classes (all use static methods):
 
 **Admin Panel Structure**: Header (always visible), 4 Collapsible Sections (Behavior Settings, Challenge Row Styling, Overlay Background, Twitch Chat Integration), Bottom Action Buttons (Backup, Restore, Reset, Clear All Data)
 
+**Slider Synchronization**: Admin panel applies visual updates immediately to its own DOM when sliders change, while debouncing viewer window notifications to prevent flicker during drag operations. Methods: `updateAdminUIForSliderChange()`, `updateOverlayBackgroundInDOM()`, `updateChallengeRowColorsInDOM()`, `notifyViewerDebounced()`
+
 ## Coding Standards & Patterns
 
 ### Naming Conventions
