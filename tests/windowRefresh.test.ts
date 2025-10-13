@@ -5,6 +5,7 @@ import { WindowMode } from "../src/types/WindowMode";
 import {
     WindowRefreshManager,
     getWindowRefreshManager,
+    isAdminPanelConnected,
     isRefreshSystemAvailable,
     notifyChallengeStateChanged,
     notifyConfigurationSaved,
@@ -711,6 +712,317 @@ describe("WindowRefreshManager", () => {
             expect(mockConsoleWarn).toHaveBeenCalledWith(
                 "BroadcastChannel not available, cannot notify other windows"
             );
+        });
+    });
+
+    describe("heartbeat mechanism", () => {
+        it("should send heartbeat messages in admin mode", () => {
+            vi.useFakeTimers();
+            window.location.hash = "#admin";
+
+            // Set up spy before creating manager
+            const postMessageSpy = vi.spyOn(
+                MockBroadcastChannel.prototype,
+                "postMessage"
+            );
+
+            const manager = new WindowRefreshManager();
+
+            // Initial heartbeat should be sent immediately
+            expect(postMessageSpy).toHaveBeenCalledWith({
+                type: RefreshMessageType.HEARTBEAT,
+                timestamp: expect.any(Number),
+                source: WindowMode.ADMIN,
+            });
+
+            // Clear the spy to check periodic heartbeats
+            postMessageSpy.mockClear();
+
+            // Fast-forward 5 seconds to trigger periodic heartbeat
+            vi.advanceTimersByTime(5000);
+
+            expect(postMessageSpy).toHaveBeenCalledWith({
+                type: RefreshMessageType.HEARTBEAT,
+                timestamp: expect.any(Number),
+                source: WindowMode.ADMIN,
+            });
+
+            vi.useRealTimers();
+            manager.destroy();
+        });
+
+        it("should not send heartbeat messages in viewer mode", () => {
+            vi.useFakeTimers();
+            window.location.hash = "";
+
+            // Set up spy before creating manager
+            const postMessageSpy = vi.spyOn(
+                MockBroadcastChannel.prototype,
+                "postMessage"
+            );
+
+            const manager = new WindowRefreshManager();
+
+            // No heartbeat should be sent in viewer mode
+            expect(postMessageSpy).not.toHaveBeenCalledWith(
+                expect.objectContaining({
+                    type: RefreshMessageType.HEARTBEAT,
+                })
+            );
+
+            // Fast-forward 5 seconds
+            vi.advanceTimersByTime(5000);
+
+            // Still no heartbeat
+            expect(postMessageSpy).not.toHaveBeenCalledWith(
+                expect.objectContaining({
+                    type: RefreshMessageType.HEARTBEAT,
+                })
+            );
+
+            vi.useRealTimers();
+            manager.destroy();
+        });
+
+        it("should update lastHeartbeatReceived when receiving heartbeat in viewer mode", () => {
+            window.location.hash = "";
+            const manager = new WindowRefreshManager();
+
+            // Initially connected (grace period active)
+            expect(manager.isConnected()).toBe(true);
+
+            // Simulate receiving a heartbeat from admin
+            const channel = MockBroadcastChannel.instances[0];
+            if (!channel) throw new Error("Channel not found");
+
+            const heartbeatMessage = {
+                type: RefreshMessageType.HEARTBEAT,
+                timestamp: Date.now(),
+                source: WindowMode.ADMIN,
+            };
+
+            channel.simulateMessage(heartbeatMessage);
+
+            // Should still be connected (now based on heartbeat instead of grace period)
+            expect(manager.isConnected()).toBe(true);
+
+            manager.destroy();
+        });
+
+        it("should detect connection timeout when no heartbeat received", () => {
+            vi.useFakeTimers();
+            window.location.hash = "";
+            const manager = new WindowRefreshManager();
+
+            // Simulate receiving initial heartbeat
+            const channel = MockBroadcastChannel.instances[0];
+            if (!channel) throw new Error("Channel not found");
+
+            const heartbeatMessage = {
+                type: RefreshMessageType.HEARTBEAT,
+                timestamp: Date.now(),
+                source: WindowMode.ADMIN,
+            };
+
+            channel.simulateMessage(heartbeatMessage);
+
+            // Should be connected
+            expect(manager.isConnected()).toBe(true);
+
+            // Fast-forward 14 seconds (within timeout)
+            vi.advanceTimersByTime(14000);
+            expect(manager.isConnected()).toBe(true);
+
+            // Fast-forward 2 more seconds (total 16 seconds, exceeds 15 second timeout)
+            vi.advanceTimersByTime(2000);
+            expect(manager.isConnected()).toBe(false);
+
+            vi.useRealTimers();
+            manager.destroy();
+        });
+
+        it("should always return true for isConnected in admin mode", () => {
+            window.location.hash = "#admin";
+            const manager = new WindowRefreshManager();
+
+            // Admin mode is always considered connected
+            expect(manager.isConnected()).toBe(true);
+
+            manager.destroy();
+        });
+
+        it("should return false for isConnected when BroadcastChannel unavailable", () => {
+            delete (global as any).BroadcastChannel;
+            window.location.hash = "";
+
+            const manager = new WindowRefreshManager();
+
+            expect(manager.isConnected()).toBe(false);
+        });
+
+        it("should stop heartbeat when manager is destroyed", () => {
+            vi.useFakeTimers();
+            window.location.hash = "#admin";
+
+            const manager = new WindowRefreshManager();
+            const postMessageSpy = vi.spyOn(
+                MockBroadcastChannel.prototype,
+                "postMessage"
+            );
+
+            // Clear initial heartbeat
+            postMessageSpy.mockClear();
+
+            // Destroy manager
+            manager.destroy();
+
+            // Fast-forward 5 seconds
+            vi.advanceTimersByTime(5000);
+
+            // No heartbeat should be sent after destroy
+            expect(postMessageSpy).not.toHaveBeenCalled();
+
+            vi.useRealTimers();
+        });
+
+        it("should not update lastHeartbeatReceived in admin mode", () => {
+            window.location.hash = "#admin";
+            const manager = new WindowRefreshManager();
+
+            // Simulate receiving a heartbeat (shouldn't happen in admin mode, but test the guard)
+            const channel = MockBroadcastChannel.instances[0];
+            if (!channel) throw new Error("Channel not found");
+
+            const heartbeatMessage = {
+                type: RefreshMessageType.HEARTBEAT,
+                timestamp: Date.now(),
+                source: WindowMode.VIEWER,
+            };
+
+            channel.simulateMessage(heartbeatMessage);
+
+            // Admin mode should always return true regardless
+            expect(manager.isConnected()).toBe(true);
+
+            manager.destroy();
+        });
+    });
+
+    describe("grace period behavior", () => {
+        it("should return true during initial grace period (no heartbeat yet)", () => {
+            vi.useFakeTimers();
+            window.location.hash = "";
+            const manager = new WindowRefreshManager();
+
+            // Initially should be connected (grace period)
+            expect(manager.isConnected()).toBe(true);
+
+            // Fast-forward 10 seconds (still within 15 second grace period)
+            vi.advanceTimersByTime(10000);
+            expect(manager.isConnected()).toBe(true);
+
+            // Fast-forward 4 more seconds (14 seconds total, still within grace period)
+            vi.advanceTimersByTime(4000);
+            expect(manager.isConnected()).toBe(true);
+
+            vi.useRealTimers();
+            manager.destroy();
+        });
+
+        it("should return false after grace period expires without heartbeat", () => {
+            vi.useFakeTimers();
+            window.location.hash = "";
+            const manager = new WindowRefreshManager();
+
+            // Initially should be connected (grace period)
+            expect(manager.isConnected()).toBe(true);
+
+            // Fast-forward 15 seconds (grace period expires)
+            vi.advanceTimersByTime(15000);
+            expect(manager.isConnected()).toBe(false);
+
+            // Fast-forward more time (still no heartbeat)
+            vi.advanceTimersByTime(5000);
+            expect(manager.isConnected()).toBe(false);
+
+            vi.useRealTimers();
+            manager.destroy();
+        });
+
+        it("should transition from grace period to connected when heartbeat received", () => {
+            vi.useFakeTimers();
+            window.location.hash = "";
+            const manager = new WindowRefreshManager();
+
+            // Initially should be connected (grace period)
+            expect(manager.isConnected()).toBe(true);
+
+            // Fast-forward 5 seconds
+            vi.advanceTimersByTime(5000);
+
+            // Simulate receiving a heartbeat
+            const channel = MockBroadcastChannel.instances[0];
+            if (!channel) throw new Error("Channel not found");
+
+            const heartbeatMessage = {
+                type: RefreshMessageType.HEARTBEAT,
+                timestamp: Date.now(),
+                source: WindowMode.ADMIN,
+            };
+
+            channel.simulateMessage(heartbeatMessage);
+
+            // Should still be connected (now based on heartbeat, not grace period)
+            expect(manager.isConnected()).toBe(true);
+
+            // Fast-forward 10 more seconds (15 seconds total from start, 10 seconds since heartbeat)
+            vi.advanceTimersByTime(10000);
+
+            // Should still be connected because heartbeat was received within timeout (10s < 15s)
+            expect(manager.isConnected()).toBe(true);
+
+            vi.useRealTimers();
+            manager.destroy();
+        });
+
+        it("should not use grace period in admin mode", () => {
+            vi.useFakeTimers();
+            window.location.hash = "#admin";
+            const manager = new WindowRefreshManager();
+
+            // Admin mode should always return true
+            expect(manager.isConnected()).toBe(true);
+
+            // Fast-forward past grace period
+            vi.advanceTimersByTime(20000);
+
+            // Should still be true (admin mode doesn't use grace period)
+            expect(manager.isConnected()).toBe(true);
+
+            vi.useRealTimers();
+            manager.destroy();
+        });
+
+        it("should handle grace period with BroadcastChannel unavailable", () => {
+            delete (global as any).BroadcastChannel;
+            window.location.hash = "";
+
+            const manager = new WindowRefreshManager();
+
+            // Should return false immediately if BroadcastChannel unavailable
+            // (grace period only applies when API is available)
+            expect(manager.isConnected()).toBe(false);
+        });
+    });
+
+    describe("isAdminPanelConnected convenience function", () => {
+        it("should call manager.isConnected()", () => {
+            const manager = getWindowRefreshManager();
+            const isConnectedSpy = vi.spyOn(manager, "isConnected");
+
+            isAdminPanelConnected();
+
+            expect(isConnectedSpy).toHaveBeenCalled();
         });
     });
 });

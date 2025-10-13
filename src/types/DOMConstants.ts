@@ -76,6 +76,10 @@ export const CSS_CLASSES = {
     COLLAPSIBLE_TITLE: "collapsible-title",
     COLLAPSIBLE_ICON: "collapsible-icon",
     COLLAPSIBLE_CONTENT: "collapsible-content",
+
+    // Connection warning classes
+    CONNECTION_WARNING: "connection-warning",
+    CONNECTION_WARNING_HIDDEN: "connection-warning-hidden",
 } as const;
 
 /**
@@ -192,6 +196,12 @@ export const ELEMENT_IDS = {
     ACTIONS_SECTION: "actions",
     BACKUP_SECTION: "backup",
     DANGER_ZONE_SECTION: "danger-zone",
+
+    // Connection warning element
+    CONNECTION_WARNING: "connection-warning",
+
+    // Main application container
+    APP: "app",
 } as const;
 
 /**
@@ -226,6 +236,7 @@ export const EVENT_NAMES = {
     SCROLL: "scroll",
     HASHCHANGE: "hashchange",
     CHALLENGE_LIST_REFRESH: "challenge-list-refresh",
+    BEFOREUNLOAD: "beforeunload",
 } as const;
 
 /**

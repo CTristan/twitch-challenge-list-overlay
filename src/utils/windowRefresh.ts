@@ -39,6 +39,12 @@ const DEFAULT_CONFIG: RefreshConfig = {
 };
 
 /**
+ * Heartbeat configuration constants
+ */
+const HEARTBEAT_INTERVAL = 5000; // Send heartbeat every 5 seconds (admin mode)
+const HEARTBEAT_TIMEOUT = 15000; // Consider connection lost after 15 seconds (viewer mode)
+
+/**
  * @class WindowRefreshManager
  * Manages BroadcastChannel communication for automatic window refresh
  * when configuration changes are saved.
@@ -47,6 +53,9 @@ export class WindowRefreshManager {
     private channel: BroadcastChannel | null = null;
     private config: RefreshConfig;
     private isAdminMode: boolean;
+    private lastHeartbeatReceived: number | null = null;
+    private heartbeatInterval: number | null = null;
+    private initialLoadTimestamp: number | null = null;
 
     /**
      * @constructor
@@ -56,6 +65,16 @@ export class WindowRefreshManager {
         this.config = { ...DEFAULT_CONFIG, ...config };
         this.isAdminMode = window.location.hash === URL_HASH.ADMIN;
         this.initializeBroadcastChannel();
+
+        // Set initial load timestamp for viewer mode (used for grace period)
+        if (!this.isAdminMode) {
+            this.initialLoadTimestamp = Date.now();
+        }
+
+        // Start sending heartbeats if in admin mode
+        if (this.isAdminMode && this.channel) {
+            this.startHeartbeat();
+        }
     }
 
     /**
@@ -126,6 +145,11 @@ export class WindowRefreshManager {
                 ) {
                     // Received challenge-state-changed message from source window, triggering DOM update...`
                     this.triggerChallengeListRefresh();
+                } else if (type === RefreshMessageType.HEARTBEAT) {
+                    // Update last heartbeat timestamp (viewer mode only)
+                    if (!this.isAdminMode) {
+                        this.lastHeartbeatReceived = timestamp;
+                    }
                 }
             }
         );
@@ -275,6 +299,100 @@ export class WindowRefreshManager {
     }
 
     /**
+     * Check if there is an active connection to the admin panel
+     * In admin mode, always returns true (admin is always "connected" to itself)
+     * In viewer mode, checks if:
+     * 1. BroadcastChannel API is available
+     * 2. A heartbeat has been received from admin panel within the timeout period
+     * 3. If no heartbeat received yet, checks if still within initial grace period
+     * @returns {boolean} True if connected to admin panel or in admin mode
+     */
+    public isConnected(): boolean {
+        // Admin mode is always considered "connected"
+        if (this.isAdminMode) {
+            return true;
+        }
+
+        // Check if BroadcastChannel is available
+        if (!this.isAvailable()) {
+            return false;
+        }
+
+        // Check if we've received a heartbeat recently
+        if (this.lastHeartbeatReceived === null) {
+            // No heartbeat received yet - check if we're still in initial grace period
+            if (this.initialLoadTimestamp !== null) {
+                const timeSinceLoad = Date.now() - this.initialLoadTimestamp;
+                if (timeSinceLoad < HEARTBEAT_TIMEOUT) {
+                    // Still in grace period - assume connected to avoid warning flash
+                    return true;
+                }
+            }
+            // Grace period expired and no heartbeat received - not connected
+            return false;
+        }
+
+        const timeSinceLastHeartbeat = Date.now() - this.lastHeartbeatReceived;
+        return timeSinceLastHeartbeat < HEARTBEAT_TIMEOUT;
+    }
+
+    /**
+     * Start sending periodic heartbeat messages (admin mode only)
+     * @returns {void}
+     */
+    private startHeartbeat(): void {
+        if (!this.isAdminMode || !this.channel) {
+            return;
+        }
+
+        // Send initial heartbeat immediately
+        this.sendHeartbeat();
+
+        // Set up periodic heartbeat
+        this.heartbeatInterval = window.setInterval(() => {
+            this.sendHeartbeat();
+        }, HEARTBEAT_INTERVAL);
+
+        console.log(
+            `Admin heartbeat started (interval: ${HEARTBEAT_INTERVAL}ms)`
+        );
+    }
+
+    /**
+     * Stop sending heartbeat messages
+     * @returns {void}
+     */
+    private stopHeartbeat(): void {
+        if (this.heartbeatInterval !== null) {
+            window.clearInterval(this.heartbeatInterval);
+            this.heartbeatInterval = null;
+            console.log("Admin heartbeat stopped");
+        }
+    }
+
+    /**
+     * Send a heartbeat message to viewer windows
+     * @returns {void}
+     */
+    private sendHeartbeat(): void {
+        if (!this.channel) {
+            return;
+        }
+
+        const message: RefreshMessage = {
+            type: RefreshMessageType.HEARTBEAT,
+            timestamp: Date.now(),
+            source: this.isAdminMode ? WindowMode.ADMIN : WindowMode.VIEWER,
+        };
+
+        try {
+            this.channel.postMessage(message);
+        } catch (error) {
+            console.error("Failed to send heartbeat:", error);
+        }
+    }
+
+    /**
      * Get the current configuration
      * @returns {RefreshConfig} Current configuration
      */
@@ -299,6 +417,9 @@ export class WindowRefreshManager {
      * @returns {void}
      */
     public destroy(): void {
+        // Stop heartbeat if running
+        this.stopHeartbeat();
+
         if (this.channel) {
             try {
                 this.channel.close();
@@ -361,4 +482,13 @@ export function notifyChallengeStateChanged(): void {
 export function isRefreshSystemAvailable(): boolean {
     const manager = getWindowRefreshManager();
     return manager.isAvailable();
+}
+
+/**
+ * Convenience function to check if there is an active connection to the admin panel
+ * @returns {boolean} True if connected to admin panel or in admin mode
+ */
+export function isAdminPanelConnected(): boolean {
+    const manager = getWindowRefreshManager();
+    return manager.isConnected();
 }

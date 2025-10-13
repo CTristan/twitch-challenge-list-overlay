@@ -289,15 +289,21 @@ describe("AdminPanel Collapsible Sections Integration", () => {
             mockCollapsibleInstance.getExpandedState.mockReturnValue(true);
 
             // Reinitialize (simulating page reload)
+            // Note: AdminPanel.createConfigurationForm() has an early return if the form already exists,
+            // so calling initialize() again won't create new sections - it will reuse the existing ones
             adminPanel.initialize();
 
             // Sections should maintain their state through the CollapsibleSection persistence
+            // Sections are created in this order: behavior, challenge-row-styling, overlay-background, authentication
+            // Check that the authentication section (4th call) was created
             expect(MockedCollapsibleSection).toHaveBeenCalledWith(
                 expect.objectContaining({
                     id: "authentication",
-                    defaultExpanded: true,
                 })
             );
+
+            // Verify all 4 sections were created (only once, since second initialize() reuses existing form)
+            expect(MockedCollapsibleSection).toHaveBeenCalledTimes(4);
         });
 
         it("should save configuration changes made within collapsible sections", () => {

@@ -30,6 +30,7 @@ import {
     ERROR_MESSAGES,
     MODAL_TEXT,
     STATUS_MESSAGES,
+    UI_ELEMENTS,
 } from "./types/MessageConstants";
 import {
     VALIDATION_CONSTRAINTS,
@@ -43,7 +44,10 @@ import DOMHelper from "./utils/DOMHelper";
 import TimerController from "./utils/TimerController";
 import TimerDisplayUtils from "./utils/TimerDisplayUtils";
 import UIUpdateHandler from "./utils/UIUpdateHandler";
-import { notifyChallengeStateChanged } from "./utils/windowRefresh";
+import {
+    isAdminPanelConnected,
+    notifyChallengeStateChanged,
+} from "./utils/windowRefresh";
 
 // Commands and responses are loaded from ConfigManager
 
@@ -65,6 +69,9 @@ export default class App {
 
     // Track current editing challenge ID for modal mode switching
     private editingChallengeId: string | null = null;
+
+    // Connection warning interval for periodic checks
+    private connectionWarningInterval: number | null = null;
 
     /**
      * @constructor
@@ -112,6 +119,91 @@ export default class App {
     }
 
     /**
+     * Setup connection warning indicator for viewer mode
+     * Shows a warning when admin panel is not connected (API unavailable, not loaded, or not responding)
+     * Only runs in viewer mode (not admin mode)
+     * @returns {void}
+     */
+    private setupConnectionWarning(): void {
+        // Only show warning in viewer mode
+        if (window.location.hash === URL_HASH.ADMIN) {
+            return;
+        }
+
+        // Check if warning element already exists (prevent duplicates on multiple render calls)
+        if (document.getElementById(ELEMENT_IDS.CONNECTION_WARNING)) {
+            return;
+        }
+
+        // Create warning element
+        const warningElement = document.createElement(HTML_ELEMENTS.DIV);
+        warningElement.id = ELEMENT_IDS.CONNECTION_WARNING;
+        warningElement.className = CSS_CLASSES.CONNECTION_WARNING;
+        warningElement.textContent = UI_ELEMENTS.CONNECTION_WARNING_TEXT;
+
+        // Add to DOM
+        const appElement = document.getElementById(ELEMENT_IDS.APP);
+        if (appElement) {
+            appElement.appendChild(warningElement);
+        }
+
+        // Initial visibility check
+        this.updateConnectionWarningVisibility();
+
+        // Set up periodic checks (every 10 seconds) only if not already set up
+        if (this.connectionWarningInterval === null) {
+            this.connectionWarningInterval = window.setInterval(() => {
+                this.updateConnectionWarningVisibility();
+            }, 10000);
+
+            // Clean up interval on window unload
+            window.addEventListener(EVENT_NAMES.BEFOREUNLOAD, () => {
+                this.cleanupConnectionWarning();
+            });
+        }
+    }
+
+    /**
+     * Update the visibility of the connection warning based on admin panel connection status
+     * Shows warning if:
+     * - BroadcastChannel API is unavailable, OR
+     * - Admin panel is not loaded/open, OR
+     * - Admin panel is not responding to heartbeat messages
+     * @returns {void}
+     */
+    private updateConnectionWarningVisibility(): void {
+        const warningElement = document.getElementById(
+            ELEMENT_IDS.CONNECTION_WARNING
+        );
+        if (!warningElement) {
+            return;
+        }
+
+        // Check if admin panel is connected (includes API availability and heartbeat check)
+        const isConnected = isAdminPanelConnected();
+
+        // Show warning if admin panel is not connected
+        if (isConnected) {
+            warningElement.classList.add(CSS_CLASSES.CONNECTION_WARNING_HIDDEN);
+        } else {
+            warningElement.classList.remove(
+                CSS_CLASSES.CONNECTION_WARNING_HIDDEN
+            );
+        }
+    }
+
+    /**
+     * Clean up connection warning resources
+     * @returns {void}
+     */
+    private cleanupConnectionWarning(): void {
+        if (this.connectionWarningInterval !== null) {
+            window.clearInterval(this.connectionWarningInterval);
+            this.connectionWarningInterval = null;
+        }
+    }
+
+    /**
      * Handle challenge list refresh event from other windows
      * Reloads the challenge list from localStorage and re-renders the DOM
      * @returns {void}
@@ -138,6 +230,9 @@ export default class App {
 
         // Setup admin mode features after rendering
         this.enableAdminCheckboxInteraction();
+
+        // Setup connection warning for viewer mode
+        this.setupConnectionWarning();
     }
 
     /**

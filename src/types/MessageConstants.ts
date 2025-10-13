@@ -236,6 +236,8 @@ export const UI_ELEMENTS = {
     EDIT_ICON: "✏️",
     INCREMENT_BUTTON: "+",
     DECREMENT_BUTTON: "-",
+    CONNECTION_WARNING_TEXT:
+        "⚠️ Admin panel not connected - overlay may require manual refresh",
 } as const;
 
 /**

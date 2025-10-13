@@ -5,4 +5,5 @@
 export enum RefreshMessageType {
     CONFIG_SAVED = "config-saved",
     CHALLENGE_STATE_CHANGED = "challenge-state-changed",
+    HEARTBEAT = "heartbeat",
 }

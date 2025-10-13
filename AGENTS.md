@@ -22,7 +22,7 @@ src/
 
 ### Key Classes
 
--   **App**: Main controller, DOM rendering, chat commands, cross-window sync
+-   **App**: Main controller, DOM rendering, chat commands, cross-window sync, connection warning management
 -   **ChallengeList**: Challenge persistence with reload capability
 -   **AdminPanel**: Admin interface with template-based UI
 -   **ConfigManager**: Singleton configuration with localStorage
@@ -31,7 +31,7 @@ src/
 -   **Constants**: MessageConstants, ColorConstants, ConfigConstants, DOMConstants, FileConstants, NumericConstants, StorageConstants, ValidationConstants
 -   **ChallengeRenderer**: Centralized DOM creation with ID prefix display
 -   **UIUpdateHandler**: DOM manipulation for challenge list rendering, handles overlay background styling
--   **WindowRefreshManager**: Cross-window BroadcastChannel communication
+-   **WindowRefreshManager**: Cross-window BroadcastChannel communication with availability detection
 -   **TwitchChat**: WebSocket IRC client with OAuth validation
 -   **Timer/TimerController**: Countdown and lifecycle management
 -   **TimerDisplayUtils**: Timer display formatting and DOM creation utilities
@@ -113,7 +113,9 @@ const uiUpdate: UIUpdateData = { action: UIUpdateAction.ADD };
 // Usage
 import { BACKGROUND_CONFIG } from "../types/ConfigConstants";
 import { CSS_CLASSES, EVENT_NAMES } from "../types/DOMConstants";
-const backgroundColor = configManager.get(BACKGROUND_CONFIG.CHALLENGE_BACKGROUND_COLOR);
+const backgroundColor = configManager.get(
+    BACKGROUND_CONFIG.CHALLENGE_BACKGROUND_COLOR
+);
 element.classList.add(CSS_CLASSES.DONE);
 field.addEventListener(EVENT_NAMES.INPUT, callback);
 ```
@@ -127,7 +129,9 @@ export default class ClassName {
     constructor(param: type) {
         this.publicProperty = this.validateParam(param);
     }
-    methodName(param: type): returnType { /* Implementation */ }
+    methodName(param: type): returnType {
+        /* Implementation */
+    }
 }
 ```
 
@@ -330,6 +334,17 @@ Single challenge panel with dual-mode interface:
 -   **Real-time countdown**: Live updates every second in human-readable format ("5:30", "1:23:45", "30s")
 -   **Visual states**: Normal (⏱️ white), Warning ≤2min (🟡 gold), Critical ≤30s (🔴 red), Expired (⏰ bright red)
 
+### Connection Warning Indicator
+
+-   **Viewer mode only**: Visual warning indicator displayed in viewer overlay when BroadcastChannel connection to admin panel is unavailable
+-   **Message**: "⚠️ Live sync unavailable - overlay may require manual refresh"
+-   **Positioning**: Fixed to top-right corner (1rem from top and right edges)
+-   **Styling**: Gold/yellow background (`rgba(255, 193, 7, 0.95)`), black text, rounded corners, drop shadow
+-   **Dynamic visibility**: Automatically shown/hidden based on BroadcastChannel API availability
+-   **Periodic checks**: Updates visibility every 10 seconds
+-   **Mode-specific**: Never appears in admin mode
+-   **Implementation**: `App.setupConnectionWarning()`, `App.updateConnectionWarningVisibility()`, `App.cleanupConnectionWarning()`
+
 ### Unified Command System
 
 -   **Unified "!ch" prefix** with keyword subcommands
@@ -387,6 +402,7 @@ The WindowRefreshManager handles cross-window communication with two distinct me
 #### Message Types
 
 1. **`'config-saved'`** - Configuration changes (triggers full page reload)
+
     - Used when: Auth settings, behavior config, colors, or background settings change
     - Action: Full `window.location.reload()` in viewer window
     - Called via: `notifyConfigurationSaved()`
@@ -401,7 +417,7 @@ The WindowRefreshManager handles cross-window communication with two distinct me
 -   **`notifyConfigurationSaved()`** - Broadcasts config change and triggers full page reload
 -   **`notifyChallengeStateChanged()`** - Broadcasts challenge state change and triggers DOM refresh
 -   **`triggerChallengeListRefresh()`** - Dispatches custom `'challenge-list-refresh'` event
--   **`isAvailable()`** - Checks if BroadcastChannel is supported
+-   **`isAvailable()`** - Checks if BroadcastChannel is supported (used by connection warning indicator)
 
 ### App Class Synchronization Methods
 
@@ -424,32 +440,50 @@ The WindowRefreshManager handles cross-window communication with two distinct me
 ## Troubleshooting Common Issues
 
 ### Authentication Problems
+
 -   **Symptoms**: Bot doesn't respond to `!ch` or `!ch help` commands
 -   **Solution**: Generate new OAuth token from https://twitchtokengenerator.com, update `_config.js`, ensure `oauth:` prefix, rebuild with `pnpm run build`
 
 ### Timer-Related Issues
+
 -   **Symptoms**: Timer commands execute but timer doesn't appear
 -   **Solution**: Ensure Timer imports use ES module syntax: `import Timer from "../utils/Timer";`, rebuild application
 
 ### Overlay Background Opacity Issues
+
 -   **Symptoms**: Overlay background opacity slider changes don't affect visual transparency
 -   **Solution**: Verify `UIUpdateHandler.renderChallengeList()` retrieves `overlayBackgroundColor` and `overlayBackgroundOpacity`, combines using `combineColorWithOpacity()`, applies RGBA to `challengeCard.style.backgroundColor`, adds `custom-overlay-background` class, performs before appending to DOM
 
 ### Clear All Data Not Removing Challenges
+
 -   **Symptoms**: "Clear All Data" button doesn't remove challenges
 -   **Solution**: Ensure `STORAGE_KEYS.CHALLENGE_LIST` uses prefixed key: `"twitch-overlay-challenge-list"` (not `"challengeList"`)
 
 ### Command Processing Issues
+
 -   **Expected Behavior**: Regular viewers' commands are silently ignored (no response)
 -   **Authorized Users**: Only broadcasters and moderators can use bot commands
 
 ### Admin Panel Slider Not Visible
+
 -   **Symptoms**: Slider controls not visible in admin panel sections
 -   **Solution**: Add `expanded` class to `.color-pickers-container` in `AdminPanelTemplates.ts` for always-visible sections
+
+### Connection Warning Appearing in Admin Mode
+
+-   **Symptoms**: Connection warning indicator appears in admin mode
+-   **Expected Behavior**: Warning should only appear in viewer mode (without #admin hash)
+-   **Solution**: Verify `App.setupConnectionWarning()` checks `window.location.hash === URL_HASH.ADMIN` and returns early
+
+### Connection Warning Not Appearing When Expected
+
+-   **Symptoms**: Warning doesn't appear in viewer mode when BroadcastChannel is unavailable
+-   **Solution**: Check `WindowRefreshManager.isAvailable()` returns false, verify periodic check interval (10 seconds) is running, ensure warning element has correct ID (`connection-warning`)
 
 ## Development Guidelines
 
 ### Adding New Features
+
 1. **Write in TypeScript** - All new files must use `.ts` extension
 2. **Define types** in TypeScript interfaces or `types/globals.d.ts` if needed
 3. **Create classes** following established patterns with explicit type annotations
@@ -458,6 +492,7 @@ The WindowRefreshManager handles cross-window communication with two distinct me
 6. **Update documentation** and configuration comments
 
 ### Modifying Existing Code
+
 1. **No backward compatibility or legacy code** - Remove any legacy parameters, deprecated methods, or backward compatibility code
 2. **Follow existing naming conventions**
 3. **Update tests** for changed behavior
@@ -465,6 +500,7 @@ The WindowRefreshManager handles cross-window communication with two distinct me
 5. **Test with OBS Browser Source**
 
 ### Performance Considerations
+
 -   **Lightweight bundle** - avoid heavy dependencies
 -   **Efficient DOM updates** - use DocumentFragment for batch operations
 -   **Animation optimization** - use Web Animations API
@@ -473,6 +509,7 @@ The WindowRefreshManager handles cross-window communication with two distinct me
 ## Common Patterns
 
 ### Configuration Access
+
 ```typescript
 import { BEHAVIOR_CONFIG } from "../types/ConfigConstants";
 const configManager = ConfigManager.getInstance();
@@ -480,6 +517,7 @@ const maxChallenges = configManager.get(BEHAVIOR_CONFIG.MAX_CHALLENGES);
 ```
 
 ### Fallback Configuration Pattern
+
 ```typescript
 import { createFallbackConfig } from "./utils/ConfigDefaults";
 try {
@@ -490,6 +528,7 @@ try {
 ```
 
 ### DOM Manipulation
+
 ```typescript
 const fragment = document.createDocumentFragment();
 items.forEach((item: Challenge) => {
@@ -499,15 +538,21 @@ container.appendChild(fragment);
 ```
 
 ### StorageManager Pattern
+
 ```typescript
 import { StorageManager } from "../utils/StorageManager";
 import { STORAGE_KEYS } from "../types/StorageConstants";
 
 const result = StorageManager.save(STORAGE_KEYS.CONFIG, config, {
-    version: "1.0.0", timestamp: true, fallbackToMemory: true, retryOnQuotaExceeded: true
+    version: "1.0.0",
+    timestamp: true,
+    fallbackToMemory: true,
+    retryOnQuotaExceeded: true,
 });
 
-const loadResult = StorageManager.load(STORAGE_KEYS.CONFIG, defaultConfig,
+const loadResult = StorageManager.load(
+    STORAGE_KEYS.CONFIG,
+    defaultConfig,
     (data): data is Config => isValidConfiguration(data)
 );
 ```
@@ -515,21 +560,25 @@ const loadResult = StorageManager.load(STORAGE_KEYS.CONFIG, defaultConfig,
 **Key Points**: Automatic fallback to memory-only mode, error handling with structured results, validation support, quota management, transparent fallback
 
 ### Validation Pattern
+
 ```typescript
 import { ValidationUtils } from "../utils/ValidationUtils";
 import { VALIDATION_CONSTRAINTS } from "../types/ValidationConstants";
 
 const title = ValidationUtils.validateChallengeTitle(userInput);
-const description = ValidationUtils.validateChallengeDescription(descInput, { allowEmpty: true });
+const description = ValidationUtils.validateChallengeDescription(descInput, {
+    allowEmpty: true,
+});
 const amount = ValidationUtils.validateChallengeAmount(amountInput);
 const validated = ValidationUtils.validateNumber(value, "amount", {
     min: VALIDATION_CONSTRAINTS.AMOUNT_MIN,
     max: VALIDATION_CONSTRAINTS.AMOUNT_MAX,
-    integer: true
+    integer: true,
 });
 ```
 
 ### Challenge Persistence Pattern
+
 ```typescript
 // ✅ CORRECT: Using ChallengeList methods (auto-saves)
 this.challengeList.addChallengeObjects(challenge);
@@ -544,6 +593,7 @@ this.challengeList.saveToLocalStorage(); // Required
 **Key Points**: ChallengeList methods auto-save, direct challenge setters do NOT auto-save, always call `saveToLocalStorage()` after setters, cross-window sync requires `notifyChallengeStateChanged()`
 
 ### Challenge Rendering with ID Prefix Pattern
+
 ```typescript
 import ChallengeRenderer from "../utils/ChallengeRenderer";
 
@@ -551,20 +601,25 @@ challenges.forEach((challenge: Challenge, index: number) => {
     const listItem = ChallengeRenderer.createChallengeElement(challenge, {
         displayPosition: index + 1,
         includeEventListeners: true,
-        eventHandler: handleCheckboxClick
+        eventHandler: handleCheckboxClick,
     });
     container.appendChild(listItem);
 });
 ```
 
 ### HTML Attribute Setting Pattern
+
 ```typescript
 import { HTML_ATTRIBUTE_NAMES, HTML_ATTRIBUTES } from "../types/DOMConstants";
 editIcon.setAttribute(HTML_ATTRIBUTE_NAMES.ROLE, HTML_ATTRIBUTES.ROLE_BUTTON);
-editIcon.setAttribute(HTML_ATTRIBUTE_NAMES.ARIA_LABEL, ARIA_LABELS.EDIT_CHALLENGE);
+editIcon.setAttribute(
+    HTML_ATTRIBUTE_NAMES.ARIA_LABEL,
+    ARIA_LABELS.EDIT_CHALLENGE
+);
 ```
 
 ### Event Listener Pattern
+
 ```typescript
 import { EVENT_NAMES } from "../types/DOMConstants";
 field.addEventListener(EVENT_NAMES.INPUT, callback);
@@ -574,14 +629,25 @@ checkbox.addEventListener(EVENT_NAMES.CHANGE, callback);
 **Event Type Guidelines**: `INPUT` for real-time updates, `CHANGE` for form validation/auto-save on blur, `CLICK` for button clicks
 
 ### Overlay Background Styling Pattern
+
 ```typescript
 import { combineColorWithOpacity } from "./ColorUtils";
-import { BACKGROUND_CONFIG, BACKGROUND_DEFAULTS } from "../types/ConfigConstants";
+import {
+    BACKGROUND_CONFIG,
+    BACKGROUND_DEFAULTS,
+} from "../types/ConfigConstants";
 
-const overlayBackgroundColor = this.configManager.get(BACKGROUND_CONFIG.OVERLAY_BACKGROUND_COLOR);
+const overlayBackgroundColor = this.configManager.get(
+    BACKGROUND_CONFIG.OVERLAY_BACKGROUND_COLOR
+);
 if (overlayBackgroundColor) {
-    const overlayBackgroundOpacity = this.configManager.get(BACKGROUND_CONFIG.OVERLAY_BACKGROUND_OPACITY) ?? BACKGROUND_DEFAULTS.OVERLAY_BACKGROUND_OPACITY;
-    const overlayBackgroundRGBA = combineColorWithOpacity(overlayBackgroundColor, overlayBackgroundOpacity);
+    const overlayBackgroundOpacity =
+        this.configManager.get(BACKGROUND_CONFIG.OVERLAY_BACKGROUND_OPACITY) ??
+        BACKGROUND_DEFAULTS.OVERLAY_BACKGROUND_OPACITY;
+    const overlayBackgroundRGBA = combineColorWithOpacity(
+        overlayBackgroundColor,
+        overlayBackgroundOpacity
+    );
     challengeCard.style.backgroundColor = overlayBackgroundRGBA;
     challengeCard.classList.add(CSS_CLASSES.CUSTOM_OVERLAY_BACKGROUND);
 }
@@ -590,6 +656,7 @@ if (overlayBackgroundColor) {
 **Key Points**: Apply in `UIUpdateHandler.renderChallengeList()`, apply before appending to DOM, hex color + numeric opacity stored separately, use `combineColorWithOpacity()` utility
 
 ### Admin Panel Template Pattern
+
 ```typescript
 import { AdminPanelTemplates } from "../templates/AdminPanelTemplates";
 
@@ -597,7 +664,7 @@ const colorContent = AdminPanelTemplates.colorSection({
     primaryBackgroundColor: DEFAULT_COLORS.PRIMARY_BACKGROUND,
     primaryTextColor: DEFAULT_COLORS.PRIMARY_TEXT,
     rowColorsOpacityPercent: 100,
-    elementIds: ELEMENT_IDS
+    elementIds: ELEMENT_IDS,
 });
 ```
 
@@ -608,4 +675,3 @@ const colorContent = AdminPanelTemplates.colorSection({
 **CSS Classes**: `.collapsible-section`, `.collapsible-header`, `.collapsible-title`, `.collapsible-icon`, `.collapsible-content`, `.expanded`
 
 **Implementation**: Each section independently collapsible, state persisted to localStorage with section-specific keys, keyboard accessible (Enter/Space), smooth CSS transitions, proper ARIA attributes
-

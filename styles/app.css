@@ -451,7 +451,7 @@ body {
   background-color: #4a90e2;
   color: #ffffff;
   border: none;
-  padding: 10px 16px;
+  padding: 12px 20px;
   border-radius: 4px;
   cursor: pointer;
   font-family: inherit;
@@ -459,6 +459,7 @@ body {
   font-weight: 500;
   transition: all 0.3s ease;
   min-width: 100px;
+  box-sizing: border-box;
 }
 
 .modal .admin-button:hover {
@@ -474,4 +475,44 @@ body {
 .modal .admin-button.primary:hover {
   background-color: #218838;
   box-shadow: 0 4px 8px rgba(40, 167, 69, 0.3);
+}
+
+/* Responsive modal button styles */
+@media (max-width: 768px) {
+  .modal .form-actions {
+    flex-direction: column;
+  }
+
+  .modal .admin-button {
+    width: 100%;
+    margin-right: 0;
+    margin-bottom: 10px;
+  }
+
+  .modal .admin-button:last-child {
+    margin-bottom: 0;
+  }
+}
+
+/* Connection Warning Indicator */
+.connection-warning {
+  position: fixed;
+  top: 1rem;
+  right: 1rem;
+  background-color: rgba(255, 193, 7, 0.95);
+  color: #000000;
+  padding: 0.75rem 1rem;
+  border-radius: 0.5rem;
+  font-size: 1rem;
+  font-weight: 500;
+  font-family: var(--card-font-family, "arial");
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  z-index: 1000;
+  transition: opacity 0.3s ease;
+  max-width: 400px;
+  line-height: 1.4;
+}
+
+.connection-warning-hidden {
+  display: none;
 }
