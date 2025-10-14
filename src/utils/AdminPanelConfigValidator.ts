@@ -1,3 +1,4 @@
+import { AUTH_PROPERTY_NAMES, CORE_CONFIG } from "../types/ConfigConstants";
 import { VALIDATION_MESSAGES } from "../types/MessageConstants";
 
 /**
@@ -27,69 +28,94 @@ export class AdminPanelConfigValidator {
 
         // Check for required top-level properties
         const requiredProperties = [
-            "auth",
-            "maxChallenges",
-            "commands",
-            "responses",
+            CORE_CONFIG.AUTH,
+            CORE_CONFIG.MAX_CHALLENGES,
+            CORE_CONFIG.COMMANDS,
+            CORE_CONFIG.RESPONSES,
         ];
 
         for (const prop of requiredProperties) {
             if (!(prop in config)) {
                 return {
                     isValid: false,
-                    errorMessage: `Missing required property: ${prop}`,
+                    errorMessage:
+                        VALIDATION_MESSAGES.MISSING_REQUIRED_PROPERTY.replace(
+                            "{prop}",
+                            prop
+                        ),
                 };
             }
         }
 
         // Validate auth section
-        if (!config.auth || typeof config.auth !== "object") {
+        if (
+            !config[CORE_CONFIG.AUTH] ||
+            typeof config[CORE_CONFIG.AUTH] !== "object"
+        ) {
             return {
                 isValid: false,
-                errorMessage: "Auth section must be an object!",
+                errorMessage: VALIDATION_MESSAGES.AUTH_SECTION_INVALID,
             };
         }
 
-        const authProps = ["twitch_channel", "twitch_oauth", "twitch_username"];
+        const authProps = [
+            AUTH_PROPERTY_NAMES.TWITCH_CHANNEL,
+            AUTH_PROPERTY_NAMES.TWITCH_OAUTH,
+            AUTH_PROPERTY_NAMES.TWITCH_USERNAME,
+        ];
         for (const prop of authProps) {
-            if (!(prop in config.auth)) {
+            if (!(prop in config[CORE_CONFIG.AUTH])) {
                 return {
                     isValid: false,
-                    errorMessage: `Missing auth property: ${prop}`,
+                    errorMessage:
+                        VALIDATION_MESSAGES.MISSING_AUTH_PROPERTY.replace(
+                            "{prop}",
+                            prop
+                        ),
                 };
             }
-            if (typeof config.auth[prop] !== "string") {
+            if (typeof config[CORE_CONFIG.AUTH][prop] !== "string") {
                 return {
                     isValid: false,
-                    errorMessage: `Auth property ${prop} must be a string`,
+                    errorMessage:
+                        VALIDATION_MESSAGES.AUTH_PROPERTY_INVALID_TYPE.replace(
+                            "{prop}",
+                            prop
+                        ),
                 };
             }
         }
 
         // Validate maxChallenges
         if (
-            typeof config.maxChallenges !== "number" ||
-            config.maxChallenges < 1
+            typeof config[CORE_CONFIG.MAX_CHALLENGES] !== "number" ||
+            config[CORE_CONFIG.MAX_CHALLENGES] < 1
         ) {
             return {
                 isValid: false,
-                errorMessage: "maxChallenges must be a positive number!",
+                errorMessage: VALIDATION_MESSAGES.MAX_CHALLENGES_INVALID,
             };
         }
 
         // Validate commands section
-        if (!config.commands || typeof config.commands !== "object") {
+        if (
+            !config[CORE_CONFIG.COMMANDS] ||
+            typeof config[CORE_CONFIG.COMMANDS] !== "object"
+        ) {
             return {
                 isValid: false,
-                errorMessage: "Commands section must be an object!",
+                errorMessage: VALIDATION_MESSAGES.COMMANDS_SECTION_INVALID,
             };
         }
 
         // Validate responses section
-        if (!config.responses || typeof config.responses !== "object") {
+        if (
+            !config[CORE_CONFIG.RESPONSES] ||
+            typeof config[CORE_CONFIG.RESPONSES] !== "object"
+        ) {
             return {
                 isValid: false,
-                errorMessage: "Responses section must be an object!",
+                errorMessage: VALIDATION_MESSAGES.RESPONSES_SECTION_INVALID,
             };
         }
 
@@ -99,4 +125,3 @@ export class AdminPanelConfigValidator {
         };
     }
 }
-

@@ -16,6 +16,16 @@ export const AUTH_CONFIG = {
 } as const;
 
 /**
+ * Authentication property names (without "auth." prefix)
+ * Used for validation and import/export operations
+ */
+export const AUTH_PROPERTY_NAMES = {
+    TWITCH_CHANNEL: "twitch_channel",
+    TWITCH_OAUTH: "twitch_oauth",
+    TWITCH_USERNAME: "twitch_username",
+} as const;
+
+/**
  * Basic behavior configuration property names
  */
 export const BEHAVIOR_CONFIG = {

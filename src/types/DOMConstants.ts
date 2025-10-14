@@ -59,6 +59,7 @@ export const CSS_CLASSES = {
     // Admin panel classes
     ADMIN_CONTENT: "admin-content",
     CONFIG_FORM: "config-form",
+    CONFIG_SECTION: "config-section",
     FORM_INPUT: "form-input",
     COLOR_TIER_SECTION: "color-tier-section",
     COLOR_TIER_HEADER: "color-tier-header",
@@ -284,6 +285,7 @@ export const HTML_ELEMENTS = {
     DIV: "div",
     BUTTON: "button",
     H2: "h2",
+    H4: "h4",
     LI: "li",
     ANCHOR: "a",
     TEXTAREA: "textarea",
@@ -395,6 +397,9 @@ export const CSS_PROPERTY_NAMES = {
     POSITION: "position",
     OPACITY: "opacity",
     POINTER_EVENTS: "pointerEvents",
+    BACKGROUND_COLOR: "backgroundColor",
+    COLOR: "color",
+    TEXT_SHADOW: "textShadow",
 } as const;
 
 /**

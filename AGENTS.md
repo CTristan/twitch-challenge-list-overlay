@@ -42,17 +42,30 @@ src/
 
 ### AdminPanel Architecture
 
+**File Size**: 283 lines (refactored from 1,738 lines to comply with 300-line limit)
+
 Delegates to specialized utility classes (all use static methods):
 
 -   **AdminPanelColorManager** - Color configuration logic
 -   **AdminPanelBackgroundManager** - Background configuration
--   **AdminPanelConfigValidator** - Configuration validation
+-   **AdminPanelConfigValidator** - Configuration validation (also used by AdminPanelConfigImporter)
+-   **AdminPanelConfigImporter** - Configuration import and processing (file reading, JSON parsing, validation)
 -   **AdminPanelDOMBuilder** - DOM element creation using AdminPanelTemplates
 -   **AdminPanelEventSetup** - Event listener registration
+-   **AdminPanelAutoSave** - Auto-save for all configuration types (auth, behavior, color, background)
+-   **AdminPanelImportExport** - Import/export/reset functionality (delegates to AdminPanelConfigImporter for import operations)
+-   **AdminPanelUIHelper** - UI manipulation and feedback methods
+-   **AdminPanelUIPopulator** - UI population with config values
+-   **AdminPanelSectionBuilder** - UI section creation
+-   **AdminPanelDOMUpdater** - DOM updates for sliders with debounced viewer notifications
+-   **AdminPanelBackgroundPreview** - Background preview updates and calculations
+-   **AdminPanelBackgroundConfigGetter** - Background configuration extraction from UI
+-   **AdminPanelColorTierManager** - Color tier state management
+-   **AdminPanelClearStorage** - localStorage clearing functionality
 
 **Admin Panel Structure**: Header (always visible), 4 Collapsible Sections (Behavior Settings, Challenge Row Styling, Overlay Background, Twitch Chat Integration), Bottom Action Buttons (Backup, Restore, Reset, Clear All Data)
 
-**Slider Synchronization**: Admin panel applies visual updates immediately to its own DOM when sliders change, while debouncing viewer window notifications to prevent flicker during drag operations. Methods: `updateAdminUIForSliderChange()`, `updateOverlayBackgroundInDOM()`, `updateChallengeRowColorsInDOM()`, `notifyViewerDebounced()`
+**Slider Synchronization**: Admin panel applies visual updates immediately to its own DOM when sliders change, while debouncing viewer window notifications to prevent flicker during drag operations. Delegated to AdminPanelDOMUpdater utility class.
 
 ## Coding Standards & Patterns
 
@@ -102,11 +115,11 @@ const uiUpdate: UIUpdateData = { action: UIUpdateAction.ADD };
 
 #### Comprehensive Constants System
 
--   **MessageConstants**: `src/types/MessageConstants.ts` (ERROR_MESSAGES, SUCCESS_MESSAGES, HELP_MESSAGES, MODAL_TEXT, UI_ELEMENTS, ARIA_LABELS, CONFIG_EXPORT_MESSAGES, CONFIG_EXPORT_ERRORS, CONFIG_VALIDATION_ERRORS, CONFIG_EXPORT_TEMPLATES)
--   **ConfigConstants**: `src/types/ConfigConstants.ts` (AUTH_CONFIG, BEHAVIOR_CONFIG, BACKGROUND_CONFIG, EXPORT_METADATA_KEYS, EXPORT_METADATA_VALUES, EXPORT_PLACEHOLDERS, NETWORK_URLS, URL_PARAMS, GLOBAL_PROPERTIES, TWITCH_EVENTS)
+-   **MessageConstants**: `src/types/MessageConstants.ts` (ERROR_MESSAGES, SUCCESS_MESSAGES, HELP_MESSAGES, MODAL_TEXT, UI_ELEMENTS, ARIA_LABELS, CONFIG_EXPORT_MESSAGES, CONFIG_EXPORT_ERRORS, CONFIG_VALIDATION_ERRORS, CONFIG_EXPORT_TEMPLATES, ADMIN_FEEDBACK_MESSAGES, VALIDATION_MESSAGES, IMPORT_EXPORT_CONSOLE_MESSAGES)
+-   **ConfigConstants**: `src/types/ConfigConstants.ts` (AUTH_CONFIG, AUTH_PROPERTY_NAMES, BEHAVIOR_CONFIG, BACKGROUND_CONFIG, CORE_CONFIG, EXPORT_METADATA_KEYS, EXPORT_METADATA_VALUES, EXPORT_PLACEHOLDERS, NETWORK_URLS, URL_PARAMS, GLOBAL_PROPERTIES, TWITCH_EVENTS)
 -   **ColorConstants**: `src/types/ColorConstants.ts` (DEFAULT_COLORS, STATUS_COLORS, SHADOW_COLORS, COLOR_FORMAT)
 -   **DOMConstants**: `src/types/DOMConstants.ts` (CSS_CLASSES, CSS_VALUES, CSS_PROPERTY_NAMES, ELEMENT_IDS, EVENT_NAMES, COMMON_STRINGS, HTML_ELEMENTS, HTML_ATTRIBUTE_NAMES, HTML_ATTRIBUTES, MODAL_MODES, DOM_COMMANDS, BROADCAST_CHANNEL_NAMES, COMMAND_CONSTANTS, KEYBOARD_KEYS, BUTTON_TEXT)
--   **FileConstants**: `src/types/FileConstants.ts` (FILE_FORMATS, DEFAULT_FILENAMES, FILENAME_PATTERNS, MIME_TYPES)
+-   **FileConstants**: `src/types/FileConstants.ts` (FILE_FORMATS, FILE_EXTENSIONS, DEFAULT_FILENAMES, FILENAME_PATTERNS, MIME_TYPES, FILE_FORMAT_VALUES)
 -   **NumericConstants**: `src/types/NumericConstants.ts` (FORM_CONSTRAINTS, COLOR_CONSTANTS, TIMING_CONSTANTS)
 -   **StorageConstants**: `src/types/StorageConstants.ts` (LOCALSTORAGE_PREFIX, STORAGE_KEYS, getAllStorageKeys())
 -   **ValidationConstants**: `src/types/ValidationConstants.ts` (VALIDATION_PATTERNS, VALIDATION_DEFAULTS, VALIDATION_CONSTRAINTS)
@@ -156,6 +169,54 @@ export default class ClassName {
 -   **Pre-commit validation**: Always verify clean diagnostics before committing changes
 -   **Type safety over convenience**: Use proper type annotations and assertions rather than suppressing errors with `any` or `@ts-ignore` unless absolutely necessary
 -   **Deprecated API handling**: Replace or properly document deprecated API usage with appropriate comments explaining why it's needed
+
+### File Size Limits & Refactoring Requirements
+
+**MANDATORY**: All source files must adhere to strict file size limits to maintain code readability and modularity.
+
+-   **Maximum file size**: No source file in `src/` directory should exceed **300 lines of code**
+-   **Refactoring trigger**: When modifying any file that currently exceeds 300 lines, it **must be refactored** to bring it under the 300-line limit as part of the same change
+-   **Scope**: This requirement applies to all TypeScript source files in the `src/` directory (`.ts` files)
+-   **Enforcement**: This is a mandatory requirement that must be followed during code reviews and all file modifications
+
+#### Refactoring Approach
+
+When refactoring large files to meet the 300-line limit:
+
+1. **Follow established patterns**: Use the class-based architecture and separation of concerns patterns already established in the codebase
+2. **Extract specialized utilities**: Break out focused utility classes with static methods (see AdminPanel delegation pattern)
+3. **Create focused modules**: Each extracted module should have a single, well-defined responsibility
+4. **Maintain type safety**: Ensure all extracted code maintains explicit type annotations and interfaces
+5. **Update imports**: Use proper ES module imports for all extracted functionality
+6. **Preserve functionality**: Ensure all existing functionality remains intact after refactoring
+7. **Update tests**: Modify or create tests for extracted modules to maintain coverage thresholds
+
+#### Examples of Good Refactoring
+
+```typescript
+// ❌ BEFORE: Large monolithic class (400+ lines)
+export default class AdminPanel {
+    // Color management methods (100 lines)
+    // Background management methods (80 lines)
+    // DOM building methods (120 lines)
+    // Event setup methods (100 lines)
+}
+
+// ✅ AFTER: Delegated to specialized utilities
+export default class AdminPanel {
+    // Delegates to utility classes
+    private colorManager = AdminPanelColorManager;
+    private backgroundManager = AdminPanelBackgroundManager;
+    private domBuilder = AdminPanelDOMBuilder;
+    private eventSetup = AdminPanelEventSetup;
+}
+
+// Extracted utilities (each under 300 lines)
+// src/utils/AdminPanelColorManager.ts
+// src/utils/AdminPanelBackgroundManager.ts
+// src/utils/AdminPanelDOMBuilder.ts
+// src/utils/AdminPanelEventSetup.ts
+```
 
 ### Authentication & OAuth Token Handling
 
@@ -242,7 +303,15 @@ Key components maintain 80%+ coverage across all metrics. Major components inclu
 
 -   **index.ts** (28 tests): 100% coverage across all metrics (statements, branches, functions, lines)
 -   **App** (27 tests): 92.59% statement, 88.46% branch
--   **AdminPanel** (35 tests): 89.92% statement, 82.22% branch
+-   **AdminPanel** (16 tests): 90.42% statement, 100% branch, 100% function, 90.42% line
+-   **AdminPanelAutoSave** (13 tests): 100% coverage across all metrics
+-   **AdminPanelBackgroundConfigGetter** (12 tests): 100% coverage across all metrics
+-   **AdminPanelBackgroundPreview** (17 tests): 100% coverage across all metrics
+-   **AdminPanelClearStorage** (10 tests): 97.01% statement, 100% branch, 100% function, 97.01% line
+-   **AdminPanelDOMUpdater** (21 tests): 100% coverage across all metrics
+-   **AdminPanelImportExport** (36 tests): Refactored to delegate to AdminPanelConfigImporter and AdminPanelConfigValidator
+-   **AdminPanelUIHelper** (12 tests): 100% coverage across all metrics
+-   **AdminPanelUIPopulator** (20 tests): 100% statement, 89.18% branch, 100% function, 100% line
 -   **CommandRegistry** (34 tests): 100% coverage across all metrics
 -   **TwitchChat** (34 tests): 100% statement, 90.19% branch
 -   **Commands**: 10+ command classes with 80%+ coverage

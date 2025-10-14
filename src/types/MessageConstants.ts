@@ -76,6 +76,9 @@ export const ERROR_MESSAGES = {
     ERROR_AUTO_SAVING_COLOR_CONFIG: "Error auto-saving color configuration:",
     ERROR_AUTO_SAVING_BACKGROUND_CONFIG:
         "Error auto-saving background configuration:",
+
+    // Admin panel section creation errors
+    ERROR_CREATING_COLLAPSIBLE_SECTION: "Error creating CollapsibleSection:",
 } as const;
 
 /**
@@ -388,6 +391,18 @@ export const CONFIG_SETTINGS_CONSOLE_MESSAGES = {
 } as const;
 
 /**
+ * Console messages for AdminPanelImportExport operations
+ */
+export const IMPORT_EXPORT_CONSOLE_MESSAGES = {
+    CONFIGURATION_RESET_FAILED: "Configuration reset failed",
+    ERROR_RESETTING_CONFIGURATION: "Error resetting configuration:",
+    ERROR_EXPORTING_CONFIGURATION: "Error exporting configuration:",
+    ERROR_READING_FILE: "Error reading file:",
+    ERROR_IMPORTING_CONFIGURATION: "Error importing configuration:",
+    IMPORTING_CONFIGURATION_FROM: "Importing configuration exported on:",
+} as const;
+
+/**
  * Console error messages for configuration export operations
  */
 export const CONFIG_EXPORT_MESSAGES = {
@@ -478,6 +493,8 @@ export type AdminPanelConsoleMessageValue =
     (typeof ADMIN_PANEL_CONSOLE_MESSAGES)[keyof typeof ADMIN_PANEL_CONSOLE_MESSAGES];
 export type ConfigSettingsConsoleMessageValue =
     (typeof CONFIG_SETTINGS_CONSOLE_MESSAGES)[keyof typeof CONFIG_SETTINGS_CONSOLE_MESSAGES];
+export type ImportExportConsoleMessageValue =
+    (typeof IMPORT_EXPORT_CONSOLE_MESSAGES)[keyof typeof IMPORT_EXPORT_CONSOLE_MESSAGES];
 export type ConfigExportMessageValue =
     (typeof CONFIG_EXPORT_MESSAGES)[keyof typeof CONFIG_EXPORT_MESSAGES];
 export type ConfigExportErrorValue =

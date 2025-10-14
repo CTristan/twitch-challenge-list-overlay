@@ -230,7 +230,7 @@ describe("animateScroll", () => {
         });
 
         it("should not start animation when already scrolling", () => {
-            const { container, mockAnimation } = setupScrollTestDOM();
+            const { container } = setupScrollTestDOM();
 
             // First call - should start animation
             animateScroll();
@@ -242,7 +242,7 @@ describe("animateScroll", () => {
         });
 
         it("should cancel existing animation when container becomes smaller than wrapper", () => {
-            const { container, wrapper, mockAnimation } = setupScrollTestDOM();
+            const { container, mockAnimation } = setupScrollTestDOM();
 
             // Start animation
             animateScroll();

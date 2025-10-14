@@ -130,7 +130,6 @@ describe("AdminPanel Memory Leak Prevention", () => {
             );
             const exportButton = document.getElementById("export-json-btn");
             const importButton = document.getElementById("import-config-btn");
-            const saveButton = document.getElementById("save-config-btn");
 
             // Spy on removeEventListener to verify cleanup
             const clearButtonRemoveSpy = vi.spyOn(
