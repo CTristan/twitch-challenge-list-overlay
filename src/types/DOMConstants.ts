@@ -329,6 +329,7 @@ export const KEYBOARD_KEYS = {
 export const BUTTON_TEXT = {
     ADD_CHALLENGE: "Add Challenge",
     CLEAR_FINISHED: "Clear Finished Challenges",
+    REFRESH: "Refresh Page",
 } as const;
 
 /**

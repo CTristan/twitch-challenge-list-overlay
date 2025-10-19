@@ -50,7 +50,7 @@ Delegates to specialized utility classes (all use static methods):
 -   **AdminPanelDOMBuilder** - DOM element creation using AdminPanelTemplates
 -   **AdminPanelEventSetup** - Event listener registration
 
-**Admin Panel Structure**: Header (always visible), 4 Collapsible Sections (Behavior Settings, Challenge Row Styling, Overlay Background, Twitch Chat Integration), Bottom Action Buttons (Backup, Restore, Reset, Clear All Data)
+**Admin Panel Structure**: Header (always visible), 4 Collapsible Sections (Behavior Settings, Challenge Row Styling, Overlay Background, Twitch Chat Integration), Bottom Action Buttons (Backup, Restore, Reset, Clear All Data, Refresh)
 
 **Slider Synchronization**: Admin panel applies visual updates immediately to its own DOM when sliders change, while debouncing viewer window notifications to prevent flicker during drag operations. Methods: `updateAdminUIForSliderChange()`, `updateOverlayBackgroundInDOM()`, `updateChallengeRowColorsInDOM()`, `notifyViewerDebounced()`
 
@@ -373,6 +373,7 @@ Single challenge panel with dual-mode interface:
 -   **Add/Edit Challenge modals** - Modal interface with mode switching (MODAL_MODES.ADD / MODAL_MODES.EDIT)
 -   **Edit icon (✏️)** - Appears next to checkboxes in admin mode only
 -   **Clear All Data with confirmation** - Confirmation dialog before clearing all application data, refreshes both admin and viewer windows after clearing
+-   **Refresh Page button** - Manual page refresh button in admin panel for troubleshooting or ensuring changes are properly loaded
 
 **Background Opacity Configuration**:
 

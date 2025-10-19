@@ -633,6 +633,22 @@ export default class App {
 
                 buttonContainer.appendChild(clearFinishedButton);
 
+                // Create the Refresh button
+                const refreshButton = document.createElement(
+                    HTML_ELEMENTS.BUTTON
+                );
+                refreshButton.className = CSS_CLASSES.CLEAR_FINISHED_BTN;
+                refreshButton.textContent = BUTTON_TEXT.REFRESH;
+                refreshButton.type = HTML_ATTRIBUTES.BUTTON_TYPE;
+
+                // Add click event listener
+                refreshButton.addEventListener(
+                    EVENT_NAMES.CLICK,
+                    this.handleRefreshClick
+                );
+
+                buttonContainer.appendChild(refreshButton);
+
                 card.appendChild(buttonContainer);
             }
         });
@@ -645,6 +661,15 @@ export default class App {
      */
     private handleAddChallengeClick = (): void => {
         this.openAddChallengeModal();
+    };
+
+    /**
+     * Handle refresh button click
+     * Reloads the current page
+     * @returns {void}
+     */
+    private handleRefreshClick = (): void => {
+        window.location.reload();
     };
 
     /**
