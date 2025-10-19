@@ -3,6 +3,7 @@ import AdminPanel from "./classes/AdminPanel";
 import ConfigManager from "./classes/ConfigManager";
 import { setupDualWindow } from "./dualWindow";
 import { closeModal, openModal } from "./modal";
+import { StorageInitializer } from "./storage/StorageInitializer";
 import TwitchChat from "./twitch/TwitchChat";
 import { loadTestUsers } from "./twitch/loadTestUsers";
 import {
@@ -18,7 +19,7 @@ import {
     TWITCH_INTEGRATION_MESSAGES,
 } from "./types/MessageConstants";
 import { STORAGE_KEYS } from "./types/StorageConstants";
-import { createFallbackConfig } from "./utils/ConfigDefaults";
+import { createConfigWithDeploymentSettings } from "./utils/DeploymentConfigLoader";
 import { getWindowRefreshManager } from "./utils/windowRefresh";
 
 // Initialize dual-window architecture
@@ -29,9 +30,14 @@ getWindowRefreshManager();
 
 // Initialize configuration management system
 // Configuration is loaded from localStorage with fallback to defaults
+// Deployment config from config.js (if present) is merged with defaults
 const configManager: ConfigManager = ConfigManager.getInstance(
-    createFallbackConfig()
+    createConfigWithDeploymentSettings()
 );
+
+// Initialize storage adapter based on configuration
+// This will use Supabase if configured in config.js, otherwise localStorage
+StorageInitializer.initializeFromConfig(configManager);
 
 /**
  * Check if Twitch credentials are configured

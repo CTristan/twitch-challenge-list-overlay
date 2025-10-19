@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Config Test</title>
+    <script>
+        // Simulate config.js
+        window.OVERLAY_CONFIG = {
+            storage: {
+                mode: "supabase",
+                supabaseRoomCode: "test-room-123"
+            },
+            maxChallenges: 15
+        };
+    </script>
+</head>
+<body>
+    <h1>Deployment Config Test</h1>
+    <pre id="output"></pre>
+    <script type="module">
+        import { createConfigWithDeploymentSettings } from './dist/challengeBot.iife.js';
+        
+        try {
+            const config = createConfigWithDeploymentSettings();
+            document.getElementById('output').textContent = JSON.stringify(config, null, 2);
+        } catch (e) {
+            document.getElementById('output').textContent = 'Error: ' + e.message;
+        }
+    </script>
+</body>
+</html>

@@ -13,11 +13,13 @@ Twitch Challenge List Overlay is a frontend-only application that allows streame
 **Key Highlights:**
 
 -   🎯 **Zero-Server Deployment** - No backend required, runs entirely in the browser
+-   🔄 **Multi-Streamer Sync** - Optional Supabase integration for real-time collaboration
+-   📦 **Deployment Config** - Pre-configure with `config.js` for web server deployments
 -   🔄 **Real-Time Sync** - Cross-window synchronization using BroadcastChannel API
 -   💬 **Twitch Chat Integration** - Unified `!ch` command system with WebSocket IRC
 -   ⏱️ **Countdown Timers** - Visual countdown timers with warning states
 -   🎨 **Customizable Styling** - Configurable colors, opacity, and backgrounds
--   📦 **LocalStorage Persistence** - All data stored locally, no database needed
+-   � **Flexible Storage** - LocalStorage (default) or Supabase (multi-streamer sync)
 
 ## ✨ Features
 
@@ -126,6 +128,32 @@ pnpm run build
 ```
 
 This creates `dist/challengeBot.iife.js` which is loaded by `index.html`.
+
+### Deployment Configuration (Optional)
+
+For web server deployments or multi-streamer collaboration, create a `config.js` file:
+
+```bash
+cp config.example.js config.js
+```
+
+Edit `config.js` to enable Supabase mode:
+
+```javascript
+window.OVERLAY_CONFIG = {
+    storage: {
+        mode: "supabase",
+        supabaseRoomCode: "my-room-code",
+    },
+};
+```
+
+**Use Cases:**
+- **Multi-Streamer Sync** - Share challenges in real-time across multiple streamers
+- **Multiple Computers** - Sync challenges between your desktop and laptop
+- **Web Server Deployment** - Pre-configure settings for team/organization use
+
+📖 **See [Deployment Configuration Guide](docs/DEPLOYMENT_CONFIG.md) for complete documentation**
 
 ### Development Workflow
 

@@ -37,6 +37,10 @@ export function createFallbackConfig(): Config {
             twitch_channel: "",
         },
         maxChallenges: 10,
+        storage: {
+            mode: "local",
+            supabaseRoomCode: "",
+        },
         commands: {
             // Admin commands (restricted to moderators and broadcaster)
             clearAll: ["!ch clearlist", "!ch clearall"],

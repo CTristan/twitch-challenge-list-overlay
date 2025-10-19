@@ -1,5 +1,6 @@
 # Configuration files (user-editable)
 _config.js
+config.js
 
 # coverage
 coverage/

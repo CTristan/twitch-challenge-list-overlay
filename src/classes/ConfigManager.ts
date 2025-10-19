@@ -355,7 +355,7 @@ export default class ConfigManager {
         }
 
         return {
-            memoryOnlyMode: this.memoryOnlyMode || storageStatus.memoryOnlyMode,
+            memoryOnlyMode: this.memoryOnlyMode || storageStatus["memoryOnlyMode"],
             storageAvailable: storageStatus.available,
             configVersion: this.configVersion,
             lastSaved,

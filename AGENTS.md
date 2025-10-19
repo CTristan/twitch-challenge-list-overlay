@@ -4,8 +4,9 @@
 
 ## Core Architecture
 
--   **Frontend-only** - No backend/database, event-driven, modular class-based, configuration-driven
--   **Tech Stack**: TypeScript, Vite (IIFE bundle), Vitest (jsdom), CSS Custom Properties, WebSocket, LocalStorage
+-   **Frontend-only** - No backend/database (local mode), event-driven, modular class-based, configuration-driven
+-   **Storage Adapters** - Pluggable storage backends: LocalStorage (default) or Supabase (multi-streamer sync)
+-   **Tech Stack**: TypeScript, Vite (IIFE bundle), Vitest (jsdom), CSS Custom Properties, WebSocket, LocalStorage/Supabase
 
 ### Directory Structure
 
@@ -13,8 +14,9 @@
 src/
 ├── classes/    # AdminPanel, Challenge, ChallengeList, ConfigManager, ConfigExporter
 ├── commands/   # Command pattern (15+ classes)
+├── storage/    # StorageAdapter, LocalStorageAdapter, SupabaseStorageAdapter, StorageFactory, StorageInitializer
 ├── twitch/     # TwitchChat, EventEmitter, message-parsers
-├── utils/      # CommandHandler, Timer, UIUpdateHandler, ConfigDefaults, ChallengeRenderer
+├── utils/      # CommandHandler, Timer, UIUpdateHandler, ConfigDefaults, ChallengeRenderer, StorageManager
 ├── types/      # Type definitions and constants
 ├── templates/  # AdminPanelTemplates
 └── animations/ # UI animations
@@ -25,7 +27,13 @@ src/
 -   **App**: Main controller, DOM rendering, chat commands, cross-window sync, connection warning management
 -   **ChallengeList**: Challenge persistence with reload capability
 -   **AdminPanel**: Admin interface with template-based UI
--   **ConfigManager**: Singleton configuration with localStorage
+-   **ConfigManager**: Singleton configuration with storage adapter
+-   **StorageAdapter**: Interface for pluggable storage backends
+-   **LocalStorageAdapter**: Default localStorage-based storage implementation
+-   **SupabaseStorageAdapter**: Real-time multi-streamer sync via Supabase
+-   **StorageFactory**: Creates storage adapter instances based on mode
+-   **StorageInitializer**: Initializes storage from configuration
+-   **StorageManager**: Facade over storage adapter with legacy sync API
 -   **CommandHandler/CommandRegistry**: Command execution and routing
 -   **CommandParser**: key=value and simple string syntax parsing
 -   **Constants**: MessageConstants, ColorConstants, ConfigConstants, DOMConstants, FileConstants, NumericConstants, StorageConstants, ValidationConstants
@@ -35,7 +43,6 @@ src/
 -   **TwitchChat**: WebSocket IRC client with OAuth validation
 -   **Timer/TimerController**: Countdown and lifecycle management
 -   **TimerDisplayUtils**: Timer display formatting and DOM creation utilities
--   **StorageManager**: Centralized localStorage management with error handling and fallback strategies
 -   **ErrorHandler**: Singleton error handler for storage, export, and validation errors
 -   **PositionUtils**: Utility functions for position-based challenge references
 -   **CollapsibleSection**: Utility class for collapsible sections with localStorage persistence
@@ -236,16 +243,50 @@ OAuth tokens are automatically validated and formatted by the TwitchChat class w
 
 ### Configuration Management
 
-Configuration is managed through the **ConfigManager** class with **100% localStorage-based persistence**. On first run, default configuration is automatically created and saved to localStorage.
+Configuration is managed through the **ConfigManager** class with **storage adapter-based persistence**. Storage backend can be localStorage (default) or Supabase (multi-streamer sync).
 
 ### Configuration Architecture
 
 -   **ConfigManager singleton**: Centralized configuration management
--   **localStorage persistence**: Automatic saving and loading of settings
+-   **Storage adapter persistence**: Pluggable backends (LocalStorage, Supabase)
+-   **Deployment configuration**: Optional `config.js` for pre-configured deployments
 -   **ConfigDefaults utility**: Modular fallback configuration creation with validation
 -   **Default configuration**: Built-in fallback values for all settings
--   **Admin panel interface**: User-friendly configuration editing
+-   **Admin panel interface**: User-friendly configuration editing with storage mode selection
 -   **Import/export functionality**: Backup and restore configuration
+
+### Deployment Configuration System
+
+The application supports optional deployment configuration through a `config.js` file. This allows pre-configuration of storage mode, Supabase room codes, and other settings before deployment.
+
+**Configuration Priority:**
+1. User settings in localStorage (highest - admin panel changes)
+2. Deployment config from `config.js` (if present)
+3. Default fallback configuration (lowest - built-in defaults)
+
+**Key Components:**
+- **DeploymentConfigLoader** (`src/utils/DeploymentConfigLoader.ts`): Loads and merges `config.js` with defaults
+- **config.example.js**: Template for deployment configuration
+- **config.js**: User-created configuration (gitignored)
+
+**Deployment Config Structure:**
+```javascript
+window.OVERLAY_CONFIG = {
+    storage: {
+        mode: "supabase",           // "local" or "supabase"
+        supabaseRoomCode: "room-id" // Required for Supabase mode
+    },
+    maxChallenges: 10,
+    auth: { /* Optional Twitch credentials */ },
+    appearance: { /* Optional styling */ }
+};
+```
+
+**Use Cases:**
+- Web server deployments with pre-configured Supabase
+- Multi-streamer collaboration with shared room codes
+- Branded deployments with consistent styling
+- Environment-specific configurations
 
 ### localStorage Key Naming Convention
 
@@ -637,7 +678,42 @@ const loadResult = StorageManager.load(
 );
 ```
 
-**Key Points**: Automatic fallback to memory-only mode, error handling with structured results, validation support, quota management, transparent fallback
+**Key Points**: Automatic fallback to memory-only mode, error handling with structured results, validation support, quota management, transparent fallback, delegates to storage adapter
+
+### Storage Adapter Pattern
+
+```typescript
+import { StorageFactory } from "../storage/StorageFactory";
+import { StorageInitializer } from "../storage/StorageInitializer";
+import { STORAGE_CONFIG, NETWORK_URLS } from "../types/ConfigConstants";
+
+// Initialize from configuration
+const adapter = StorageInitializer.initializeFromConfig(configManager);
+
+// Switch storage mode
+const newAdapter = await StorageInitializer.switchMode(
+    "supabase",
+    "my-room-code",
+    configManager
+);
+
+// Create adapter manually
+const localAdapter = StorageFactory.createAdapter("local");
+const supabaseAdapter = StorageFactory.createAdapter("supabase", {
+    url: NETWORK_URLS.SUPABASE_URL,
+    anonKey: NETWORK_URLS.SUPABASE_ANON_KEY,
+    roomCode: "my-room-code",
+});
+
+// Subscribe to real-time changes
+const unsubscribe = adapter.subscribe("challenges", (data) => {
+    console.log("Challenges updated:", data);
+});
+```
+
+**Storage Modes**: `"local"` (localStorage-based, default), `"supabase"` (real-time multi-streamer sync)
+
+**Key Points**: Pluggable architecture, real-time subscriptions (Supabase), room-based collaboration, async operations, backward-compatible sync API
 
 ### Validation Pattern
 

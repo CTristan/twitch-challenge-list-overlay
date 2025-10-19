@@ -117,6 +117,16 @@ interface ColorConfigurationUI {
 }
 
 /**
+ * Storage mode configuration
+ */
+interface StorageConfig {
+    /** Storage mode: "local" for localStorage, "supabase" for multi-streamer sync */
+    mode: "local" | "supabase";
+    /** Room code for Supabase collaboration (required when mode is "supabase") */
+    supabaseRoomCode: string;
+}
+
+/**
  * Main application configuration interface
  * Contains all user-configurable settings for the Twitch Challenge Overlay
  */
@@ -126,6 +136,9 @@ interface Config {
 
     /** Maximum number of challenges that can be active simultaneously */
     maxChallenges: number;
+
+    /** Storage backend configuration */
+    storage?: StorageConfig;
 
     /** Optional array of background colors for challenge rows (supports 1-3 colors for cycling) */
     challengeRowColors?: string[];

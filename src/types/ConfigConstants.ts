@@ -33,6 +33,22 @@ export const BEHAVIOR_CONFIG = {
 } as const;
 
 /**
+ * Storage configuration property names
+ */
+export const STORAGE_CONFIG = {
+    MODE: "storage.mode",
+    SUPABASE_ROOM_CODE: "storage.supabaseRoomCode",
+} as const;
+
+/**
+ * Storage mode values
+ */
+export const STORAGE_MODES = {
+    LOCAL: "local",
+    SUPABASE: "supabase",
+} as const;
+
+/**
  * Response template configuration property names
  */
 export const RESPONSE_CONFIG = {
@@ -82,6 +98,7 @@ export const BACKGROUND_CONFIG = {
 export const CONFIG_PROPERTIES = {
     AUTH: AUTH_CONFIG,
     BEHAVIOR: BEHAVIOR_CONFIG,
+    STORAGE: STORAGE_CONFIG,
     RESPONSE: RESPONSE_CONFIG,
     COLOR: COLOR_CONFIG,
     BACKGROUND: BACKGROUND_CONFIG,
@@ -94,6 +111,7 @@ export const CONFIG_PROPERTIES = {
 export type ConfigPropertyValue =
     | (typeof AUTH_CONFIG)[keyof typeof AUTH_CONFIG]
     | (typeof BEHAVIOR_CONFIG)[keyof typeof BEHAVIOR_CONFIG]
+    | (typeof STORAGE_CONFIG)[keyof typeof STORAGE_CONFIG]
     | (typeof RESPONSE_CONFIG)[keyof typeof RESPONSE_CONFIG]
     | (typeof COLOR_CONFIG)[keyof typeof COLOR_CONFIG]
     | (typeof BACKGROUND_CONFIG)[keyof typeof BACKGROUND_CONFIG]
@@ -174,6 +192,9 @@ export const BACKGROUND_UI_ELEMENTS = {
  */
 export const NETWORK_URLS = {
     TWITCH_IRC: "wss://irc-ws.chat.twitch.tv:443",
+    SUPABASE_URL: "https://kxrtsymmhshxctjgjatb.supabase.co",
+    SUPABASE_ANON_KEY:
+        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt4cnRzeW1taHNoeGN0amdqYXRiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA4MTU4OTgsImV4cCI6MjA3NjM5MTg5OH0.bV3p9AFSKKrV7XP3PFXPjxmH151-ehK12VM5C3lZxxE",
 } as const;
 
 /**
