@@ -304,7 +304,32 @@ export default class UIUpdateHandler {
                 this.challengeList.challengesCompleted,
                 this.challengeList.totalChallenges
             );
+
+            // Apply overlay background styling to the new card
+            const overlayBackgroundColor = this.configManager.get(
+                BACKGROUND_CONFIG.OVERLAY_BACKGROUND_COLOR
+            );
+            if (overlayBackgroundColor) {
+                const overlayBackgroundOpacity =
+                    this.configManager.get(
+                        BACKGROUND_CONFIG.OVERLAY_BACKGROUND_OPACITY
+                    ) ?? BACKGROUND_DEFAULTS.OVERLAY_BACKGROUND_OPACITY;
+
+                // Combine color and opacity to create RGBA string
+                const overlayBackgroundRGBA = combineColorWithOpacity(
+                    overlayBackgroundColor,
+                    overlayBackgroundOpacity
+                );
+                challengeCard.style.backgroundColor = overlayBackgroundRGBA;
+                challengeCard.classList.add(
+                    CSS_CLASSES.CUSTOM_OVERLAY_BACKGROUND
+                );
+            }
+
             challengeContainer.appendChild(challengeCard);
+
+            // Invalidate cache after creating new card to ensure we query the fresh DOM
+            this.invalidateCache();
         }
 
         const challengesList = this.getCachedChallengesList();
@@ -426,6 +451,12 @@ export default class UIUpdateHandler {
      * @returns Challenges list element or null if not found
      */
     private getCachedChallengesList(): HTMLElement | null {
+        // If we have a cached element, verify it's still in the DOM
+        // (it might have been detached by a render operation)
+        if (this.challengesList && !document.contains(this.challengesList)) {
+            this.challengesList = null;
+        }
+
         if (!this.challengesList) {
             const container = this.getCachedChallengeContainer();
             if (container) {
