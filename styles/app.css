@@ -61,6 +61,11 @@ body {
   font-family: var(--card-font-family, "arial");
 }
 
+/* Hide card when empty in viewer mode */
+.card.hidden {
+  display: none;
+}
+
 /* Overlay Background Customization Styles */
 .card.custom-overlay-background {
   background-color: var(--overlay-background-color);

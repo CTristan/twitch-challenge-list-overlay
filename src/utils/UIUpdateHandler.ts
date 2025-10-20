@@ -518,6 +518,12 @@ export default class UIUpdateHandler {
             challengeCard.classList.add(CSS_CLASSES.CUSTOM_OVERLAY_BACKGROUND);
         }
 
+        // Hide card in viewer mode when there are no challenges
+        const isAdminMode = window.location.hash === URL_HASH.ADMIN;
+        if (!isAdminMode && this.challengeList.challenges.length === 0) {
+            challengeCard.classList.add(CSS_CLASSES.HIDDEN);
+        }
+        
         // Append card to container
         challengeContainer.appendChild(challengeCard);
 

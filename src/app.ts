@@ -386,8 +386,7 @@ export default class App {
             list.appendChild(fragment);
         }
 
-        // Always append the card to container, even if the list is empty
-        // This ensures the header is always visible
+        // Always append the card to container
         const challengeContainer = document.querySelector(
             CSS_SELECTORS.CHALLENGE_CONTAINER
         );
@@ -396,6 +395,13 @@ export default class App {
             return;
         }
         challengeContainer.innerHTML = COMMON_STRINGS.EMPTY;
+        
+        // Hide card in viewer mode when there are no challenges
+        const isAdminMode = window.location.hash === URL_HASH.ADMIN;
+        if (!isAdminMode && this.challengeList.challenges.length === 0) {
+            cardEl.classList.add(CSS_CLASSES.HIDDEN);
+        }
+        
         challengeContainer.appendChild(cardEl);
 
         animateScroll();
