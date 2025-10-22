@@ -41,7 +41,7 @@ export const STORAGE_KEYS = {
     CONFIG_SETTINGS_COLLAPSED: `${LOCALSTORAGE_PREFIX}config-settings-collapsed`,
 
     /**
-     * Behavior Settings section collapsed state
+     * General Settings section collapsed state
      * Managed by CollapsibleSection
      */
     BEHAVIOR_SECTION_COLLAPSED: `${LOCALSTORAGE_PREFIX}behavior-section`,

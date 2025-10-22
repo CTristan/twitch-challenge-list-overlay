@@ -280,7 +280,7 @@ export const ADMIN_PANEL_LABELS = {
     CONFIGURATION_SETTINGS: "Configuration Settings",
     AUTHENTICATION_SETTINGS: "Twitch Chat Integration Settings",
     AUTHENTICATION: "Authentication",
-    BEHAVIOR_SETTINGS: "Behavior Settings",
+    BEHAVIOR_SETTINGS: "General Settings",
     CHALLENGE_ROW_STYLING: "Challenge Row Styling",
     OVERLAY_BACKGROUND: "Overlay Background",
     CONFIGURATION_ACTIONS: "Configuration Actions",

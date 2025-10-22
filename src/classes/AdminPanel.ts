@@ -323,7 +323,7 @@ export default class AdminPanel {
     }
 
     /**
-     * Create the Behavior Settings section
+     * Create the General Settings section
      * @param container - The parent container element
      */
     private createBehaviorSection(container: HTMLElement): void {

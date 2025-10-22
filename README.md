@@ -193,7 +193,7 @@ The bot will now connect to your Twitch chat and respond to `!ch` commands.
 
 The admin panel provides comprehensive configuration options:
 
-### Behavior Settings
+### General Settings
 
 -   **Max Challenges** - Maximum number of active challenges (default: 10)
 -   **Command Mappings** - Customize command aliases

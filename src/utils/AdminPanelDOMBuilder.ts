@@ -45,8 +45,8 @@ export class AdminPanelDOMBuilder {
     }
 
     /**
-     * Create behavior section HTML
-     * @returns HTML string for behavior section
+     * Create general settings section HTML
+     * @returns HTML string for general settings section
      */
     static createBehaviorSection(): string {
         return `
