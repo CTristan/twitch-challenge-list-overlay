@@ -414,6 +414,485 @@
   }
 }
 
+/* ========================================
+   Viewport Optimizations for OBS Docks
+   ======================================== */
+
+/* Small Viewport - Vertical OBS Dock (narrow width) */
+@media (max-width: 400px) {
+  .admin-panel {
+    padding: 10px;
+    margin-top: 8px;
+  }
+
+  .admin-content {
+    padding: 12px;
+  }
+
+  .admin-panel-header {
+    padding: 12px 15px;
+  }
+
+  .admin-panel-header h2 {
+    font-size: 16px;
+  }
+
+  .admin-panel-content {
+    padding: 15px;
+  }
+
+  .admin-content h2 {
+    font-size: 16px;
+    padding-bottom: 8px;
+  }
+
+  .admin-content h3 {
+    font-size: 14px;
+    margin-top: 20px;
+    margin-bottom: 10px;
+  }
+
+  .admin-content h4 {
+    font-size: 13px;
+    margin-top: 15px;
+    margin-bottom: 8px;
+  }
+
+  .admin-section,
+  .config-section {
+    margin-bottom: 15px;
+    padding: 12px;
+  }
+
+  .color-tier-section {
+    padding: 10px;
+    margin-bottom: 10px;
+  }
+
+  .color-tier-title {
+    font-size: 13px;
+  }
+
+  .subsection-title {
+    font-size: 14px;
+  }
+
+  .form-group {
+    margin-bottom: 12px;
+  }
+
+  .form-group label,
+  .form-label {
+    font-size: 12px;
+    margin-bottom: 4px;
+  }
+
+  .form-input {
+    padding: 8px 10px;
+    font-size: 12px;
+  }
+
+  .form-input[type="color"] {
+    width: 50px;
+    height: 35px;
+  }
+
+  .admin-button {
+    padding: 10px 16px;
+    font-size: 12px;
+    min-width: 100px;
+  }
+
+  .color-pickers-container {
+    gap: 10px;
+  }
+
+  .color-picker-label {
+    font-size: 11px;
+  }
+
+  .collapsible-header {
+    padding: 12px 15px;
+  }
+
+  .collapsible-title {
+    font-size: 14px;
+  }
+
+  .collapsible-icon {
+    width: 18px;
+    height: 18px;
+    font-size: 12px;
+  }
+
+  .collapsible-section.expanded .collapsible-content {
+    padding: 15px;
+  }
+
+  .help-text,
+  .danger-warning {
+    font-size: 11px;
+  }
+
+  .checkbox-label {
+    font-size: 12px;
+  }
+}
+
+/* Very Small Viewport - Extreme Vertical Dock (very narrow) */
+@media (max-width: 320px) {
+  .admin-panel {
+    padding: 8px;
+    margin-top: 6px;
+    border-radius: 6px;
+  }
+
+  .admin-content {
+    padding: 10px;
+    border-radius: 4px;
+  }
+
+  .admin-panel-header {
+    padding: 10px 12px;
+  }
+
+  .admin-panel-header h2 {
+    font-size: 14px;
+  }
+
+  .admin-panel-content {
+    padding: 12px;
+  }
+
+  .admin-content h2 {
+    font-size: 14px;
+    padding-bottom: 6px;
+  }
+
+  .admin-content h3 {
+    font-size: 12px;
+    margin-top: 15px;
+    margin-bottom: 8px;
+  }
+
+  .admin-content h4 {
+    font-size: 12px;
+    margin-top: 12px;
+    margin-bottom: 6px;
+  }
+
+  .admin-section,
+  .config-section {
+    margin-bottom: 12px;
+    padding: 10px;
+    border-radius: 4px;
+  }
+
+  .color-tier-section {
+    padding: 8px;
+    margin-bottom: 8px;
+    border-radius: 4px;
+  }
+
+  .color-tier-title {
+    font-size: 12px;
+  }
+
+  .subsection-title {
+    font-size: 13px;
+  }
+
+  .form-group {
+    margin-bottom: 10px;
+  }
+
+  .form-group label,
+  .form-label {
+    font-size: 11px;
+    margin-bottom: 3px;
+  }
+
+  .form-input {
+    padding: 6px 8px;
+    font-size: 11px;
+    border-radius: 3px;
+  }
+
+  .form-input[type="color"] {
+    width: 45px;
+    height: 30px;
+  }
+
+  .admin-button {
+    padding: 8px 12px;
+    font-size: 11px;
+    min-width: 80px;
+    margin-right: 6px;
+    margin-bottom: 6px;
+  }
+
+  .color-pickers-container {
+    gap: 8px;
+  }
+
+  .color-picker-label {
+    font-size: 10px;
+  }
+
+  .collapsible-header {
+    padding: 10px 12px;
+  }
+
+  .collapsible-title {
+    font-size: 13px;
+  }
+
+  .collapsible-icon {
+    width: 16px;
+    height: 16px;
+    font-size: 11px;
+  }
+
+  .collapsible-section.expanded .collapsible-content {
+    padding: 12px;
+  }
+
+  .help-text,
+  .danger-warning {
+    font-size: 10px;
+  }
+
+  .checkbox-label {
+    font-size: 11px;
+  }
+
+  .opacity-value {
+    font-size: 12px;
+    min-width: 35px;
+  }
+
+  .preview-title {
+    font-size: 14px;
+  }
+
+  .preview-description,
+  .preview-progress {
+    font-size: 12px;
+  }
+}
+
+/* Small Height - Horizontal OBS Dock (short height) */
+@media (max-height: 350px) {
+  .admin-panel {
+    padding: 8px;
+    margin-top: 6px;
+  }
+
+  .admin-content {
+    padding: 10px;
+  }
+
+  .admin-panel-header {
+    padding: 10px 12px;
+  }
+
+  .admin-panel-header h2 {
+    font-size: 14px;
+  }
+
+  .admin-panel-content {
+    padding: 12px;
+  }
+
+  .admin-content h2 {
+    font-size: 14px;
+    padding-bottom: 6px;
+  }
+
+  .admin-content h3 {
+    font-size: 12px;
+    margin-top: 15px;
+    margin-bottom: 8px;
+  }
+
+  .admin-content h4 {
+    font-size: 12px;
+    margin-top: 10px;
+    margin-bottom: 6px;
+  }
+
+  .admin-section,
+  .config-section {
+    margin-bottom: 12px;
+    padding: 10px;
+  }
+
+  .color-tier-section {
+    padding: 8px;
+    margin-bottom: 8px;
+  }
+
+  .collapsible-header {
+    padding: 8px 12px;
+  }
+
+  .collapsible-title {
+    font-size: 13px;
+  }
+
+  .collapsible-section.expanded .collapsible-content {
+    max-height: 900px;
+    padding: 12px;
+  }
+
+  .form-group {
+    margin-bottom: 8px;
+  }
+
+  .form-group label,
+  .form-label {
+    font-size: 11px;
+    margin-bottom: 3px;
+  }
+
+  .form-input {
+    padding: 6px 8px;
+    font-size: 11px;
+  }
+
+  .admin-button {
+    padding: 6px 12px;
+    font-size: 11px;
+    min-width: 80px;
+  }
+
+  .help-text,
+  .danger-warning {
+    font-size: 10px;
+  }
+}
+
+/* Very Small Height - Extreme Horizontal Dock */
+@media (max-height: 250px) {
+  .admin-panel {
+    padding: 6px;
+    margin-top: 4px;
+  }
+
+  .admin-content {
+    padding: 8px;
+  }
+
+  .admin-panel-header {
+    padding: 8px 10px;
+  }
+
+  .admin-panel-header h2 {
+    font-size: 12px;
+  }
+
+  .admin-panel-content {
+    padding: 10px;
+  }
+
+  .admin-content h2 {
+    font-size: 12px;
+    padding-bottom: 5px;
+  }
+
+  .admin-content h3 {
+    font-size: 11px;
+    margin-top: 10px;
+    margin-bottom: 6px;
+  }
+
+  .admin-content h4 {
+    font-size: 11px;
+    margin-top: 8px;
+    margin-bottom: 5px;
+  }
+
+  .admin-section,
+  .config-section {
+    margin-bottom: 10px;
+    padding: 8px;
+  }
+
+  .color-tier-section {
+    padding: 6px;
+    margin-bottom: 6px;
+  }
+
+  .collapsible-header {
+    padding: 6px 10px;
+  }
+
+  .collapsible-title {
+    font-size: 12px;
+  }
+
+  .collapsible-icon {
+    width: 14px;
+    height: 14px;
+    font-size: 10px;
+  }
+
+  .collapsible-section.expanded .collapsible-content {
+    max-height: 600px;
+    padding: 10px;
+  }
+
+  .form-group {
+    margin-bottom: 6px;
+  }
+
+  .form-group label,
+  .form-label {
+    font-size: 10px;
+    margin-bottom: 2px;
+  }
+
+  .form-input {
+    padding: 5px 6px;
+    font-size: 10px;
+  }
+
+  .form-input[type="color"] {
+    width: 40px;
+    height: 25px;
+  }
+
+  .admin-button {
+    padding: 5px 10px;
+    font-size: 10px;
+    min-width: 70px;
+    margin-right: 5px;
+    margin-bottom: 5px;
+  }
+
+  .color-pickers-container {
+    gap: 6px;
+  }
+
+  .color-picker-label {
+    font-size: 9px;
+  }
+
+  .help-text,
+  .danger-warning {
+    font-size: 9px;
+  }
+
+  .checkbox-label {
+    font-size: 10px;
+  }
+
+  .opacity-value {
+    font-size: 11px;
+    min-width: 30px;
+  }
+}
+
 /* Status Indicators */
 .status-indicator {
   display: inline-block;

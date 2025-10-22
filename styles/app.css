@@ -499,6 +499,185 @@ body {
   }
 }
 
+/* ========================================
+   Viewport Optimizations for OBS Docks
+   ======================================== */
+
+/* Small Viewport - Vertical OBS Dock (narrow width) */
+@media (max-width: 400px) {
+  .add-challenge-container {
+    padding: 0.75rem 1rem 0.4rem;
+    margin-top: 0.4rem;
+    gap: 8px;
+  }
+
+  .add-challenge-btn,
+  .clear-finished-btn {
+    padding: 8px 12px;
+    font-size: 12px;
+    min-width: 100px;
+  }
+
+  .connection-warning {
+    font-size: 0.85rem;
+    padding: 0.6rem 0.75rem;
+    max-width: 280px;
+  }
+
+  .modal .form-group label {
+    font-size: 12px;
+  }
+
+  .modal .form-input {
+    padding: 6px 10px;
+    font-size: 12px;
+  }
+
+  .modal .admin-button {
+    padding: 10px 16px;
+    font-size: 12px;
+    min-width: 80px;
+  }
+}
+
+/* Very Small Viewport - Extreme Vertical Dock (very narrow) */
+@media (max-width: 320px) {
+  .add-challenge-container {
+    padding: 0.5rem 0.75rem 0.3rem;
+    margin-top: 0.3rem;
+    gap: 6px;
+  }
+
+  .add-challenge-btn,
+  .clear-finished-btn {
+    padding: 6px 10px;
+    font-size: 11px;
+    min-width: 80px;
+  }
+
+  .connection-warning {
+    font-size: 0.75rem;
+    padding: 0.5rem 0.6rem;
+    max-width: 240px;
+    top: 0.5rem;
+    right: 0.5rem;
+  }
+
+  .modal .form-group {
+    margin-bottom: 0.75rem;
+  }
+
+  .modal .form-group label {
+    font-size: 11px;
+    margin-bottom: 0.4rem;
+  }
+
+  .modal .form-input {
+    padding: 5px 8px;
+    font-size: 11px;
+  }
+
+  .modal .admin-button {
+    padding: 8px 12px;
+    font-size: 11px;
+    min-width: 70px;
+  }
+
+  .modal .form-actions {
+    margin-top: 1rem;
+    padding-top: 0.75rem;
+    gap: 6px;
+  }
+}
+
+/* Small Height - Horizontal OBS Dock (short height) */
+@media (max-height: 350px) {
+  .add-challenge-container {
+    padding: 0.5rem 0.75rem 0.3rem;
+    margin-top: 0.3rem;
+    gap: 6px;
+  }
+
+  .add-challenge-btn,
+  .clear-finished-btn {
+    padding: 6px 10px;
+    font-size: 11px;
+    min-width: 80px;
+  }
+
+  .connection-warning {
+    font-size: 0.75rem;
+    padding: 0.5rem 0.6rem;
+  }
+
+  .modal .form-group {
+    margin-bottom: 0.75rem;
+  }
+
+  .modal .form-group label {
+    font-size: 11px;
+    margin-bottom: 0.3rem;
+  }
+
+  .modal .form-input {
+    padding: 5px 8px;
+    font-size: 11px;
+  }
+
+  .modal .admin-button {
+    padding: 6px 12px;
+    font-size: 11px;
+  }
+}
+
+/* Very Small Height - Extreme Horizontal Dock */
+@media (max-height: 250px) {
+  .add-challenge-container {
+    padding: 0.4rem 0.6rem 0.25rem;
+    margin-top: 0.25rem;
+    gap: 5px;
+  }
+
+  .add-challenge-btn,
+  .clear-finished-btn {
+    padding: 5px 8px;
+    font-size: 10px;
+    min-width: 70px;
+  }
+
+  .connection-warning {
+    font-size: 0.7rem;
+    padding: 0.4rem 0.5rem;
+    max-width: 200px;
+  }
+
+  .modal .form-group {
+    margin-bottom: 0.6rem;
+  }
+
+  .modal .form-group label {
+    font-size: 10px;
+    margin-bottom: 0.3rem;
+  }
+
+  .modal .form-input {
+    padding: 4px 6px;
+    font-size: 10px;
+  }
+
+  .modal .admin-button {
+    padding: 5px 10px;
+    font-size: 10px;
+    min-width: 60px;
+  }
+
+  .modal .form-actions {
+    margin-top: 0.75rem;
+    padding-top: 0.5rem;
+    gap: 5px;
+  }
+}
+
 /* Connection Warning Indicator */
 .connection-warning {
   position: fixed;

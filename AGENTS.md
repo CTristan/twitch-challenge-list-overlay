@@ -374,6 +374,7 @@ Single challenge panel with dual-mode interface:
 -   **Edit icon (✏️)** - Appears next to checkboxes in admin mode only
 -   **Clear All Data with confirmation** - Confirmation dialog before clearing all application data, refreshes both admin and viewer windows after clearing
 -   **Refresh Page button** - Manual page refresh button in admin panel for troubleshooting or ensuring changes are properly loaded
+-   **OBS Dock optimization** - Responsive viewport scaling for both vertical and horizontal OBS dock layouts
 
 **Background Opacity Configuration**:
 
@@ -517,6 +518,49 @@ The WindowRefreshManager handles cross-window communication with two distinct me
 -   **Efficient DOM updates** - use DocumentFragment for batch operations
 -   **Animation optimization** - use Web Animations API
 -   **Memory management** - clean up event listeners and intervals
+
+## Responsive Design & OBS Dock Support
+
+### Viewport Optimizations
+
+The application includes comprehensive responsive CSS media queries to support OBS docks in both vertical and horizontal orientations:
+
+#### Viewport Breakpoints
+
+-   **Small Vertical Dock** (`@media (max-width: 400px)`): Optimized for narrow vertical docks (320-400px width)
+-   **Extreme Vertical Dock** (`@media (max-width: 320px)`): Minimal spacing for very narrow docks (≤320px width)
+-   **Small Horizontal Dock** (`@media (max-height: 350px)`): Optimized for short horizontal docks (250-350px height)
+-   **Extreme Horizontal Dock** (`@media (max-height: 250px)`): Minimal vertical spacing for very short docks (≤250px height)
+
+#### Responsive Scaling
+
+**Variables.css** - Core UI elements scale progressively:
+-   Header font: 2.25rem → 1.25rem → 1rem
+-   Challenge text: 2rem → 1.1rem → 0.95rem → 0.9rem
+-   Card padding: 1.5rem → 0.75rem → 0.5rem
+-   Checkbox size: Auto-calculated based on font sizes
+-   All spacing (margins, padding, gaps) scales proportionally
+
+**Admin.css** - Admin panel elements scale:
+-   Panel headers: 20px → 16px → 14px → 12px
+-   Form labels: 14px → 12px → 11px → 10px
+-   Buttons: 14px → 12px → 11px → 10px text
+-   Color pickers: 60px → 50px → 45px → 40px
+-   All sections, padding, and spacing scale proportionally
+
+**App.css** - Viewer mode and buttons scale:
+-   Challenge buttons: 14px → 12px → 11px → 10px text
+-   Connection warning: 1rem → 0.85rem → 0.75rem → 0.7rem
+-   Modal forms: Proportional scaling for all input elements
+-   Button padding and spacing scales across breakpoints
+
+#### Implementation Notes
+
+-   **CSS Custom Properties**: All responsive values use CSS variables for consistency
+-   **Progressive Enhancement**: Multiple breakpoints ensure smooth transitions between sizes
+-   **Dual-Axis Support**: Independent optimization for both width and height constraints
+-   **Touch-Friendly**: Maintains adequate button sizes even at smallest viewports
+-   **Readability First**: Font sizes remain legible while maximizing space efficiency
 
 ## Common Patterns
 

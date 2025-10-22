@@ -81,3 +81,107 @@
   --challenge-checkbox-checked-border-color: #4a90e2;
   --challenge-checkbox-checkmark-color: #4a90e2;
 }
+
+/* ========================================
+   Viewport Optimizations for OBS Docks
+   ======================================== */
+
+/* Small Viewport - Vertical OBS Dock (narrow width) */
+@media (max-width: 400px) {
+  :root {
+    --header-font-size: 1.25rem;
+    --header-padding: 0.75rem;
+    --header-margin-bottom: 0.5rem;
+    --app-padding: 0.5rem;
+    
+    --username-font-size: 1.25rem;
+    
+    --card-padding: 0.75rem;
+    --card-gap-between: 0.5rem;
+    
+    --challenge-font-size: 1.1rem;
+    --challenge-description-font-size: 0.95rem;
+    --challenge-timer-font-size: 0.9rem;
+    
+    --challenge-checkbox-size: calc(
+      (var(--challenge-font-size, 1.1rem) * 1.2 + var(--challenge-description-font-size, 0.95rem) * 2.2) * 2 / 3
+    );
+    --challenge-checkbox-margin-right: 0.5rem;
+    --challenge-checkbox-border-width: 0.2rem;
+  }
+}
+
+/* Very Small Viewport - Extreme Vertical Dock (very narrow) */
+@media (max-width: 320px) {
+  :root {
+    --header-font-size: 1rem;
+    --header-padding: 0.5rem;
+    --header-margin-bottom: 0.4rem;
+    --app-padding: 0.4rem;
+    
+    --username-font-size: 1rem;
+    
+    --card-padding: 0.5rem;
+    --card-gap-between: 0.4rem;
+    
+    --challenge-font-size: 0.95rem;
+    --challenge-description-font-size: 0.8rem;
+    --challenge-timer-font-size: 0.75rem;
+    
+    --challenge-checkbox-size: calc(
+      (var(--challenge-font-size, 0.95rem) * 1.2 + var(--challenge-description-font-size, 0.8rem) * 2.2) * 2 / 3
+    );
+    --challenge-checkbox-margin-right: 0.4rem;
+    --challenge-checkbox-border-width: 0.15rem;
+  }
+}
+
+/* Small Height - Horizontal OBS Dock (short height) */
+@media (max-height: 350px) {
+  :root {
+    --header-font-size: 1.25rem;
+    --header-padding: 0.5rem;
+    --header-margin-bottom: 0.4rem;
+    --app-padding: 0.4rem;
+    
+    --username-font-size: 1.25rem;
+    
+    --card-padding: 0.6rem;
+    --card-gap-between: 0.4rem;
+    
+    --challenge-font-size: 1rem;
+    --challenge-description-font-size: 0.85rem;
+    --challenge-timer-font-size: 0.85rem;
+    
+    --challenge-checkbox-size: calc(
+      (var(--challenge-font-size, 1rem) * 1.2 + var(--challenge-description-font-size, 0.85rem) * 2.2) * 2 / 3
+    );
+    --challenge-checkbox-margin-right: 0.5rem;
+    --challenge-checkbox-border-width: 0.2rem;
+  }
+}
+
+/* Very Small Height - Extreme Horizontal Dock */
+@media (max-height: 250px) {
+  :root {
+    --header-font-size: 1rem;
+    --header-padding: 0.4rem;
+    --header-margin-bottom: 0.3rem;
+    --app-padding: 0.3rem;
+    
+    --username-font-size: 1rem;
+    
+    --card-padding: 0.5rem;
+    --card-gap-between: 0.3rem;
+    
+    --challenge-font-size: 0.9rem;
+    --challenge-description-font-size: 0.75rem;
+    --challenge-timer-font-size: 0.75rem;
+    
+    --challenge-checkbox-size: calc(
+      (var(--challenge-font-size, 0.9rem) * 1.2 + var(--challenge-description-font-size, 0.75rem) * 2.2) * 2 / 3
+    );
+    --challenge-checkbox-margin-right: 0.4rem;
+    --challenge-checkbox-border-width: 0.15rem;
+  }
+}
