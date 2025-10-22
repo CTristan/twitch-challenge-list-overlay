@@ -20,6 +20,7 @@ export const AUTH_CONFIG = {
  */
 export const BEHAVIOR_CONFIG = {
     MAX_CHALLENGES: "maxChallenges",
+    ADMIN_TEXT_ONLY_MODE: "adminTextOnlyMode",
 } as const;
 
 /**

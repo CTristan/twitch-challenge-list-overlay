@@ -117,12 +117,20 @@ export class ChallengeRenderer {
 
     /**
      * Create an edit icon element for a challenge
-     * @returns The edit icon element
+     * @param textOnly - If true, creates a text button instead of an icon
+     * @returns The edit icon or button element
      */
-    static createChallengeEditIcon(): HTMLDivElement {
+    static createChallengeEditIcon(textOnly: boolean = false): HTMLDivElement {
         const editIcon = document.createElement(HTML_ELEMENTS.DIV);
-        editIcon.classList.add(CSS_CLASSES.CHALLENGE_EDIT_ICON);
-        editIcon.textContent = UI_ELEMENTS.EDIT_ICON;
+
+        if (textOnly) {
+            editIcon.classList.add(CSS_CLASSES.CHALLENGE_TEXT_ONLY_EDIT);
+            editIcon.textContent = UI_ELEMENTS.TEXT_ONLY_EDIT_BUTTON;
+        } else {
+            editIcon.classList.add(CSS_CLASSES.CHALLENGE_EDIT_ICON);
+            editIcon.textContent = UI_ELEMENTS.EDIT_ICON;
+        }
+
         editIcon.setAttribute(
             HTML_ATTRIBUTE_NAMES.ROLE,
             HTML_ATTRIBUTES.ROLE_BUTTON
@@ -140,12 +148,27 @@ export class ChallengeRenderer {
 
     /**
      * Create an increment button element for a challenge
+     * @param textOnly - If true, creates a text button instead of a symbol
      * @returns The increment button element
      */
-    static createChallengeIncrementButton(): HTMLDivElement {
+    static createChallengeIncrementButton(
+        textOnly: boolean = false
+    ): HTMLDivElement {
         const incrementButton = document.createElement(HTML_ELEMENTS.DIV);
-        incrementButton.classList.add(CSS_CLASSES.CHALLENGE_INCREMENT_BUTTON);
-        incrementButton.textContent = UI_ELEMENTS.INCREMENT_BUTTON;
+
+        if (textOnly) {
+            incrementButton.classList.add(
+                CSS_CLASSES.CHALLENGE_TEXT_ONLY_INCREMENT
+            );
+            incrementButton.textContent =
+                UI_ELEMENTS.TEXT_ONLY_INCREMENT_BUTTON;
+        } else {
+            incrementButton.classList.add(
+                CSS_CLASSES.CHALLENGE_INCREMENT_BUTTON
+            );
+            incrementButton.textContent = UI_ELEMENTS.INCREMENT_BUTTON;
+        }
+
         incrementButton.setAttribute(
             HTML_ATTRIBUTE_NAMES.ROLE,
             HTML_ATTRIBUTES.ROLE_BUTTON
@@ -163,12 +186,27 @@ export class ChallengeRenderer {
 
     /**
      * Create a decrement button element for a challenge
+     * @param textOnly - If true, creates a text button instead of a symbol
      * @returns The decrement button element
      */
-    static createChallengeDecrementButton(): HTMLDivElement {
+    static createChallengeDecrementButton(
+        textOnly: boolean = false
+    ): HTMLDivElement {
         const decrementButton = document.createElement(HTML_ELEMENTS.DIV);
-        decrementButton.classList.add(CSS_CLASSES.CHALLENGE_DECREMENT_BUTTON);
-        decrementButton.textContent = UI_ELEMENTS.DECREMENT_BUTTON;
+
+        if (textOnly) {
+            decrementButton.classList.add(
+                CSS_CLASSES.CHALLENGE_TEXT_ONLY_DECREMENT
+            );
+            decrementButton.textContent =
+                UI_ELEMENTS.TEXT_ONLY_DECREMENT_BUTTON;
+        } else {
+            decrementButton.classList.add(
+                CSS_CLASSES.CHALLENGE_DECREMENT_BUTTON
+            );
+            decrementButton.textContent = UI_ELEMENTS.DECREMENT_BUTTON;
+        }
+
         decrementButton.setAttribute(
             HTML_ATTRIBUTE_NAMES.ROLE,
             HTML_ATTRIBUTES.ROLE_BUTTON
@@ -185,6 +223,151 @@ export class ChallengeRenderer {
     }
 
     /**
+     * Create a text-only challenge list item for admin view
+     * Renders as plain text with text buttons instead of styled challenge rows
+     * @param challenge - Challenge to create element for
+     * @param options - Optional configuration for element creation
+     * @returns HTMLElement representing the text-only challenge
+     */
+    static createTextOnlyChallengeElement(
+        challenge: Challenge,
+        options: {
+            editHandler?: (event: Event) => void;
+            incrementHandler?: (event: Event) => void;
+            decrementHandler?: (event: Event) => void;
+            completeHandler?: (event: Event) => void;
+            failHandler?: (event: Event) => void;
+            displayPosition?: number;
+        } = {}
+    ): HTMLElement {
+        const challengeElement = document.createElement(HTML_ELEMENTS.LI);
+        challengeElement.classList.add(CSS_CLASSES.CHALLENGE_TEXT_ONLY_ITEM);
+        challengeElement.dataset[DATA_ATTRIBUTES.CHALLENGE_ID] = challenge.id;
+
+        // Create content container for text
+        const contentContainer = document.createElement(HTML_ELEMENTS.DIV);
+        contentContainer.classList.add(CSS_CLASSES.CHALLENGE_TEXT_ONLY_CONTENT);
+
+        // Create challenge text with position prefix
+        const titlePrefix =
+            options.displayPosition !== undefined
+                ? `${options.displayPosition}. `
+                : "";
+        let textContent = `${titlePrefix}${challenge.title}`;
+
+        // Add description if different from title
+        if (
+            challenge.title !== challenge.description &&
+            challenge.description &&
+            challenge.description.trim() !== ""
+        ) {
+            textContent += ` - ${challenge.description}`;
+        }
+
+        // Add progress indicator if amount > 1
+        if (challenge.amount > 1) {
+            textContent += ` (${challenge.progress}/${challenge.amount})`;
+        }
+
+        // Apply state styling based on challenge state
+        const state = challenge.getState();
+        if (state === CHALLENGE_STATES.DONE) {
+            challengeElement.classList.add(CSS_CLASSES.DONE);
+        } else if (state === CHALLENGE_STATES.FAILED) {
+            challengeElement.classList.add(CSS_CLASSES.FAILED);
+        }
+
+        contentContainer.textContent = textContent;
+        challengeElement.appendChild(contentContainer);
+
+        // Create buttons container
+        const buttonsContainer = document.createElement(HTML_ELEMENTS.DIV);
+        buttonsContainer.classList.add(CSS_CLASSES.CHALLENGE_TEXT_ONLY_BUTTONS);
+
+        // Edit button
+        if (options.editHandler) {
+            const editButton = document.createElement(HTML_ELEMENTS.BUTTON);
+            editButton.classList.add(CSS_CLASSES.CHALLENGE_TEXT_ONLY_EDIT);
+            editButton.textContent = UI_ELEMENTS.TEXT_ONLY_EDIT_BUTTON;
+            editButton.setAttribute(
+                HTML_ATTRIBUTE_NAMES.ARIA_LABEL,
+                ARIA_LABELS.EDIT_CHALLENGE
+            );
+            editButton.addEventListener(EVENT_NAMES.CLICK, options.editHandler);
+            buttonsContainer.appendChild(editButton);
+        }
+
+        // Complete button (only if not already completed)
+        if (options.completeHandler && !challenge.isComplete()) {
+            const completeButton = document.createElement(HTML_ELEMENTS.BUTTON);
+            completeButton.classList.add(
+                CSS_CLASSES.CHALLENGE_TEXT_ONLY_COMPLETE
+            );
+            completeButton.textContent = UI_ELEMENTS.TEXT_ONLY_COMPLETE_BUTTON;
+            completeButton.addEventListener(
+                EVENT_NAMES.CLICK,
+                options.completeHandler
+            );
+            buttonsContainer.appendChild(completeButton);
+        }
+
+        // Fail button (only if not already failed or completed)
+        if (options.failHandler && state !== CHALLENGE_STATES.FAILED) {
+            const failButton = document.createElement(HTML_ELEMENTS.BUTTON);
+            failButton.classList.add(CSS_CLASSES.CHALLENGE_TEXT_ONLY_FAIL);
+            failButton.textContent = UI_ELEMENTS.TEXT_ONLY_FAIL_BUTTON;
+            failButton.addEventListener(EVENT_NAMES.CLICK, options.failHandler);
+            buttonsContainer.appendChild(failButton);
+        }
+
+        // Increment/Decrement buttons for multi-step challenges
+        if (challenge.amount > 1) {
+            if (options.incrementHandler) {
+                const incrementButton = document.createElement(
+                    HTML_ELEMENTS.BUTTON
+                );
+                incrementButton.classList.add(
+                    CSS_CLASSES.CHALLENGE_TEXT_ONLY_INCREMENT
+                );
+                incrementButton.textContent =
+                    UI_ELEMENTS.TEXT_ONLY_INCREMENT_BUTTON;
+                incrementButton.setAttribute(
+                    HTML_ATTRIBUTE_NAMES.ARIA_LABEL,
+                    ARIA_LABELS.INCREMENT_PROGRESS
+                );
+                incrementButton.addEventListener(
+                    EVENT_NAMES.CLICK,
+                    options.incrementHandler
+                );
+                buttonsContainer.appendChild(incrementButton);
+            }
+
+            if (options.decrementHandler) {
+                const decrementButton = document.createElement(
+                    HTML_ELEMENTS.BUTTON
+                );
+                decrementButton.classList.add(
+                    CSS_CLASSES.CHALLENGE_TEXT_ONLY_DECREMENT
+                );
+                decrementButton.textContent =
+                    UI_ELEMENTS.TEXT_ONLY_DECREMENT_BUTTON;
+                decrementButton.setAttribute(
+                    HTML_ATTRIBUTE_NAMES.ARIA_LABEL,
+                    ARIA_LABELS.DECREMENT_PROGRESS
+                );
+                decrementButton.addEventListener(
+                    EVENT_NAMES.CLICK,
+                    options.decrementHandler
+                );
+                buttonsContainer.appendChild(decrementButton);
+            }
+        }
+
+        challengeElement.appendChild(buttonsContainer);
+        return challengeElement;
+    }
+
+    /**
      * Create a complete challenge list item element with all components
      * @param challenge - Challenge to create element for
      * @param options - Optional configuration for element creation
@@ -198,7 +381,9 @@ export class ChallengeRenderer {
             editHandler?: (event: Event) => void;
             incrementHandler?: (event: Event) => void;
             decrementHandler?: (event: Event) => void;
+            failHandler?: (event: Event) => void;
             displayPosition?: number;
+            textOnlyMode?: boolean;
         } = {}
     ): HTMLElement {
         const challengeElement = document.createElement(HTML_ELEMENTS.LI);
@@ -232,9 +417,12 @@ export class ChallengeRenderer {
         // Assemble the challenge element
         challengeElement.appendChild(checkbox);
 
-        // Create and add edit icon only if edit handler is provided (admin mode only)
+        // Determine if text-only mode should be used
+        const useTextOnlyMode = options.textOnlyMode ?? false;
+
+        // Create and add edit icon/button only if edit handler is provided (admin mode only)
         if (options.editHandler) {
-            const editIcon = this.createChallengeEditIcon();
+            const editIcon = this.createChallengeEditIcon(useTextOnlyMode);
             editIcon.addEventListener(EVENT_NAMES.CLICK, options.editHandler);
             challengeElement.appendChild(editIcon);
         }
@@ -243,7 +431,8 @@ export class ChallengeRenderer {
         // and challenge has progress tracking (amount > 1)
         if (challenge.amount > 1) {
             if (options.incrementHandler) {
-                const incrementButton = this.createChallengeIncrementButton();
+                const incrementButton =
+                    this.createChallengeIncrementButton(useTextOnlyMode);
                 incrementButton.addEventListener(
                     EVENT_NAMES.CLICK,
                     options.incrementHandler
@@ -252,13 +441,25 @@ export class ChallengeRenderer {
             }
 
             if (options.decrementHandler) {
-                const decrementButton = this.createChallengeDecrementButton();
+                const decrementButton =
+                    this.createChallengeDecrementButton(useTextOnlyMode);
                 decrementButton.addEventListener(
                     EVENT_NAMES.CLICK,
                     options.decrementHandler
                 );
                 challengeElement.appendChild(decrementButton);
             }
+        }
+
+        // Add Fail button in admin view (non text-only and text-only styles reused for consistency)
+        // Only show Fail button when challenge is not already failed
+        if (options.failHandler && state !== CHALLENGE_STATES.FAILED) {
+            const failButton = document.createElement(HTML_ELEMENTS.BUTTON);
+            // Reuse text-only fail class for consistent appearance as requested
+            failButton.classList.add(CSS_CLASSES.CHALLENGE_TEXT_ONLY_FAIL);
+            failButton.textContent = UI_ELEMENTS.TEXT_ONLY_FAIL_BUTTON;
+            failButton.addEventListener(EVENT_NAMES.CLICK, options.failHandler);
+            challengeElement.appendChild(failButton);
         }
 
         challengeElement.appendChild(textElement);

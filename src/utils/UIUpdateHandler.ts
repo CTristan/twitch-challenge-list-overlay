@@ -6,14 +6,10 @@ import type { CommandResponse } from "../types/CommandResponse";
 import {
     BACKGROUND_CONFIG,
     BACKGROUND_DEFAULTS,
+    BEHAVIOR_CONFIG,
     COLOR_CONFIG,
 } from "../types/ConfigConstants";
-import {
-    CHALLENGE_STATES,
-    CSS_CLASSES,
-    CSS_SELECTORS,
-    URL_HASH,
-} from "../types/DOMConstants";
+import { CSS_CLASSES, CSS_SELECTORS, URL_HASH } from "../types/DOMConstants";
 import ChallengeRenderer from "./ChallengeRenderer";
 import { combineColorWithOpacity } from "./ColorUtils";
 import DOMHelper from "./DOMHelper";
@@ -33,6 +29,8 @@ export default class UIUpdateHandler {
     private editHandler?: (event: Event) => void;
     private incrementHandler?: (event: Event) => void;
     private decrementHandler?: (event: Event) => void;
+    private completeHandler?: (event: Event) => void;
+    private failHandler?: (event: Event) => void;
 
     // DOM element cache for performance optimization
     private challengeContainer: HTMLElement | null = null;
@@ -74,7 +72,9 @@ export default class UIUpdateHandler {
         configManager: ConfigManager,
         editHandler?: (event: Event) => void,
         incrementHandler?: (event: Event) => void,
-        decrementHandler?: (event: Event) => void
+        decrementHandler?: (event: Event) => void,
+        completeHandler?: (event: Event) => void,
+        failHandler?: (event: Event) => void
     ) {
         this.challengeList = challengeList;
         this.configManager = configManager;
@@ -87,6 +87,12 @@ export default class UIUpdateHandler {
         }
         if (decrementHandler !== undefined) {
             this.decrementHandler = decrementHandler;
+        }
+        if (completeHandler !== undefined) {
+            this.completeHandler = this.handleCompleteButtonClick;
+        }
+        if (failHandler !== undefined) {
+            this.failHandler = this.handleFailButtonClick;
         }
     }
 
@@ -523,7 +529,7 @@ export default class UIUpdateHandler {
         if (!isAdminMode && this.challengeList.challenges.length === 0) {
             challengeCard.classList.add(CSS_CLASSES.HIDDEN);
         }
-        
+
         // Append card to container
         challengeContainer.appendChild(challengeCard);
 
@@ -584,7 +590,10 @@ export default class UIUpdateHandler {
             editHandler?: (event: Event) => void;
             incrementHandler?: (event: Event) => void;
             decrementHandler?: (event: Event) => void;
+            completeHandler?: (event: Event) => void;
+            failHandler?: (event: Event) => void;
             displayPosition?: number;
+            textOnlyMode?: boolean;
         } = {
             includeEventListeners: !isAdminMode, // Don't add direct listeners in admin mode
             eventHandler: this.handleCheckboxClick,
@@ -601,6 +610,35 @@ export default class UIUpdateHandler {
             if (this.decrementHandler) {
                 options.decrementHandler = this.decrementHandler;
             }
+
+            const adminTextOnlyMode =
+                this.configManager.get(BEHAVIOR_CONFIG.ADMIN_TEXT_ONLY_MODE) ??
+                false;
+
+            // Use completely different rendering for text-only mode
+            if (adminTextOnlyMode) {
+                if (displayPosition !== undefined) {
+                    options.displayPosition = displayPosition;
+                }
+                if (this.completeHandler) {
+                    options.completeHandler = this.completeHandler;
+                }
+                if (this.failHandler) {
+                    options.failHandler = this.failHandler;
+                }
+
+                // Create text-only element (no styling needed)
+                return ChallengeRenderer.createTextOnlyChallengeElement(
+                    challenge,
+                    options
+                );
+            }
+
+            // Non text-only admin mode: still provide fail handler to render Fail button
+            if (this.failHandler) {
+                options.failHandler = this.failHandler;
+            }
+            options.textOnlyMode = adminTextOnlyMode;
         }
 
         if (displayPosition !== undefined) {
@@ -704,6 +742,96 @@ export default class UIUpdateHandler {
      * Handle checkbox click events to toggle challenge completion status
      * @param event - The click event
      */
+    /**
+     * Handle Complete button click in text-only mode
+     * @param event - Click event
+     */
+    private handleCompleteButtonClick = (event: Event): void => {
+        const button = event.target as HTMLElement;
+        const challengeElement = button.closest(
+            ".challenge, .challenge-text-only-item"
+        ) as HTMLElement;
+
+        if (!challengeElement) {
+            console.error(
+                "Could not find challenge element for Complete button"
+            );
+            return;
+        }
+
+        const challengeId = challengeElement.dataset["challengeId"];
+        if (!challengeId) {
+            console.error("Could not find challenge ID for Complete button");
+            return;
+        }
+
+        try {
+            const challenge = this.challengeList.getChallengeById(challengeId);
+            if (!challenge) {
+                console.error("Could not find challenge with ID:", challengeId);
+                return;
+            }
+
+            // Set challenge to done state
+            challenge.setCompletionStatus(true);
+            challenge.setFailureStatus(false);
+            this.challengeList.saveToLocalStorage();
+
+            // Update DOM to reflect the new state
+            DOMHelper.completeChallengeFromDOM(challengeId);
+
+            // Update count and timers
+            this.updateChallengeCount();
+            this.timerController.updateTimerDisplays();
+        } catch (error) {
+            console.error("Error completing challenge:", error);
+        }
+    };
+
+    /**
+     * Handle Fail button click in text-only mode
+     * @param event - Click event
+     */
+    private handleFailButtonClick = (event: Event): void => {
+        const button = event.target as HTMLElement;
+        const challengeElement = button.closest(
+            ".challenge, .challenge-text-only-item"
+        ) as HTMLElement;
+
+        if (!challengeElement) {
+            console.error("Could not find challenge element for Fail button");
+            return;
+        }
+
+        const challengeId = challengeElement.dataset["challengeId"];
+        if (!challengeId) {
+            console.error("Could not find challenge ID for Fail button");
+            return;
+        }
+
+        try {
+            const challenge = this.challengeList.getChallengeById(challengeId);
+            if (!challenge) {
+                console.error("Could not find challenge with ID:", challengeId);
+                return;
+            }
+
+            // Set challenge to failed state
+            challenge.setFailureStatus(true);
+            challenge.setCompletionStatus(false);
+            this.challengeList.saveToLocalStorage();
+
+            // Update DOM to reflect the new state
+            DOMHelper.failChallengeFromDOM(challengeId);
+
+            // Update count and timers
+            this.updateChallengeCount();
+            this.timerController.updateTimerDisplays();
+        } catch (error) {
+            console.error("Error failing challenge:", error);
+        }
+    };
+
     private handleCheckboxClick = (event: Event): void => {
         // Only handle clicks in admin mode
         if (window.location.hash !== "#admin") {
@@ -725,20 +853,17 @@ export default class UIUpdateHandler {
         }
 
         try {
-            // Cycle through challenge states: in-progress → done → failed → in-progress
+            // Toggle completion only: in-progress ↔ done (failure handled via explicit Fail button)
             const challenge =
-                this.challengeList.cycleChallengeState(challengeId);
+                this.challengeList.toggleChallengeCompletion(challengeId);
             if (!challenge) {
                 console.error("Could not find challenge with ID:", challengeId);
                 return;
             }
 
             // Update DOM to reflect the new state
-            const state = challenge.getState();
-            if (state === CHALLENGE_STATES.DONE) {
+            if (challenge.isComplete()) {
                 DOMHelper.completeChallengeFromDOM(challengeId);
-            } else if (state === CHALLENGE_STATES.FAILED) {
-                DOMHelper.failChallengeFromDOM(challengeId);
             } else {
                 // in-progress
                 DOMHelper.revertChallengeFromDOM(challengeId);
@@ -748,7 +873,7 @@ export default class UIUpdateHandler {
             this.updateChallengeCount();
             this.timerController.updateTimerDisplays();
         } catch (error) {
-            console.error("Error cycling challenge state:", error);
+            console.error("Error toggling challenge completion:", error);
         }
     };
 

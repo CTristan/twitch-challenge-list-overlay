@@ -8,6 +8,7 @@ import {
     BACKGROUND_CONFIG,
     BACKGROUND_DEFAULTS,
     BACKGROUND_UI_ELEMENTS,
+    BEHAVIOR_CONFIG,
     COLOR_CONFIG,
     CORE_CONFIG,
 } from "../types/ConfigConstants";
@@ -428,6 +429,15 @@ export default class AdminPanel {
             ELEMENT_IDS.MAX_CHALLENGES,
             config.maxChallenges?.toString() || "10"
         );
+
+        // Populate admin text-only mode checkbox
+        const adminTextOnlyModeCheckbox = document.getElementById(
+            ELEMENT_IDS.ADMIN_TEXT_ONLY_MODE
+        ) as HTMLInputElement;
+        if (adminTextOnlyModeCheckbox) {
+            adminTextOnlyModeCheckbox.checked =
+                config.adminTextOnlyMode ?? false;
+        }
 
         // Populate color configuration
         this.populateColorConfiguration(
@@ -1097,6 +1107,9 @@ export default class AdminPanel {
 
             // Update challenge row colors in the DOM to reflect new opacity
             this.updateChallengeRowColorsInDOM();
+        } else if (configType === ConfigType.BEHAVIOR) {
+            // Re-render the challenge list to apply text-only mode changes
+            this.reRenderChallengeListInDOM();
         }
     }
 
@@ -1131,6 +1144,19 @@ export default class AdminPanel {
                 overlayBackgroundOpacity
             );
             challengeCard.style.backgroundColor = overlayBackgroundRGBA;
+        }
+    }
+
+    /**
+     * Re-render the challenge list in the DOM without page refresh
+     * Useful for changes that affect challenge structure (e.g., text-only mode)
+     * @returns {void}
+     */
+    private reRenderChallengeListInDOM(): void {
+        // Trigger a re-render through the app instance
+        // This will recreate all challenge elements with the new settings
+        if (this.#app) {
+            this.#app.renderChallengeList();
         }
     }
 
@@ -1231,14 +1257,34 @@ export default class AdminPanel {
                 10
             );
 
-            const success = this.#configManager.set(
+            const adminTextOnlyModeCheckbox = document.getElementById(
+                ELEMENT_IDS.ADMIN_TEXT_ONLY_MODE
+            ) as HTMLInputElement;
+            const adminTextOnlyMode =
+                adminTextOnlyModeCheckbox?.checked ?? false;
+
+            // Get previous value to detect if text-only mode actually changed
+            const previousTextOnlyMode =
+                this.#configManager.get(BEHAVIOR_CONFIG.ADMIN_TEXT_ONLY_MODE) ??
+                false;
+
+            const maxSuccess = this.#configManager.set(
                 CORE_CONFIG.MAX_CHALLENGES,
                 maxChallenges
             );
+            const textModeSuccess = this.#configManager.set(
+                BEHAVIOR_CONFIG.ADMIN_TEXT_ONLY_MODE,
+                adminTextOnlyMode
+            );
 
-            if (success) {
-                // Notify other windows to refresh after successful save
-                notifyConfigurationSaved();
+            if (maxSuccess && textModeSuccess) {
+                // If text-only mode changed, re-render the challenge list
+                // without full page reload (similar to color/background changes)
+                if (adminTextOnlyMode !== previousTextOnlyMode) {
+                    this.updateAdminUIForSliderChange(ConfigType.BEHAVIOR);
+                }
+
+                // Viewer window doesn't need update (no admin controls there)
             }
         } catch (error) {
             console.error(

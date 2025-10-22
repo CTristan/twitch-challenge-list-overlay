@@ -20,6 +20,14 @@ export const CSS_CLASSES = {
     CHALLENGE_EDIT_ICON: "challenge-edit-icon",
     CHALLENGE_INCREMENT_BUTTON: "challenge-increment-button",
     CHALLENGE_DECREMENT_BUTTON: "challenge-decrement-button",
+    CHALLENGE_TEXT_ONLY_EDIT: "challenge-text-only-edit",
+    CHALLENGE_TEXT_ONLY_COMPLETE: "challenge-text-only-complete",
+    CHALLENGE_TEXT_ONLY_FAIL: "challenge-text-only-fail",
+    CHALLENGE_TEXT_ONLY_INCREMENT: "challenge-text-only-increment",
+    CHALLENGE_TEXT_ONLY_DECREMENT: "challenge-text-only-decrement",
+    CHALLENGE_TEXT_ONLY_ITEM: "challenge-text-only-item",
+    CHALLENGE_TEXT_ONLY_CONTENT: "challenge-text-only-content",
+    CHALLENGE_TEXT_ONLY_BUTTONS: "challenge-text-only-buttons",
     CHALLENGE_TEXT: "challenge-text",
     CHALLENGE_TITLE: "challenge-title",
     CHALLENGE_DESCRIPTION: "challenge-description",
@@ -146,6 +154,7 @@ export const ELEMENT_IDS = {
 
     // Behavior form elements
     MAX_CHALLENGES: "max-challenges",
+    ADMIN_TEXT_ONLY_MODE: "admin-text-only-mode",
 
     // Add Challenge Modal elements
     ADD_CHALLENGE_MODAL: "add-challenge-modal",

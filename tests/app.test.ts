@@ -179,9 +179,9 @@ describe("App", () => {
         });
 
         it("should handle errors in try/catch block during checkbox processing", () => {
-            // Mock the cycleChallengeState to return null (challenge not found)
-            const originalCycle = app.challengeList.cycleChallengeState;
-            app.challengeList.cycleChallengeState = vi
+            // Mock the toggleChallengeCompletion to return null (challenge not found)
+            const originalToggle = app.challengeList.toggleChallengeCompletion;
+            app.challengeList.toggleChallengeCompletion = vi
                 .fn()
                 .mockReturnValue(null);
 
@@ -216,7 +216,7 @@ describe("App", () => {
             );
 
             // Restore original method
-            app.challengeList.cycleChallengeState = originalCycle;
+            app.challengeList.toggleChallengeCompletion = originalToggle;
         });
 
         it("should handle non-checkbox targets in delegated click handler", () => {

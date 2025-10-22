@@ -195,6 +195,45 @@ body {
   background-color: rgba(255, 255, 255, 0.15);
 }
 
+/* Text-only button styling (when admin text-only mode is enabled) */
+.challenge-text-only-edit,
+.challenge-text-only-increment,
+.challenge-text-only-decrement {
+  flex-shrink: 0;
+  height: var(--challenge-checkbox-size);
+  margin-left: 0.25rem;
+  margin-right: 0.25rem;
+  padding: 0 0.5rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: calc(var(--challenge-checkbox-size) * 0.5);
+  font-weight: 600;
+  opacity: 0.8;
+  transition: opacity 0.2s ease, transform 0.2s ease, background-color 0.2s ease;
+  user-select: none;
+  border-radius: 4px;
+  background-color: rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.challenge-text-only-edit:hover,
+.challenge-text-only-increment:hover,
+.challenge-text-only-decrement:hover {
+  opacity: 1;
+  transform: scale(1.05);
+  background-color: rgba(255, 255, 255, 0.25);
+  border-color: rgba(255, 255, 255, 0.5);
+}
+
+.challenge-text-only-edit:active,
+.challenge-text-only-increment:active,
+.challenge-text-only-decrement:active {
+  transform: scale(0.98);
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
 .challenge-text {
   flex: 1;
   display: flex;
@@ -699,4 +738,161 @@ body {
 
 .connection-warning-hidden {
   display: none;
+}
+
+/* ========================================
+   Text-Only Challenge Rendering (Admin View)
+   ======================================== */
+
+.challenge-text-only-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  list-style: none;
+}
+
+.challenge-text-only-item:last-child {
+  border-bottom: none;
+}
+
+.challenge-text-only-content {
+  font-size: 1rem;
+  color: #ffffff;
+  font-family: var(--card-font-family, "arial");
+  line-height: 1.4;
+}
+
+/* Apply state styling to text content */
+.challenge-text-only-item.done .challenge-text-only-content {
+  text-decoration: line-through;
+  opacity: 0.6;
+  color: #4caf50;
+}
+
+.challenge-text-only-item.failed .challenge-text-only-content {
+  text-decoration: line-through;
+  opacity: 0.6;
+  color: #f44336;
+}
+
+.challenge-text-only-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.challenge-text-only-buttons button {
+  padding: 0.4rem 0.75rem;
+  font-size: 0.875rem;
+  font-family: var(--card-font-family, "arial");
+  font-weight: 500;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+/* Edit button */
+.challenge-text-only-edit {
+  background-color: #4a90e2;
+  color: #ffffff;
+}
+
+.challenge-text-only-edit:hover {
+  background-color: #357abd;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(74, 144, 226, 0.3);
+}
+
+/* Complete button */
+.challenge-text-only-complete {
+  background-color: #4caf50;
+  color: #ffffff;
+}
+
+.challenge-text-only-complete:hover {
+  background-color: #45a049;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(76, 175, 80, 0.3);
+}
+
+/* Fail button */
+.challenge-text-only-fail {
+  background-color: #f44336;
+  color: #ffffff;
+}
+
+.challenge-text-only-fail:hover {
+  background-color: #da190b;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(244, 67, 54, 0.3);
+}
+
+/* Increment button */
+.challenge-text-only-increment {
+  background-color: #ff9800;
+  color: #ffffff;
+}
+
+.challenge-text-only-increment:hover {
+  background-color: #e68900;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(255, 152, 0, 0.3);
+}
+
+/* Decrement button */
+.challenge-text-only-decrement {
+  background-color: #9c27b0;
+  color: #ffffff;
+}
+
+.challenge-text-only-decrement:hover {
+  background-color: #7b1fa2;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(156, 39, 176, 0.3);
+}
+
+/* Active state for all text-only buttons */
+.challenge-text-only-buttons button:active {
+  transform: translateY(0);
+  box-shadow: none;
+}
+
+/* Responsive adjustments for text-only mode */
+@media (max-width: 400px) {
+  .challenge-text-only-item {
+    padding: 0.5rem 0;
+  }
+
+  .challenge-text-only-content {
+    font-size: 0.875rem;
+  }
+
+  .challenge-text-only-buttons button {
+    padding: 0.35rem 0.6rem;
+    font-size: 0.8125rem;
+  }
+}
+
+@media (max-width: 320px) {
+  .challenge-text-only-item {
+    padding: 0.4rem 0;
+    gap: 0.4rem;
+  }
+
+  .challenge-text-only-content {
+    font-size: 0.8125rem;
+  }
+
+  .challenge-text-only-buttons {
+    gap: 0.4rem;
+  }
+
+  .challenge-text-only-buttons button {
+    padding: 0.3rem 0.5rem;
+    font-size: 0.75rem;
+  }
 }

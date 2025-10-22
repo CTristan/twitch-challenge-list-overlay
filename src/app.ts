@@ -13,7 +13,6 @@ import {
 } from "./types/ConfigConstants";
 import {
     BUTTON_TEXT,
-    CHALLENGE_STATES,
     COMMAND_CONSTANTS,
     COMMON_STRINGS,
     CSS_CLASSES,
@@ -89,7 +88,9 @@ export default class App {
             this.#configManager,
             this.handleEditIconClick,
             this.handleIncrementButtonClick,
-            this.handleDecrementButtonClick
+            this.handleDecrementButtonClick,
+            this.handleCompleteButtonClick,
+            this.handleFailButtonClick
         );
         this.#timerController = new TimerController(this.challengeList);
         loadStyles(this.#configManager.getAll());
@@ -327,12 +328,21 @@ export default class App {
                     // Use ChallengeRenderer for consistent element creation
                     // Pass displayPosition as index + 1 for 1-based numbering
                     const isAdminMode = window.location.hash === URL_HASH.ADMIN;
+
+                    // Check if admin text-only mode is enabled
+                    const adminTextOnlyMode =
+                        this.#configManager.get(
+                            BEHAVIOR_CONFIG.ADMIN_TEXT_ONLY_MODE
+                        ) ?? false;
+
                     const options: {
                         displayPosition: number;
                         includeEventListeners?: boolean;
                         editHandler?: (event: Event) => void;
                         incrementHandler?: (event: Event) => void;
                         decrementHandler?: (event: Event) => void;
+                        failHandler?: (event: Event) => void;
+                        textOnlyMode?: boolean;
                     } = {
                         displayPosition: index + 1,
                     };
@@ -345,6 +355,8 @@ export default class App {
                             this.handleIncrementButtonClick;
                         options.decrementHandler =
                             this.handleDecrementButtonClick;
+                        options.failHandler = this.handleFailButtonClick;
+                        options.textOnlyMode = adminTextOnlyMode;
                     }
 
                     const listItem = ChallengeRenderer.createChallengeElement(
@@ -395,13 +407,13 @@ export default class App {
             return;
         }
         challengeContainer.innerHTML = COMMON_STRINGS.EMPTY;
-        
+
         // Hide card in viewer mode when there are no challenges
         const isAdminMode = window.location.hash === URL_HASH.ADMIN;
         if (!isAdminMode && this.challengeList.challenges.length === 0) {
             cardEl.classList.add(CSS_CLASSES.HIDDEN);
         }
-        
+
         challengeContainer.appendChild(cardEl);
 
         animateScroll();
@@ -1003,8 +1015,9 @@ export default class App {
         // Mark this challenge as being processed
         this.processingCheckboxClicks.add(challengeId);
 
-        // Cycle through challenge states: in-progress → done → failed → in-progress
-        const challenge = this.challengeList.cycleChallengeState(challengeId);
+        // Toggle completion only: in-progress ↔ done (failure handled via explicit Fail button)
+        const challenge =
+            this.challengeList.toggleChallengeCompletion(challengeId);
         if (!challenge) {
             console.error(
                 ERROR_MESSAGES.CHALLENGE_NOT_FOUND_BY_ID.replace(
@@ -1017,14 +1030,10 @@ export default class App {
         }
 
         try {
-            // Update DOM to reflect the new state
-            const state = challenge.getState();
-            if (state === CHALLENGE_STATES.DONE) {
+            // Update DOM to reflect the new state (only done or in-progress)
+            if (challenge.isComplete()) {
                 this.completeChallengeFromDOM(challengeId);
-            } else if (state === CHALLENGE_STATES.FAILED) {
-                this.failChallengeFromDOM(challengeId);
             } else {
-                // in-progress
                 this.revertChallengeFromDOM(challengeId);
             }
 
@@ -1336,8 +1345,9 @@ export default class App {
         }
 
         const target = event.target as HTMLElement;
+        // Find challenge element (both regular and text-only modes)
         const challengeElement = target.closest(
-            CSS_SELECTORS.CHALLENGE
+            `${CSS_SELECTORS.CHALLENGE}, .challenge-text-only-item`
         ) as HTMLElement;
 
         if (!challengeElement) {
@@ -1369,8 +1379,9 @@ export default class App {
         }
 
         const target = event.target as HTMLElement;
+        // Find challenge element (both regular and text-only modes)
         const challengeElement = target.closest(
-            CSS_SELECTORS.CHALLENGE
+            `${CSS_SELECTORS.CHALLENGE}, .challenge-text-only-item`
         ) as HTMLElement;
 
         if (!challengeElement) {
@@ -1410,8 +1421,9 @@ export default class App {
         }
 
         const target = event.target as HTMLElement;
+        // Find challenge element (both regular and text-only modes)
         const challengeElement = target.closest(
-            CSS_SELECTORS.CHALLENGE
+            `${CSS_SELECTORS.CHALLENGE}, .challenge-text-only-item`
         ) as HTMLElement;
 
         if (!challengeElement) {
@@ -1434,6 +1446,28 @@ export default class App {
             // Notify other windows (viewer overlay) about the state change
             notifyChallengeStateChanged();
         }
+    };
+
+    /**
+     * Handle Complete button click in text-only mode
+     * @param {Event} event - The click event
+     * @returns {void}
+     */
+    private handleCompleteButtonClick = (event: Event): void => {
+        event.stopPropagation();
+        // Handler implementation is in UIUpdateHandler
+        // This is just a passthrough to maintain consistency
+    };
+
+    /**
+     * Handle Fail button click in text-only mode
+     * @param {Event} event - The click event
+     * @returns {void}
+     */
+    private handleFailButtonClick = (event: Event): void => {
+        event.stopPropagation();
+        // Handler implementation is in UIUpdateHandler
+        // This is just a passthrough to maintain consistency
     };
 }
 

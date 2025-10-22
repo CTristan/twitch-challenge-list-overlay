@@ -37,6 +37,7 @@ export function createFallbackConfig(): Config {
             twitch_channel: "",
         },
         maxChallenges: 10,
+        adminTextOnlyMode: false,
         commands: {
             // Admin commands (restricted to moderators and broadcaster)
             clearAll: ["!ch clearlist", "!ch clearall"],

@@ -5,4 +5,5 @@
 export enum ConfigType {
     COLOR = "color",
     BACKGROUND = "background",
+    BEHAVIOR = "behavior",
 }

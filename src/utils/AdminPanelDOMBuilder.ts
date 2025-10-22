@@ -61,6 +61,16 @@ export class AdminPanelDOMBuilder {
             />
             <small>Maximum number of active challenges (1-100)</small>
           </div>
+          <div class="form-group">
+            <label class="checkbox-label">
+              <input
+                type="checkbox"
+                id="${ELEMENT_IDS.ADMIN_TEXT_ONLY_MODE}"
+              />
+              <span>Text-Only Mode in Admin View</span>
+            </label>
+            <small>When enabled, icons become text buttons in admin view (viewer overlay remains unchanged)</small>
+          </div>
         `;
     }
 

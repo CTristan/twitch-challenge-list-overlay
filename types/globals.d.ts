@@ -127,6 +127,9 @@ interface Config {
     /** Maximum number of challenges that can be active simultaneously */
     maxChallenges: number;
 
+    /** Enable text-only rendering mode in admin view (icons become text buttons) */
+    adminTextOnlyMode?: boolean;
+
     /** Optional array of background colors for challenge rows (supports 1-3 colors for cycling) */
     challengeRowColors?: string[];
 

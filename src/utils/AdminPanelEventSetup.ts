@@ -63,6 +63,17 @@ export class AdminPanelEventSetup {
                 autoSaveCallback
             );
         }
+
+        const adminTextOnlyModeCheckbox = document.getElementById(
+            ELEMENT_IDS.ADMIN_TEXT_ONLY_MODE
+        ) as HTMLInputElement;
+
+        if (adminTextOnlyModeCheckbox) {
+            adminTextOnlyModeCheckbox.addEventListener(
+                EVENT_NAMES.CHANGE,
+                autoSaveCallback
+            );
+        }
     }
 
     /**
