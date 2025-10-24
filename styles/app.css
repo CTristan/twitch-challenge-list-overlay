@@ -455,6 +455,66 @@ body {
   box-shadow: none;
 }
 
+/* Text-only admin action styles */
+.add-challenge-container.admin-text-only-action-container {
+  background: rgba(255, 255, 255, 0.04);
+  border-top: 1px dashed rgba(255, 255, 255, 0.15);
+  align-items: baseline;
+  gap: 0.75rem;
+}
+
+.admin-text-only-action-label {
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.admin-text-only-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  color: rgba(255, 255, 255, 0.9);
+  transition: color 0.2s ease, transform 0.2s ease;
+}
+
+.admin-text-only-action::before {
+  content: "•";
+  font-size: 0.7rem;
+  opacity: 0.5;
+}
+
+.admin-text-only-action-add {
+  color: #4a90e2;
+}
+
+.admin-text-only-action-clear {
+  color: #f44336;
+}
+
+.admin-text-only-action-refresh {
+  color: #ff9800;
+}
+
+.admin-text-only-action:hover,
+.admin-text-only-action:focus-visible {
+  color: rgba(255, 255, 255, 1);
+  transform: translateY(-1px);
+}
+
+.admin-text-only-action:focus-visible {
+  outline: 2px solid rgba(255, 255, 255, 0.5);
+  outline-offset: 2px;
+}
+
+.admin-text-only-action:active {
+  transform: translateY(0);
+}
+
 /* Modal Form Styles */
 .modal .form-group {
   margin-bottom: 1rem;

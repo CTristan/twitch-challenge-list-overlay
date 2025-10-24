@@ -47,6 +47,8 @@ Prefix: "twitch-overlay-" (LOCALSTORAGE_PREFIX). Keys: CONFIG, CHALLENGE_LIST, C
 
 Vitest + jsdom; ≥80% coverage. Use ensureTestIsolation(). **Testability over workarounds:** Refactor large methods (>50 lines), tightly-coupled logic, complex conditionals. Extract methods, separate concerns, use DI.
 
+> **Execution rule:** Always run tests via the VS Code native testing integration (runTests tool). **Never run** `pnpm test` or other CLI shortcuts from the terminal.
+
 ### Refactoring triggers
 
 -   > 20 public methods → split class.

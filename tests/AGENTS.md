@@ -46,3 +46,5 @@ Test all branches: error paths, conditionals (admin/viewer mode), state variatio
 -   Specific: `runTests({files: ["path/to/test.ts"]})`
 -   Coverage: `runTests({mode: "coverage", coverageFiles: ["path/to/file.ts"]})`
 -   Debug: `it.only()` to focus, `it.skip()` to disable
+
+> **Do not** run `pnpm test`; rely exclusively on the VS Code runTests integration.

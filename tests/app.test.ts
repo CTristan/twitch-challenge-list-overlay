@@ -2,14 +2,22 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import App from "../src/app";
 import Challenge from "../src/classes/Challenge";
 import ConfigManager from "../src/classes/ConfigManager";
-import { BACKGROUND_CONFIG } from "../src/types/ConfigConstants";
+import {
+    BACKGROUND_CONFIG,
+    BEHAVIOR_CONFIG,
+} from "../src/types/ConfigConstants";
 import {
     CSS_CLASSES,
     CSS_SELECTORS,
     DATA_ATTRIBUTES,
+    HTML_ELEMENTS,
     URL_HASH,
 } from "../src/types/DOMConstants";
-import { ERROR_MESSAGES, STATUS_MESSAGES } from "../src/types/MessageConstants";
+import {
+    ERROR_MESSAGES,
+    STATUS_MESSAGES,
+    UI_ELEMENTS,
+} from "../src/types/MessageConstants";
 import { VALIDATION_CONSTRAINTS } from "../src/types/ValidationConstants";
 import {
     createAdminUser,
@@ -638,6 +646,124 @@ describe("App", () => {
                 // Verify only one button exists
                 const buttons = document.querySelectorAll(".add-challenge-btn");
                 expect(buttons.length).toBe(1);
+            });
+
+            it("should update admin actions to text-only when text-only mode is enabled", () => {
+                // Initial render with default button styling
+                app.render();
+
+                let container = document.querySelector(
+                    `.${CSS_CLASSES.ADD_CHALLENGE_CONTAINER}`
+                ) as HTMLElement | null;
+
+                expect(container).toBeTruthy();
+                const initialContainer = container as HTMLElement;
+                expect(
+                    initialContainer.querySelectorAll(HTML_ELEMENTS.BUTTON)
+                        .length
+                ).toBe(3);
+
+                // Enable text-only mode and re-render
+                app.getConfigManager().set(
+                    BEHAVIOR_CONFIG.ADMIN_TEXT_ONLY_MODE,
+                    true
+                );
+                app.render();
+
+                container = document.querySelector(
+                    `.${CSS_CLASSES.ADD_CHALLENGE_CONTAINER}`
+                ) as HTMLElement | null;
+
+                expect(container).toBeTruthy();
+                const textOnlyContainer = container as HTMLElement;
+                expect(
+                    textOnlyContainer.classList.contains(
+                        CSS_CLASSES.ADMIN_TEXT_ONLY_ACTION_CONTAINER
+                    )
+                ).toBe(true);
+                expect(
+                    textOnlyContainer.querySelectorAll(HTML_ELEMENTS.BUTTON)
+                        .length
+                ).toBe(0);
+
+                const textOnlyActions = textOnlyContainer.querySelectorAll(
+                    `.${CSS_CLASSES.ADMIN_TEXT_ONLY_ACTION}`
+                );
+                expect(textOnlyActions.length).toBe(3);
+
+                expect(
+                    textOnlyContainer.querySelector(
+                        `.${CSS_CLASSES.ADMIN_TEXT_ONLY_ACTION_LABEL}`
+                    )?.textContent
+                ).toBe(UI_ELEMENTS.TEXT_ONLY_ADMIN_ACTIONS_LABEL);
+                expect(
+                    textOnlyContainer.querySelector(
+                        `.${CSS_CLASSES.ADMIN_TEXT_ONLY_ACTION_ADD}`
+                    )?.textContent
+                ).toBe(UI_ELEMENTS.TEXT_ONLY_ADD_CHALLENGE_ACTION);
+                expect(
+                    textOnlyContainer.querySelector(
+                        `.${CSS_CLASSES.ADMIN_TEXT_ONLY_ACTION_CLEAR}`
+                    )?.textContent
+                ).toBe(UI_ELEMENTS.TEXT_ONLY_CLEAR_FINISHED_ACTION);
+                expect(
+                    textOnlyContainer.querySelector(
+                        `.${CSS_CLASSES.ADMIN_TEXT_ONLY_ACTION_REFRESH}`
+                    )?.textContent
+                ).toBe(UI_ELEMENTS.TEXT_ONLY_REFRESH_ACTION);
+
+                // Reset admin text-only mode for subsequent tests
+                app.getConfigManager().set(
+                    BEHAVIOR_CONFIG.ADMIN_TEXT_ONLY_MODE,
+                    false
+                );
+                app.render();
+            });
+
+            it("should open the modal when text-only admin actions are activated", () => {
+                app.getConfigManager().set(
+                    BEHAVIOR_CONFIG.ADMIN_TEXT_ONLY_MODE,
+                    true
+                );
+                app.render();
+
+                const container = document.querySelector(
+                    `.${CSS_CLASSES.ADD_CHALLENGE_CONTAINER}`
+                ) as HTMLElement;
+                const addAction = container.querySelector(
+                    `.${CSS_CLASSES.ADMIN_TEXT_ONLY_ACTION_ADD}`
+                ) as HTMLElement;
+                const modal = document.getElementById("add-challenge-modal");
+
+                expect(modal?.classList.contains("hidden")).toBe(true);
+
+                addAction.click();
+
+                expect(modal?.classList.contains("hidden")).toBe(false);
+                expect(modal?.classList.contains("flex")).toBe(true);
+
+                const cancelButton = document.getElementById(
+                    "add-challenge-cancel"
+                ) as HTMLButtonElement;
+                cancelButton?.click();
+
+                expect(modal?.classList.contains("hidden")).toBe(true);
+
+                const keydownEvent = new KeyboardEvent("keydown", {
+                    key: "Enter",
+                });
+                addAction.dispatchEvent(keydownEvent);
+
+                expect(modal?.classList.contains("hidden")).toBe(false);
+                expect(modal?.classList.contains("flex")).toBe(true);
+
+                // Close modal and reset admin text-only mode for subsequent tests
+                cancelButton?.click();
+                app.getConfigManager().set(
+                    BEHAVIOR_CONFIG.ADMIN_TEXT_ONLY_MODE,
+                    false
+                );
+                app.render();
             });
         });
 

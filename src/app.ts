@@ -11,6 +11,7 @@ import {
     COLOR_CONFIG,
     RESPONSE_CONFIG,
 } from "./types/ConfigConstants";
+import type { CSSClassValue } from "./types/DOMConstants";
 import {
     BUTTON_TEXT,
     COMMAND_CONSTANTS,
@@ -20,8 +21,10 @@ import {
     DATA_ATTRIBUTES,
     ELEMENT_IDS,
     EVENT_NAMES,
+    HTML_ATTRIBUTE_NAMES,
     HTML_ATTRIBUTES,
     HTML_ELEMENTS,
+    KEYBOARD_KEYS,
     MODAL_MODES,
     URL_HASH,
 } from "./types/DOMConstants";
@@ -644,68 +647,140 @@ export default class App {
             return;
         }
 
+        const adminTextOnlyMode =
+            this.#configManager.get(BEHAVIOR_CONFIG.ADMIN_TEXT_ONLY_MODE) ??
+            false;
+
         // Find all challenge cards
         const challengeCards = document.querySelectorAll(CSS_SELECTORS.CARD);
         challengeCards.forEach((card) => {
-            // Check if button container already exists
-            let buttonContainer = card.querySelector(
+            let buttonContainer = card.querySelector<HTMLElement>(
                 `.${CSS_CLASSES.ADD_CHALLENGE_CONTAINER}`
             );
 
             if (!buttonContainer) {
-                // Create button container
                 buttonContainer = document.createElement(HTML_ELEMENTS.DIV);
                 buttonContainer.className = CSS_CLASSES.ADD_CHALLENGE_CONTAINER;
-
-                // Create the Add Challenge button
-                const addButton = document.createElement(HTML_ELEMENTS.BUTTON);
-                addButton.className = CSS_CLASSES.ADD_CHALLENGE_BTN;
-                addButton.textContent = BUTTON_TEXT.ADD_CHALLENGE;
-                addButton.type = HTML_ATTRIBUTES.BUTTON_TYPE;
-
-                // Add click event listener
-                addButton.addEventListener(
-                    EVENT_NAMES.CLICK,
-                    this.handleAddChallengeClick
-                );
-
-                buttonContainer.appendChild(addButton);
-
-                // Create the Clear Finished Challenges button
-                const clearFinishedButton = document.createElement(
-                    HTML_ELEMENTS.BUTTON
-                );
-                clearFinishedButton.className = CSS_CLASSES.CLEAR_FINISHED_BTN;
-                clearFinishedButton.textContent = BUTTON_TEXT.CLEAR_FINISHED;
-                clearFinishedButton.type = HTML_ATTRIBUTES.BUTTON_TYPE;
-
-                // Add click event listener
-                clearFinishedButton.addEventListener(
-                    EVENT_NAMES.CLICK,
-                    this.handleClearFinishedClick
-                );
-
-                buttonContainer.appendChild(clearFinishedButton);
-
-                // Create the Refresh button
-                const refreshButton = document.createElement(
-                    HTML_ELEMENTS.BUTTON
-                );
-                refreshButton.className = CSS_CLASSES.CLEAR_FINISHED_BTN;
-                refreshButton.textContent = BUTTON_TEXT.REFRESH;
-                refreshButton.type = HTML_ATTRIBUTES.BUTTON_TYPE;
-
-                // Add click event listener
-                refreshButton.addEventListener(
-                    EVENT_NAMES.CLICK,
-                    this.handleRefreshClick
-                );
-
-                buttonContainer.appendChild(refreshButton);
-
                 card.appendChild(buttonContainer);
             }
+
+            buttonContainer.classList.toggle(
+                CSS_CLASSES.ADMIN_TEXT_ONLY_ACTION_CONTAINER,
+                adminTextOnlyMode
+            );
+
+            buttonContainer.innerHTML = COMMON_STRINGS.EMPTY;
+
+            if (adminTextOnlyMode) {
+                this.renderAdminTextOnlyActions(buttonContainer);
+            } else {
+                this.renderStandardAdminActions(buttonContainer);
+            }
         });
+    }
+
+    private renderStandardAdminActions(buttonContainer: HTMLElement): void {
+        const addButton = document.createElement(HTML_ELEMENTS.BUTTON);
+        addButton.className = CSS_CLASSES.ADD_CHALLENGE_BTN;
+        addButton.textContent = BUTTON_TEXT.ADD_CHALLENGE;
+        addButton.type = HTML_ATTRIBUTES.BUTTON_TYPE;
+        addButton.addEventListener(
+            EVENT_NAMES.CLICK,
+            this.handleAddChallengeClick
+        );
+
+        buttonContainer.appendChild(addButton);
+
+        const clearFinishedButton = document.createElement(
+            HTML_ELEMENTS.BUTTON
+        );
+        clearFinishedButton.className = CSS_CLASSES.CLEAR_FINISHED_BTN;
+        clearFinishedButton.textContent = BUTTON_TEXT.CLEAR_FINISHED;
+        clearFinishedButton.type = HTML_ATTRIBUTES.BUTTON_TYPE;
+        clearFinishedButton.addEventListener(
+            EVENT_NAMES.CLICK,
+            this.handleClearFinishedClick
+        );
+
+        buttonContainer.appendChild(clearFinishedButton);
+
+        const refreshButton = document.createElement(HTML_ELEMENTS.BUTTON);
+        refreshButton.className = CSS_CLASSES.CLEAR_FINISHED_BTN;
+        refreshButton.textContent = BUTTON_TEXT.REFRESH;
+        refreshButton.type = HTML_ATTRIBUTES.BUTTON_TYPE;
+        refreshButton.addEventListener(
+            EVENT_NAMES.CLICK,
+            this.handleRefreshClick
+        );
+
+        buttonContainer.appendChild(refreshButton);
+    }
+
+    private renderAdminTextOnlyActions(buttonContainer: HTMLElement): void {
+        const fragment = document.createDocumentFragment();
+
+        const label = document.createElement(HTML_ELEMENTS.DIV);
+        label.classList.add(CSS_CLASSES.ADMIN_TEXT_ONLY_ACTION_LABEL);
+        label.textContent = UI_ELEMENTS.TEXT_ONLY_ADMIN_ACTIONS_LABEL;
+        fragment.appendChild(label);
+
+        const addAction = this.createAdminTextOnlyAction(
+            UI_ELEMENTS.TEXT_ONLY_ADD_CHALLENGE_ACTION,
+            CSS_CLASSES.ADMIN_TEXT_ONLY_ACTION_ADD,
+            this.handleAddChallengeClick
+        );
+        fragment.appendChild(addAction);
+
+        const clearFinishedAction = this.createAdminTextOnlyAction(
+            UI_ELEMENTS.TEXT_ONLY_CLEAR_FINISHED_ACTION,
+            CSS_CLASSES.ADMIN_TEXT_ONLY_ACTION_CLEAR,
+            this.handleClearFinishedClick
+        );
+        fragment.appendChild(clearFinishedAction);
+
+        const refreshAction = this.createAdminTextOnlyAction(
+            UI_ELEMENTS.TEXT_ONLY_REFRESH_ACTION,
+            CSS_CLASSES.ADMIN_TEXT_ONLY_ACTION_REFRESH,
+            this.handleRefreshClick
+        );
+        fragment.appendChild(refreshAction);
+
+        buttonContainer.appendChild(fragment);
+    }
+
+    private createAdminTextOnlyAction(
+        text: string,
+        variantClass: CSSClassValue,
+        handler: EventListener
+    ): HTMLElement {
+        const actionElement = document.createElement(HTML_ELEMENTS.DIV);
+        actionElement.classList.add(
+            CSS_CLASSES.ADMIN_TEXT_ONLY_ACTION,
+            variantClass
+        );
+        actionElement.textContent = text;
+        actionElement.setAttribute(
+            HTML_ATTRIBUTE_NAMES.ROLE,
+            HTML_ATTRIBUTES.ROLE_BUTTON
+        );
+        actionElement.setAttribute(
+            HTML_ATTRIBUTE_NAMES.TABINDEX,
+            HTML_ATTRIBUTES.TABINDEX_ZERO
+        );
+
+        actionElement.addEventListener(EVENT_NAMES.CLICK, handler);
+        actionElement.addEventListener(EVENT_NAMES.KEYDOWN, (event) => {
+            const keyboardEvent = event as KeyboardEvent;
+            if (
+                keyboardEvent.key === KEYBOARD_KEYS.ENTER ||
+                keyboardEvent.key === KEYBOARD_KEYS.SPACE
+            ) {
+                keyboardEvent.preventDefault();
+                (keyboardEvent.currentTarget as HTMLElement)?.click();
+            }
+        });
+
+        return actionElement;
     }
 
     /**

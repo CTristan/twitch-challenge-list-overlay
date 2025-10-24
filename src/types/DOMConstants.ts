@@ -52,6 +52,12 @@ export const CSS_CLASSES = {
     ADD_CHALLENGE_BTN: "add-challenge-btn",
     ADD_CHALLENGE_CONTAINER: "add-challenge-container",
     CLEAR_FINISHED_BTN: "clear-finished-btn",
+    ADMIN_TEXT_ONLY_ACTION_CONTAINER: "admin-text-only-action-container",
+    ADMIN_TEXT_ONLY_ACTION_LABEL: "admin-text-only-action-label",
+    ADMIN_TEXT_ONLY_ACTION: "admin-text-only-action",
+    ADMIN_TEXT_ONLY_ACTION_ADD: "admin-text-only-action-add",
+    ADMIN_TEXT_ONLY_ACTION_CLEAR: "admin-text-only-action-clear",
+    ADMIN_TEXT_ONLY_ACTION_REFRESH: "admin-text-only-action-refresh",
 
     // Background customization classes
     CUSTOM_OVERLAY_BACKGROUND: "custom-overlay-background",
