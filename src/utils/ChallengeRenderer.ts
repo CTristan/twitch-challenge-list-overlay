@@ -12,6 +12,7 @@ import {
     HTML_ATTRIBUTE_NAMES,
     HTML_ATTRIBUTES,
     HTML_ELEMENTS,
+    KEYBOARD_KEYS,
 } from "../types/DOMConstants";
 import { ARIA_LABELS, UI_ELEMENTS } from "../types/MessageConstants";
 import {
@@ -79,7 +80,10 @@ export class ChallengeRenderer {
 
         // Create metadata row for amount and timer (if either exists)
         const hasAmount = challenge.amount > 1;
-        const hasTimer = challenge.timer && challenge.timer.isActive;
+        // Show timer if it's active OR if it's expired (to show expired state)
+        const hasTimer =
+            challenge.timer &&
+            (challenge.timer.isActive || challenge.timer.isExpired());
 
         if (hasAmount || hasTimer) {
             const metadataRow = document.createElement(HTML_ELEMENTS.DIV);
@@ -236,7 +240,9 @@ export class ChallengeRenderer {
             incrementHandler?: (event: Event) => void;
             decrementHandler?: (event: Event) => void;
             completeHandler?: (event: Event) => void;
+            uncompleteHandler?: (event: Event) => void;
             failHandler?: (event: Event) => void;
+            unfailHandler?: (event: Event) => void;
             displayPosition?: number;
         } = {}
     ): HTMLElement {
@@ -284,82 +290,266 @@ export class ChallengeRenderer {
         const buttonsContainer = document.createElement(HTML_ELEMENTS.DIV);
         buttonsContainer.classList.add(CSS_CLASSES.CHALLENGE_TEXT_ONLY_BUTTONS);
 
-        // Edit button
+        // Edit action (rendered as plain text, accessible as a button)
         if (options.editHandler) {
-            const editButton = document.createElement(HTML_ELEMENTS.BUTTON);
-            editButton.classList.add(CSS_CLASSES.CHALLENGE_TEXT_ONLY_EDIT);
-            editButton.textContent = UI_ELEMENTS.TEXT_ONLY_EDIT_BUTTON;
-            editButton.setAttribute(
+            const editAction = document.createElement(HTML_ELEMENTS.DIV);
+            editAction.classList.add(CSS_CLASSES.CHALLENGE_TEXT_ONLY_EDIT);
+            editAction.textContent = UI_ELEMENTS.TEXT_ONLY_EDIT_BUTTON;
+            editAction.setAttribute(
+                HTML_ATTRIBUTE_NAMES.ROLE,
+                HTML_ATTRIBUTES.ROLE_BUTTON
+            );
+            editAction.setAttribute(
                 HTML_ATTRIBUTE_NAMES.ARIA_LABEL,
                 ARIA_LABELS.EDIT_CHALLENGE
             );
-            editButton.addEventListener(EVENT_NAMES.CLICK, options.editHandler);
-            buttonsContainer.appendChild(editButton);
-        }
-
-        // Complete button (only if not already completed)
-        if (options.completeHandler && !challenge.isComplete()) {
-            const completeButton = document.createElement(HTML_ELEMENTS.BUTTON);
-            completeButton.classList.add(
-                CSS_CLASSES.CHALLENGE_TEXT_ONLY_COMPLETE
+            editAction.setAttribute(
+                HTML_ATTRIBUTE_NAMES.TABINDEX,
+                HTML_ATTRIBUTES.TABINDEX_ZERO
             );
-            completeButton.textContent = UI_ELEMENTS.TEXT_ONLY_COMPLETE_BUTTON;
-            completeButton.addEventListener(
-                EVENT_NAMES.CLICK,
-                options.completeHandler
+            editAction.addEventListener(EVENT_NAMES.CLICK, options.editHandler);
+            // Keyboard accessibility (Enter/Space)
+            editAction.addEventListener(
+                EVENT_NAMES.KEYDOWN,
+                (e: KeyboardEvent) => {
+                    if (
+                        e.key === KEYBOARD_KEYS.ENTER ||
+                        e.key === KEYBOARD_KEYS.SPACE
+                    ) {
+                        e.preventDefault();
+                        (e.currentTarget as HTMLElement).click();
+                    }
+                }
             );
-            buttonsContainer.appendChild(completeButton);
+            buttonsContainer.appendChild(editAction);
         }
 
-        // Fail button (only if not already failed or completed)
-        if (options.failHandler && state !== CHALLENGE_STATES.FAILED) {
-            const failButton = document.createElement(HTML_ELEMENTS.BUTTON);
-            failButton.classList.add(CSS_CLASSES.CHALLENGE_TEXT_ONLY_FAIL);
-            failButton.textContent = UI_ELEMENTS.TEXT_ONLY_FAIL_BUTTON;
-            failButton.addEventListener(EVENT_NAMES.CLICK, options.failHandler);
-            buttonsContainer.appendChild(failButton);
+        // Complete/Uncomplete action
+        if (challenge.isComplete()) {
+            // Show "Uncomplete" button if challenge is completed
+            if (options.uncompleteHandler) {
+                const uncompleteAction = document.createElement(
+                    HTML_ELEMENTS.DIV
+                );
+                uncompleteAction.classList.add(
+                    CSS_CLASSES.CHALLENGE_TEXT_ONLY_UNCOMPLETE
+                );
+                uncompleteAction.textContent =
+                    UI_ELEMENTS.TEXT_ONLY_UNCOMPLETE_BUTTON;
+                uncompleteAction.setAttribute(
+                    HTML_ATTRIBUTE_NAMES.ROLE,
+                    HTML_ATTRIBUTES.ROLE_BUTTON
+                );
+                uncompleteAction.setAttribute(
+                    HTML_ATTRIBUTE_NAMES.TABINDEX,
+                    HTML_ATTRIBUTES.TABINDEX_ZERO
+                );
+                uncompleteAction.addEventListener(
+                    EVENT_NAMES.CLICK,
+                    options.uncompleteHandler
+                );
+                uncompleteAction.addEventListener(
+                    EVENT_NAMES.KEYDOWN,
+                    (e: KeyboardEvent) => {
+                        if (
+                            e.key === KEYBOARD_KEYS.ENTER ||
+                            e.key === KEYBOARD_KEYS.SPACE
+                        ) {
+                            e.preventDefault();
+                            (e.currentTarget as HTMLElement).click();
+                        }
+                    }
+                );
+                buttonsContainer.appendChild(uncompleteAction);
+            }
+        } else {
+            // Show "Complete" button if challenge is not completed
+            if (options.completeHandler) {
+                const completeAction = document.createElement(
+                    HTML_ELEMENTS.DIV
+                );
+                completeAction.classList.add(
+                    CSS_CLASSES.CHALLENGE_TEXT_ONLY_COMPLETE
+                );
+                completeAction.textContent =
+                    UI_ELEMENTS.TEXT_ONLY_COMPLETE_BUTTON;
+                completeAction.setAttribute(
+                    HTML_ATTRIBUTE_NAMES.ROLE,
+                    HTML_ATTRIBUTES.ROLE_BUTTON
+                );
+                completeAction.setAttribute(
+                    HTML_ATTRIBUTE_NAMES.TABINDEX,
+                    HTML_ATTRIBUTES.TABINDEX_ZERO
+                );
+                completeAction.addEventListener(
+                    EVENT_NAMES.CLICK,
+                    options.completeHandler
+                );
+                completeAction.addEventListener(
+                    EVENT_NAMES.KEYDOWN,
+                    (e: KeyboardEvent) => {
+                        if (
+                            e.key === KEYBOARD_KEYS.ENTER ||
+                            e.key === KEYBOARD_KEYS.SPACE
+                        ) {
+                            e.preventDefault();
+                            (e.currentTarget as HTMLElement).click();
+                        }
+                    }
+                );
+                buttonsContainer.appendChild(completeAction);
+            }
         }
 
-        // Increment/Decrement buttons for multi-step challenges
+        // Fail/Unfail action
+        if (state === CHALLENGE_STATES.FAILED) {
+            // Show "Unfail" button if challenge is failed
+            if (options.unfailHandler) {
+                const unfailAction = document.createElement(HTML_ELEMENTS.DIV);
+                unfailAction.classList.add(
+                    CSS_CLASSES.CHALLENGE_TEXT_ONLY_UNFAIL
+                );
+                unfailAction.textContent = UI_ELEMENTS.TEXT_ONLY_UNFAIL_BUTTON;
+                unfailAction.setAttribute(
+                    HTML_ATTRIBUTE_NAMES.ROLE,
+                    HTML_ATTRIBUTES.ROLE_BUTTON
+                );
+                unfailAction.setAttribute(
+                    HTML_ATTRIBUTE_NAMES.TABINDEX,
+                    HTML_ATTRIBUTES.TABINDEX_ZERO
+                );
+                unfailAction.addEventListener(
+                    EVENT_NAMES.CLICK,
+                    options.unfailHandler
+                );
+                unfailAction.addEventListener(
+                    EVENT_NAMES.KEYDOWN,
+                    (e: KeyboardEvent) => {
+                        if (
+                            e.key === KEYBOARD_KEYS.ENTER ||
+                            e.key === KEYBOARD_KEYS.SPACE
+                        ) {
+                            e.preventDefault();
+                            (e.currentTarget as HTMLElement).click();
+                        }
+                    }
+                );
+                buttonsContainer.appendChild(unfailAction);
+            }
+        } else {
+            // Show "Fail" button if challenge is not failed
+            if (options.failHandler) {
+                const failAction = document.createElement(HTML_ELEMENTS.DIV);
+                failAction.classList.add(CSS_CLASSES.CHALLENGE_TEXT_ONLY_FAIL);
+                failAction.textContent = UI_ELEMENTS.TEXT_ONLY_FAIL_BUTTON;
+                failAction.setAttribute(
+                    HTML_ATTRIBUTE_NAMES.ROLE,
+                    HTML_ATTRIBUTES.ROLE_BUTTON
+                );
+                failAction.setAttribute(
+                    HTML_ATTRIBUTE_NAMES.TABINDEX,
+                    HTML_ATTRIBUTES.TABINDEX_ZERO
+                );
+                failAction.addEventListener(
+                    EVENT_NAMES.CLICK,
+                    options.failHandler
+                );
+                failAction.addEventListener(
+                    EVENT_NAMES.KEYDOWN,
+                    (e: KeyboardEvent) => {
+                        if (
+                            e.key === KEYBOARD_KEYS.ENTER ||
+                            e.key === KEYBOARD_KEYS.SPACE
+                        ) {
+                            e.preventDefault();
+                            (e.currentTarget as HTMLElement).click();
+                        }
+                    }
+                );
+                buttonsContainer.appendChild(failAction);
+            }
+        }
+
+        // Increment/Decrement buttons for multi-step challenges (rendered as plain text)
         if (challenge.amount > 1) {
             if (options.incrementHandler) {
-                const incrementButton = document.createElement(
-                    HTML_ELEMENTS.BUTTON
+                const incrementAction = document.createElement(
+                    HTML_ELEMENTS.DIV
                 );
-                incrementButton.classList.add(
+                incrementAction.classList.add(
                     CSS_CLASSES.CHALLENGE_TEXT_ONLY_INCREMENT
                 );
-                incrementButton.textContent =
+                incrementAction.textContent =
                     UI_ELEMENTS.TEXT_ONLY_INCREMENT_BUTTON;
-                incrementButton.setAttribute(
+                incrementAction.setAttribute(
+                    HTML_ATTRIBUTE_NAMES.ROLE,
+                    HTML_ATTRIBUTES.ROLE_BUTTON
+                );
+                incrementAction.setAttribute(
                     HTML_ATTRIBUTE_NAMES.ARIA_LABEL,
                     ARIA_LABELS.INCREMENT_PROGRESS
                 );
-                incrementButton.addEventListener(
+                incrementAction.setAttribute(
+                    HTML_ATTRIBUTE_NAMES.TABINDEX,
+                    HTML_ATTRIBUTES.TABINDEX_ZERO
+                );
+                incrementAction.addEventListener(
                     EVENT_NAMES.CLICK,
                     options.incrementHandler
                 );
-                buttonsContainer.appendChild(incrementButton);
+                incrementAction.addEventListener(
+                    EVENT_NAMES.KEYDOWN,
+                    (e: KeyboardEvent) => {
+                        if (
+                            e.key === KEYBOARD_KEYS.ENTER ||
+                            e.key === KEYBOARD_KEYS.SPACE
+                        ) {
+                            e.preventDefault();
+                            (e.currentTarget as HTMLElement).click();
+                        }
+                    }
+                );
+                buttonsContainer.appendChild(incrementAction);
             }
 
             if (options.decrementHandler) {
-                const decrementButton = document.createElement(
-                    HTML_ELEMENTS.BUTTON
+                const decrementAction = document.createElement(
+                    HTML_ELEMENTS.DIV
                 );
-                decrementButton.classList.add(
+                decrementAction.classList.add(
                     CSS_CLASSES.CHALLENGE_TEXT_ONLY_DECREMENT
                 );
-                decrementButton.textContent =
+                decrementAction.textContent =
                     UI_ELEMENTS.TEXT_ONLY_DECREMENT_BUTTON;
-                decrementButton.setAttribute(
+                decrementAction.setAttribute(
+                    HTML_ATTRIBUTE_NAMES.ROLE,
+                    HTML_ATTRIBUTES.ROLE_BUTTON
+                );
+                decrementAction.setAttribute(
                     HTML_ATTRIBUTE_NAMES.ARIA_LABEL,
                     ARIA_LABELS.DECREMENT_PROGRESS
                 );
-                decrementButton.addEventListener(
+                decrementAction.setAttribute(
+                    HTML_ATTRIBUTE_NAMES.TABINDEX,
+                    HTML_ATTRIBUTES.TABINDEX_ZERO
+                );
+                decrementAction.addEventListener(
                     EVENT_NAMES.CLICK,
                     options.decrementHandler
                 );
-                buttonsContainer.appendChild(decrementButton);
+                decrementAction.addEventListener(
+                    EVENT_NAMES.KEYDOWN,
+                    (e: KeyboardEvent) => {
+                        if (
+                            e.key === KEYBOARD_KEYS.ENTER ||
+                            e.key === KEYBOARD_KEYS.SPACE
+                        ) {
+                            e.preventDefault();
+                            (e.currentTarget as HTMLElement).click();
+                        }
+                    }
+                );
+                buttonsContainer.appendChild(decrementAction);
             }
         }
 

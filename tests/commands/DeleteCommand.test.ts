@@ -3,6 +3,7 @@ import Challenge from "../../src/classes/Challenge";
 import ChallengeList from "../../src/classes/ChallengeList";
 import ConfigManager from "../../src/classes/ConfigManager";
 import { DeleteCommand } from "../../src/commands/DeleteCommand";
+import { ChallengeStatus } from "../../src/types/ChallengeStatus";
 import { UIUpdateAction } from "../../src/types/UIUpdateAction";
 import { ensureTestIsolation } from "../utils/chatHandlerTestUtils";
 
@@ -174,7 +175,7 @@ describe("DeleteCommand", () => {
         it("should delete completed challenge", () => {
             // Add completed challenge
             const completedChallenge = new Challenge("Completed Challenge");
-            completedChallenge.setCompletionStatus(true);
+            completedChallenge.setStatus(ChallengeStatus.COMPLETED);
             challengeList.addChallengeObjects(completedChallenge);
 
             // Delete challenge
@@ -199,7 +200,7 @@ describe("DeleteCommand", () => {
         it("should delete failed challenge", () => {
             // Add failed challenge
             const failedChallenge = new Challenge("Failed Challenge");
-            failedChallenge.setFailureStatus(true);
+            failedChallenge.setStatus(ChallengeStatus.FAILED);
             challengeList.addChallengeObjects(failedChallenge);
 
             // Delete challenge
@@ -332,7 +333,7 @@ describe("DeleteCommand", () => {
             const timedChallenge = new Challenge("Timed", { timer: "5m" });
             const progressChallenge = new Challenge("Progress", { amount: 5 });
 
-            completedChallenge.setCompletionStatus(true);
+            completedChallenge.setStatus(ChallengeStatus.COMPLETED);
             timedChallenge.startTimer();
             progressChallenge.incrementProgress();
 

@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import AdminPanel from "../../src/classes/AdminPanel";
 import ConfigManager from "../../src/classes/ConfigManager";
+import { CORE_CONFIG } from "../../src/types/ConfigConstants";
 import { ELEMENT_IDS } from "../../src/types/DOMConstants";
 import { ERROR_MESSAGES } from "../../src/types/MessageConstants";
 
@@ -1661,17 +1662,22 @@ describe("AdminPanel", () => {
         });
 
         it("should auto-save behavior configuration", () => {
-            const consoleSpy = vi
-                .spyOn(console, "log")
-                .mockImplementation(() => {});
+            // Setup DOM with behavior configuration elements
+            document.body.innerHTML = `
+                <div class="admin-content">
+                    <input type="number" id="max-challenges" value="15">
+                    <input type="checkbox" id="admin-text-only-mode">
+                </div>
+            `;
 
             // Call autoSaveBehaviorConfiguration
             (adminPanel as any).autoSaveBehaviorConfiguration();
 
-            // Verify console log was called
-            expect(consoleSpy).toHaveBeenCalled();
-
-            consoleSpy.mockRestore();
+            // Verify configuration was saved
+            const savedMaxChallenges = ConfigManager.getInstance().get(
+                CORE_CONFIG.MAX_CHALLENGES
+            );
+            expect(savedMaxChallenges).toBe(15);
         });
 
         it("should auto-save color configuration", () => {
@@ -2140,7 +2146,7 @@ describe("AdminPanel", () => {
             (adminPanel as any).createBehaviorSection(container);
 
             // Verify section was created
-            expect(container.innerHTML).toContain("Behavior");
+            expect(container.innerHTML).toContain("General Settings");
         });
 
         it("should create challenge row styling section", () => {

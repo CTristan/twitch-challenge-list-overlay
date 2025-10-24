@@ -3,6 +3,7 @@ import App from "../../src/app";
 import Challenge from "../../src/classes/Challenge";
 import ChallengeList from "../../src/classes/ChallengeList";
 import ConfigManager from "../../src/classes/ConfigManager";
+import { ChallengeStatus } from "../../src/types/ChallengeStatus";
 import { ensureTestIsolation } from "../utils/chatHandlerTestUtils";
 import { setupChallengeTestDOM } from "../utils/domTestUtils";
 
@@ -307,7 +308,7 @@ describe("Challenge Progress Display", () => {
             challengeList.addChallengeForTesting(challenge);
 
             // Complete the challenge
-            challenge.setCompletionStatus(true);
+            challenge.setStatus(ChallengeStatus.COMPLETED);
 
             app.renderChallengeList();
 

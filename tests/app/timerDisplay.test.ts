@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import App from "../../src/app";
 import Challenge from "../../src/classes/Challenge";
 import ChallengeList from "../../src/classes/ChallengeList";
+import { ChallengeStatus } from "../../src/types/ChallengeStatus";
 
 describe("Timer Display in Challenge Rows", () => {
     let app: App;
@@ -242,7 +243,7 @@ describe("Timer Display in Challenge Rows", () => {
             app.renderChallengeList();
 
             // Complete the challenge
-            challenge.setCompletionStatus(true);
+            challenge.setStatus(ChallengeStatus.COMPLETED);
 
             // Update DOM
             app.completeChallengeFromDOM(challenge.id);
@@ -289,7 +290,7 @@ describe("Timer Display in Challenge Rows", () => {
             app.renderChallengeList();
 
             // Complete the challenge (this stops the timer)
-            challenge.setCompletionStatus(true);
+            challenge.setStatus(ChallengeStatus.COMPLETED);
 
             // Update timer displays
             app.updateTimerDisplays();

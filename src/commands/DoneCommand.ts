@@ -1,4 +1,5 @@
 import type Challenge from "../classes/Challenge";
+import { ChallengeStatus } from "../types/ChallengeStatus";
 import type { CommandResponse } from "../types/CommandResponse";
 import { UIUpdateAction } from "../types/UIUpdateAction";
 import type { UIUpdateData } from "../types/UIUpdateData";
@@ -43,13 +44,8 @@ export class DoneCommand extends BaseCommand {
                     throw new Error(`Index ${i} not found in indices array`);
                 }
 
-                if (!challenge.isComplete()) {
-                    challenge.setCompletionStatus(true);
-
-                    // Stop timer if running
-                    if (challenge.timer && challenge.timer.isActive) {
-                        challenge.timer.stop();
-                    }
+                if (challenge.getStatus() !== ChallengeStatus.COMPLETED) {
+                    challenge.setStatus(ChallengeStatus.COMPLETED);
 
                     completedChallenges.push(challenge);
                     completedIndices.push(index);

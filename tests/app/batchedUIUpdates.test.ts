@@ -3,6 +3,7 @@ import App from "../../src/app";
 import Challenge from "../../src/classes/Challenge";
 import ChallengeList from "../../src/classes/ChallengeList";
 import ConfigManager from "../../src/classes/ConfigManager";
+import { ChallengeStatus } from "../../src/types/ChallengeStatus";
 import type { CommandResponse } from "../../src/types/CommandResponse";
 import { UIUpdateAction } from "../../src/types/UIUpdateAction";
 import UIUpdateHandler from "../../src/utils/UIUpdateHandler";
@@ -213,7 +214,7 @@ describe("Batched UI Updates Performance", () => {
             ];
 
             // Mark one as complete
-            challenges[0]!.setCompletionStatus(true);
+            challenges[0]!.setStatus(ChallengeStatus.COMPLETED);
 
             challenges.forEach((challenge) =>
                 challengeList.addChallengeObjects(challenge)

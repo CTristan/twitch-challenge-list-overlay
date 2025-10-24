@@ -3,6 +3,7 @@ import Challenge from "../../src/classes/Challenge";
 import ChallengeList from "../../src/classes/ChallengeList";
 import ConfigManager from "../../src/classes/ConfigManager";
 import { SetCommand } from "../../src/commands/SetCommand";
+import { ChallengeStatus } from "../../src/types/ChallengeStatus";
 import { UIUpdateAction } from "../../src/types/UIUpdateAction";
 import { ensureTestIsolation } from "../utils/chatHandlerTestUtils";
 
@@ -547,7 +548,7 @@ describe("SetCommand", () => {
 
         it("should handle setting progress on completed challenge", () => {
             const challenge = new Challenge("Test Challenge", { amount: 10 });
-            challenge.setCompletionStatus(true);
+            challenge.setStatus(ChallengeStatus.COMPLETED);
             challengeList.addChallengeObjects(challenge);
 
             const response = setCommand.execute(

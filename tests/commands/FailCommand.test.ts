@@ -3,6 +3,7 @@ import Challenge from "../../src/classes/Challenge";
 import ChallengeList from "../../src/classes/ChallengeList";
 import ConfigManager from "../../src/classes/ConfigManager";
 import { FailCommand } from "../../src/commands/FailCommand";
+import { ChallengeStatus } from "../../src/types/ChallengeStatus";
 import { ensureTestIsolation } from "../utils/chatHandlerTestUtils";
 
 describe("FailCommand", () => {
@@ -395,7 +396,7 @@ describe("FailCommand", () => {
         it("should return error when challenge is already failed", () => {
             // Add failed challenge
             const failedChallenge = new Challenge("Failed Challenge");
-            failedChallenge.setFailureStatus(true);
+            failedChallenge.setStatus(ChallengeStatus.FAILED);
             challengeList.addChallengeObjects(failedChallenge);
 
             // Try to mark as failed again
@@ -420,8 +421,8 @@ describe("FailCommand", () => {
             // Add failed challenges
             const challenge1 = new Challenge("Challenge 1");
             const challenge2 = new Challenge("Challenge 2");
-            challenge1.setFailureStatus(true);
-            challenge2.setFailureStatus(true);
+            challenge1.setStatus(ChallengeStatus.FAILED);
+            challenge2.setStatus(ChallengeStatus.FAILED);
             challengeList.addChallengeObjects([challenge1, challenge2]);
 
             // Try to mark as failed
@@ -495,9 +496,9 @@ describe("FailCommand", () => {
             const challenge = new Challenge("Test Challenge");
             challengeList.addChallengeObjects(challenge);
 
-            // Mock setFailureStatus to throw an error
-            const originalMethod = challenge.setFailureStatus;
-            challenge.setFailureStatus = () => {
+            // Mock setStatus to throw an error
+            const originalMethod = challenge.setStatus;
+            challenge.setStatus = () => {
                 throw new Error("Failure operation failed");
             };
 
@@ -520,7 +521,7 @@ describe("FailCommand", () => {
             expect(response.message).toContain("Failure operation failed");
 
             // Restore original method
-            challenge.setFailureStatus = originalMethod;
+            challenge.setStatus = originalMethod;
         });
 
         it("should handle non-Error exceptions", () => {
@@ -528,9 +529,9 @@ describe("FailCommand", () => {
             const challenge = new Challenge("Test Challenge");
             challengeList.addChallengeObjects(challenge);
 
-            // Mock setFailureStatus to throw a non-Error object
-            const originalMethod = challenge.setFailureStatus;
-            challenge.setFailureStatus = () => {
+            // Mock setStatus to throw a non-Error object
+            const originalMethod = challenge.setStatus;
+            challenge.setStatus = () => {
                 throw "String error";
             };
 
@@ -552,7 +553,7 @@ describe("FailCommand", () => {
             expect(response.message).toContain("marking challenges as failed");
 
             // Restore original method
-            challenge.setFailureStatus = originalMethod;
+            challenge.setStatus = originalMethod;
         });
     });
 
@@ -783,7 +784,7 @@ describe("FailCommand", () => {
             const challenge3 = new Challenge("Challenge 3");
 
             // Mark challenge2 as already failed
-            challenge2.setFailureStatus(true);
+            challenge2.setStatus(ChallengeStatus.FAILED);
 
             challengeList.addChallengeObjects([
                 challenge1,
@@ -817,7 +818,7 @@ describe("FailCommand", () => {
         it("should handle completed challenge being marked as failed", () => {
             // Add completed challenge
             const completedChallenge = new Challenge("Completed Challenge");
-            completedChallenge.setCompletionStatus(true);
+            completedChallenge.setStatus(ChallengeStatus.COMPLETED);
             challengeList.addChallengeObjects(completedChallenge);
 
             // Mark completed challenge as failed

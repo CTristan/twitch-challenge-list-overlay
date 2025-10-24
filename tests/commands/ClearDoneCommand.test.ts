@@ -3,6 +3,7 @@ import Challenge from "../../src/classes/Challenge";
 import ChallengeList from "../../src/classes/ChallengeList";
 import ConfigManager from "../../src/classes/ConfigManager";
 import { ClearDoneCommand } from "../../src/commands/ClearDoneCommand";
+import { ChallengeStatus } from "../../src/types/ChallengeStatus";
 import { ERROR_MESSAGES } from "../../src/types/MessageConstants";
 import { UIUpdateAction } from "../../src/types/UIUpdateAction";
 
@@ -27,9 +28,9 @@ describe("ClearDoneCommand", () => {
             const completedChallenge2 = new Challenge("Completed Challenge 2");
             const failedChallenge = new Challenge("Failed Challenge");
 
-            completedChallenge1.setCompletionStatus(true);
-            completedChallenge2.setCompletionStatus(true);
-            failedChallenge.setFailureStatus(true);
+            completedChallenge1.setStatus(ChallengeStatus.COMPLETED);
+            completedChallenge2.setStatus(ChallengeStatus.COMPLETED);
+            failedChallenge.setStatus(ChallengeStatus.FAILED);
 
             challengeList.addChallengeObjects([
                 activeChallenge,
@@ -71,7 +72,7 @@ describe("ClearDoneCommand", () => {
             // Add challenges with completed status
             const activeChallenge = new Challenge("Active Challenge");
             const completedChallenge = new Challenge("Completed Challenge");
-            completedChallenge.setCompletionStatus(true);
+            completedChallenge.setStatus(ChallengeStatus.COMPLETED);
 
             challengeList.addChallengeObjects([
                 activeChallenge,
@@ -184,8 +185,8 @@ describe("ClearDoneCommand", () => {
             activeTimedChallenge.startTimer();
             completedTimedChallenge1.startTimer();
             completedTimedChallenge2.startTimer();
-            completedTimedChallenge1.setCompletionStatus(true);
-            completedTimedChallenge2.setCompletionStatus(true);
+            completedTimedChallenge1.setStatus(ChallengeStatus.COMPLETED);
+            completedTimedChallenge2.setStatus(ChallengeStatus.COMPLETED);
 
             challengeList.addChallengeObjects([
                 activeTimedChallenge,
@@ -283,7 +284,7 @@ describe("ClearDoneCommand", () => {
             // Add challenges with different statuses
             const activeChallenge = new Challenge("Active Challenge");
             const completedChallenge = new Challenge("Completed Challenge");
-            completedChallenge.setCompletionStatus(true);
+            completedChallenge.setStatus(ChallengeStatus.COMPLETED);
 
             challengeList.addChallengeObjects([
                 activeChallenge,
@@ -317,7 +318,7 @@ describe("ClearDoneCommand", () => {
             const completedChallenge = new Challenge(
                 "Single Completed Challenge"
             );
-            completedChallenge.setCompletionStatus(true);
+            completedChallenge.setStatus(ChallengeStatus.COMPLETED);
             challengeList.addChallengeObjects(completedChallenge);
 
             // Execute clear done command
@@ -345,7 +346,7 @@ describe("ClearDoneCommand", () => {
         it("should handle error during clear operation", () => {
             // Add completed challenge
             const completedChallenge = new Challenge("Completed Challenge");
-            completedChallenge.setCompletionStatus(true);
+            completedChallenge.setStatus(ChallengeStatus.COMPLETED);
             challengeList.addChallengeObjects(completedChallenge);
 
             // Mock clearDoneChallenges to throw an error
@@ -404,9 +405,9 @@ describe("ClearDoneCommand", () => {
             const completedChallenge2 = new Challenge("Completed Challenge 2");
             const completedChallenge3 = new Challenge("Completed Challenge 3");
 
-            completedChallenge1.setCompletionStatus(true);
-            completedChallenge2.setCompletionStatus(true);
-            completedChallenge3.setCompletionStatus(true);
+            completedChallenge1.setStatus(ChallengeStatus.COMPLETED);
+            completedChallenge2.setStatus(ChallengeStatus.COMPLETED);
+            completedChallenge3.setStatus(ChallengeStatus.COMPLETED);
 
             challengeList.addChallengeObjects([
                 completedChallenge1,
@@ -448,9 +449,9 @@ describe("ClearDoneCommand", () => {
             const failedChallenge2 = new Challenge("Failed Challenge 2");
             const completedChallenge = new Challenge("Completed Challenge");
 
-            failedChallenge1.setFailureStatus(true);
-            failedChallenge2.setFailureStatus(true);
-            completedChallenge.setCompletionStatus(true);
+            failedChallenge1.setStatus(ChallengeStatus.FAILED);
+            failedChallenge2.setStatus(ChallengeStatus.FAILED);
+            completedChallenge.setStatus(ChallengeStatus.COMPLETED);
 
             challengeList.addChallengeObjects([
                 failedChallenge1,
@@ -503,11 +504,11 @@ describe("ClearDoneCommand", () => {
             );
 
             // Set statuses
-            completedChallenge.setCompletionStatus(true);
-            failedChallenge.setFailureStatus(true);
+            completedChallenge.setStatus(ChallengeStatus.COMPLETED);
+            failedChallenge.setStatus(ChallengeStatus.FAILED);
             timedActiveChallenge.startTimer();
             timedCompletedChallenge.startTimer();
-            timedCompletedChallenge.setCompletionStatus(true);
+            timedCompletedChallenge.setStatus(ChallengeStatus.COMPLETED);
             progressActiveChallenge.incrementProgress();
             for (let i = 0; i < 3; i++) {
                 progressCompletedChallenge.incrementProgress();

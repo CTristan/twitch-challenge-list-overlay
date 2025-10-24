@@ -1,144 +1,48 @@
 # tests/ - Testing Patterns & Coverage
 
-Test organization, utilities, and coverage requirements.
-
-## Test Organization
-
-**Parallel structure**: Tests mirror `src/` directory
-
-```
-tests/
-├── classes/      # Core class tests
-├── commands/     # Command tests
-├── twitch/       # IRC integration tests
-├── utils/        # Utility tests
-├── integration/  # Integration tests
-└── app/          # App-level tests
-```
-
-## Coverage Requirements (MANDATORY)
-
-- **Thresholds**: 80% minimum (statements, branches, functions, lines)
-- **Provider**: v8 for TypeScript
-- **Enforcement**: Build fails below thresholds
-- **Command**: `pnpm run test:coverage`
+Tests mirror `src/` structure. 80% minimum coverage (v8). Use runTests tool with mode="coverage".
 
 ## Test Structure
 
 ```typescript
-import { beforeEach, describe, expect, it } from "vitest";
-
 describe("ClassName", () => {
-    let instance: ClassName;
-    
     beforeEach(() => {
-        ensureTestIsolation();  // CRITICAL: Clear state
-        instance = new ClassName("param");
+        ensureTestIsolation(); // CRITICAL: Clear state before each test
     });
-    
-    describe("methodName", () => {
-        it("should describe expected behavior", () => {
-            expect(instance.methodName()).toBe(expected);
-        });
+    it("should describe expected behavior", () => {
+        expect(result).toBe(expected);
     });
 });
 ```
+
+## TypeScript Strict Patterns
+
+**Optional properties**: `{...(val !== undefined && {prop: val})}` (never pass undefined)
+**Dataset access**: `element.dataset[DATA_ATTRIBUTES.KEY]` (bracket notation only)
 
 ## Coverage Summary
 
-### High Coverage (90%+)
-- index.ts: 100% (28 tests)
-- CommandRegistry: 100% (34 tests)
-- TwitchChat: 100% statements (34 tests)
-- ChallengeRenderer, CommandHandler, ValidationUtils: 90%+
+**High (90%+)**: index.ts, CommandRegistry, TwitchChat, ChallengeRenderer, CommandHandler, ValidationUtils
+**Good (80-89%)**: App (92.59%), AdminPanel (89.92%), Commands (10+ classes)
 
-### Good Coverage (80-89%)
-- App: 92.59% statements (27 tests)
-- AdminPanel: 89.92% statements (35 tests)
-- Commands: 10+ classes with 80%+
+## Branch Coverage
 
-## Branch Coverage Strategies
-
-**Test all branches**:
-- Error paths (invalid inputs, null checks, boundaries)
-- Conditional logic (admin vs viewer mode, feature flags)
-- State variations (empty lists, max capacity, edge cases)
-- DOM errors (missing elements)
-- Integration flows (complete command paths)
-
-**Example**:
-```typescript
-describe("handleCheckboxClick", () => {
-    it("toggles in admin mode", () => {
-        window.location.hash = "#admin";
-        // Test logic
-    });
-    
-    it("ignores in viewer mode", () => {
-        window.location.hash = "";
-        // Verify no change
-    });
-});
-```
+Test all branches: error paths, conditionals (admin/viewer mode), state variations (empty/max), DOM errors, integration flows.
 
 ## Test Utilities
 
-### ensureTestIsolation() - CRITICAL
-Call in EVERY `beforeEach` block:
-```typescript
-beforeEach(() => {
-    ensureTestIsolation();  // Clears localStorage, resets state
-});
-```
+**ensureTestIsolation()**: Call in EVERY `beforeEach` (clears localStorage, resets state)
+**domTestUtils.ts**: createMockDOM(), cleanupDOM(), findElement()
+**chatHandlerTestUtils.ts**: createMockChatMessage(), createMockUser(), simulateCommand()
 
-### domTestUtils.ts
-- `createMockDOM()`: Mock DOM environment
-- `cleanupDOM()`: Teardown
-- `findElement(selector)`: Safe query
+## Mocking
 
-### chatHandlerTestUtils.ts
-- `createMockChatMessage()`: Test messages
-- `createMockUser()`: Test users
-- `simulateCommand()`: Command execution
-
-## Testing DOM
-
-```typescript
-import { JSDOM } from "jsdom";
-
-beforeEach(() => {
-    const dom = new JSDOM("<!DOCTYPE html><div id='container'></div>");
-    global.document = dom.window.document;
-    global.window = dom.window as any;
-});
-```
-
-## Mocking localStorage
-
-```typescript
-const mockStorage = new Map<string, string>();
-global.localStorage = {
-    getItem: (key) => mockStorage.get(key) ?? null,
-    setItem: (key, value) => mockStorage.set(key, value),
-    removeItem: (key) => mockStorage.delete(key),
-    clear: () => mockStorage.clear(),
-    length: mockStorage.size,
-    key: (index) => Array.from(mockStorage.keys())[index] ?? null
-};
-```
+**DOM**: Use JSDOM to set global.document/window
+**localStorage**: Map-based mock with getItem/setItem/removeItem/clear/length/key
 
 ## Running Tests
 
-```bash
-pnpm run test              # All tests
-pnpm run test:coverage     # Coverage report
-pnpm test -- ClassName     # Specific file
-pnpm test -- --watch       # Watch mode
-```
-
-## Debugging
-
-- Console logs visible in output
-- VS Code debugger with Vitest
-- `it.only()` for focused test
-- `it.skip()` to disable test
+-   All: `runTests()`
+-   Specific: `runTests({files: ["path/to/test.ts"]})`
+-   Coverage: `runTests({mode: "coverage", coverageFiles: ["path/to/file.ts"]})`
+-   Debug: `it.only()` to focus, `it.skip()` to disable

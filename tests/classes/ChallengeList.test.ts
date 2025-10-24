@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import Challenge from "../../src/classes/Challenge";
 import ChallengeList from "../../src/classes/ChallengeList";
+import { ChallengeStatus } from "../../src/types/ChallengeStatus";
 import { CHALLENGE_STATES } from "../../src/types/DOMConstants";
 
 describe("ChallengeList", () => {
@@ -30,8 +31,7 @@ describe("ChallengeList", () => {
                         description: "Description for challenge 1",
                         amount: 1,
                         progress: 0,
-                        completionStatus: false,
-                        failureStatus: false,
+                        status: ChallengeStatus.IN_PROGRESS,
                         createdAt: Date.now(),
                     },
                 ])
@@ -43,7 +43,7 @@ describe("ChallengeList", () => {
             expect(challenge.description).toEqual(
                 "Description for challenge 1"
             );
-            expect(challenge.completionStatus).toEqual(false);
+            expect(challenge.status).toEqual(ChallengeStatus.IN_PROGRESS);
         });
 
         it("should correctly restore completed challenge counts from localStorage", () => {
@@ -457,7 +457,7 @@ describe("ChallengeList", () => {
             });
 
             it("should cycle challenge state from done to failed", () => {
-                challenge1.setCompletionStatus(true);
+                challenge1.setStatus(ChallengeStatus.COMPLETED);
                 challengeList.saveToLocalStorage();
                 const initialCompleted = challengeList.challengesCompleted;
 
@@ -472,7 +472,7 @@ describe("ChallengeList", () => {
             });
 
             it("should cycle challenge state from failed to in-progress", () => {
-                challenge1.setFailureStatus(true);
+                challenge1.setStatus(ChallengeStatus.FAILED);
                 const initialCompleted = challengeList.challengesCompleted;
 
                 const result = challengeList.cycleChallengeState(challenge1.id);

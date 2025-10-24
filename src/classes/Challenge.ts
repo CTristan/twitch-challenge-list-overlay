@@ -1,3 +1,4 @@
+import { ChallengeStatus } from "../types/ChallengeStatus";
 import { CHALLENGE_STATES } from "../types/DOMConstants";
 import Timer from "../utils/Timer";
 import { ValidationUtils } from "../utils/ValidationUtils";
@@ -13,8 +14,7 @@ export default class Challenge {
     amount: number;
     progress: number;
     timer?: Timer;
-    completionStatus: boolean;
-    failureStatus: boolean;
+    status: ChallengeStatus;
     id: string;
     createdAt: number;
 
@@ -45,8 +45,7 @@ export default class Challenge {
 
         this.amount = ValidationUtils.validateChallengeAmount(amount);
         this.progress = 0;
-        this.completionStatus = false;
-        this.failureStatus = false;
+        this.status = ChallengeStatus.IN_PROGRESS;
         this.createdAt = Date.now();
 
         // Generate internal ID for storage (keep timestamp-based for uniqueness)
@@ -181,8 +180,11 @@ export default class Challenge {
         this.progress = Math.min(this.progress + amount, this.amount);
 
         // Auto-complete if progress reaches amount
-        if (this.progress >= this.amount && !this.completionStatus) {
-            this.setCompletionStatus(true);
+        if (
+            this.progress >= this.amount &&
+            this.status !== ChallengeStatus.COMPLETED
+        ) {
+            this.setStatus(ChallengeStatus.COMPLETED);
         }
 
         return this.progress;
@@ -201,8 +203,11 @@ export default class Challenge {
         this.progress = Math.max(this.progress - amount, 0);
 
         // Remove completion status if progress drops below amount
-        if (this.progress < this.amount && this.completionStatus) {
-            this.setCompletionStatus(false);
+        if (
+            this.progress < this.amount &&
+            this.status === ChallengeStatus.COMPLETED
+        ) {
+            this.setStatus(ChallengeStatus.IN_PROGRESS);
         }
 
         return this.progress;
@@ -221,10 +226,16 @@ export default class Challenge {
         this.progress = Math.min(progress, this.amount);
 
         // Update completion status based on progress
-        if (this.progress >= this.amount && !this.completionStatus) {
-            this.setCompletionStatus(true);
-        } else if (this.progress < this.amount && this.completionStatus) {
-            this.setCompletionStatus(false);
+        if (
+            this.progress >= this.amount &&
+            this.status !== ChallengeStatus.COMPLETED
+        ) {
+            this.setStatus(ChallengeStatus.COMPLETED);
+        } else if (
+            this.progress < this.amount &&
+            this.status === ChallengeStatus.COMPLETED
+        ) {
+            this.setStatus(ChallengeStatus.IN_PROGRESS);
         }
 
         return this.progress;
@@ -235,23 +246,7 @@ export default class Challenge {
      * @returns Whether the challenge is complete
      */
     isComplete(): boolean {
-        return this.completionStatus;
-    }
-
-    /**
-     * Set the completion status of the challenge
-     * @param status - The new completion status
-     */
-    setCompletionStatus(status: boolean): void {
-        if (typeof status !== "boolean") {
-            throw new Error("Completion status must be of type boolean");
-        }
-        this.completionStatus = status;
-
-        // Stop timer when completed
-        if (status && this.timer) {
-            this.timer.stop();
-        }
+        return this.status === ChallengeStatus.COMPLETED;
     }
 
     /**
@@ -259,66 +254,84 @@ export default class Challenge {
      * @returns Whether the challenge has failed
      */
     isFailed(): boolean {
-        return this.failureStatus;
+        return this.status === ChallengeStatus.FAILED;
     }
 
     /**
-     * Set the failure status of the challenge
-     * @param status - The new failure status
+     * Get the current status of the challenge
+     * @returns The current ChallengeStatus
      */
-    setFailureStatus(status: boolean): void {
-        if (typeof status !== "boolean") {
-            throw new Error("Failure status must be of type boolean");
+    getStatus(): ChallengeStatus {
+        return this.status;
+    }
+
+    /**
+     * Set the status of the challenge
+     * @param newStatus - The new status to set
+     */
+    setStatus(newStatus: ChallengeStatus): void {
+        const previousStatus = this.status;
+        this.status = newStatus;
+
+        // Stop timer when completed or failed
+        if (
+            (newStatus === ChallengeStatus.COMPLETED ||
+                newStatus === ChallengeStatus.FAILED) &&
+            this.timer
+        ) {
+            this.timer.stop();
         }
-        this.failureStatus = status;
 
-        // Note: Timer continues running even after failure to show expired state
-        // This provides visual feedback that the challenge failed due to timer expiration
-
-        // Clear completion status when setting failure status
-        if (status && this.completionStatus) {
-            this.completionStatus = false;
+        // Restart timer when returning to in-progress from completed/failed
+        if (
+            newStatus === ChallengeStatus.IN_PROGRESS &&
+            (previousStatus === ChallengeStatus.COMPLETED ||
+                previousStatus === ChallengeStatus.FAILED) &&
+            this.timer &&
+            !this.timer.isActive &&
+            this.timer.getRemainingTime() > 0
+        ) {
+            this.timer.start();
         }
     }
 
     /**
-     * Cycle through challenge states: in-progress → done → failed → in-progress
+     * Cycle through challenge states: in-progress → completed → failed → in-progress
      * @returns The new state as a string ("in-progress", "done", or "failed")
      */
     cycleState(): string {
-        if (!this.completionStatus && !this.failureStatus) {
-            // Currently in-progress → transition to done
-            this.setCompletionStatus(true);
-            return CHALLENGE_STATES.DONE;
-        } else if (this.completionStatus && !this.failureStatus) {
-            // Currently done → transition to failed
-            this.completionStatus = false;
-            this.setFailureStatus(true);
-            return CHALLENGE_STATES.FAILED;
-        } else {
-            // Currently failed → transition to in-progress
-            this.failureStatus = false;
-            this.completionStatus = false;
-            // Restart timer if it exists and has remaining time
-            if (
-                this.timer &&
-                !this.timer.isActive &&
-                this.timer.getRemainingTime() > 0
-            ) {
-                this.timer.start();
-            }
-            return CHALLENGE_STATES.IN_PROGRESS;
+        switch (this.status) {
+            case ChallengeStatus.IN_PROGRESS:
+                // in-progress → completed
+                this.setStatus(ChallengeStatus.COMPLETED);
+                return CHALLENGE_STATES.DONE;
+            case ChallengeStatus.COMPLETED:
+                // completed → failed
+                this.setStatus(ChallengeStatus.FAILED);
+                return CHALLENGE_STATES.FAILED;
+            case ChallengeStatus.FAILED:
+                // failed → in-progress
+                this.setStatus(ChallengeStatus.IN_PROGRESS);
+                return CHALLENGE_STATES.IN_PROGRESS;
+            default:
+                return CHALLENGE_STATES.IN_PROGRESS;
         }
     }
 
     /**
-     * Get the current state of the challenge
+     * Get the current state of the challenge as a display string
      * @returns The current state as a string ("in-progress", "done", or "failed")
      */
     getState(): string {
-        if (this.failureStatus) return CHALLENGE_STATES.FAILED;
-        if (this.completionStatus) return CHALLENGE_STATES.DONE;
-        return CHALLENGE_STATES.IN_PROGRESS;
+        switch (this.status) {
+            case ChallengeStatus.FAILED:
+                return CHALLENGE_STATES.FAILED;
+            case ChallengeStatus.COMPLETED:
+                return CHALLENGE_STATES.DONE;
+            case ChallengeStatus.IN_PROGRESS:
+            default:
+                return CHALLENGE_STATES.IN_PROGRESS;
+        }
     }
 
     /**
@@ -343,8 +356,8 @@ export default class Challenge {
      * @returns Status emoji
      */
     getStatusEmoji(): string {
-        if (this.failureStatus) return "❌";
-        if (this.completionStatus) return "✅";
+        if (this.status === ChallengeStatus.FAILED) return "❌";
+        if (this.status === ChallengeStatus.COMPLETED) return "✅";
         if (this.timer?.isActive) return this.timer.getStatusDisplay();
         return "📝";
     }
@@ -364,8 +377,18 @@ export default class Challenge {
         );
 
         challenge.progress = data.progress || 0;
-        challenge.completionStatus = data.completionStatus || false;
-        challenge.failureStatus = data.failureStatus || false;
+
+        // Handle both new status enum and legacy boolean fields for backward compatibility
+        if (data.status) {
+            challenge.status = data.status as ChallengeStatus;
+        } else if (data.failureStatus) {
+            challenge.status = ChallengeStatus.FAILED;
+        } else if (data.completionStatus) {
+            challenge.status = ChallengeStatus.COMPLETED;
+        } else {
+            challenge.status = ChallengeStatus.IN_PROGRESS;
+        }
+
         challenge.createdAt = data.createdAt || Date.now();
 
         // Restore timer if present
@@ -386,8 +409,7 @@ export default class Challenge {
             description: this.description,
             amount: this.amount,
             progress: this.progress,
-            completionStatus: this.completionStatus,
-            failureStatus: this.failureStatus,
+            status: this.status,
             createdAt: this.createdAt,
             timer: this.timer?.toData(),
         };

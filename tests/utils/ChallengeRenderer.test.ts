@@ -1,7 +1,447 @@
-import { beforeEach, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import Challenge from "../../src/classes/Challenge";
+import { ChallengeStatus } from "../../src/types/ChallengeStatus";
+import {
+    CSS_CLASSES,
+    CSS_SELECTORS,
+    DATA_ATTRIBUTES,
+    EVENT_NAMES,
+    HTML_ATTRIBUTE_NAMES,
+    HTML_ATTRIBUTES,
+    HTML_ELEMENTS,
+} from "../../src/types/DOMConstants";
+import { ARIA_LABELS, UI_ELEMENTS } from "../../src/types/MessageConstants";
 import ChallengeRenderer from "../../src/utils/ChallengeRenderer";
+import { parseColor } from "../../src/utils/ColorUtils";
 import { ensureTestIsolation } from "./chatHandlerTestUtils";
+
+// Utility to create a basic challenge for DOM rendering
+function createChallenge(
+    title: string,
+    options: Partial<{
+        description: string;
+        amount: number;
+        progress: number;
+        timer: number | string;
+        status: ChallengeStatus;
+    }> = {}
+): Challenge {
+    const ch = new Challenge(title, {
+        description: options.description ?? "",
+        amount: options.amount ?? 1,
+        ...(options.timer !== undefined && { timer: options.timer }),
+    });
+    if (typeof options.progress === "number") ch.progress = options.progress;
+    if (options.status !== undefined) ch.setStatus(options.status);
+    return ch;
+}
+
+describe("ChallengeRenderer", () => {
+    beforeEach(() => {
+        // Fresh DOM for each test
+        document.body.innerHTML = "";
+        localStorage.clear();
+        vi.restoreAllMocks();
+    });
+
+    it("createChallengeTextElement renders title only when description is same and no metadata", () => {
+        const ch = createChallenge("Title", {
+            description: "Title",
+            amount: 1,
+        });
+        const el = ChallengeRenderer.createChallengeTextElement(ch);
+
+        expect(el.classList.contains(CSS_CLASSES.CHALLENGE_TEXT)).toBe(true);
+        const title = el.querySelector(
+            CSS_SELECTORS.CHALLENGE_TITLE
+        ) as HTMLElement;
+        expect(title).toBeTruthy();
+        expect(title.textContent).toBe("Title");
+        expect(
+            el.querySelector(CSS_SELECTORS.CHALLENGE_DESCRIPTION)
+        ).toBeNull();
+        // No amount and no timer -> no metadata row
+        expect(el.querySelector(CSS_SELECTORS.CHALLENGE_METADATA)).toBeNull();
+    });
+
+    it("createChallengeTextElement includes description and progress when amount > 1", () => {
+        const ch = createChallenge("Title", {
+            description: "Desc",
+            amount: 3,
+            progress: 1,
+        });
+        const el = ChallengeRenderer.createChallengeTextElement(ch, 2);
+
+        const title = el.querySelector(
+            CSS_SELECTORS.CHALLENGE_TITLE
+        ) as HTMLElement;
+        expect(title.textContent).toBe("2. Title");
+
+        const desc = el.querySelector(
+            CSS_SELECTORS.CHALLENGE_DESCRIPTION
+        ) as HTMLElement;
+        expect(desc.textContent).toBe("Desc");
+
+        const meta = el.querySelector(
+            CSS_SELECTORS.CHALLENGE_METADATA
+        ) as HTMLElement;
+        expect(meta).toBeTruthy();
+        const progress = el.querySelector(
+            CSS_SELECTORS.CHALLENGE_AMOUNT
+        ) as HTMLElement;
+        expect(progress).toBeTruthy();
+        expect(progress.textContent).toBe("1/3");
+    });
+
+    it("createChallengeTextElement creates empty metadata row if timer exists without amount", () => {
+        const ch = createChallenge("Timered", { amount: 1, timer: 5 });
+        ch.startTimer();
+        const el = ChallengeRenderer.createChallengeTextElement(ch);
+        const meta = el.querySelector(
+            CSS_SELECTORS.CHALLENGE_METADATA
+        ) as HTMLElement;
+        expect(meta).toBeTruthy();
+        // No progress element because amount == 1
+        expect(el.querySelector(CSS_SELECTORS.CHALLENGE_AMOUNT)).toBeNull();
+    });
+
+    it("createChallengeCheckbox sets checked class when isChecked=true", () => {
+        const cb = ChallengeRenderer.createChallengeCheckbox(true);
+        expect(cb.classList.contains(CSS_CLASSES.CHALLENGE_CHECKBOX)).toBe(
+            true
+        );
+        expect(cb.classList.contains(CSS_CLASSES.CHECKED)).toBe(true);
+    });
+
+    it("createChallengeEditIcon renders icon and text-only variants with accessibility attrs", () => {
+        const icon = ChallengeRenderer.createChallengeEditIcon(false);
+        expect(icon.classList.contains(CSS_CLASSES.CHALLENGE_EDIT_ICON)).toBe(
+            true
+        );
+        expect(icon.textContent).toBe(UI_ELEMENTS.EDIT_ICON);
+        expect(icon.getAttribute(HTML_ATTRIBUTE_NAMES.ROLE)).toBe(
+            HTML_ATTRIBUTES.ROLE_BUTTON
+        );
+        expect(icon.getAttribute(HTML_ATTRIBUTE_NAMES.ARIA_LABEL)).toBe(
+            ARIA_LABELS.EDIT_CHALLENGE
+        );
+
+        const textBtn = ChallengeRenderer.createChallengeEditIcon(true);
+        expect(
+            textBtn.classList.contains(CSS_CLASSES.CHALLENGE_TEXT_ONLY_EDIT)
+        ).toBe(true);
+        expect(textBtn.textContent).toBe(UI_ELEMENTS.TEXT_ONLY_EDIT_BUTTON);
+    });
+
+    it("create increment/decrement buttons with proper labels and accessibility", () => {
+        const inc = ChallengeRenderer.createChallengeIncrementButton();
+        expect(
+            inc.classList.contains(CSS_CLASSES.CHALLENGE_INCREMENT_BUTTON)
+        ).toBe(true);
+        expect(inc.textContent).toBe(UI_ELEMENTS.INCREMENT_BUTTON);
+        expect(inc.getAttribute(HTML_ATTRIBUTE_NAMES.ARIA_LABEL)).toBe(
+            ARIA_LABELS.INCREMENT_PROGRESS
+        );
+
+        const dec = ChallengeRenderer.createChallengeDecrementButton(true);
+        expect(
+            dec.classList.contains(CSS_CLASSES.CHALLENGE_TEXT_ONLY_DECREMENT)
+        ).toBe(true);
+        expect(dec.textContent).toBe(UI_ELEMENTS.TEXT_ONLY_DECREMENT_BUTTON);
+        expect(dec.getAttribute(HTML_ATTRIBUTE_NAMES.ARIA_LABEL)).toBe(
+            ARIA_LABELS.DECREMENT_PROGRESS
+        );
+    });
+
+    it("createTextOnlyChallengeElement renders content, state classes, and fires handlers", () => {
+        const ch = createChallenge("T", {
+            description: "D",
+            amount: 2,
+            progress: 1,
+            status: ChallengeStatus.COMPLETED,
+        });
+
+        const editHandler = vi.fn();
+        const incHandler = vi.fn();
+        const decHandler = vi.fn();
+        const uncompleteHandler = vi.fn();
+        const failHandler = vi.fn();
+
+        const el = ChallengeRenderer.createTextOnlyChallengeElement(ch, {
+            editHandler,
+            incrementHandler: incHandler,
+            decrementHandler: decHandler,
+            uncompleteHandler,
+            failHandler,
+            displayPosition: 1,
+        });
+
+        expect(
+            el.classList.contains(CSS_CLASSES.CHALLENGE_TEXT_ONLY_ITEM)
+        ).toBe(true);
+        expect(el.dataset[DATA_ATTRIBUTES.CHALLENGE_ID]).toBe(ch.id);
+        expect(el.classList.contains(CSS_CLASSES.DONE)).toBe(true);
+
+        // Content shows title, description and progress
+        const content = el.querySelector(
+            `.${CSS_CLASSES.CHALLENGE_TEXT_ONLY_CONTENT}`
+        ) as HTMLElement;
+        expect(content.textContent).toContain("1. T");
+        expect(content.textContent).toContain("D");
+        expect(content.textContent).toContain("1/2");
+
+        // Buttons exist and wired
+        const btns = el.querySelector(
+            `.${CSS_CLASSES.CHALLENGE_TEXT_ONLY_BUTTONS}`
+        )!;
+
+        const edit = btns.querySelector(
+            `.${CSS_CLASSES.CHALLENGE_TEXT_ONLY_EDIT}`
+        ) as HTMLElement;
+        edit.dispatchEvent(new Event(EVENT_NAMES.CLICK));
+        expect(editHandler).toHaveBeenCalledTimes(1);
+
+        // Keydown Enter triggers click for accessibility
+        edit.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter" }));
+        expect(editHandler).toHaveBeenCalledTimes(2);
+
+        const uncomplete = btns.querySelector(
+            `.${CSS_CLASSES.CHALLENGE_TEXT_ONLY_UNCOMPLETE}`
+        ) as HTMLElement;
+        uncomplete.dispatchEvent(new Event(EVENT_NAMES.CLICK));
+        expect(uncompleteHandler).toHaveBeenCalledTimes(1);
+
+        const inc = btns.querySelector(
+            `.${CSS_CLASSES.CHALLENGE_TEXT_ONLY_INCREMENT}`
+        ) as HTMLElement;
+        inc.dispatchEvent(new Event(EVENT_NAMES.CLICK));
+        expect(incHandler).toHaveBeenCalledTimes(1);
+
+        const dec = btns.querySelector(
+            `.${CSS_CLASSES.CHALLENGE_TEXT_ONLY_DECREMENT}`
+        ) as HTMLElement;
+        dec.dispatchEvent(new Event(EVENT_NAMES.CLICK));
+        expect(decHandler).toHaveBeenCalledTimes(1);
+
+        // Not failed -> Fail button rendered
+        const fail = btns.querySelector(
+            `.${CSS_CLASSES.CHALLENGE_TEXT_ONLY_FAIL}`
+        ) as HTMLElement;
+        fail.dispatchEvent(new Event(EVENT_NAMES.CLICK));
+        expect(failHandler).toHaveBeenCalledTimes(1);
+    });
+
+    it("createTextOnlyChallengeElement shows Unfail when failed", () => {
+        const ch = createChallenge("T", { status: ChallengeStatus.FAILED });
+        const unfailHandler = vi.fn();
+        const el = ChallengeRenderer.createTextOnlyChallengeElement(ch, {
+            unfailHandler,
+        });
+        expect(el.classList.contains(CSS_CLASSES.FAILED)).toBe(true);
+        const btns = el.querySelector(
+            `.${CSS_CLASSES.CHALLENGE_TEXT_ONLY_BUTTONS}`
+        )!;
+        const unfail = btns.querySelector(
+            `.${CSS_CLASSES.CHALLENGE_TEXT_ONLY_UNFAIL}`
+        ) as HTMLElement;
+        unfail.dispatchEvent(new Event(EVENT_NAMES.CLICK));
+        expect(unfailHandler).toHaveBeenCalledTimes(1);
+    });
+
+    it("createChallengeElement wires checkbox, edit icon style by mode, inc/dec and fail button", () => {
+        const ch = createChallenge("T", { amount: 3, progress: 1 });
+
+        const checkboxHandler = vi.fn();
+        const editHandler = vi.fn();
+        const incHandler = vi.fn();
+        const decHandler = vi.fn();
+        const failHandler = vi.fn();
+
+        const el = ChallengeRenderer.createChallengeElement(ch, {
+            includeEventListeners: true,
+            eventHandler: checkboxHandler,
+            editHandler,
+            incrementHandler: incHandler,
+            decrementHandler: decHandler,
+            failHandler,
+            textOnlyMode: true,
+        });
+
+        // Checkbox click delegates
+        const cb = el.querySelector(
+            CSS_SELECTORS.CHALLENGE_CHECKBOX
+        ) as HTMLElement;
+        cb.dispatchEvent(new Event(EVENT_NAMES.CLICK));
+        expect(checkboxHandler).toHaveBeenCalledTimes(1);
+
+        // Edit icon is text-only when textOnlyMode=true
+        const edit = el.querySelector(
+            `.${CSS_CLASSES.CHALLENGE_TEXT_ONLY_EDIT}`
+        ) as HTMLElement;
+        expect(edit).toBeTruthy();
+        edit.dispatchEvent(new Event(EVENT_NAMES.CLICK));
+        expect(editHandler).toHaveBeenCalledTimes(1);
+
+        // Inc/Dec exist and wired
+        const inc = el.querySelector(
+            `.${CSS_CLASSES.CHALLENGE_TEXT_ONLY_INCREMENT}`
+        ) as HTMLElement;
+        const dec = el.querySelector(
+            `.${CSS_CLASSES.CHALLENGE_TEXT_ONLY_DECREMENT}`
+        ) as HTMLElement;
+        expect(inc && dec).toBeTruthy();
+        inc.dispatchEvent(new Event(EVENT_NAMES.CLICK));
+        dec.dispatchEvent(new Event(EVENT_NAMES.CLICK));
+        expect(incHandler).toHaveBeenCalledTimes(1);
+        expect(decHandler).toHaveBeenCalledTimes(1);
+
+        // Fail button exists (state not failed)
+        const failBtn = el.querySelector(
+            `.${CSS_CLASSES.CHALLENGE_TEXT_ONLY_FAIL}`
+        ) as HTMLButtonElement;
+        expect(failBtn.tagName.toLowerCase()).toBe(HTML_ELEMENTS.BUTTON);
+        expect(failBtn.textContent).toBe(UI_ELEMENTS.TEXT_ONLY_FAIL_BUTTON);
+        failBtn.click();
+        expect(failHandler).toHaveBeenCalledTimes(1);
+    });
+
+    it("createChallengeElement does not render Fail button when already failed", () => {
+        const ch = createChallenge("T", { status: ChallengeStatus.FAILED });
+        const el = ChallengeRenderer.createChallengeElement(ch, {
+            failHandler: vi.fn(),
+        });
+        expect(
+            el.querySelector(`.${CSS_CLASSES.CHALLENGE_TEXT_ONLY_FAIL}`)
+        ).toBeNull();
+    });
+
+    it("applyChallengeRowColors sets background and returns text color", () => {
+        const li = document.createElement("li");
+        const text = ChallengeRenderer.applyChallengeRowColors(
+            li,
+            2,
+            ["#ff0000", "#00ff00"],
+            ["#111111", "#222222"]
+        );
+        expect(li.style.backgroundColor.length).toBeGreaterThan(0);
+        expect(text).toBe("#111111"); // index 2 -> rotates to 0
+    });
+
+    it("decorateChallengeCheckbox applies CSS custom properties", () => {
+        const cb = document.createElement("div");
+        ChallengeRenderer.decorateChallengeCheckbox(cb, "#abcdef");
+        expect(
+            cb.style.getPropertyValue("--challenge-checkbox-border-color")
+        ).toBe("#abcdef");
+        expect(
+            cb.style.getPropertyValue(
+                "--challenge-checkbox-checked-border-color"
+            )
+        ).toBe("#abcdef");
+        expect(
+            cb.style.getPropertyValue("--challenge-checkbox-checkmark-color")
+        ).toBe("#abcdef");
+    });
+
+    it("applyChallengeTextColors applies to container and children", () => {
+        const ch = createChallenge("T", {
+            description: "D",
+            amount: 2,
+            progress: 1,
+        });
+        const textEl = ChallengeRenderer.createChallengeTextElement(ch);
+        ChallengeRenderer.applyChallengeTextColors(textEl, "#123456");
+
+        // jsdom normalizes colors to rgb(...)
+        expect(parseColor(textEl.style.color)).toEqual(parseColor("#123456"));
+        const title = textEl.querySelector(
+            CSS_SELECTORS.CHALLENGE_TITLE
+        ) as HTMLElement;
+        const desc = textEl.querySelector(
+            CSS_SELECTORS.CHALLENGE_DESCRIPTION
+        ) as HTMLElement;
+        const prog = textEl.querySelector(
+            CSS_SELECTORS.CHALLENGE_AMOUNT
+        ) as HTMLElement;
+        expect(parseColor(title.style.color)).toEqual(parseColor("#123456"));
+        expect(parseColor(desc.style.color)).toEqual(parseColor("#123456"));
+        expect(parseColor(prog.style.color)).toEqual(parseColor("#123456"));
+    });
+
+    it("applyBackgroundCustomization uses row-specific colors and text color", () => {
+        const ch = createChallenge("T", { amount: 2, progress: 1 });
+        const el = ChallengeRenderer.createChallengeElement(ch, {
+            includeEventListeners: false,
+        });
+
+        ChallengeRenderer.applyBackgroundCustomization(
+            el as HTMLElement,
+            {
+                // Global overrides should be ignored due to row-specific values
+                challengeBackgroundColor: "#ff00ff",
+                challengeTextColor: "#000000",
+                challengeTextShadow: false,
+            },
+            0,
+            ["#00ff00"],
+            ["#333333"],
+            0.5
+        );
+
+        // Background applied with opacity
+        expect(el.style.backgroundColor).toMatch(
+            /rgba\(\s*0,\s*255,\s*0,\s*0\.5\s*\)/
+        );
+        expect(el.classList.contains(CSS_CLASSES.CUSTOM_BACKGROUND)).toBe(true);
+
+        // Text element styled using row text color
+        const textEl = el.querySelector(
+            CSS_SELECTORS.CHALLENGE_TEXT
+        ) as HTMLElement;
+        expect(parseColor(textEl.style.color)).toEqual(parseColor("#333333"));
+
+        // Checkbox decorated with text color
+        const cb = el.querySelector(
+            CSS_SELECTORS.CHALLENGE_CHECKBOX
+        ) as HTMLElement;
+        expect(
+            cb.style.getPropertyValue("--challenge-checkbox-border-color")
+        ).toBe("#333333");
+    });
+
+    it("applyBackgroundCustomization uses global settings, default opacity, and text shadow classes", () => {
+        const ch = createChallenge("T", { amount: 1 });
+        const el = ChallengeRenderer.createChallengeElement(ch);
+
+        ChallengeRenderer.applyBackgroundCustomization(el as HTMLElement, {
+            challengeBackgroundColor: "#0000ff",
+            // Omit opacity -> uses default 0.7
+            challengeTextColor: "#000000", // dark -> expect LIGHT shadow class
+            challengeTextShadow: true,
+        });
+
+        expect(el.style.backgroundColor).toMatch(
+            /rgba\(\s*0,\s*0,\s*255,\s*0\.7\s*\)/
+        );
+
+        const textEl = el.querySelector(
+            CSS_SELECTORS.CHALLENGE_TEXT
+        ) as HTMLElement;
+        expect(parseColor(textEl.style.color)).toEqual(parseColor("#000000"));
+        expect(
+            textEl.style.textShadow && textEl.style.textShadow.length
+        ).toBeGreaterThan(0);
+        expect(
+            textEl.classList.contains(CSS_CLASSES.ENHANCED_READABILITY)
+        ).toBe(true);
+        expect(textEl.classList.contains(CSS_CLASSES.TEXT_SHADOW_LIGHT)).toBe(
+            true
+        );
+        expect(textEl.classList.contains(CSS_CLASSES.TEXT_SHADOW_DARK)).toBe(
+            false
+        );
+    });
+});
 
 describe("ChallengeRenderer", () => {
     beforeEach(() => {
@@ -277,7 +717,7 @@ describe("ChallengeRenderer", () => {
 
         it("should mark completed challenges with done class", () => {
             const challenge = new Challenge("Test Title");
-            challenge.setCompletionStatus(true);
+            challenge.setStatus(ChallengeStatus.COMPLETED);
 
             const challengeElement =
                 ChallengeRenderer.createChallengeElement(challenge);

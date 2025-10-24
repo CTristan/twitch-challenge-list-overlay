@@ -3,6 +3,7 @@ import Challenge from "../../src/classes/Challenge";
 import ChallengeList from "../../src/classes/ChallengeList";
 import ConfigManager from "../../src/classes/ConfigManager";
 import { ClearAllCommand } from "../../src/commands/ClearAllCommand";
+import { ChallengeStatus } from "../../src/types/ChallengeStatus";
 import { ERROR_MESSAGES } from "../../src/types/MessageConstants";
 import { UIUpdateAction } from "../../src/types/UIUpdateAction";
 
@@ -111,9 +112,9 @@ describe("ClearAllCommand", () => {
             // Add challenges with different statuses
             const activeChallenge = new Challenge("Active Challenge");
             const completedChallenge = new Challenge("Completed Challenge");
-            completedChallenge.setCompletionStatus(true);
+            completedChallenge.setStatus(ChallengeStatus.COMPLETED);
             const failedChallenge = new Challenge("Failed Challenge");
-            failedChallenge.setFailureStatus(true);
+            failedChallenge.setStatus(ChallengeStatus.FAILED);
 
             challengeList.addChallengeObjects([
                 activeChallenge,

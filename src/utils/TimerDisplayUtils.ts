@@ -1,4 +1,5 @@
-import ChallengeList from "../classes/ChallengeList";
+import type ChallengeList from "../classes/ChallengeList";
+import { ChallengeStatus } from "../types/ChallengeStatus";
 import { CSS_CLASSES, CSS_SELECTORS } from "../types/DOMConstants";
 import Timer from "./Timer";
 import { notifyChallengeStateChanged } from "./windowRefresh";
@@ -82,11 +83,10 @@ export class TimerDisplayUtils {
                 // Check if timer has expired and challenge is not already failed/completed
                 if (
                     challenge.timer.isExpired() &&
-                    !challenge.isFailed() &&
-                    !challenge.isComplete()
+                    challenge.getStatus() === ChallengeStatus.IN_PROGRESS
                 ) {
                     // Automatically fail the challenge
-                    challenge.setFailureStatus(true);
+                    challenge.setStatus(ChallengeStatus.FAILED);
                     stateChanged = true;
 
                     // Update DOM to reflect failed state
@@ -110,8 +110,14 @@ export class TimerDisplayUtils {
                     element as HTMLElement,
                     challenge.timer
                 );
+            } else if (challenge.timer.isExpired()) {
+                // Timer is expired but inactive - keep it visible with expired styling
+                this.updateTimerElement(
+                    element as HTMLElement,
+                    challenge.timer
+                );
             } else {
-                // Timer is no longer active, remove the element
+                // Timer is no longer active and not expired, remove the element
                 element.remove();
             }
         });

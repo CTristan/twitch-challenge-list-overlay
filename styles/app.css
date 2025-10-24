@@ -779,7 +779,8 @@ body {
 
 .challenge-text-only-buttons {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
+  align-items: center;
   gap: 0.5rem;
 }
 
@@ -796,64 +797,78 @@ body {
 }
 
 /* Edit button */
-.challenge-text-only-edit {
-  background-color: #4a90e2;
-  color: #ffffff;
+/* Default chip-style for non list-context usage retained above; override inside text-only list buttons:
+   Render Edit/Complete/Uncomplete/Fail/Unfail/Increment/Decrement as plain text labels rather than buttons. */
+.challenge-text-only-buttons .challenge-text-only-edit,
+.challenge-text-only-buttons .challenge-text-only-complete,
+.challenge-text-only-buttons .challenge-text-only-uncomplete,
+.challenge-text-only-buttons .challenge-text-only-fail,
+.challenge-text-only-buttons .challenge-text-only-unfail,
+.challenge-text-only-buttons .challenge-text-only-increment,
+.challenge-text-only-buttons .challenge-text-only-decrement {
+  background: none !important;
+  border: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  height: auto !important;
+  box-shadow: none !important;
+  transform: none !important;
+  display: inline-flex !important;
+  align-items: center;
+  line-height: 1;
+  white-space: nowrap;
+  vertical-align: middle;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
 }
 
-.challenge-text-only-edit:hover {
-  background-color: #357abd;
-  transform: translateY(-1px);
-  box-shadow: 0 2px 4px rgba(74, 144, 226, 0.3);
+.challenge-text-only-buttons .challenge-text-only-edit {
+  color: #4a90e2;
+}
+.challenge-text-only-buttons .challenge-text-only-complete {
+  color: #4caf50;
+}
+.challenge-text-only-buttons .challenge-text-only-uncomplete {
+  color: #ff9800;
+}
+.challenge-text-only-buttons .challenge-text-only-fail {
+  color: #f44336;
+}
+.challenge-text-only-buttons .challenge-text-only-unfail {
+  color: #9c27b0;
+}
+.challenge-text-only-buttons .challenge-text-only-increment {
+  color: #4caf50;
+}
+.challenge-text-only-buttons .challenge-text-only-decrement {
+  color: #ff9800;
+}
+
+.challenge-text-only-buttons .challenge-text-only-edit:hover,
+.challenge-text-only-buttons .challenge-text-only-complete:hover,
+.challenge-text-only-buttons .challenge-text-only-uncomplete:hover,
+.challenge-text-only-buttons .challenge-text-only-fail:hover,
+.challenge-text-only-buttons .challenge-text-only-unfail:hover,
+.challenge-text-only-buttons .challenge-text-only-increment:hover,
+.challenge-text-only-buttons .challenge-text-only-decrement:hover,
+.challenge-text-only-buttons .challenge-text-only-edit:focus-visible,
+.challenge-text-only-buttons .challenge-text-only-complete:focus-visible,
+.challenge-text-only-buttons .challenge-text-only-uncomplete:focus-visible,
+.challenge-text-only-buttons .challenge-text-only-fail:focus-visible,
+.challenge-text-only-buttons .challenge-text-only-unfail:focus-visible,
+.challenge-text-only-buttons .challenge-text-only-increment:focus-visible,
+.challenge-text-only-buttons .challenge-text-only-decrement:focus-visible {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  opacity: 1;
 }
 
 /* Complete button */
-.challenge-text-only-complete {
-  background-color: #4caf50;
-  color: #ffffff;
-}
-
-.challenge-text-only-complete:hover {
-  background-color: #45a049;
-  transform: translateY(-1px);
-  box-shadow: 0 2px 4px rgba(76, 175, 80, 0.3);
-}
+/* (Complete appearance overridden in list context above) */
 
 /* Fail button */
-.challenge-text-only-fail {
-  background-color: #f44336;
-  color: #ffffff;
-}
-
-.challenge-text-only-fail:hover {
-  background-color: #da190b;
-  transform: translateY(-1px);
-  box-shadow: 0 2px 4px rgba(244, 67, 54, 0.3);
-}
-
-/* Increment button */
-.challenge-text-only-increment {
-  background-color: #ff9800;
-  color: #ffffff;
-}
-
-.challenge-text-only-increment:hover {
-  background-color: #e68900;
-  transform: translateY(-1px);
-  box-shadow: 0 2px 4px rgba(255, 152, 0, 0.3);
-}
-
-/* Decrement button */
-.challenge-text-only-decrement {
-  background-color: #9c27b0;
-  color: #ffffff;
-}
-
-.challenge-text-only-decrement:hover {
-  background-color: #7b1fa2;
-  transform: translateY(-1px);
-  box-shadow: 0 2px 4px rgba(156, 39, 176, 0.3);
-}
+/* (Fail appearance overridden in list context above) */
 
 /* Active state for all text-only buttons */
 .challenge-text-only-buttons button:active {

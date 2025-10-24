@@ -139,8 +139,12 @@ export const HELP_MESSAGES = {
         '!ch edit 1 "New Title" d/desc="New Description" a/amount=10 - Edit challenge properties',
     DONE_COMMAND_HELP:
         "!ch done 1,2,3 - Mark challenges as completed (supports multiple IDs)",
+    UNDONE_COMMAND_HELP:
+        "!ch undone 1,2,3 - Revert completed challenges to in-progress (supports multiple IDs)",
     FAIL_COMMAND_HELP:
         "!ch fail 1,2,3 - Mark challenges as failed (supports multiple IDs)",
+    UNFAIL_COMMAND_HELP:
+        "!ch unfail 1,2,3 - Revert failed challenges to in-progress (supports multiple IDs)",
     DELETE_COMMAND_HELP:
         "!ch delete 1,2,3 - Delete challenges (supports multiple IDs)",
     INCREMENT_COMMAND_HELP:
@@ -238,9 +242,11 @@ export const UI_ELEMENTS = {
     DECREMENT_BUTTON: "-",
     TEXT_ONLY_EDIT_BUTTON: "Edit",
     TEXT_ONLY_COMPLETE_BUTTON: "Complete",
+    TEXT_ONLY_UNCOMPLETE_BUTTON: "Uncomplete",
     TEXT_ONLY_FAIL_BUTTON: "Fail",
-    TEXT_ONLY_INCREMENT_BUTTON: "+1",
-    TEXT_ONLY_DECREMENT_BUTTON: "-1",
+    TEXT_ONLY_UNFAIL_BUTTON: "Unfail",
+    TEXT_ONLY_INCREMENT_BUTTON: "+",
+    TEXT_ONLY_DECREMENT_BUTTON: "-",
     CONNECTION_WARNING_TEXT:
         "⚠️ Admin panel not connected - overlay may require manual refresh",
 } as const;

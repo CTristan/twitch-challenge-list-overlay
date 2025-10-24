@@ -1,4 +1,5 @@
 import type Challenge from "../classes/Challenge";
+import { ChallengeStatus } from "../types/ChallengeStatus";
 import type { CommandResponse } from "../types/CommandResponse";
 import { ResponseFormatter } from "../utils/ResponseFormatter";
 import { BaseCommand } from "./Command";
@@ -43,13 +44,8 @@ export class FailCommand extends BaseCommand {
                     );
                 }
 
-                if (!challenge.isFailed()) {
-                    challenge.setFailureStatus(true);
-
-                    // Stop timer if running
-                    if (challenge.timer && challenge.timer.isActive) {
-                        challenge.timer.stop();
-                    }
+                if (challenge.getStatus() !== ChallengeStatus.FAILED) {
+                    challenge.setStatus(ChallengeStatus.FAILED);
 
                     failedChallenges.push(challenge);
                     failedIndices.push(challengeIndex);

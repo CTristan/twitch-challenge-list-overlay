@@ -2,62 +2,67 @@
 
 Twitch Challenge Overlay — frontend-only challenge management for OBS Browser Source. Dual-mode (admin/viewer), Twitch IRC, zero-server.
 
-## Scope and guidelines
-- Root AGENTS.md holds architecture and cross-cutting rules. Folder specifics belong in nested AGENTS.md files.
-- Hard limit: 4,000 characters per AGENTS.md.
+## Scope
+
+-   Root AGENTS.md: architecture + cross-cutting rules. Folder specifics in nested AGENTS.md.
+-   Hard limit: 4,000 characters.
 
 ## Architecture
-- Tech: TypeScript, Vite (IIFE), Vitest (jsdom), LocalStorage, WebSocket.
-- Style: Event-driven, modular classes, configuration-driven, no backend.
 
-### Core classes
-- App: Main controller (DOM, chat commands, cross-window sync).
-- ChallengeList: Persistence + reload; auto-saves on list ops.
-- AdminPanel: Admin UI; delegates to ColorManager, BackgroundManager, ConfigValidator, DOMBuilder, EventSetup.
-- ConfigManager: Singleton config over localStorage.
-- CommandRegistry/Handler: Parse/route/execute commands.
-- TwitchChat: WebSocket IRC + OAuth validation.
-- WindowRefreshManager: BroadcastChannel-based cross-window sync.
+Tech: TypeScript, Vite (IIFE), Vitest (jsdom), LocalStorage, WebSocket. Style: Event-driven, modular classes, configuration-driven, no backend.
 
-### Constants (src/types)
-MessageConstants, ColorConstants, ConfigConstants, DOMConstants, FileConstants, NumericConstants, StorageConstants, ValidationConstants.
+**Core classes:** App (main controller), ChallengeList (persistence), AdminPanel (UI + delegates), ConfigManager (singleton), CommandRegistry/Handler, TwitchChat (WebSocket IRC), WindowRefreshManager (BroadcastChannel sync).
 
-## Standards (mandatory)
-- TypeScript clean: no errors/warnings on modified files; avoid `any`/`@ts-ignore`.
-- Naming: Classes PascalCase; methods camelCase; private `#prefix`; constants UPPER_SNAKE_CASE.
-- Type safety: Enums live in dedicated .ts files (not globals.d.ts); use enum references (e.g., UIUpdateAction.ADD) and centralized constants (no magic strings).
+**Constants (src/types):** Message, Color, Config, DOM, File, Numeric, Storage, Validation.
 
-## Storage keys
-- Prefix: "twitch-overlay-" (StorageConstants.LOCALSTORAGE_PREFIX).
-- Keys: CONFIG, CHALLENGE_LIST, CHALLENGE_LIST_TEST, *_SECTION_COLLAPSED.
+## Standards
 
-## Cross-window sync
-- WindowRefreshManager (src/utils/windowRefresh.ts):
-	- notifyConfigurationSaved() → full page reload (auth/config changes).
-	- notifyChallengeStateChanged() → DOM-only update (add/edit/complete/delete).
-- App: setupChallengeListRefreshListener(), handleChallengeListRefresh(); call notifyChallengeStateChanged() after any challenge mutation.
-- ChallengeList: loadFromLocalStorage(), saveToLocalStorage(); call save after direct property setters on a Challenge.
+-   TypeScript: no errors/warnings; avoid `any`/`@ts-ignore`. Project uses `exactOptionalPropertyTypes: true`.
+-   Naming: PascalCase (classes), camelCase (methods), `#prefix` (private), UPPER_SNAKE_CASE (constants).
+-   Type safety: Enums in dedicated .ts; use enum refs (UIUpdateAction.ADD) + centralized constants (no magic strings).
+-   **DOM operations:** Always use constants from `src/types/DOMConstants.ts` (CSS_SELECTORS, CSS_CLASSES, DATA_ATTRIBUTES, URL_HASH, etc.). Never hardcode selectors like ".challenge" or dataset keys like "challengeId".
+-   **Optional properties:** Use spread with conditional: `...(value !== undefined && { prop: value })` to avoid passing undefined to optional properties.
+-   **Dataset access:** Use bracket notation: `element.dataset[DATA_ATTRIBUTES.KEY]`, never dot notation.
+-   **No deprecated/legacy code:** Remove deprecated methods immediately; do not maintain backward compatibility layers.
 
-## Common patterns
-- Configuration: `ConfigManager.getInstance().get(BEHAVIOR_CONFIG.MAX_CHALLENGES)`.
-- Challenge persistence:
-	- Auto-save: addChallengeObjects(...), toggleChallengeCompletion(id).
-	- Manual save required after direct setters (e.g., challenge.setTitle()) → challengeList.saveToLocalStorage().
-- DOM: Build with DocumentFragment; append once to minimize layout thrash.
+## Storage
+
+Prefix: "twitch-overlay-" (LOCALSTORAGE_PREFIX). Keys: CONFIG, CHALLENGE_LIST, CHALLENGE_LIST_TEST, \*\_SECTION_COLLAPSED.
+
+## Sync
+
+**WindowRefreshManager:** notifyConfigurationSaved() → reload; notifyChallengeStateChanged() → DOM update.
+**App:** Call notifyChallengeStateChanged() after challenge mutations.
+**ChallengeList:** Auto-save on list ops; manual save after direct setters (challenge.setTitle()).
+
+## Patterns
+
+-   Config: `ConfigManager.getInstance().get(BEHAVIOR_CONFIG.MAX_CHALLENGES)`.
+-   DOM selectors: `CSS_SELECTORS.CHALLENGE_CONTAINER`, `CSS_CLASSES.CHALLENGE_TEXT_ONLY_ITEM`.
+-   Dataset access: `element.dataset[DATA_ATTRIBUTES.CHALLENGE_ID]`.
+-   URL checks: `window.location.hash === URL_HASH.ADMIN`.
+-   DOM: Build with DocumentFragment; append once.
 
 ## Testing
-- Vitest + jsdom; target ≥80% coverage (statements/branches/functions/lines).
-- Use beforeEach with ensureTestIsolation().
+
+Vitest + jsdom; ≥80% coverage. Use ensureTestIsolation(). **Testability over workarounds:** Refactor large methods (>50 lines), tightly-coupled logic, complex conditionals. Extract methods, separate concerns, use DI.
+
+### Refactoring triggers
+
+-   > 20 public methods → split class.
+-   > 6 returns, >12 branches, >5 args, >15 vars, >50 statements, >5 bools in `if`, >5 nested blocks → simplify/extract.
 
 ## Build
-- Output: dist/challengeBot.iife.js.
-- Scripts: pnpm run dev | build | test | test:coverage | type-check.
+
+Output: dist/challengeBot.iife.js. Use VS Code runTests tool for execution and coverage.
 
 ## Features
-- Dual-mode via URL fragment (#admin vs viewer).
-- Numeric IDs (1-based positions) on challenges.
-- Timer with real-time visual states.
-- Viewer connection warning when BroadcastChannel unavailable.
-- Admin panel: auto-save, backup/restore, color/opacity, collapsible sections, text-only toggle; explicit Fail button in both standard and text-only admin modes; checkbox is binary (Complete/Uncomplete) and cannot set Failed.
-- Text-only mode: admin-only rendering with explicit Complete/Fail buttons (viewer overlay unaffected).
-- Commands: unified "!ch" prefix; moderator/broadcaster only.
+
+-   Dual-mode via URL fragment (#admin vs viewer).
+-   Numeric IDs (1-based positions) on challenges.
+-   Timer with real-time visual states.
+-   Viewer connection warning when BroadcastChannel unavailable.
+-   Admin panel: auto-save, backup/restore, color/opacity, collapsible sections, text-only toggle.
+-   Text-only mode: admin-only plain text rendering with action buttons: Edit, Complete/Uncomplete, Fail/Unfail, +/- (for multi-step). All buttons render as plain text with color coding. Viewer overlay unaffected.
+-   Challenge states: Active, completed (reversible via Uncomplete), failed (reversible via Unfail). Checkbox cycles states; text-only buttons provide direct state control.
+-   Commands: unified "!ch" prefix; moderator/broadcaster only.

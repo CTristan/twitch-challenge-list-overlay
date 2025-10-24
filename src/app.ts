@@ -90,7 +90,9 @@ export default class App {
             this.handleIncrementButtonClick,
             this.handleDecrementButtonClick,
             this.handleCompleteButtonClick,
-            this.handleFailButtonClick
+            this.handleFailButtonClick,
+            this.handleUncompleteButtonClick,
+            this.handleUnfailButtonClick
         );
         this.#timerController = new TimerController(this.challengeList);
         loadStyles(this.#configManager.getAll());
@@ -341,11 +343,16 @@ export default class App {
                         editHandler?: (event: Event) => void;
                         incrementHandler?: (event: Event) => void;
                         decrementHandler?: (event: Event) => void;
+                        completeHandler?: (event: Event) => void;
+                        uncompleteHandler?: (event: Event) => void;
                         failHandler?: (event: Event) => void;
+                        unfailHandler?: (event: Event) => void;
                         textOnlyMode?: boolean;
                     } = {
                         displayPosition: index + 1,
                     };
+
+                    let listItem: HTMLElement;
 
                     // Add handlers in admin mode
                     if (isAdminMode) {
@@ -356,23 +363,52 @@ export default class App {
                         options.decrementHandler =
                             this.handleDecrementButtonClick;
                         options.failHandler = this.handleFailButtonClick;
-                        options.textOnlyMode = adminTextOnlyMode;
+
+                        // Use completely different rendering for text-only mode
+                        if (adminTextOnlyMode) {
+                            options.completeHandler =
+                                this.handleCompleteButtonClick;
+                            options.uncompleteHandler =
+                                this.handleUncompleteButtonClick;
+                            options.unfailHandler =
+                                this.handleUnfailButtonClick;
+                            // Create text-only element (no styling needed)
+                            listItem =
+                                ChallengeRenderer.createTextOnlyChallengeElement(
+                                    challenge,
+                                    options
+                                );
+                        } else {
+                            options.textOnlyMode = adminTextOnlyMode;
+                            listItem = ChallengeRenderer.createChallengeElement(
+                                challenge,
+                                options
+                            );
+                            // Apply background customization (includes row colors if configured)
+                            ChallengeRenderer.applyBackgroundCustomization(
+                                listItem,
+                                backgroundConfig,
+                                index,
+                                rowColors,
+                                rowTextColors,
+                                rowColorsOpacity
+                            );
+                        }
+                    } else {
+                        listItem = ChallengeRenderer.createChallengeElement(
+                            challenge,
+                            options
+                        );
+                        // Apply background customization (includes row colors if configured)
+                        ChallengeRenderer.applyBackgroundCustomization(
+                            listItem,
+                            backgroundConfig,
+                            index,
+                            rowColors,
+                            rowTextColors,
+                            rowColorsOpacity
+                        );
                     }
-
-                    const listItem = ChallengeRenderer.createChallengeElement(
-                        challenge,
-                        options
-                    );
-
-                    // Apply background customization (includes row colors if configured)
-                    ChallengeRenderer.applyBackgroundCustomization(
-                        listItem,
-                        backgroundConfig,
-                        index,
-                        rowColors,
-                        rowTextColors,
-                        rowColorsOpacity
-                    );
 
                     // Add timer display if timer exists and is active (inside metadata row)
                     if (challenge.timer && challenge.timer.isActive) {
@@ -1455,8 +1491,49 @@ export default class App {
      */
     private handleCompleteButtonClick = (event: Event): void => {
         event.stopPropagation();
-        // Handler implementation is in UIUpdateHandler
-        // This is just a passthrough to maintain consistency
+
+        // Only handle clicks in admin mode
+        if (window.location.hash !== URL_HASH.ADMIN) {
+            return;
+        }
+
+        const target = event.target as HTMLElement;
+        // Find challenge element (text-only mode)
+        const challengeElement = target.closest(
+            ".challenge-text-only-item"
+        ) as HTMLElement;
+
+        if (!challengeElement) {
+            return;
+        }
+
+        const challengeId =
+            challengeElement.dataset[DATA_ATTRIBUTES.CHALLENGE_ID];
+        if (!challengeId) {
+            return;
+        }
+
+        // Prevent duplicate processing
+        if (this.processingCheckboxClicks.has(challengeId)) {
+            return;
+        }
+
+        this.processingCheckboxClicks.add(challengeId);
+
+        try {
+            // Toggle completion
+            const challenge =
+                this.challengeList.toggleChallengeCompletion(challengeId);
+            if (challenge) {
+                // Re-render the challenge list to reflect the updated state
+                this.renderChallengeList();
+
+                // Notify other windows about the state change
+                notifyChallengeStateChanged();
+            }
+        } finally {
+            this.processingCheckboxClicks.delete(challengeId);
+        }
     };
 
     /**
@@ -1466,8 +1543,118 @@ export default class App {
      */
     private handleFailButtonClick = (event: Event): void => {
         event.stopPropagation();
-        // Handler implementation is in UIUpdateHandler
-        // This is just a passthrough to maintain consistency
+
+        // Only handle clicks in admin mode
+        if (window.location.hash !== URL_HASH.ADMIN) {
+            return;
+        }
+
+        const target = event.target as HTMLElement;
+        // Find challenge element (both regular and text-only modes)
+        const challengeElement = target.closest(
+            `${CSS_SELECTORS.CHALLENGE}, .challenge-text-only-item`
+        ) as HTMLElement;
+
+        if (!challengeElement) {
+            return;
+        }
+
+        const challengeId =
+            challengeElement.dataset[DATA_ATTRIBUTES.CHALLENGE_ID];
+        if (!challengeId) {
+            return;
+        }
+
+        // Mark challenge as failed
+        const challenge = this.challengeList.markChallengeAsFailed(challengeId);
+        if (challenge) {
+            // Re-render the challenge list to reflect the failed state
+            this.renderChallengeList();
+
+            // Notify other windows about the state change
+            notifyChallengeStateChanged();
+        }
+    };
+
+    /**
+     * Handle Uncomplete button click in text-only mode
+     * @param {Event} event - The click event
+     * @returns {void}
+     */
+    private handleUncompleteButtonClick = (event: Event): void => {
+        event.stopPropagation();
+
+        // Only handle clicks in admin mode
+        if (window.location.hash !== URL_HASH.ADMIN) {
+            return;
+        }
+
+        const target = event.target as HTMLElement;
+        // Find challenge element (text-only mode)
+        const challengeElement = target.closest(
+            ".challenge-text-only-item"
+        ) as HTMLElement;
+
+        if (!challengeElement) {
+            return;
+        }
+
+        const challengeId =
+            challengeElement.dataset[DATA_ATTRIBUTES.CHALLENGE_ID];
+        if (!challengeId) {
+            return;
+        }
+
+        // Uncomplete the challenge
+        const challenge =
+            this.challengeList.uncompleteChallengeStatus(challengeId);
+        if (challenge) {
+            // Re-render the challenge list to reflect the updated state
+            this.renderChallengeList();
+
+            // Notify other windows about the state change
+            notifyChallengeStateChanged();
+        }
+    };
+
+    /**
+     * Handle Unfail button click in text-only mode
+     * @param {Event} event - The click event
+     * @returns {void}
+     */
+    private handleUnfailButtonClick = (event: Event): void => {
+        event.stopPropagation();
+
+        // Only handle clicks in admin mode
+        if (window.location.hash !== URL_HASH.ADMIN) {
+            return;
+        }
+
+        const target = event.target as HTMLElement;
+        // Find challenge element (text-only mode)
+        const challengeElement = target.closest(
+            ".challenge-text-only-item"
+        ) as HTMLElement;
+
+        if (!challengeElement) {
+            return;
+        }
+
+        const challengeId =
+            challengeElement.dataset[DATA_ATTRIBUTES.CHALLENGE_ID];
+        if (!challengeId) {
+            return;
+        }
+
+        // Unfail the challenge
+        const challenge = this.challengeList.unfailChallengeStatus(challengeId);
+        if (challenge) {
+            // Re-render the challenge list to reflect the updated state
+            this.renderChallengeList();
+
+            // Notify other windows about the state change
+            notifyChallengeStateChanged();
+        }
     };
 }
 

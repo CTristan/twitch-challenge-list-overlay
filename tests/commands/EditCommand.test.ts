@@ -3,6 +3,7 @@ import Challenge from "../../src/classes/Challenge";
 import ChallengeList from "../../src/classes/ChallengeList";
 import ConfigManager from "../../src/classes/ConfigManager";
 import { EditCommand } from "../../src/commands/EditCommand";
+import { ChallengeStatus } from "../../src/types/ChallengeStatus";
 import { UIUpdateAction } from "../../src/types/UIUpdateAction";
 import { ensureTestIsolation } from "../utils/chatHandlerTestUtils";
 
@@ -986,7 +987,7 @@ describe("EditCommand", () => {
 
         it("should handle editing completed challenge", () => {
             const challenge = new Challenge("Test Challenge");
-            challenge.setCompletionStatus(true);
+            challenge.setStatus(ChallengeStatus.COMPLETED);
             challengeList.addChallengeObjects(challenge);
 
             const response = editCommand.execute(

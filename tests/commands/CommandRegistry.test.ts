@@ -45,9 +45,9 @@ describe("CommandRegistry", () => {
             expect(registeredCommands).toContain(CommandType.CLEAR_DONE);
         });
 
-        it("should register exactly 14 commands", () => {
+        it("should register exactly 15 commands", () => {
             const registeredCommands = commandRegistry.getRegisteredCommands();
-            expect(registeredCommands.length).toBe(14);
+            expect(registeredCommands.length).toBe(15);
         });
     });
 

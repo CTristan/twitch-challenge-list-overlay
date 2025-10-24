@@ -229,6 +229,8 @@ interface ChallengeTimer {
     isPaused: boolean;
     /** Timestamp when timer was paused (0 if not paused) */
     pausedTime: number;
+    /** Whether timer had expired when it was stopped (for display purposes) */
+    wasExpired?: boolean;
 }
 
 /**

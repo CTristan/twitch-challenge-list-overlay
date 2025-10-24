@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import App from "../../src/app";
 import Challenge from "../../src/classes/Challenge";
+import { ChallengeStatus } from "../../src/types/ChallengeStatus";
 
 describe("Two-Line Challenge Layout", () => {
     let app: App;
@@ -181,7 +182,7 @@ describe("Two-Line Challenge Layout", () => {
                 description: "Completed description",
                 amount: 1,
             });
-            challenge.setCompletionStatus(true);
+            challenge.setStatus(ChallengeStatus.COMPLETED);
             challengeList.addChallengeForTesting(challenge);
 
             app.renderChallengeList();

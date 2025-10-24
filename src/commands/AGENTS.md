@@ -7,6 +7,7 @@ Command classes implementing the unified "!ch" command system.
 **Pattern**: Command interface → BaseCommand → Individual command classes → CommandRegistry
 
 **Processing Flow**:
+
 1. TwitchChat receives message
 2. App.chatHandler checks permissions
 3. CommandParser extracts command and args
@@ -19,23 +20,28 @@ Command classes implementing the unified "!ch" command system.
 ## Command Classes
 
 ### Core Commands
-- **AddCommand**: `!ch add <description> [d=<desc>] [a=<amount>] [t=<duration>]`
-- **EditCommand**: `!ch edit <id> [d=<desc>] [a=<amount>] [t=<duration>]`
-- **DeleteCommand**: `!ch delete <id> [<id2> ...]` (supports multiple IDs)
-- **DoneCommand**: `!ch done <id> [<id2> ...]` (marks complete)
-- **UndoneCommand**: `!ch undone <id> [<id2> ...]` (marks incomplete)
+
+-   **AddCommand**: `!ch add <description> [d=<desc>] [a=<amount>] [t=<duration>]`
+-   **EditCommand**: `!ch edit <id> [d=<desc>] [a=<amount>] [t=<duration>]`
+-   **DeleteCommand**: `!ch delete <id> [<id2> ...]` (supports multiple IDs)
+-   **DoneCommand**: `!ch done <id> [<id2> ...]` (marks complete)
+-   **UndoneCommand**: `!ch undone <id> [<id2> ...]` (marks incomplete)
+-   **FailCommand**: `!ch fail <id> [<id2> ...]` (marks failed)
+-   **UnfailCommand**: `!ch unfail <id> [<id2> ...]` (reverts failed → in-progress)
 
 ### Management Commands
-- **IncrementCommand**: `!ch increment <id> [amount]`
-- **DecrementCommand**: `!ch decrement <id> [amount]`
-- **SetCommand**: `!ch set <id> <new_amount>`
-- **ClearAllCommand**: `!ch clearall` (removes all challenges)
-- **ClearDoneCommand**: `!ch cleardone` (removes completed)
+
+-   **IncrementCommand**: `!ch increment <id> [amount]`
+-   **DecrementCommand**: `!ch decrement <id> [amount]`
+-   **SetCommand**: `!ch set <id> <new_amount>`
+-   **ClearAllCommand**: `!ch clearall` (removes all challenges)
+-   **ClearDoneCommand**: `!ch cleardone` (removes completed)
 
 ### Utility Commands
-- **ListCommand**: `!ch list` (shows all challenges with IDs)
-- **ShowCommand**: `!ch show <id>` (detailed challenge info)
-- **HelpCommand**: `!ch help` (command reference)
+
+-   **ListCommand**: `!ch list` (shows all challenges with IDs)
+-   **ShowCommand**: `!ch show <id>` (detailed challenge info)
+-   **HelpCommand**: `!ch help` (command reference)
 
 ## Command Implementation Pattern
 
@@ -46,10 +52,10 @@ export default class MyCommand extends BaseCommand {
         if (!this.validateArgs(args)) {
             return this.createResponse(false, "Error message");
         }
-        
+
         // 2. Perform operation
         const result = challengeList.someMethod(args);
-        
+
         // 3. Return response
         return this.createResponse(true, "Success message");
     }
@@ -62,6 +68,11 @@ export default class MyCommand extends BaseCommand {
 
 ## Dual Syntax Support
 
-- **key=value syntax**: `!ch add Challenge d="Full description" a=5 t=10m`
-- **Simple string syntax**: `!ch add Just the challenge text`
-- **Parser**: CommandParser handles both formats, extracts structured data
+-   **Aliases**
+
+    -   `!ch complete` → `!ch done` (help and execution map to Done)
+    -   Other command aliases are resolved by `CommandTypes.normalizeCommand()`
+
+-   **key=value syntax**: `!ch add Challenge d="Full description" a=5 t=10m`
+-   **Simple string syntax**: `!ch add Just the challenge text`
+-   **Parser**: CommandParser handles both formats, extracts structured data

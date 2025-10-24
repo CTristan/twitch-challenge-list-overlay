@@ -1,99 +1,50 @@
-# src/types/ - Type Definitions & Constants
+# src/types/ — Type Definitions & Constants
 
-Centralized type definitions and constant systems for type-safe operations.
+Centralized enums and constants for type-safe operations.
 
-## Enum Management (CRITICAL)
+## Enums (CRITICAL)
 
-**All enums MUST be in separate `.ts` files** (NOT in `globals.d.ts`):
+**All enums in separate `.ts` files** (NOT `globals.d.ts`). Use enum refs, not strings.
 
-```typescript
-// src/types/UIUpdateAction.ts
-export enum UIUpdateAction {
-    ADD = "add",
-    EDIT = "edit",
-    COMPLETE = "complete",
-    DELETE = "delete"
+**Existing**: UIUpdateAction, RefreshMessageType, MessageVariant, WindowMode, ConfigType, CommandType, ChallengeStatus
+
+```ts
+// ChallengeStatus.ts — lifecycle states (replaces legacy booleans)
+export enum ChallengeStatus {
+    IN_PROGRESS = "in-progress",
+    COMPLETED = "completed",
+    FAILED = "failed",
 }
 
 // Usage
-import { UIUpdateAction } from "../types/UIUpdateAction";
-const action = UIUpdateAction.ADD; // ✅ Correct
-const action = "add" as UIUpdateAction; // ❌ Avoid
+import { ChallengeStatus } from "../types/ChallengeStatus";
+challenge.setStatus(ChallengeStatus.COMPLETED); // ✅
 ```
 
-**Existing Enums**: UIUpdateAction, RefreshMessageType, MessageVariant, WindowMode, ConfigType, CommandType
+## Constants Files
 
-## Constants System
+**MessageConstants**: ERROR_MESSAGES, SUCCESS_MESSAGES, HELP_MESSAGES, MODAL_TEXT, UI_ELEMENTS (button labels: TEXT_ONLY_\*), ARIA_LABELS, CONFIG_EXPORT\_\*
 
-### MessageConstants.ts
-- **ERROR_MESSAGES**: Validation errors, operation failures
-- **SUCCESS_MESSAGES**: Operation confirmations
-- **HELP_MESSAGES**: Command help text
-- **MODAL_TEXT**: Modal UI strings
-- **UI_ELEMENTS**: Button labels, placeholders
-- **ARIA_LABELS**: Accessibility labels
-- **CONFIG_EXPORT_***: Export/import messages
+**ConfigConstants**: AUTH_CONFIG (Twitch auth), BEHAVIOR_CONFIG (maxChallenges, prefix), BACKGROUND_CONFIG (colors, opacity), EXPORT_METADATA\_\*, NETWORK_URLS, URL_PARAMS
 
-### ConfigConstants.ts
-- **AUTH_CONFIG**: Twitch authentication keys (channel, username, oauth)
-- **BEHAVIOR_CONFIG**: App behavior (maxChallenges, command prefix)
-- **BACKGROUND_CONFIG**: UI styling (colors, opacity)
-- **EXPORT_METADATA_***: Export file metadata
-- **NETWORK_URLS**: External URLs (token generator)
-- **URL_PARAMS**: URL hash values (#admin)
+**DOMConstants**: CSS_CLASSES (includes CHALLENGE_TEXT_ONLY\_\*), CSS_VALUES, CSS_PROPERTY_NAMES, ELEMENT_IDS, EVENT_NAMES, HTML_ELEMENTS, HTML_ATTRIBUTE_NAMES, HTML_ATTRIBUTES, MODAL_MODES, KEYBOARD_KEYS
 
-### DOMConstants.ts
-- **CSS_CLASSES**: All CSS class names
-- **CSS_VALUES**: CSS property values
-- **CSS_PROPERTY_NAMES**: CSS property keys
-- **ELEMENT_IDS**: DOM element IDs
-- **EVENT_NAMES**: DOM event types (input, change, click)
-- **HTML_ELEMENTS**: HTML tag names
-- **HTML_ATTRIBUTE_NAMES**: Attribute keys (role, aria-label)
-- **HTML_ATTRIBUTES**: Attribute values
-- **MODAL_MODES**: Modal states (add, edit)
-- **KEYBOARD_KEYS**: Key event codes
+**ColorConstants**: DEFAULT_COLORS, STATUS_COLORS, SHADOW_COLORS, COLOR_FORMAT
 
-### ColorConstants.ts
-- **DEFAULT_COLORS**: Primary, secondary, tertiary colors
-- **STATUS_COLORS**: Done, warning, error states
-- **SHADOW_COLORS**: Drop shadow values
-- **COLOR_FORMAT**: Regex patterns for validation
+**StorageConstants**: LOCALSTORAGE_PREFIX ("twitch-overlay-"), STORAGE_KEYS, getAllStorageKeys()
 
-### StorageConstants.ts
-- **LOCALSTORAGE_PREFIX**: `"twitch-overlay-"` (required for all keys)
-- **STORAGE_KEYS**: CONFIG, CHALLENGE_LIST, *_SECTION_COLLAPSED
-- **getAllStorageKeys()**: Returns all storage key values
+**ValidationConstants**: VALIDATION_PATTERNS (regex), VALIDATION_DEFAULTS, VALIDATION_CONSTRAINTS (min/max)
 
-### ValidationConstants.ts
-- **VALIDATION_PATTERNS**: Regex for URLs, colors, durations
-- **VALIDATION_DEFAULTS**: Default validation values
-- **VALIDATION_CONSTRAINTS**: Min/max values (title, description, amount)
+**NumericConstants**: FORM_CONSTRAINTS, COLOR_CONSTANTS, TIMING_CONSTANTS
 
-### NumericConstants.ts
-- **FORM_CONSTRAINTS**: Max lengths, min/max values
-- **COLOR_CONSTANTS**: Opacity ranges, color format lengths
-- **TIMING_CONSTANTS**: Debounce delays, animation durations
+**FileConstants**: FILE_FORMATS, DEFAULT_FILENAMES, MIME_TYPES
 
-### FileConstants.ts
-- **FILE_FORMATS**: Export file extensions (.json)
-- **DEFAULT_FILENAMES**: Export filename patterns
-- **MIME_TYPES**: File MIME types
+## Usage
 
-## Usage Pattern
-
-```typescript
+```ts
 import { BACKGROUND_CONFIG } from "../types/ConfigConstants";
-import { CSS_CLASSES, EVENT_NAMES } from "../types/DOMConstants";
-import { VALIDATION_CONSTRAINTS } from "../types/ValidationConstants";
+import { CSS_CLASSES } from "../types/DOMConstants";
 
-// Configuration
 const color = config.get(BACKGROUND_CONFIG.OVERLAY_BACKGROUND_COLOR);
-
-// DOM
 element.classList.add(CSS_CLASSES.DONE);
-field.addEventListener(EVENT_NAMES.INPUT, handler);
-
-// Validation
-const isValid = title.length <= VALIDATION_CONSTRAINTS.TITLE_MAX_LENGTH;
 ```

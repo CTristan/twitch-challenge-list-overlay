@@ -2,13 +2,13 @@ import { beforeEach, describe, expect, it } from "vitest";
 import Challenge from "../../src/classes/Challenge";
 import ChallengeList from "../../src/classes/ChallengeList";
 import ConfigManager from "../../src/classes/ConfigManager";
-import { DoneCommand } from "../../src/commands/DoneCommand";
+import { UnfailCommand } from "../../src/commands/UnfailCommand";
 import { ChallengeStatus } from "../../src/types/ChallengeStatus";
 import { UIUpdateAction } from "../../src/types/UIUpdateAction";
 import { ensureTestIsolation } from "../utils/chatHandlerTestUtils";
 
-describe("DoneCommand", () => {
-    let doneCommand: DoneCommand;
+describe("UnfailCommand", () => {
+    let unfailCommand: UnfailCommand;
     let challengeList: ChallengeList;
     let configManager: ConfigManager;
 
@@ -17,23 +17,24 @@ describe("DoneCommand", () => {
         ensureTestIsolation();
         challengeList = new ChallengeList();
         configManager = ConfigManager.getInstance();
-        doneCommand = new DoneCommand(challengeList, configManager);
+        unfailCommand = new UnfailCommand(challengeList, configManager);
     });
 
     describe("Constructor and Initialization", () => {
-        it("should create DoneCommand instance with required dependencies", () => {
-            expect(doneCommand).toBeDefined();
-            expect(doneCommand).toBeInstanceOf(DoneCommand);
+        it("should create UnfailCommand instance with required dependencies", () => {
+            expect(unfailCommand).toBeDefined();
+            expect(unfailCommand).toBeInstanceOf(UnfailCommand);
         });
 
         it("should have access to challengeList", () => {
-            // Add a challenge to verify access
+            // Add a failed challenge to verify access
             const challenge = new Challenge("Test Challenge");
+            challenge.setStatus(ChallengeStatus.FAILED);
             challengeList.addChallengeObjects(challenge);
 
-            const response = doneCommand.execute(
+            const response = unfailCommand.execute(
                 {
-                    command: "done",
+                    command: "unfail",
                     parameters: {},
                     rawParameters: "",
                     targetId: "1",
@@ -44,20 +45,24 @@ describe("DoneCommand", () => {
             );
 
             expect(response.error).toBe(false);
-            expect(challenge.isComplete()).toBe(true);
+            expect(challenge.isFailed()).toBe(false);
         });
     });
 
-    describe("execute - Single Challenge Completion", () => {
-        it("should mark a single challenge as completed", () => {
-            // Add challenge
+    describe("execute - Single Challenge Revert", () => {
+        it("should revert a single failed challenge to active status", () => {
+            // Add failed challenge
             const challenge = new Challenge("Test Challenge");
+            challenge.setStatus(ChallengeStatus.FAILED);
             challengeList.addChallengeObjects(challenge);
 
-            // Mark as done
-            const response = doneCommand.execute(
+            // Verify challenge is failed
+            expect(challenge.isFailed()).toBe(true);
+
+            // Revert to active
+            const response = unfailCommand.execute(
                 {
-                    command: "done",
+                    command: "unfail",
                     parameters: {},
                     rawParameters: "",
                     targetId: "1",
@@ -68,20 +73,21 @@ describe("DoneCommand", () => {
             );
 
             expect(response.error).toBe(false);
+            expect(response.message).toContain("Unfailed");
             expect(response.message).toContain("#1");
-            expect(response.message).toContain("✅");
-            expect(challenge.isComplete()).toBe(true);
+            expect(challenge.isFailed()).toBe(false);
         });
 
-        it("should include UI update data with COMPLETE action", () => {
-            // Add challenge
+        it("should include UI update data with REVERT action", () => {
+            // Add failed challenge
             const challenge = new Challenge("Test Challenge");
+            challenge.setStatus(ChallengeStatus.FAILED);
             challengeList.addChallengeObjects(challenge);
 
-            // Mark as done
-            const response = doneCommand.execute(
+            // Revert to active
+            const response = unfailCommand.execute(
                 {
-                    command: "done",
+                    command: "unfail",
                     parameters: {},
                     rawParameters: "",
                     targetId: "1",
@@ -93,29 +99,28 @@ describe("DoneCommand", () => {
 
             expect(response.error).toBe(false);
             expect(response.uiUpdate).toBeDefined();
-            expect(response.uiUpdate?.action).toBe(UIUpdateAction.COMPLETE);
+            expect(response.uiUpdate?.action).toBe(UIUpdateAction.REVERT);
             expect(response.uiUpdate?.challengeIndices).toEqual([0]);
             expect(response.uiUpdate?.challenges).toHaveLength(1);
             expect(response.uiUpdate?.updateTimers).toBe(true);
             expect(response.uiUpdate?.updateCount).toBe(true);
         });
 
-        it("should stop timer when marking challenge as done", () => {
-            // Add timed challenge
+        it("should revert failed challenge with timer", () => {
+            // Add failed timed challenge
             const timedChallenge = new Challenge("Timed Challenge", {
                 timer: "10m",
             });
-            timedChallenge.startTimer();
+            timedChallenge.setStatus(ChallengeStatus.FAILED);
             challengeList.addChallengeObjects(timedChallenge);
 
-            // Verify timer is active
-            expect(timedChallenge.timer).toBeDefined();
-            expect(timedChallenge.timer?.isActive).toBe(true);
+            // Verify challenge is failed
+            expect(timedChallenge.isFailed()).toBe(true);
 
-            // Mark as done
-            const response = doneCommand.execute(
+            // Revert to active
+            const response = unfailCommand.execute(
                 {
-                    command: "done",
+                    command: "unfail",
                     parameters: {},
                     rawParameters: "",
                     targetId: "1",
@@ -126,27 +131,26 @@ describe("DoneCommand", () => {
             );
 
             expect(response.error).toBe(false);
-            expect(timedChallenge.isComplete()).toBe(true);
-            expect(timedChallenge.timer?.isActive).toBe(false);
+            expect(timedChallenge.isFailed()).toBe(false);
         });
 
-        it("should mark challenge with progress tracking as done", () => {
-            // Add progress challenge
+        it("should revert failed challenge with progress tracking", () => {
+            // Add failed progress challenge
             const progressChallenge = new Challenge("Progress Challenge", {
                 amount: 5,
             });
-            progressChallenge.incrementProgress();
-            progressChallenge.incrementProgress();
+            progressChallenge.setProgress(3);
+            progressChallenge.setStatus(ChallengeStatus.FAILED);
             challengeList.addChallengeObjects(progressChallenge);
 
-            // Verify challenge has progress
-            expect(progressChallenge.progress).toBe(2);
-            expect(progressChallenge.isComplete()).toBe(false);
+            // Verify challenge is failed
+            expect(progressChallenge.progress).toBe(3);
+            expect(progressChallenge.isFailed()).toBe(true);
 
-            // Mark as done
-            const response = doneCommand.execute(
+            // Revert to active
+            const response = unfailCommand.execute(
                 {
-                    command: "done",
+                    command: "unfail",
                     parameters: {},
                     rawParameters: "",
                     targetId: "1",
@@ -157,18 +161,20 @@ describe("DoneCommand", () => {
             );
 
             expect(response.error).toBe(false);
-            expect(progressChallenge.isComplete()).toBe(true);
+            expect(progressChallenge.isFailed()).toBe(false);
+            expect(progressChallenge.progress).toBe(3); // Progress unchanged
         });
 
-        it("should mark challenge without timer as done", () => {
-            // Add simple challenge
+        it("should revert failed challenge without timer", () => {
+            // Add simple failed challenge
             const simpleChallenge = new Challenge("Simple Challenge");
+            simpleChallenge.setStatus(ChallengeStatus.FAILED);
             challengeList.addChallengeObjects(simpleChallenge);
 
-            // Mark as done
-            const response = doneCommand.execute(
+            // Revert to active
+            const response = unfailCommand.execute(
                 {
-                    command: "done",
+                    command: "unfail",
                     parameters: {},
                     rawParameters: "",
                     targetId: "1",
@@ -179,17 +185,23 @@ describe("DoneCommand", () => {
             );
 
             expect(response.error).toBe(false);
-            expect(simpleChallenge.isComplete()).toBe(true);
+            expect(simpleChallenge.isFailed()).toBe(false);
         });
     });
 
-    describe("execute - Multiple Challenge Completion", () => {
-        it("should mark multiple challenges as completed by comma-separated IDs", () => {
+    describe("execute - Multiple Challenge Revert", () => {
+        it("should revert multiple failed challenges by comma-separated IDs", () => {
             // Add challenges
             const challenge1 = new Challenge("Challenge 1");
             const challenge2 = new Challenge("Challenge 2");
             const challenge3 = new Challenge("Challenge 3");
             const challenge4 = new Challenge("Challenge 4");
+
+            // Mark some as failed
+            challenge1.setStatus(ChallengeStatus.FAILED);
+            challenge3.setStatus(ChallengeStatus.FAILED);
+            challenge4.setStatus(ChallengeStatus.FAILED);
+
             challengeList.addChallengeObjects([
                 challenge1,
                 challenge2,
@@ -197,10 +209,10 @@ describe("DoneCommand", () => {
                 challenge4,
             ]);
 
-            // Mark challenges at positions 1, 3, 4 as done
-            const response = doneCommand.execute(
+            // Revert challenges at positions 1, 3, 4
+            const response = unfailCommand.execute(
                 {
-                    command: "done",
+                    command: "unfail",
                     parameters: {},
                     rawParameters: "",
                     targetId: "1,3,4",
@@ -214,27 +226,32 @@ describe("DoneCommand", () => {
             expect(response.message).toContain("#1");
             expect(response.message).toContain("#3");
             expect(response.message).toContain("#4");
-            expect(challenge1.isComplete()).toBe(true);
-            expect(challenge2.isComplete()).toBe(false);
-            expect(challenge3.isComplete()).toBe(true);
-            expect(challenge4.isComplete()).toBe(true);
+            expect(challenge1.isFailed()).toBe(false);
+            expect(challenge2.isFailed()).toBe(false);
+            expect(challenge3.isFailed()).toBe(false);
+            expect(challenge4.isFailed()).toBe(false);
         });
 
-        it("should include correct UI update data for multiple completions", () => {
-            // Add challenges
+        it("should include correct UI update data for multiple reverts", () => {
+            // Add failed challenges
             const challenge1 = new Challenge("Challenge 1");
             const challenge2 = new Challenge("Challenge 2");
             const challenge3 = new Challenge("Challenge 3");
+
+            challenge1.setStatus(ChallengeStatus.FAILED);
+            challenge2.setStatus(ChallengeStatus.FAILED);
+            challenge3.setStatus(ChallengeStatus.FAILED);
+
             challengeList.addChallengeObjects([
                 challenge1,
                 challenge2,
                 challenge3,
             ]);
 
-            // Mark challenges at positions 1 and 3 as done
-            const response = doneCommand.execute(
+            // Revert challenges at positions 1 and 3
+            const response = unfailCommand.execute(
                 {
-                    command: "done",
+                    command: "unfail",
                     parameters: {},
                     rawParameters: "",
                     targetId: "1,3",
@@ -246,61 +263,24 @@ describe("DoneCommand", () => {
 
             expect(response.error).toBe(false);
             expect(response.uiUpdate).toBeDefined();
-            expect(response.uiUpdate?.action).toBe(UIUpdateAction.COMPLETE);
+            expect(response.uiUpdate?.action).toBe(UIUpdateAction.REVERT);
             expect(response.uiUpdate?.challengeIndices).toEqual([0, 2]);
             expect(response.uiUpdate?.challenges).toHaveLength(2);
             expect(response.uiUpdate?.updateTimers).toBe(true);
             expect(response.uiUpdate?.updateCount).toBe(true);
         });
 
-        it("should stop timers for all completed challenges", () => {
-            // Add timed challenges
-            const timedChallenge1 = new Challenge("Timed 1", { timer: "5m" });
-            const timedChallenge2 = new Challenge("Timed 2", { timer: "10m" });
-            const timedChallenge3 = new Challenge("Timed 3", { timer: "15m" });
-
-            timedChallenge1.startTimer();
-            timedChallenge2.startTimer();
-            timedChallenge3.startTimer();
-
-            challengeList.addChallengeObjects([
-                timedChallenge1,
-                timedChallenge2,
-                timedChallenge3,
-            ]);
-
-            // Verify all timers are active
-            expect(timedChallenge1.timer?.isActive).toBe(true);
-            expect(timedChallenge2.timer?.isActive).toBe(true);
-            expect(timedChallenge3.timer?.isActive).toBe(true);
-
-            // Mark challenges 1 and 3 as done
-            const response = doneCommand.execute(
-                {
-                    command: "done",
-                    parameters: {},
-                    rawParameters: "",
-                    targetId: "1,3",
-                    isValid: true,
-                    errors: [],
-                },
-                "testuser"
-            );
-
-            expect(response.error).toBe(false);
-            expect(timedChallenge1.timer?.isActive).toBe(false);
-            expect(timedChallenge2.timer?.isActive).toBe(true);
-            expect(timedChallenge3.timer?.isActive).toBe(false);
-        });
-
         it("should handle mixed challenge types", () => {
-            // Add mixed challenges
+            // Add mixed failed challenges
             const activeChallenge = new Challenge("Active");
             const timedChallenge = new Challenge("Timed", { timer: "5m" });
             const progressChallenge = new Challenge("Progress", { amount: 5 });
 
-            timedChallenge.startTimer();
-            progressChallenge.incrementProgress();
+            progressChallenge.setProgress(3);
+
+            activeChallenge.setStatus(ChallengeStatus.FAILED);
+            timedChallenge.setStatus(ChallengeStatus.FAILED);
+            progressChallenge.setStatus(ChallengeStatus.FAILED);
 
             challengeList.addChallengeObjects([
                 activeChallenge,
@@ -308,10 +288,10 @@ describe("DoneCommand", () => {
                 progressChallenge,
             ]);
 
-            // Mark all as done
-            const response = doneCommand.execute(
+            // Revert all
+            const response = unfailCommand.execute(
                 {
-                    command: "done",
+                    command: "unfail",
                     parameters: {},
                     rawParameters: "",
                     targetId: "1,2,3",
@@ -322,22 +302,23 @@ describe("DoneCommand", () => {
             );
 
             expect(response.error).toBe(false);
-            expect(activeChallenge.isComplete()).toBe(true);
-            expect(timedChallenge.isComplete()).toBe(true);
-            expect(progressChallenge.isComplete()).toBe(true);
+            expect(activeChallenge.isFailed()).toBe(false);
+            expect(timedChallenge.isFailed()).toBe(false);
+            expect(progressChallenge.isFailed()).toBe(false);
         });
     });
 
     describe("execute - Error Handling", () => {
         it("should return error when no target ID is provided", () => {
-            // Add challenge
+            // Add failed challenge
             const challenge = new Challenge("Test Challenge");
+            challenge.setStatus(ChallengeStatus.FAILED);
             challengeList.addChallengeObjects(challenge);
 
-            // Try to mark as done without target ID
-            const response = doneCommand.execute(
+            // Try to revert without target ID
+            const response = unfailCommand.execute(
                 {
-                    command: "done",
+                    command: "unfail",
                     parameters: {},
                     rawParameters: "",
                     targetId: "",
@@ -349,19 +330,20 @@ describe("DoneCommand", () => {
 
             expect(response.error).toBe(true);
             expect(response.message).toContain("Target ID required");
-            expect(response.message).toContain("done");
-            expect(challenge.isComplete()).toBe(false);
+            expect(response.message).toContain("unfail");
+            expect(challenge.isFailed()).toBe(true);
         });
 
         it("should return error when target ID is invalid", () => {
-            // Add challenge
+            // Add failed challenge
             const challenge = new Challenge("Test Challenge");
+            challenge.setStatus(ChallengeStatus.FAILED);
             challengeList.addChallengeObjects(challenge);
 
-            // Try to mark as done with invalid ID
-            const response = doneCommand.execute(
+            // Try to revert with invalid ID
+            const response = unfailCommand.execute(
                 {
-                    command: "done",
+                    command: "unfail",
                     parameters: {},
                     rawParameters: "",
                     targetId: "invalid",
@@ -373,18 +355,19 @@ describe("DoneCommand", () => {
 
             expect(response.error).toBe(true);
             expect(response.message).toContain("Invalid target ID format");
-            expect(challenge.isComplete()).toBe(false);
+            expect(challenge.isFailed()).toBe(true);
         });
 
         it("should return error when challenge does not exist", () => {
-            // Add one challenge
+            // Add one failed challenge
             const challenge = new Challenge("Test Challenge");
+            challenge.setStatus(ChallengeStatus.FAILED);
             challengeList.addChallengeObjects(challenge);
 
-            // Try to mark non-existent challenge as done
-            const response = doneCommand.execute(
+            // Try to revert non-existent challenge
+            const response = unfailCommand.execute(
                 {
-                    command: "done",
+                    command: "unfail",
                     parameters: {},
                     rawParameters: "",
                     targetId: "5",
@@ -396,19 +379,18 @@ describe("DoneCommand", () => {
 
             expect(response.error).toBe(true);
             expect(response.message).toContain("not found");
-            expect(challenge.isComplete()).toBe(false);
+            expect(challenge.isFailed()).toBe(true);
         });
 
-        it("should return error when challenge is already completed", () => {
-            // Add completed challenge
-            const completedChallenge = new Challenge("Completed Challenge");
-            completedChallenge.setStatus(ChallengeStatus.COMPLETED);
-            challengeList.addChallengeObjects(completedChallenge);
+        it("should return error when challenge is not marked as failed", () => {
+            // Add active challenge (not failed)
+            const activeChallenge = new Challenge("Active Challenge");
+            challengeList.addChallengeObjects(activeChallenge);
 
-            // Try to mark as done again
-            const response = doneCommand.execute(
+            // Try to revert non-failed challenge
+            const response = unfailCommand.execute(
                 {
-                    command: "done",
+                    command: "unfail",
                     parameters: {},
                     rawParameters: "",
                     targetId: "1",
@@ -419,22 +401,20 @@ describe("DoneCommand", () => {
             );
 
             expect(response.error).toBe(true);
-            expect(response.message).toContain("already completed");
+            expect(response.message).toContain("not marked as failed");
             expect(response.message).toContain("#1");
         });
 
-        it("should return error when all challenges are already completed", () => {
-            // Add completed challenges
+        it("should return error when all challenges are not marked as failed", () => {
+            // Add active challenges
             const challenge1 = new Challenge("Challenge 1");
             const challenge2 = new Challenge("Challenge 2");
-            challenge1.setStatus(ChallengeStatus.COMPLETED);
-            challenge2.setStatus(ChallengeStatus.COMPLETED);
             challengeList.addChallengeObjects([challenge1, challenge2]);
 
-            // Try to mark as done
-            const response = doneCommand.execute(
+            // Try to revert non-failed challenges
+            const response = unfailCommand.execute(
                 {
-                    command: "done",
+                    command: "unfail",
                     parameters: {},
                     rawParameters: "",
                     targetId: "1,2",
@@ -445,21 +425,23 @@ describe("DoneCommand", () => {
             );
 
             expect(response.error).toBe(true);
-            expect(response.message).toContain("already completed");
+            expect(response.message).toContain("not marked as failed");
             expect(response.message).toContain("#1");
             expect(response.message).toContain("#2");
         });
 
         it("should return error when some challenges in list do not exist", () => {
-            // Add two challenges
+            // Add two failed challenges
             const challenge1 = new Challenge("Challenge 1");
             const challenge2 = new Challenge("Challenge 2");
+            challenge1.setStatus(ChallengeStatus.FAILED);
+            challenge2.setStatus(ChallengeStatus.FAILED);
             challengeList.addChallengeObjects([challenge1, challenge2]);
 
-            // Try to mark with mix of valid and invalid IDs
-            const response = doneCommand.execute(
+            // Try to revert with mix of valid and invalid IDs
+            const response = unfailCommand.execute(
                 {
-                    command: "done",
+                    command: "unfail",
                     parameters: {},
                     rawParameters: "",
                     targetId: "1,5,10",
@@ -471,19 +453,19 @@ describe("DoneCommand", () => {
 
             expect(response.error).toBe(true);
             expect(response.message).toContain("not found");
-            // Should not mark any challenges as done when some IDs are invalid
-            expect(challenge1.isComplete()).toBe(false);
-            expect(challenge2.isComplete()).toBe(false);
+            // Should not revert any challenges when some IDs are invalid
+            expect(challenge1.isFailed()).toBe(true);
+            expect(challenge2.isFailed()).toBe(true);
         });
 
-        it("should return error when no valid challenges to mark as done", () => {
+        it("should return error when no valid challenges to unfail", () => {
             // Don't add any challenges
             expect(challengeList.challenges.length).toBe(0);
 
-            // Try to mark as done
-            const response = doneCommand.execute(
+            // Try to revert
+            const response = unfailCommand.execute(
                 {
-                    command: "done",
+                    command: "unfail",
                     parameters: {},
                     rawParameters: "",
                     targetId: "1",
@@ -497,21 +479,22 @@ describe("DoneCommand", () => {
             expect(response.message).toContain("not found");
         });
 
-        it("should handle error during completion operation", () => {
-            // Add challenge
+        it("should handle error during revert operation", () => {
+            // Add failed challenge
             const challenge = new Challenge("Test Challenge");
+            challenge.setStatus(ChallengeStatus.FAILED);
             challengeList.addChallengeObjects(challenge);
 
             // Mock setStatus to throw an error
             const originalMethod = challenge.setStatus;
             challenge.setStatus = () => {
-                throw new Error("Completion operation failed");
+                throw new Error("Revert operation failed");
             };
 
-            // Execute done command
-            const response = doneCommand.execute(
+            // Execute unfail command
+            const response = unfailCommand.execute(
                 {
-                    command: "done",
+                    command: "unfail",
                     parameters: {},
                     rawParameters: "",
                     targetId: "1",
@@ -523,16 +506,19 @@ describe("DoneCommand", () => {
 
             // Verify error response
             expect(response.error).toBe(true);
-            expect(response.message).toContain("marking challenges as done");
-            expect(response.message).toContain("Completion operation failed");
+            expect(response.message).toContain(
+                "reverting challenges from failed status"
+            );
+            expect(response.message).toContain("Revert operation failed");
 
             // Restore original method
             challenge.setStatus = originalMethod;
         });
 
         it("should handle non-Error exceptions", () => {
-            // Add challenge
+            // Add failed challenge
             const challenge = new Challenge("Test Challenge");
+            challenge.setStatus(ChallengeStatus.FAILED);
             challengeList.addChallengeObjects(challenge);
 
             // Mock setStatus to throw a non-Error object
@@ -541,10 +527,10 @@ describe("DoneCommand", () => {
                 throw "String error";
             };
 
-            // Execute done command
-            const response = doneCommand.execute(
+            // Execute unfail command
+            const response = unfailCommand.execute(
                 {
-                    command: "done",
+                    command: "unfail",
                     parameters: {},
                     rawParameters: "",
                     targetId: "1",
@@ -556,7 +542,9 @@ describe("DoneCommand", () => {
 
             // Verify error response
             expect(response.error).toBe(true);
-            expect(response.message).toContain("marking challenges as done");
+            expect(response.message).toContain(
+                "reverting challenges from failed status"
+            );
 
             // Restore original method
             challenge.setStatus = originalMethod;
@@ -564,21 +552,26 @@ describe("DoneCommand", () => {
     });
 
     describe("execute - Edge Cases", () => {
-        it("should handle completion of first challenge in list", () => {
-            // Add challenges
+        it("should handle reverting first challenge in list", () => {
+            // Add failed challenges
             const challenge1 = new Challenge("First");
             const challenge2 = new Challenge("Second");
             const challenge3 = new Challenge("Third");
+
+            challenge1.setStatus(ChallengeStatus.FAILED);
+            challenge2.setStatus(ChallengeStatus.FAILED);
+            challenge3.setStatus(ChallengeStatus.FAILED);
+
             challengeList.addChallengeObjects([
                 challenge1,
                 challenge2,
                 challenge3,
             ]);
 
-            // Mark first challenge as done
-            const response = doneCommand.execute(
+            // Revert first challenge
+            const response = unfailCommand.execute(
                 {
-                    command: "done",
+                    command: "unfail",
                     parameters: {},
                     rawParameters: "",
                     targetId: "1",
@@ -589,26 +582,31 @@ describe("DoneCommand", () => {
             );
 
             expect(response.error).toBe(false);
-            expect(challenge1.isComplete()).toBe(true);
-            expect(challenge2.isComplete()).toBe(false);
-            expect(challenge3.isComplete()).toBe(false);
+            expect(challenge1.isFailed()).toBe(false);
+            expect(challenge2.isFailed()).toBe(true);
+            expect(challenge3.isFailed()).toBe(true);
         });
 
-        it("should handle completion of last challenge in list", () => {
-            // Add challenges
+        it("should handle reverting last challenge in list", () => {
+            // Add failed challenges
             const challenge1 = new Challenge("First");
             const challenge2 = new Challenge("Second");
             const challenge3 = new Challenge("Third");
+
+            challenge1.setStatus(ChallengeStatus.FAILED);
+            challenge2.setStatus(ChallengeStatus.FAILED);
+            challenge3.setStatus(ChallengeStatus.FAILED);
+
             challengeList.addChallengeObjects([
                 challenge1,
                 challenge2,
                 challenge3,
             ]);
 
-            // Mark last challenge as done
-            const response = doneCommand.execute(
+            // Revert last challenge
+            const response = unfailCommand.execute(
                 {
-                    command: "done",
+                    command: "unfail",
                     parameters: {},
                     rawParameters: "",
                     targetId: "3",
@@ -619,26 +617,31 @@ describe("DoneCommand", () => {
             );
 
             expect(response.error).toBe(false);
-            expect(challenge1.isComplete()).toBe(false);
-            expect(challenge2.isComplete()).toBe(false);
-            expect(challenge3.isComplete()).toBe(true);
+            expect(challenge1.isFailed()).toBe(true);
+            expect(challenge2.isFailed()).toBe(true);
+            expect(challenge3.isFailed()).toBe(false);
         });
 
-        it("should handle completion of middle challenge in list", () => {
-            // Add challenges
+        it("should handle reverting middle challenge in list", () => {
+            // Add failed challenges
             const challenge1 = new Challenge("First");
             const challenge2 = new Challenge("Second");
             const challenge3 = new Challenge("Third");
+
+            challenge1.setStatus(ChallengeStatus.FAILED);
+            challenge2.setStatus(ChallengeStatus.FAILED);
+            challenge3.setStatus(ChallengeStatus.FAILED);
+
             challengeList.addChallengeObjects([
                 challenge1,
                 challenge2,
                 challenge3,
             ]);
 
-            // Mark middle challenge as done
-            const response = doneCommand.execute(
+            // Revert middle challenge
+            const response = unfailCommand.execute(
                 {
-                    command: "done",
+                    command: "unfail",
                     parameters: {},
                     rawParameters: "",
                     targetId: "2",
@@ -649,21 +652,25 @@ describe("DoneCommand", () => {
             );
 
             expect(response.error).toBe(false);
-            expect(challenge1.isComplete()).toBe(false);
-            expect(challenge2.isComplete()).toBe(true);
-            expect(challenge3.isComplete()).toBe(false);
+            expect(challenge1.isFailed()).toBe(true);
+            expect(challenge2.isFailed()).toBe(false);
+            expect(challenge3.isFailed()).toBe(true);
         });
 
         it("should handle duplicate IDs in target list", () => {
-            // Add challenges
+            // Add failed challenges
             const challenge1 = new Challenge("Challenge 1");
             const challenge2 = new Challenge("Challenge 2");
+
+            challenge1.setStatus(ChallengeStatus.FAILED);
+            challenge2.setStatus(ChallengeStatus.FAILED);
+
             challengeList.addChallengeObjects([challenge1, challenge2]);
 
-            // Try to mark with duplicate IDs
-            const response = doneCommand.execute(
+            // Try to revert with duplicate IDs
+            const response = unfailCommand.execute(
                 {
-                    command: "done",
+                    command: "unfail",
                     parameters: {},
                     rawParameters: "",
                     targetId: "1,1,2",
@@ -675,24 +682,28 @@ describe("DoneCommand", () => {
 
             // Should handle duplicates gracefully
             expect(response.error).toBe(false);
-            expect(challenge1.isComplete()).toBe(true);
-            expect(challenge2.isComplete()).toBe(true);
+            expect(challenge1.isFailed()).toBe(false);
+            expect(challenge2.isFailed()).toBe(false);
         });
 
-        it("should persist completion to localStorage", () => {
-            // Add challenges
+        it("should persist revert to localStorage", () => {
+            // Add failed challenges
             const challenge1 = new Challenge("Challenge 1");
             const challenge2 = new Challenge("Challenge 2");
+
+            challenge1.setStatus(ChallengeStatus.FAILED);
+            challenge2.setStatus(ChallengeStatus.FAILED);
+
             challengeList.addChallengeObjects([challenge1, challenge2]);
 
             // Verify initial state
-            expect(challenge1.isComplete()).toBe(false);
-            expect(challenge2.isComplete()).toBe(false);
+            expect(challenge1.isFailed()).toBe(true);
+            expect(challenge2.isFailed()).toBe(true);
 
-            // Mark challenge as done
-            const response = doneCommand.execute(
+            // Revert challenge
+            const response = unfailCommand.execute(
                 {
-                    command: "done",
+                    command: "unfail",
                     parameters: {},
                     rawParameters: "",
                     targetId: "1",
@@ -705,24 +716,28 @@ describe("DoneCommand", () => {
             // Verify the command succeeded
             expect(response.error).toBe(false);
 
-            // Verify the completion status was updated in memory
-            expect(challenge1.isComplete()).toBe(true);
-            expect(challenge2.isComplete()).toBe(false);
+            // Verify the failure status was updated in memory
+            expect(challenge1.isFailed()).toBe(false);
+            expect(challenge2.isFailed()).toBe(true);
 
             // Note: ChallengeList automatically persists to localStorage
             // The persistence is tested in ChallengeList tests
         });
 
         it("should handle whitespace in target ID", () => {
-            // Add challenges
+            // Add failed challenges
             const challenge1 = new Challenge("Challenge 1");
             const challenge2 = new Challenge("Challenge 2");
+
+            challenge1.setStatus(ChallengeStatus.FAILED);
+            challenge2.setStatus(ChallengeStatus.FAILED);
+
             challengeList.addChallengeObjects([challenge1, challenge2]);
 
-            // Mark with whitespace in target ID
-            const response = doneCommand.execute(
+            // Revert with whitespace in target ID
+            const response = unfailCommand.execute(
                 {
-                    command: "done",
+                    command: "unfail",
                     parameters: {},
                     rawParameters: "",
                     targetId: " 1 , 2 ",
@@ -733,19 +748,20 @@ describe("DoneCommand", () => {
             );
 
             expect(response.error).toBe(false);
-            expect(challenge1.isComplete()).toBe(true);
-            expect(challenge2.isComplete()).toBe(true);
+            expect(challenge1.isFailed()).toBe(false);
+            expect(challenge2.isFailed()).toBe(false);
         });
 
         it("should handle zero as target ID", () => {
-            // Add challenge
+            // Add failed challenge
             const challenge = new Challenge("Test Challenge");
+            challenge.setStatus(ChallengeStatus.FAILED);
             challengeList.addChallengeObjects(challenge);
 
-            // Try to mark with zero ID
-            const response = doneCommand.execute(
+            // Try to revert with zero ID
+            const response = unfailCommand.execute(
                 {
-                    command: "done",
+                    command: "unfail",
                     parameters: {},
                     rawParameters: "",
                     targetId: "0",
@@ -757,18 +773,19 @@ describe("DoneCommand", () => {
 
             expect(response.error).toBe(true);
             expect(response.message).toContain("Invalid target ID format");
-            expect(challenge.isComplete()).toBe(false);
+            expect(challenge.isFailed()).toBe(true);
         });
 
         it("should handle negative target ID", () => {
-            // Add challenge
+            // Add failed challenge
             const challenge = new Challenge("Test Challenge");
+            challenge.setStatus(ChallengeStatus.FAILED);
             challengeList.addChallengeObjects(challenge);
 
-            // Try to mark with negative ID
-            const response = doneCommand.execute(
+            // Try to revert with negative ID
+            const response = unfailCommand.execute(
                 {
-                    command: "done",
+                    command: "unfail",
                     parameters: {},
                     rawParameters: "",
                     targetId: "-1",
@@ -780,17 +797,18 @@ describe("DoneCommand", () => {
 
             expect(response.error).toBe(true);
             expect(response.message).toContain("Invalid target ID format");
-            expect(challenge.isComplete()).toBe(false);
+            expect(challenge.isFailed()).toBe(true);
         });
 
-        it("should handle partial completion when some challenges are already done", () => {
+        it("should handle partial revert when some challenges are not failed", () => {
             // Add challenges
             const challenge1 = new Challenge("Challenge 1");
             const challenge2 = new Challenge("Challenge 2");
             const challenge3 = new Challenge("Challenge 3");
 
-            // Mark challenge2 as already completed
-            challenge2.setStatus(ChallengeStatus.COMPLETED);
+            // Mark challenge1 and challenge3 as failed, leave challenge2 active
+            challenge1.setStatus(ChallengeStatus.FAILED);
+            challenge3.setStatus(ChallengeStatus.FAILED);
 
             challengeList.addChallengeObjects([
                 challenge1,
@@ -798,10 +816,10 @@ describe("DoneCommand", () => {
                 challenge3,
             ]);
 
-            // Try to mark challenges 1, 2, 3 as done
-            const response = doneCommand.execute(
+            // Try to revert challenges 1, 2, 3
+            const response = unfailCommand.execute(
                 {
-                    command: "done",
+                    command: "unfail",
                     parameters: {},
                     rawParameters: "",
                     targetId: "1,2,3",
@@ -811,27 +829,28 @@ describe("DoneCommand", () => {
                 "testuser"
             );
 
-            // Should succeed for challenges 1 and 3, but note that 2 was already done
+            // Should succeed for challenges 1 and 3, but note that 2 was not failed
             expect(response.error).toBe(false);
-            expect(challenge1.isComplete()).toBe(true);
-            expect(challenge2.isComplete()).toBe(true);
-            expect(challenge3.isComplete()).toBe(true);
-            // Response should only mention the newly completed challenges
+            expect(challenge1.isFailed()).toBe(false);
+            expect(challenge2.isFailed()).toBe(false);
+            expect(challenge3.isFailed()).toBe(false);
+            // Response should only mention the newly reverted challenges
             expect(response.message).toContain("#1");
             expect(response.message).toContain("#3");
         });
     });
 
     describe("execute - Response Formatting", () => {
-        it("should format response with short ID and emoji for single completion", () => {
-            // Add challenge
+        it("should format response correctly for single revert", () => {
+            // Add failed challenge
             const challenge = new Challenge("Test Challenge");
+            challenge.setStatus(ChallengeStatus.FAILED);
             challengeList.addChallengeObjects(challenge);
 
-            // Mark as done
-            const response = doneCommand.execute(
+            // Revert
+            const response = unfailCommand.execute(
                 {
-                    command: "done",
+                    command: "unfail",
                     parameters: {},
                     rawParameters: "",
                     targetId: "1",
@@ -842,25 +861,30 @@ describe("DoneCommand", () => {
             );
 
             expect(response.error).toBe(false);
+            expect(response.message).toContain("Unfailed");
             expect(response.message).toContain("#1");
-            expect(response.message).toContain("✅");
         });
 
-        it("should format response correctly for multiple completions", () => {
-            // Add challenges
+        it("should format response correctly for multiple reverts", () => {
+            // Add failed challenges
             const challenge1 = new Challenge("First Challenge");
             const challenge2 = new Challenge("Second Challenge");
             const challenge3 = new Challenge("Third Challenge");
+
+            challenge1.setStatus(ChallengeStatus.FAILED);
+            challenge2.setStatus(ChallengeStatus.FAILED);
+            challenge3.setStatus(ChallengeStatus.FAILED);
+
             challengeList.addChallengeObjects([
                 challenge1,
                 challenge2,
                 challenge3,
             ]);
 
-            // Mark multiple challenges as done
-            const response = doneCommand.execute(
+            // Revert multiple challenges
+            const response = unfailCommand.execute(
                 {
-                    command: "done",
+                    command: "unfail",
                     parameters: {},
                     rawParameters: "",
                     targetId: "1,3",
@@ -871,24 +895,25 @@ describe("DoneCommand", () => {
             );
 
             expect(response.error).toBe(false);
+            expect(response.message).toContain("Unfailed");
             expect(response.message).toContain("#1");
             expect(response.message).toContain("#3");
-            expect(response.message).toContain("✅");
         });
 
         it("should verify response includes position IDs not titles", () => {
-            // Add challenge with description and progress
+            // Add failed challenge with description and progress
             const challenge = new Challenge("Detailed Challenge", {
                 description: "Test description",
                 amount: 5,
             });
-            challenge.incrementProgress();
+            challenge.setProgress(5);
+            challenge.setStatus(ChallengeStatus.FAILED);
             challengeList.addChallengeObjects(challenge);
 
-            // Mark as done
-            const response = doneCommand.execute(
+            // Revert
+            const response = unfailCommand.execute(
                 {
-                    command: "done",
+                    command: "unfail",
                     parameters: {},
                     rawParameters: "",
                     targetId: "1",
