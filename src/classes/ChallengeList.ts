@@ -342,6 +342,27 @@ export default class ChallengeList {
     }
 
     /**
+     * Clear all failed challenges
+     * @returns The deleted failed challenges
+     */
+    clearFailedChallenges(): Challenge[] {
+        const removedChallenges: Challenge[] = [];
+
+        this.challenges = this.challenges.filter((challenge) => {
+            if (challenge.isFailed()) {
+                removedChallenges.push(challenge);
+                this.#challengeMap.delete(challenge.id);
+                return false;
+            }
+            return true;
+        });
+
+        this.#decreaseChallengeCount(removedChallenges);
+        this.#commitToLocalStorage();
+        return removedChallenges;
+    }
+
+    /**
      * Validates the challenge index
      * @param index - The index to validate
      * @returns Whether the index is valid

@@ -689,7 +689,7 @@ describe("App", () => {
                 const textOnlyActions = textOnlyContainer.querySelectorAll(
                     `.${CSS_CLASSES.ADMIN_TEXT_ONLY_ACTION}`
                 );
-                expect(textOnlyActions.length).toBe(3);
+                expect(textOnlyActions.length).toBe(4);
 
                 expect(
                     textOnlyContainer.querySelector(
@@ -705,7 +705,12 @@ describe("App", () => {
                     textOnlyContainer.querySelector(
                         `.${CSS_CLASSES.ADMIN_TEXT_ONLY_ACTION_CLEAR}`
                     )?.textContent
-                ).toBe(UI_ELEMENTS.TEXT_ONLY_CLEAR_FINISHED_ACTION);
+                ).toBe(UI_ELEMENTS.TEXT_ONLY_CLEAR_COMPLETED_ACTION);
+                expect(
+                    textOnlyContainer.querySelector(
+                        `.${CSS_CLASSES.ADMIN_TEXT_ONLY_ACTION_CLEAR_FAILED}`
+                    )?.textContent
+                ).toBe(UI_ELEMENTS.TEXT_ONLY_CLEAR_FAILED_ACTION);
                 expect(
                     textOnlyContainer.querySelector(
                         `.${CSS_CLASSES.ADMIN_TEXT_ONLY_ACTION_REFRESH}`

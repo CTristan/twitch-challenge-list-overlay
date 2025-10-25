@@ -705,7 +705,7 @@ export default class App {
         clearFinishedButton.type = HTML_ATTRIBUTES.BUTTON_TYPE;
         clearFinishedButton.addEventListener(
             EVENT_NAMES.CLICK,
-            this.handleClearFinishedClick
+            this.handleClearCompletedClick
         );
 
         buttonContainer.appendChild(clearFinishedButton);
@@ -737,12 +737,19 @@ export default class App {
         );
         fragment.appendChild(addAction);
 
-        const clearFinishedAction = this.createAdminTextOnlyAction(
-            UI_ELEMENTS.TEXT_ONLY_CLEAR_FINISHED_ACTION,
+        const clearCompletedAction = this.createAdminTextOnlyAction(
+            UI_ELEMENTS.TEXT_ONLY_CLEAR_COMPLETED_ACTION,
             CSS_CLASSES.ADMIN_TEXT_ONLY_ACTION_CLEAR,
-            this.handleClearFinishedClick
+            this.handleClearCompletedClick
         );
-        fragment.appendChild(clearFinishedAction);
+        fragment.appendChild(clearCompletedAction);
+
+        const clearFailedAction = this.createAdminTextOnlyAction(
+            UI_ELEMENTS.TEXT_ONLY_CLEAR_FAILED_ACTION,
+            CSS_CLASSES.ADMIN_TEXT_ONLY_ACTION_CLEAR_FAILED,
+            this.handleClearFailedClick
+        );
+        fragment.appendChild(clearFailedAction);
 
         const refreshAction = this.createAdminTextOnlyAction(
             UI_ELEMENTS.TEXT_ONLY_REFRESH_ACTION,
@@ -808,29 +815,40 @@ export default class App {
     };
 
     /**
-     * Handle clear finished challenges button click
+     * Handle clear completed challenges button click
      * Clears all completed challenges from the list
      * @returns {void}
      */
-    private handleClearFinishedClick = (): void => {
-        // Get completed challenges count before clearing
+    private handleClearCompletedClick = (): void => {
         const completedChallenges = this.challengeList.challenges.filter((c) =>
             c.isComplete()
         );
-        const completedCount = completedChallenges.length;
 
-        // Check if there are any completed challenges to clear
-        if (completedCount === 0) {
+        if (completedChallenges.length === 0) {
             return;
         }
 
-        // Clear completed challenges (automatically saves to localStorage)
         this.challengeList.clearDoneChallenges();
-
-        // Re-render the challenge list to reflect the changes
         this.renderChallengeList();
+        notifyChallengeStateChanged();
+    };
 
-        // Notify viewer overlay about the state change
+    /**
+     * Handle clear failed challenges button click
+     * Clears all failed challenges from the list
+     * @returns {void}
+     */
+    private handleClearFailedClick = (): void => {
+        const failedChallenges = this.challengeList.challenges.filter((c) =>
+            c.isFailed()
+        );
+
+        if (failedChallenges.length === 0) {
+            return;
+        }
+
+        this.challengeList.clearFailedChallenges();
+        this.renderChallengeList();
         notifyChallengeStateChanged();
     };
 

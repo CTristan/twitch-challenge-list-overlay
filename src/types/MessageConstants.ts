@@ -249,7 +249,8 @@ export const UI_ELEMENTS = {
     TEXT_ONLY_DECREMENT_BUTTON: "-",
     TEXT_ONLY_ADMIN_ACTIONS_LABEL: "Admin Actions",
     TEXT_ONLY_ADD_CHALLENGE_ACTION: "Add Challenge",
-    TEXT_ONLY_CLEAR_FINISHED_ACTION: "Clear Finished",
+    TEXT_ONLY_CLEAR_COMPLETED_ACTION: "Clear Completed",
+    TEXT_ONLY_CLEAR_FAILED_ACTION: "Clear Failed",
     TEXT_ONLY_REFRESH_ACTION: "Refresh",
     CONNECTION_WARNING_TEXT:
         "⚠️ Admin panel not connected - overlay may require manual refresh",

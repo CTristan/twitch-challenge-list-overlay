@@ -375,6 +375,44 @@ describe("ChallengeList", () => {
         });
     });
 
+    describe("clearFailedChallenges", () => {
+        it("should clear all failed challenges", () => {
+            challengeList.addChallenges([
+                "Challenge 1",
+                "Challenge 2",
+                "Challenge 3",
+            ]);
+
+            const [firstChallenge, , thirdChallenge] = challengeList.challenges;
+            if (!firstChallenge || !thirdChallenge) {
+                throw new Error("Failed challenges were not initialized");
+            }
+
+            challengeList.markChallengeAsFailed(firstChallenge.id);
+            challengeList.markChallengeAsFailed(thirdChallenge.id);
+
+            const removedChallenges = challengeList.clearFailedChallenges();
+
+            expect(removedChallenges).toHaveLength(2);
+            expect(challengeList.challenges).toHaveLength(1);
+            const remainingChallenge = challengeList.challenges[0];
+            if (!remainingChallenge) {
+                throw new Error("Remaining challenge not found");
+            }
+            expect(remainingChallenge.title).toEqual("Challenge 2");
+            expect(challengeList.challengesCompleted).toEqual(0);
+            expect(challengeList.totalChallenges).toEqual(1);
+        });
+
+        it("should return empty array if no failed challenges", () => {
+            challengeList.addChallenges("Challenge 1");
+            const removedChallenges = challengeList.clearFailedChallenges();
+
+            expect(removedChallenges).toHaveLength(0);
+            expect(challengeList.challenges).toHaveLength(1);
+        });
+    });
+
     describe("ID-based challenge operations (performance optimization)", () => {
         let challenge1: Challenge;
         let challenge2: Challenge;

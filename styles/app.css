@@ -508,11 +508,15 @@ body {
 }
 
 .admin-text-only-action-clear {
-  color: #f44336;
+  color: #4caf50;
 }
 
 .admin-text-only-action-refresh {
   color: #ff9800;
+}
+
+.admin-text-only-action-clear-failed {
+  color: #f44336;
 }
 
 .admin-text-only-action:hover,

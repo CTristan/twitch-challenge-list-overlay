@@ -59,6 +59,7 @@ export const CSS_CLASSES = {
     ADMIN_TEXT_ONLY_ACTION: "admin-text-only-action",
     ADMIN_TEXT_ONLY_ACTION_ADD: "admin-text-only-action-add",
     ADMIN_TEXT_ONLY_ACTION_CLEAR: "admin-text-only-action-clear",
+    ADMIN_TEXT_ONLY_ACTION_CLEAR_FAILED: "admin-text-only-action-clear-failed",
     ADMIN_TEXT_ONLY_ACTION_REFRESH: "admin-text-only-action-refresh",
 
     // Background customization classes
