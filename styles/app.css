@@ -213,7 +213,8 @@ body {
 /* Text-only button styling (when admin text-only mode is enabled) */
 .challenge-text-only-edit,
 .challenge-text-only-increment,
-.challenge-text-only-decrement {
+.challenge-text-only-decrement,
+.challenge-text-only-delete {
   flex-shrink: 0;
   height: var(--challenge-checkbox-size);
   margin-left: 0.25rem;
@@ -231,6 +232,28 @@ body {
   border-radius: 4px;
   background-color: rgba(255, 255, 255, 0.15);
   border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.challenge-text-only-delete {
+  color: #ffffff;
+  background-color: #660000;
+  border-color: #660000;
+  opacity: 1;
+  box-shadow: 0 2px 6px rgba(102, 0, 0, 0.35);
+}
+
+.challenge-text-only-delete:hover,
+.challenge-text-only-delete:focus-visible {
+  opacity: 1;
+  transform: scale(1.05);
+  background-color: #7a0000;
+  border-color: #7a0000;
+}
+
+.challenge-text-only-delete:active {
+  transform: scale(0.98);
+  background-color: #600000;
+  border-color: #600000;
 }
 
 .challenge-text-only-edit:hover,
@@ -931,7 +954,8 @@ body {
 .challenge-text-only-buttons .challenge-text-only-fail,
 .challenge-text-only-buttons .challenge-text-only-unfail,
 .challenge-text-only-buttons .challenge-text-only-increment,
-.challenge-text-only-buttons .challenge-text-only-decrement {
+.challenge-text-only-buttons .challenge-text-only-decrement,
+.challenge-text-only-buttons .challenge-text-only-delete {
   background: none !important;
   border: none !important;
   padding: 0 !important;
@@ -964,6 +988,24 @@ body {
 .challenge-text-only-buttons .challenge-text-only-unfail {
   color: #9c27b0;
 }
+.challenge-text-only-buttons .challenge-text-only-delete,
+.challenge-text-only-item .challenge-text-only-delete {
+  color: #b71c1c;
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  height: auto;
+  box-shadow: none;
+  transform: none;
+  display: inline-flex;
+  align-items: center;
+  line-height: 1;
+  white-space: nowrap;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+}
 .challenge-text-only-buttons .challenge-text-only-increment {
   color: #4caf50;
 }
@@ -971,11 +1013,41 @@ body {
   color: #ff9800;
 }
 
+.challenge-text-only-delete.challenge-delete-confirm {
+  background-color: #7a0000;
+  border-color: #7a0000;
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.18), 0 3px 10px rgba(122, 0, 0, 0.45);
+}
+
+.challenge-text-only-delete.challenge-delete-confirm:hover,
+.challenge-text-only-delete.challenge-delete-confirm:focus-visible {
+  background-color: #8b0000;
+  border-color: #8b0000;
+}
+
+.challenge-text-only-buttons .challenge-text-only-delete.challenge-delete-confirm,
+.challenge-text-only-item .challenge-text-only-delete.challenge-delete-confirm {
+  color: #ffffff !important;
+  padding: 0.1rem 0.45rem !important;
+  border-radius: 4px !important;
+  background: #7a0000 !important;
+  border-color: #7a0000 !important;
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.18), 0 3px 10px rgba(122, 0, 0, 0.45) !important;
+  text-decoration: none !important;
+}
+
+.challenge-text-only-buttons .challenge-text-only-delete.challenge-delete-confirm:hover,
+.challenge-text-only-buttons .challenge-text-only-delete.challenge-delete-confirm:focus-visible {
+  background: #8b0000 !important;
+  border-color: #8b0000 !important;
+}
+
 .challenge-text-only-buttons .challenge-text-only-edit:hover,
 .challenge-text-only-buttons .challenge-text-only-complete:hover,
 .challenge-text-only-buttons .challenge-text-only-uncomplete:hover,
 .challenge-text-only-buttons .challenge-text-only-fail:hover,
 .challenge-text-only-buttons .challenge-text-only-unfail:hover,
+.challenge-text-only-buttons .challenge-text-only-delete:hover,
 .challenge-text-only-buttons .challenge-text-only-increment:hover,
 .challenge-text-only-buttons .challenge-text-only-decrement:hover,
 .challenge-text-only-buttons .challenge-text-only-edit:focus-visible,
@@ -983,6 +1055,7 @@ body {
 .challenge-text-only-buttons .challenge-text-only-uncomplete:focus-visible,
 .challenge-text-only-buttons .challenge-text-only-fail:focus-visible,
 .challenge-text-only-buttons .challenge-text-only-unfail:focus-visible,
+.challenge-text-only-buttons .challenge-text-only-delete:focus-visible,
 .challenge-text-only-buttons .challenge-text-only-increment:focus-visible,
 .challenge-text-only-buttons .challenge-text-only-decrement:focus-visible {
   text-decoration: underline;

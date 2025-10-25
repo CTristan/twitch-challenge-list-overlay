@@ -166,6 +166,7 @@ describe("ChallengeRenderer", () => {
         const decHandler = vi.fn();
         const uncompleteHandler = vi.fn();
         const failHandler = vi.fn();
+        const deleteHandler = vi.fn();
 
         const el = ChallengeRenderer.createTextOnlyChallengeElement(ch, {
             editHandler,
@@ -173,6 +174,7 @@ describe("ChallengeRenderer", () => {
             decrementHandler: decHandler,
             uncompleteHandler,
             failHandler,
+            deleteHandler,
             displayPosition: 1,
         });
 
@@ -229,6 +231,14 @@ describe("ChallengeRenderer", () => {
         ) as HTMLElement;
         fail.dispatchEvent(new Event(EVENT_NAMES.CLICK));
         expect(failHandler).toHaveBeenCalledTimes(1);
+
+        const deleteAction = btns.querySelector(
+            `.${CSS_CLASSES.CHALLENGE_TEXT_ONLY_DELETE}`
+        ) as HTMLElement;
+        deleteAction.dispatchEvent(new Event(EVENT_NAMES.CLICK));
+        expect(deleteHandler).toHaveBeenCalledTimes(1);
+        deleteAction.dispatchEvent(new KeyboardEvent("keydown", { key: " " }));
+        expect(deleteHandler).toHaveBeenCalledTimes(2);
     });
 
     it("createTextOnlyChallengeElement shows Unfail when failed", () => {
@@ -256,6 +266,7 @@ describe("ChallengeRenderer", () => {
         const incHandler = vi.fn();
         const decHandler = vi.fn();
         const failHandler = vi.fn();
+        const deleteHandler = vi.fn();
 
         const el = ChallengeRenderer.createChallengeElement(ch, {
             includeEventListeners: true,
@@ -264,6 +275,7 @@ describe("ChallengeRenderer", () => {
             incrementHandler: incHandler,
             decrementHandler: decHandler,
             failHandler,
+            deleteHandler,
             textOnlyMode: true,
         });
 
@@ -303,6 +315,13 @@ describe("ChallengeRenderer", () => {
         expect(failBtn.textContent).toBe(UI_ELEMENTS.TEXT_ONLY_FAIL_BUTTON);
         failBtn.click();
         expect(failHandler).toHaveBeenCalledTimes(1);
+
+        const deleteAction = el.querySelector(
+            `.${CSS_CLASSES.CHALLENGE_TEXT_ONLY_DELETE}`
+        ) as HTMLElement;
+        expect(deleteAction).toBeTruthy();
+        deleteAction.dispatchEvent(new Event(EVENT_NAMES.CLICK));
+        expect(deleteHandler).toHaveBeenCalledTimes(1);
     });
 
     it("createChallengeElement does not render Fail button when already failed", () => {
@@ -313,6 +332,26 @@ describe("ChallengeRenderer", () => {
         expect(
             el.querySelector(`.${CSS_CLASSES.CHALLENGE_TEXT_ONLY_FAIL}`)
         ).toBeNull();
+    });
+
+    it("createChallengeElement renders delete button in standard admin mode", () => {
+        const ch = createChallenge("T");
+        const deleteHandler = vi.fn();
+
+        const el = ChallengeRenderer.createChallengeElement(ch, {
+            deleteHandler,
+        });
+
+        const deleteButton = el.querySelector(
+            `.${CSS_CLASSES.CHALLENGE_TEXT_ONLY_DELETE}`
+        ) as HTMLButtonElement;
+        expect(deleteButton).toBeTruthy();
+        expect(deleteButton.tagName.toLowerCase()).toBe(HTML_ELEMENTS.BUTTON);
+        expect(
+            deleteButton.getAttribute(HTML_ATTRIBUTE_NAMES.ARIA_LABEL)
+        ).toBe(ARIA_LABELS.DELETE_CHALLENGE);
+        deleteButton.dispatchEvent(new Event(EVENT_NAMES.CLICK));
+        expect(deleteHandler).toHaveBeenCalledTimes(1);
     });
 
     it("applyChallengeRowColors sets background and returns text color", () => {

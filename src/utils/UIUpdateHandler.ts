@@ -34,6 +34,7 @@ type ChallengeElementOptions = {
     incrementHandler?: (event: Event) => void;
     decrementHandler?: (event: Event) => void;
     failHandler?: (event: Event) => void;
+    deleteHandler?: (event: Event) => void;
     // Rendering behavior flags
     textOnlyMode?: boolean;
     // Text-only specific handlers
@@ -58,6 +59,7 @@ export default class UIUpdateHandler {
     private failHandler?: (event: Event) => void;
     private uncompleteHandler?: (event: Event) => void;
     private unfailHandler?: (event: Event) => void;
+    private deleteHandler?: (event: Event) => void;
 
     // DOM element cache for performance optimization
     private challengeContainer: HTMLElement | null = null;
@@ -107,7 +109,8 @@ export default class UIUpdateHandler {
         completeHandler?: (event: Event) => void,
         failHandler?: (event: Event) => void,
         uncompleteHandler?: (event: Event) => void,
-        unfailHandler?: (event: Event) => void
+        unfailHandler?: (event: Event) => void,
+        deleteHandler?: (event: Event) => void
     ) {
         this.challengeList = challengeList;
         this.configManager = configManager;
@@ -132,6 +135,9 @@ export default class UIUpdateHandler {
         }
         if (unfailHandler !== undefined) {
             this.unfailHandler = this.handleUnfailButtonClick;
+        }
+        if (deleteHandler !== undefined) {
+            this.deleteHandler = deleteHandler;
         }
     }
 
@@ -658,6 +664,9 @@ export default class UIUpdateHandler {
         }
         if (this.decrementHandler) {
             options.decrementHandler = this.decrementHandler;
+        }
+        if (this.deleteHandler) {
+            options.deleteHandler = this.deleteHandler;
         }
     }
 

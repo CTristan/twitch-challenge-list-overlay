@@ -29,11 +29,13 @@ import {
     URL_HASH,
 } from "./types/DOMConstants";
 import {
+    ARIA_LABELS,
     ERROR_MESSAGES,
     MODAL_TEXT,
     STATUS_MESSAGES,
     UI_ELEMENTS,
 } from "./types/MessageConstants";
+import { TIMING_CONSTANTS } from "./types/NumericConstants";
 import {
     VALIDATION_CONSTRAINTS,
     VALIDATION_PATTERNS,
@@ -69,6 +71,10 @@ export default class App {
     // Track challenges being processed
     private processingCheckboxClicks = new Set<string>();
 
+    // Track delete confirmation timeout handles per button
+    private deleteConfirmationTimers: WeakMap<HTMLElement, number> =
+        new WeakMap();
+
     // Track current editing challenge ID for modal mode switching
     private editingChallengeId: string | null = null;
 
@@ -95,7 +101,8 @@ export default class App {
             this.handleCompleteButtonClick,
             this.handleFailButtonClick,
             this.handleUncompleteButtonClick,
-            this.handleUnfailButtonClick
+            this.handleUnfailButtonClick,
+            this.handleDeleteButtonClick
         );
         this.#timerController = new TimerController(this.challengeList);
         loadStyles(this.#configManager.getAll());
@@ -353,6 +360,7 @@ export default class App {
                         uncompleteHandler?: (event: Event) => void;
                         failHandler?: (event: Event) => void;
                         unfailHandler?: (event: Event) => void;
+                        deleteHandler?: (event: Event) => void;
                         textOnlyMode?: boolean;
                     } = {
                         displayPosition: index + 1,
@@ -369,6 +377,7 @@ export default class App {
                         options.decrementHandler =
                             this.handleDecrementButtonClick;
                         options.failHandler = this.handleFailButtonClick;
+                        options.deleteHandler = this.handleDeleteButtonClick;
 
                         // Use completely different rendering for text-only mode
                         if (adminTextOnlyMode) {
@@ -1581,6 +1590,127 @@ export default class App {
             // Notify other windows (viewer overlay) about the state change
             notifyChallengeStateChanged();
         }
+    };
+
+    private clearDeleteConfirmationTimer(deleteElement: HTMLElement): void {
+        const timerId = this.deleteConfirmationTimers.get(deleteElement);
+
+        if (timerId !== undefined) {
+            window.clearTimeout(timerId);
+            this.deleteConfirmationTimers.delete(deleteElement);
+        }
+    }
+
+    private clearDeleteConfirmationState(deleteElement: HTMLElement): void {
+        this.clearDeleteConfirmationTimer(deleteElement);
+
+        if (
+            deleteElement.dataset[DATA_ATTRIBUTES.DELETE_CONFIRM_PENDING] !==
+            "true"
+        ) {
+            return;
+        }
+
+        delete deleteElement.dataset[DATA_ATTRIBUTES.DELETE_CONFIRM_PENDING];
+        deleteElement.textContent = UI_ELEMENTS.TEXT_ONLY_DELETE_BUTTON;
+        deleteElement.classList.remove(CSS_CLASSES.CHALLENGE_DELETE_CONFIRM);
+        deleteElement.setAttribute(
+            HTML_ATTRIBUTE_NAMES.ARIA_LABEL,
+            ARIA_LABELS.DELETE_CHALLENGE
+        );
+    }
+
+    private setDeleteConfirmationTimer(deleteElement: HTMLElement): void {
+        this.clearDeleteConfirmationTimer(deleteElement);
+
+        const timerId = window.setTimeout(() => {
+            this.clearDeleteConfirmationState(deleteElement);
+        }, TIMING_CONSTANTS.DELETE_CONFIRMATION_TIMEOUT);
+
+        this.deleteConfirmationTimers.set(deleteElement, timerId);
+    }
+
+    private resetDeleteConfirmations(
+        excludeElement?: HTMLElement | null
+    ): void {
+        const deleteButtons = document.querySelectorAll(
+            `.${CSS_CLASSES.CHALLENGE_TEXT_ONLY_DELETE}`
+        );
+
+        deleteButtons.forEach((element) => {
+            if (excludeElement && element === excludeElement) {
+                return;
+            }
+
+            this.clearDeleteConfirmationState(element as HTMLElement);
+        });
+    }
+
+    private handleDeleteButtonClick = (event: Event): void => {
+        event.stopPropagation();
+
+        if (window.location.hash !== URL_HASH.ADMIN) {
+            return;
+        }
+
+        const deleteButton = event.currentTarget as HTMLElement | null;
+
+        if (!deleteButton) {
+            return;
+        }
+
+        const challengeElement = deleteButton.closest(
+            `${CSS_SELECTORS.CHALLENGE}, .${CSS_CLASSES.CHALLENGE_TEXT_ONLY_ITEM}`
+        ) as HTMLElement | null;
+
+        if (!challengeElement) {
+            return;
+        }
+
+        const challengeId =
+            challengeElement.dataset[DATA_ATTRIBUTES.CHALLENGE_ID];
+        if (!challengeId) {
+            return;
+        }
+
+        const isConfirming =
+            deleteButton.dataset[DATA_ATTRIBUTES.DELETE_CONFIRM_PENDING] ===
+            "true";
+
+        if (!isConfirming) {
+            this.resetDeleteConfirmations(deleteButton);
+            deleteButton.dataset[DATA_ATTRIBUTES.DELETE_CONFIRM_PENDING] =
+                "true";
+            deleteButton.textContent = UI_ELEMENTS.DELETE_CONFIRM_PROMPT;
+            deleteButton.classList.add(CSS_CLASSES.CHALLENGE_DELETE_CONFIRM);
+            deleteButton.setAttribute(
+                HTML_ATTRIBUTE_NAMES.ARIA_LABEL,
+                ARIA_LABELS.CONFIRM_DELETE_CHALLENGE
+            );
+            this.setDeleteConfirmationTimer(deleteButton);
+            return;
+        }
+
+        this.resetDeleteConfirmations();
+
+        const challenges = this.challengeList.getAllChallenges();
+        const challengeIndex = challenges.findIndex(
+            (challenge) => challenge.id === challengeId
+        );
+
+        if (challengeIndex === -1) {
+            return;
+        }
+
+        const deletedChallenges =
+            this.challengeList.deleteChallenges(challengeIndex);
+
+        if (deletedChallenges.length === 0) {
+            return;
+        }
+
+        this.renderChallengeList();
+        notifyChallengeStateChanged();
     };
 
     /**

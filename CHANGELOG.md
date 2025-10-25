@@ -8,6 +8,7 @@ All notable changes to this project will be documented in this file.
 
 -   New option in the Admin panel for "text-only" mode in the Admin dock to make viewing challenges easier. Added under General Settings.
 -   New "Refresh Page" button in the Admin panel to make it easier to refresh when docked.
+-   Delete button for each challenge in the Admin view, with a confirmation step to prevent accidental deletions.
 
 ### Changed
 

@@ -27,6 +27,8 @@ export const CSS_CLASSES = {
     CHALLENGE_TEXT_ONLY_UNCOMPLETE: "challenge-text-only-uncomplete",
     CHALLENGE_TEXT_ONLY_FAIL: "challenge-text-only-fail",
     CHALLENGE_TEXT_ONLY_UNFAIL: "challenge-text-only-unfail",
+    CHALLENGE_TEXT_ONLY_DELETE: "challenge-text-only-delete",
+    CHALLENGE_DELETE_CONFIRM: "challenge-delete-confirm",
     CHALLENGE_TEXT_ONLY_INCREMENT: "challenge-text-only-increment",
     CHALLENGE_TEXT_ONLY_DECREMENT: "challenge-text-only-decrement",
     CHALLENGE_TEXT_ONLY_ITEM: "challenge-text-only-item",
@@ -239,6 +241,7 @@ export type ColorTier = (typeof COLOR_TIERS)[number];
  */
 export const DATA_ATTRIBUTES = {
     CHALLENGE_ID: "challengeId",
+    DELETE_CONFIRM_PENDING: "deleteConfirmPending",
 } as const;
 
 /**

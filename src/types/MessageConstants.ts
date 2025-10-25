@@ -245,6 +245,8 @@ export const UI_ELEMENTS = {
     TEXT_ONLY_UNCOMPLETE_BUTTON: "Uncomplete",
     TEXT_ONLY_FAIL_BUTTON: "Fail",
     TEXT_ONLY_UNFAIL_BUTTON: "Unfail",
+    TEXT_ONLY_DELETE_BUTTON: "Delete",
+    DELETE_CONFIRM_PROMPT: "Confirm deletion?",
     TEXT_ONLY_INCREMENT_BUTTON: "+",
     TEXT_ONLY_DECREMENT_BUTTON: "-",
     TEXT_ONLY_ADMIN_ACTIONS_LABEL: "Admin Actions",
@@ -265,6 +267,8 @@ export const ARIA_LABELS = {
     EDIT_CHALLENGE: "Edit challenge",
     INCREMENT_PROGRESS: "Increment challenge progress",
     DECREMENT_PROGRESS: "Decrement challenge progress",
+    DELETE_CHALLENGE: "Delete challenge",
+    CONFIRM_DELETE_CHALLENGE: "Confirm challenge deletion",
 } as const;
 
 /**

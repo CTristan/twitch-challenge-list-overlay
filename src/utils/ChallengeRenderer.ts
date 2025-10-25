@@ -244,6 +244,7 @@ export class ChallengeRenderer {
             uncompleteHandler?: (event: Event) => void;
             failHandler?: (event: Event) => void;
             unfailHandler?: (event: Event) => void;
+            deleteHandler?: (event: Event) => void;
             displayPosition?: number;
         } = {}
     ): HTMLElement {
@@ -476,6 +477,41 @@ export class ChallengeRenderer {
             }
         }
 
+        if (options.deleteHandler) {
+            const deleteAction = document.createElement(HTML_ELEMENTS.DIV);
+            deleteAction.classList.add(CSS_CLASSES.CHALLENGE_TEXT_ONLY_DELETE);
+            deleteAction.textContent = UI_ELEMENTS.TEXT_ONLY_DELETE_BUTTON;
+            deleteAction.setAttribute(
+                HTML_ATTRIBUTE_NAMES.ROLE,
+                HTML_ATTRIBUTES.ROLE_BUTTON
+            );
+            deleteAction.setAttribute(
+                HTML_ATTRIBUTE_NAMES.ARIA_LABEL,
+                ARIA_LABELS.DELETE_CHALLENGE
+            );
+            deleteAction.setAttribute(
+                HTML_ATTRIBUTE_NAMES.TABINDEX,
+                HTML_ATTRIBUTES.TABINDEX_ZERO
+            );
+            deleteAction.addEventListener(
+                EVENT_NAMES.CLICK,
+                options.deleteHandler
+            );
+            deleteAction.addEventListener(
+                EVENT_NAMES.KEYDOWN,
+                (e: KeyboardEvent) => {
+                    if (
+                        e.key === KEYBOARD_KEYS.ENTER ||
+                        e.key === KEYBOARD_KEYS.SPACE
+                    ) {
+                        e.preventDefault();
+                        (e.currentTarget as HTMLElement).click();
+                    }
+                }
+            );
+            buttonsContainer.appendChild(deleteAction);
+        }
+
         // Increment/Decrement buttons for multi-step challenges (rendered as plain text)
         if (challenge.amount > 1) {
             if (options.incrementHandler) {
@@ -578,6 +614,7 @@ export class ChallengeRenderer {
             incrementHandler?: (event: Event) => void;
             decrementHandler?: (event: Event) => void;
             failHandler?: (event: Event) => void;
+            deleteHandler?: (event: Event) => void;
             displayPosition?: number;
             textOnlyMode?: boolean;
         } = {}
@@ -656,6 +693,62 @@ export class ChallengeRenderer {
             failButton.textContent = UI_ELEMENTS.TEXT_ONLY_FAIL_BUTTON;
             failButton.addEventListener(EVENT_NAMES.CLICK, options.failHandler);
             challengeElement.appendChild(failButton);
+        }
+
+        if (options.deleteHandler) {
+            if (useTextOnlyMode) {
+                const deleteAction = document.createElement(HTML_ELEMENTS.DIV);
+                deleteAction.classList.add(
+                    CSS_CLASSES.CHALLENGE_TEXT_ONLY_DELETE
+                );
+                deleteAction.textContent = UI_ELEMENTS.TEXT_ONLY_DELETE_BUTTON;
+                deleteAction.setAttribute(
+                    HTML_ATTRIBUTE_NAMES.ROLE,
+                    HTML_ATTRIBUTES.ROLE_BUTTON
+                );
+                deleteAction.setAttribute(
+                    HTML_ATTRIBUTE_NAMES.TABINDEX,
+                    HTML_ATTRIBUTES.TABINDEX_ZERO
+                );
+                deleteAction.setAttribute(
+                    HTML_ATTRIBUTE_NAMES.ARIA_LABEL,
+                    ARIA_LABELS.DELETE_CHALLENGE
+                );
+                deleteAction.addEventListener(
+                    EVENT_NAMES.CLICK,
+                    options.deleteHandler
+                );
+                deleteAction.addEventListener(
+                    EVENT_NAMES.KEYDOWN,
+                    (e: KeyboardEvent) => {
+                        if (
+                            e.key === KEYBOARD_KEYS.ENTER ||
+                            e.key === KEYBOARD_KEYS.SPACE
+                        ) {
+                            e.preventDefault();
+                            (e.currentTarget as HTMLElement).click();
+                        }
+                    }
+                );
+                challengeElement.appendChild(deleteAction);
+            } else {
+                const deleteButton = document.createElement(
+                    HTML_ELEMENTS.BUTTON
+                );
+                deleteButton.classList.add(
+                    CSS_CLASSES.CHALLENGE_TEXT_ONLY_DELETE
+                );
+                deleteButton.textContent = UI_ELEMENTS.TEXT_ONLY_DELETE_BUTTON;
+                deleteButton.setAttribute(
+                    HTML_ATTRIBUTE_NAMES.ARIA_LABEL,
+                    ARIA_LABELS.DELETE_CHALLENGE
+                );
+                deleteButton.addEventListener(
+                    EVENT_NAMES.CLICK,
+                    options.deleteHandler
+                );
+                challengeElement.appendChild(deleteButton);
+            }
         }
 
         challengeElement.appendChild(textElement);
