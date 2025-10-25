@@ -544,6 +544,13 @@ export default class UIUpdateHandler {
             this.challengeList.totalChallenges
         );
 
+        const isAdminMode = this.isAdminMode();
+        const adminTextOnlyMode = isAdminMode && this.getAdminTextOnlyMode();
+
+        if (adminTextOnlyMode) {
+            challengeCard.classList.add(CSS_CLASSES.ADMIN_TEXT_ONLY_CARD);
+        }
+
         // Apply overlay background styling if configured
         // This must be done before appending to ensure styles are applied
         const overlayBackgroundColor = this.configManager.get(
@@ -565,7 +572,6 @@ export default class UIUpdateHandler {
         }
 
         // Hide card in viewer mode when there are no challenges
-        const isAdminMode = window.location.hash === URL_HASH.ADMIN;
         if (!isAdminMode && this.challengeList.challenges.length === 0) {
             challengeCard.classList.add(CSS_CLASSES.HIDDEN);
         }

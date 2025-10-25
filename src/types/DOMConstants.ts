@@ -12,6 +12,8 @@ export const CSS_CLASSES = {
     ADMIN_PANEL_COLLAPSED: "admin-panel-collapsed",
     ADMIN_PANEL_HEADER: "admin-panel-header",
     ADMIN_PANEL_CONTENT: "admin-panel-content",
+    ADMIN_TEXT_ONLY_CARD: "admin-text-only-card",
+    ADMIN_TEXT_ONLY_PANEL: "admin-panel-text-only",
 
     // Challenge-related classes
     CHALLENGE: "challenge",

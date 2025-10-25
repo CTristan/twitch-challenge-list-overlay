@@ -434,10 +434,12 @@ export default class AdminPanel {
         const adminTextOnlyModeCheckbox = document.getElementById(
             ELEMENT_IDS.ADMIN_TEXT_ONLY_MODE
         ) as HTMLInputElement;
+        const adminTextOnlyMode = config.adminTextOnlyMode ?? false;
         if (adminTextOnlyModeCheckbox) {
-            adminTextOnlyModeCheckbox.checked =
-                config.adminTextOnlyMode ?? false;
+            adminTextOnlyModeCheckbox.checked = adminTextOnlyMode;
         }
+
+        this.applyAdminTextOnlyModeClass(adminTextOnlyMode);
 
         // Populate color configuration
         this.populateColorConfiguration(
@@ -447,6 +449,23 @@ export default class AdminPanel {
 
         // Populate background configuration
         this.populateBackgroundConfiguration(config);
+    }
+
+    /**
+     * Apply or remove admin text-only mode styling hooks on the panel
+     * @param isTextOnlyMode - Whether admin text-only mode is enabled
+     * @returns {void}
+     */
+    private applyAdminTextOnlyModeClass(isTextOnlyMode: boolean): void {
+        const adminPanelElement = document.getElementById(
+            ELEMENT_IDS.ADMIN_PANEL
+        );
+        if (adminPanelElement) {
+            adminPanelElement.classList.toggle(
+                CSS_CLASSES.ADMIN_TEXT_ONLY_PANEL,
+                isTextOnlyMode
+            );
+        }
     }
 
     /**
@@ -1278,6 +1297,8 @@ export default class AdminPanel {
             );
 
             if (maxSuccess && textModeSuccess) {
+                this.applyAdminTextOnlyModeClass(adminTextOnlyMode);
+
                 // If text-only mode changed, re-render the challenge list
                 // without full page reload (similar to color/background changes)
                 if (adminTextOnlyMode !== previousTextOnlyMode) {

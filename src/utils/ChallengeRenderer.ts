@@ -21,6 +21,7 @@ import {
     generateTextShadow,
     isColorDark,
 } from "./ColorUtils";
+import TimerDisplayUtils from "./TimerDisplayUtils";
 
 /**
  * Get a value from an array by rotating through it based on an index
@@ -254,25 +255,31 @@ export class ChallengeRenderer {
         const contentContainer = document.createElement(HTML_ELEMENTS.DIV);
         contentContainer.classList.add(CSS_CLASSES.CHALLENGE_TEXT_ONLY_CONTENT);
 
-        // Create challenge text with position prefix
-        const titlePrefix =
-            options.displayPosition !== undefined
-                ? `${options.displayPosition}. `
-                : "";
-        let textContent = `${titlePrefix}${challenge.title}`;
+        const textElement = this.createChallengeTextElement(
+            challenge,
+            options.displayPosition
+        );
+        contentContainer.appendChild(textElement);
 
-        // Add description if different from title
         if (
-            challenge.title !== challenge.description &&
-            challenge.description &&
-            challenge.description.trim() !== ""
+            challenge.timer &&
+            (challenge.timer.isActive || challenge.timer.isExpired())
         ) {
-            textContent += ` - ${challenge.description}`;
-        }
+            let metadataRow = textElement.querySelector(
+                CSS_SELECTORS.CHALLENGE_METADATA
+            ) as HTMLElement | null;
 
-        // Add progress indicator if amount > 1
-        if (challenge.amount > 1) {
-            textContent += ` (${challenge.progress}/${challenge.amount})`;
+            if (!metadataRow) {
+                metadataRow = document.createElement(HTML_ELEMENTS.DIV);
+                metadataRow.classList.add(CSS_CLASSES.CHALLENGE_METADATA);
+                textElement.appendChild(metadataRow);
+            }
+
+            const timerElement = TimerDisplayUtils.createTimerElement(
+                challenge.timer,
+                challenge.id
+            );
+            metadataRow.appendChild(timerElement);
         }
 
         // Apply state styling based on challenge state
@@ -283,7 +290,6 @@ export class ChallengeRenderer {
             challengeElement.classList.add(CSS_CLASSES.FAILED);
         }
 
-        contentContainer.textContent = textContent;
         challengeElement.appendChild(contentContainer);
 
         // Create buttons container

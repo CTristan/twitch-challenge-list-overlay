@@ -296,6 +296,16 @@ export default class App {
             ),
         };
 
+        const isAdminMode = window.location.hash === URL_HASH.ADMIN;
+        const adminTextOnlyMode =
+            isAdminMode &&
+            (this.#configManager.get(BEHAVIOR_CONFIG.ADMIN_TEXT_ONLY_MODE) ??
+                false);
+
+        if (adminTextOnlyMode) {
+            cardEl.classList.add(CSS_CLASSES.ADMIN_TEXT_ONLY_CARD);
+        }
+
         // Apply overlay background styling if configured
         // This must be done outside the challenges.length check to ensure it's always applied
         if (backgroundConfig.overlayBackgroundColor) {
@@ -332,13 +342,6 @@ export default class App {
                 .forEach((challenge, index) => {
                     // Use ChallengeRenderer for consistent element creation
                     // Pass displayPosition as index + 1 for 1-based numbering
-                    const isAdminMode = window.location.hash === URL_HASH.ADMIN;
-
-                    // Check if admin text-only mode is enabled
-                    const adminTextOnlyMode =
-                        this.#configManager.get(
-                            BEHAVIOR_CONFIG.ADMIN_TEXT_ONLY_MODE
-                        ) ?? false;
 
                     const options: {
                         displayPosition: number;
@@ -414,7 +417,11 @@ export default class App {
                     }
 
                     // Add timer display if timer exists and is active (inside metadata row)
-                    if (challenge.timer && challenge.timer.isActive) {
+                    if (
+                        !adminTextOnlyMode &&
+                        challenge.timer &&
+                        challenge.timer.isActive
+                    ) {
                         const timerElement =
                             TimerDisplayUtils.createTimerElement(
                                 challenge.timer,
@@ -448,7 +455,6 @@ export default class App {
         challengeContainer.innerHTML = COMMON_STRINGS.EMPTY;
 
         // Hide card in viewer mode when there are no challenges
-        const isAdminMode = window.location.hash === URL_HASH.ADMIN;
         if (!isAdminMode && this.challengeList.challenges.length === 0) {
             cardEl.classList.add(CSS_CLASSES.HIDDEN);
         }

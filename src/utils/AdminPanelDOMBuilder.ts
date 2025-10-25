@@ -114,14 +114,10 @@ export class AdminPanelDOMBuilder {
     static createBottomActionButtons(): HTMLElement {
         const container = document.createElement("div");
         container.className = "bottom-action-buttons";
-        container.style.marginTop = "30px";
-        container.style.paddingTop = "20px";
-        container.style.borderTop = "1px solid rgba(255, 255, 255, 0.1)";
 
         // Configuration actions section
         const actionsSection = document.createElement("div");
         actionsSection.className = "config-actions";
-        actionsSection.style.marginBottom = "20px";
 
         const backupBtn = document.createElement("button");
         backupBtn.id = ELEMENT_IDS.EXPORT_JSON_BTN;
@@ -133,11 +129,6 @@ export class AdminPanelDOMBuilder {
         restoreBtn.className = "admin-button secondary";
         restoreBtn.textContent = "Restore Configuration";
 
-        const resetBtn = document.createElement("button");
-        resetBtn.id = ELEMENT_IDS.RESET_CONFIG_BTN;
-        resetBtn.className = "admin-button secondary";
-        resetBtn.textContent = "Reset to Defaults";
-
         // Hidden file input for import functionality
         const fileInput = document.createElement("input");
         fileInput.type = "file";
@@ -147,22 +138,37 @@ export class AdminPanelDOMBuilder {
 
         actionsSection.appendChild(backupBtn);
         actionsSection.appendChild(restoreBtn);
-        actionsSection.appendChild(resetBtn);
         actionsSection.appendChild(fileInput);
+
+        // Reset section
+        const resetSection = document.createElement("div");
+        resetSection.className = "reset-section";
+
+        const resetNote = document.createElement("p");
+        resetNote.className = "reset-note";
+        resetNote.textContent =
+            "Reset the challenge overlay configuration back to default values.";
+
+        const resetActions = document.createElement("div");
+        resetActions.className = "reset-actions";
+
+        const resetBtn = document.createElement("button");
+        resetBtn.id = ELEMENT_IDS.RESET_CONFIG_BTN;
+        resetBtn.className = "admin-button secondary";
+        resetBtn.textContent = "Reset to Defaults";
+
+        resetActions.appendChild(resetBtn);
+        resetSection.appendChild(resetNote);
+        resetSection.appendChild(resetActions);
 
         // Danger zone section
         const dangerSection = document.createElement("div");
         dangerSection.className = "danger-zone-section";
-        dangerSection.style.marginTop = "20px";
-        dangerSection.style.paddingTop = "20px";
-        dangerSection.style.borderTop = "2px solid rgba(220, 53, 69, 0.3)";
 
         const dangerWarning = document.createElement("p");
         dangerWarning.className = "danger-warning";
         dangerWarning.textContent =
             "The action below will permanently delete all stored configuration data. This cannot be undone.";
-        dangerWarning.style.color = "#dc3545";
-        dangerWarning.style.marginBottom = "15px";
 
         const dangerActions = document.createElement("div");
         dangerActions.className = "danger-actions";
@@ -178,6 +184,7 @@ export class AdminPanelDOMBuilder {
 
         // Add both sections to container
         container.appendChild(actionsSection);
+        container.appendChild(resetSection);
         container.appendChild(dangerSection);
 
         return container;
