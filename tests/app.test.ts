@@ -661,7 +661,7 @@ describe("App", () => {
                 expect(
                     initialContainer.querySelectorAll(HTML_ELEMENTS.BUTTON)
                         .length
-                ).toBe(3);
+                ).toBe(4);
 
                 // Enable text-only mode and re-render
                 app.getConfigManager().set(

@@ -12,7 +12,7 @@ BroadcastChannel communication: `notifyConfigurationSaved()` (full reload), `not
 
 ### ChallengeRenderer
 
-Dual rendering: `createChallengeElement()` (styled), `createTextOnlyChallengeElement()` (admin text-only). Text-only: plain entries + action buttons (Edit, Complete/Uncomplete, Fail/Unfail, +/-) as DIVs with role="button". No checkboxes/styled rows.
+Dual rendering: `createChallengeElement()` (styled), `createTextOnlyChallengeElement()` (admin text-only). Styled mode builds a `CSS_CLASSES.CHALLENGE_CONTENT_WRAPPER` container and nests all non-checkbox controls inside `CSS_CLASSES.CHALLENGE_ACTIONS` so actions sit on their own line beneath the challenge text—mirror this pattern for new controls. Text-only: plain entries + action buttons (Edit, Complete/Uncomplete, Fail/Unfail, +/-) as DIVs with role="button". No checkboxes/styled rows.
 
 ### UIUpdateHandler
 

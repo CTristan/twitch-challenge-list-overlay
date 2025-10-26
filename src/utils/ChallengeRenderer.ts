@@ -614,6 +614,7 @@ export class ChallengeRenderer {
             incrementHandler?: (event: Event) => void;
             decrementHandler?: (event: Event) => void;
             failHandler?: (event: Event) => void;
+            unfailHandler?: (event: Event) => void;
             deleteHandler?: (event: Event) => void;
             displayPosition?: number;
             textOnlyMode?: boolean;
@@ -647,8 +648,14 @@ export class ChallengeRenderer {
             options.displayPosition
         );
 
-        // Assemble the challenge element
-        challengeElement.appendChild(checkbox);
+        // Create wrapper for text and actions
+        const contentWrapper = document.createElement(HTML_ELEMENTS.DIV);
+        contentWrapper.classList.add(CSS_CLASSES.CHALLENGE_CONTENT_WRAPPER);
+        contentWrapper.appendChild(textElement);
+
+        const actionsContainer = document.createElement(HTML_ELEMENTS.DIV);
+        actionsContainer.classList.add(CSS_CLASSES.CHALLENGE_ACTIONS);
+        let hasActions = false;
 
         // Determine if text-only mode should be used
         const useTextOnlyMode = options.textOnlyMode ?? false;
@@ -657,7 +664,8 @@ export class ChallengeRenderer {
         if (options.editHandler) {
             const editIcon = this.createChallengeEditIcon(useTextOnlyMode);
             editIcon.addEventListener(EVENT_NAMES.CLICK, options.editHandler);
-            challengeElement.appendChild(editIcon);
+            actionsContainer.appendChild(editIcon);
+            hasActions = true;
         }
 
         // Create and add increment/decrement buttons only if handlers are provided (admin mode only)
@@ -670,7 +678,8 @@ export class ChallengeRenderer {
                     EVENT_NAMES.CLICK,
                     options.incrementHandler
                 );
-                challengeElement.appendChild(incrementButton);
+                actionsContainer.appendChild(incrementButton);
+                hasActions = true;
             }
 
             if (options.decrementHandler) {
@@ -680,19 +689,45 @@ export class ChallengeRenderer {
                     EVENT_NAMES.CLICK,
                     options.decrementHandler
                 );
-                challengeElement.appendChild(decrementButton);
+                actionsContainer.appendChild(decrementButton);
+                hasActions = true;
             }
         }
 
-        // Add Fail button in admin view (non text-only and text-only styles reused for consistency)
-        // Only show Fail button when challenge is not already failed
-        if (options.failHandler && state !== CHALLENGE_STATES.FAILED) {
+        // Add Fail/Unfail button in admin view (non text-only and text-only styles reused for consistency)
+        if (state === CHALLENGE_STATES.FAILED) {
+            if (options.unfailHandler) {
+                const unfailButton = document.createElement(
+                    HTML_ELEMENTS.BUTTON
+                );
+                unfailButton.classList.add(
+                    CSS_CLASSES.CHALLENGE_TEXT_ONLY_UNFAIL
+                );
+                unfailButton.textContent = UI_ELEMENTS.TEXT_ONLY_UNFAIL_BUTTON;
+                unfailButton.type = HTML_ATTRIBUTES.BUTTON_TYPE;
+                unfailButton.setAttribute(
+                    HTML_ATTRIBUTE_NAMES.ARIA_LABEL,
+                    ARIA_LABELS.UNFAIL_CHALLENGE
+                );
+                unfailButton.addEventListener(
+                    EVENT_NAMES.CLICK,
+                    options.unfailHandler
+                );
+                actionsContainer.appendChild(unfailButton);
+                hasActions = true;
+            }
+        } else if (options.failHandler) {
             const failButton = document.createElement(HTML_ELEMENTS.BUTTON);
-            // Reuse text-only fail class for consistent appearance as requested
             failButton.classList.add(CSS_CLASSES.CHALLENGE_TEXT_ONLY_FAIL);
             failButton.textContent = UI_ELEMENTS.TEXT_ONLY_FAIL_BUTTON;
+            failButton.type = HTML_ATTRIBUTES.BUTTON_TYPE;
+            failButton.setAttribute(
+                HTML_ATTRIBUTE_NAMES.ARIA_LABEL,
+                ARIA_LABELS.FAIL_CHALLENGE
+            );
             failButton.addEventListener(EVENT_NAMES.CLICK, options.failHandler);
-            challengeElement.appendChild(failButton);
+            actionsContainer.appendChild(failButton);
+            hasActions = true;
         }
 
         if (options.deleteHandler) {
@@ -730,7 +765,8 @@ export class ChallengeRenderer {
                         }
                     }
                 );
-                challengeElement.appendChild(deleteAction);
+                actionsContainer.appendChild(deleteAction);
+                hasActions = true;
             } else {
                 const deleteButton = document.createElement(
                     HTML_ELEMENTS.BUTTON
@@ -747,11 +783,18 @@ export class ChallengeRenderer {
                     EVENT_NAMES.CLICK,
                     options.deleteHandler
                 );
-                challengeElement.appendChild(deleteButton);
+                actionsContainer.appendChild(deleteButton);
+                hasActions = true;
             }
         }
 
-        challengeElement.appendChild(textElement);
+        if (hasActions) {
+            contentWrapper.appendChild(actionsContainer);
+        }
+
+        // Assemble the challenge element
+        challengeElement.appendChild(checkbox);
+        challengeElement.appendChild(contentWrapper);
 
         return challengeElement;
     }

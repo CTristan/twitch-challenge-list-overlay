@@ -105,7 +105,7 @@ body {
 
 .challenge {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   overflow: hidden;
   font-size: var(--challenge-font-size);
   color: var(--challenge-font-color);
@@ -115,6 +115,31 @@ body {
     var(--challenge-font-size, 1rem) * 1.2 +
       var(--challenge-description-font-size, 0.85rem) * 2.2
   );
+}
+
+.challenge-content-wrapper {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  min-width: 0;
+}
+
+.challenge-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem 0.75rem;
+  margin-top: 0.25rem;
+}
+
+.challenge-actions .challenge-edit-icon,
+.challenge-actions .challenge-increment-button,
+.challenge-actions .challenge-decrement-button,
+.challenge-actions .challenge-text-only-fail,
+.challenge-actions .challenge-text-only-unfail,
+.challenge-actions .challenge-text-only-delete {
+  margin: 0;
 }
 
 .challenge-checkbox {
@@ -270,6 +295,69 @@ body {
 .challenge-text-only-decrement:active {
   transform: scale(0.98);
   background-color: rgba(255, 255, 255, 0.2);
+}
+
+.challenge-actions .challenge-text-only-fail,
+.challenge-actions .challenge-text-only-unfail {
+  flex-shrink: 0;
+  height: var(--challenge-checkbox-size);
+  padding: 0 0.55rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: calc(var(--challenge-checkbox-size) * 0.5);
+  font-weight: 600;
+  border-radius: 4px;
+  border: 1px solid transparent;
+  transition: opacity 0.2s ease, transform 0.2s ease, background-color 0.2s ease,
+    border-color 0.2s ease;
+  user-select: none;
+  opacity: 0.9;
+  color: inherit;
+  background-color: transparent;
+}
+
+.challenge-actions .challenge-text-only-fail {
+  color: #f44336;
+  background-color: rgba(244, 67, 54, 0.18);
+  border-color: rgba(244, 67, 54, 0.35);
+}
+
+.challenge-actions .challenge-text-only-unfail {
+  color: #9c27b0;
+  background-color: rgba(156, 39, 176, 0.18);
+  border-color: rgba(156, 39, 176, 0.35);
+}
+
+.challenge-actions .challenge-text-only-fail:hover,
+.challenge-actions .challenge-text-only-unfail:hover {
+  opacity: 1;
+  transform: scale(1.05);
+  border-color: currentColor;
+}
+
+.challenge-actions .challenge-text-only-fail:focus-visible,
+.challenge-actions .challenge-text-only-unfail:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.25);
+  border-color: currentColor;
+}
+
+.challenge-actions .challenge-text-only-fail:hover,
+.challenge-actions .challenge-text-only-fail:focus-visible {
+  background-color: rgba(244, 67, 54, 0.28);
+}
+
+.challenge-actions .challenge-text-only-unfail:hover,
+.challenge-actions .challenge-text-only-unfail:focus-visible {
+  background-color: rgba(156, 39, 176, 0.28);
+}
+
+.challenge-actions .challenge-text-only-fail:active,
+.challenge-actions .challenge-text-only-unfail:active {
+  transform: scale(0.97);
+  opacity: 1;
 }
 
 .challenge-text {
@@ -459,34 +547,73 @@ body {
   box-shadow: none;
 }
 
-/* Clear Finished Challenges Button Styles */
-.clear-finished-btn {
-  background-color: #dc3545;
+.clear-completed-btn,
+.clear-failed-btn,
+.refresh-btn {
   color: #ffffff;
   border: none;
   padding: 10px 16px;
   border-radius: 4px;
   cursor: pointer;
-  font-family: "Roboto Mono", monospace;
+  font-family: var(--card-font-family, "arial");
   font-size: 14px;
   font-weight: 500;
   transition: all 0.3s ease;
   min-width: 140px;
-  box-shadow: 0 2px 4px rgba(220, 53, 69, 0.2);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.18);
 }
 
-.clear-finished-btn:hover {
-  background-color: #c82333;
+.clear-completed-btn {
+  background-color: #4caf50;
+  box-shadow: 0 2px 4px rgba(76, 175, 80, 0.25);
+}
+
+.clear-completed-btn:hover {
+  background-color: #43a047;
   transform: translateY(-1px);
-  box-shadow: 0 4px 8px rgba(220, 53, 69, 0.3);
+  box-shadow: 0 4px 8px rgba(76, 175, 80, 0.3);
 }
 
-.clear-finished-btn:active {
+.clear-completed-btn:active {
   transform: translateY(0);
-  box-shadow: 0 2px 4px rgba(220, 53, 69, 0.3);
+  box-shadow: 0 2px 4px rgba(76, 175, 80, 0.35);
 }
 
-.clear-finished-btn:disabled {
+.clear-failed-btn {
+  background-color: #f44336;
+  box-shadow: 0 2px 4px rgba(244, 67, 54, 0.25);
+}
+
+.clear-failed-btn:hover {
+  background-color: #d32f2f;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(244, 67, 54, 0.35);
+}
+
+.clear-failed-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(244, 67, 54, 0.4);
+}
+
+.refresh-btn {
+  background-color: #ff9800;
+  box-shadow: 0 2px 4px rgba(255, 152, 0, 0.25);
+}
+
+.refresh-btn:hover {
+  background-color: #fb8c00;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(255, 152, 0, 0.32);
+}
+
+.refresh-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(255, 152, 0, 0.35);
+}
+
+.clear-completed-btn:disabled,
+.clear-failed-btn:disabled,
+.refresh-btn:disabled {
   background-color: #666666;
   cursor: not-allowed;
   transform: none;
@@ -653,7 +780,9 @@ body {
   }
 
   .add-challenge-btn,
-  .clear-finished-btn {
+  .clear-completed-btn,
+  .clear-failed-btn,
+  .refresh-btn {
     padding: 8px 12px;
     font-size: 12px;
     min-width: 100px;
@@ -690,7 +819,9 @@ body {
   }
 
   .add-challenge-btn,
-  .clear-finished-btn {
+  .clear-completed-btn,
+  .clear-failed-btn,
+  .refresh-btn {
     padding: 6px 10px;
     font-size: 11px;
     min-width: 80px;
@@ -740,7 +871,9 @@ body {
   }
 
   .add-challenge-btn,
-  .clear-finished-btn {
+  .clear-completed-btn,
+  .clear-failed-btn,
+  .refresh-btn {
     padding: 6px 10px;
     font-size: 11px;
     min-width: 80px;
@@ -780,7 +913,9 @@ body {
   }
 
   .add-challenge-btn,
-  .clear-finished-btn {
+  .clear-completed-btn,
+  .clear-failed-btn,
+  .refresh-btn {
     padding: 5px 8px;
     font-size: 10px;
     min-width: 70px;
@@ -1016,7 +1151,8 @@ body {
 .challenge-text-only-delete.challenge-delete-confirm {
   background-color: #7a0000;
   border-color: #7a0000;
-  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.18), 0 3px 10px rgba(122, 0, 0, 0.45);
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.18),
+    0 3px 10px rgba(122, 0, 0, 0.45);
 }
 
 .challenge-text-only-delete.challenge-delete-confirm:hover,
@@ -1025,19 +1161,23 @@ body {
   border-color: #8b0000;
 }
 
-.challenge-text-only-buttons .challenge-text-only-delete.challenge-delete-confirm,
+.challenge-text-only-buttons
+  .challenge-text-only-delete.challenge-delete-confirm,
 .challenge-text-only-item .challenge-text-only-delete.challenge-delete-confirm {
   color: #ffffff !important;
   padding: 0.1rem 0.45rem !important;
   border-radius: 4px !important;
   background: #7a0000 !important;
   border-color: #7a0000 !important;
-  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.18), 0 3px 10px rgba(122, 0, 0, 0.45) !important;
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.18),
+    0 3px 10px rgba(122, 0, 0, 0.45) !important;
   text-decoration: none !important;
 }
 
-.challenge-text-only-buttons .challenge-text-only-delete.challenge-delete-confirm:hover,
-.challenge-text-only-buttons .challenge-text-only-delete.challenge-delete-confirm:focus-visible {
+.challenge-text-only-buttons
+  .challenge-text-only-delete.challenge-delete-confirm:hover,
+.challenge-text-only-buttons
+  .challenge-text-only-delete.challenge-delete-confirm:focus-visible {
   background: #8b0000 !important;
   border-color: #8b0000 !important;
 }

@@ -1,141 +1,50 @@
-# styles/ - CSS Architecture
+# styles/ - CSS Conventions (≤4000 chars)
 
-Styling patterns and responsive design system.
+High-level reference for styling the Twitch overlay. Keep styles lean, selector-driven, and aligned with TypeScript constants in `DOMConstants`.
 
-## File Organization
+## File Map
 
-- **variables.css**: CSS custom properties (colors, sizes, spacing)
-- **index.css**: Global styles and resets
-- **app.css**: Viewer mode and challenge display
-- **admin.css**: Admin panel specific styles
-- **modal.css**: Modal dialog styles
-- **utility.css**: Utility classes
+-   `variables.css` — design tokens (colors, spacing, typography)
+-   `index.css` — resets + global base
+-   `app.css` — viewer overlay + challenge rows
+-   `admin.css` — admin panel layout/forms
+-   `modal.css` — dialog layout + transitions
+-   `utility.css` — helper classes (spacing, alignment)
 
-## CSS Custom Properties
+## Core Rules
 
-### Variable Naming
-- Kebab-case with `--` prefix
-- Semantic names: `--header-font-size`, `--primary-color`
-- Scoped to `:root` for global access
+-   Always use CSS custom properties declared in `variables.css`; extend tokens instead of hardcoding raw values.
+-   Selector strings must match constants from `CSS_CLASSES`/`CSS_SELECTORS`; never drift from TypeScript names.
+-   Keep challenge row DOM split into:
+    -   `.challenge-content-wrapper` (checkbox + text stack)
+    -   `.challenge-actions` (secondary controls, same order in standard/text-only modes)
+-   Maintain parity: color, hover/active states, and enabled buttons should be identical between standard and text-only admin layouts.
+-   Use flexbox for row alignment; avoid absolute positioning to preserve responsive wrapping.
 
-### Core Variables (variables.css)
-```css
-:root {
-    --header-font-size: 2.25rem;
-    --challenge-font-size: 2rem;
-    --card-padding: 1.5rem;
-    --checkbox-size: calc(var(--challenge-font-size) * 0.9);
-}
-```
+## Responsive System
 
-## Responsive Design (CRITICAL)
+-   Breakpoints target OBS docks:
+    -   Width ≤400px (compact vertical)
+    -   Width ≤320px (extreme vertical)
+    -   Height ≤350px (compact horizontal)
+    -   Height ≤250px (extreme horizontal)
+-   Scale typography, padding, gap, and picker sizes proportionally; smallest breakpoint keeps controls touch-safe (>36px tap targets).
+-   Derive checkbox size from `--challenge-font-size` (`--checkbox-size` custom property).
 
-### Viewport Breakpoints
+## Key Classes (abridged)
 
-**Vertical Docks (width-based)**:
-- `@media (max-width: 400px)`: Small vertical (320-400px)
-- `@media (max-width: 320px)`: Extreme vertical (≤320px)
+-   Layout: `.card`, `.challenge-list`, `.challenge-container`, `.challenge-metadata`
+-   State: `.done`, `.warning`, `.critical`, `.expired`, `.expanded`
+-   Components: `.checkbox-wrapper`, `.checkbox-custom`, `.challenge-content-wrapper`, `.challenge-actions`, `.challenge-title`, `.challenge-description`, `.timer-display`, `.edit-icon`
+-   Admin panel: `.admin-panel`, `.collapsible-section`, `.collapsible-header`, `.collapsible-content`, `.color-pickers-container`
 
-**Horizontal Docks (height-based)**:
-- `@media (max-height: 350px)`: Small horizontal (250-350px)
-- `@media (max-height: 250px)`: Extreme horizontal (≤250px)
+## Dynamic Styling Notes
 
-### Progressive Scaling
+-   Overlay background color = `combineColorWithOpacity` result stored inline + `CSS_CLASSES.CUSTOM_OVERLAY_BACKGROUND` flag.
+-   Challenge row colors rotate primary/secondary/tertiary palettes based on `index % 3`; always apply opacity at render time.
 
-**Font Sizes**:
-- Header: 2.25rem → 1.25rem → 1rem
-- Challenge text: 2rem → 1.1rem → 0.95rem → 0.9rem
-- Admin labels: 14px → 12px → 11px → 10px
+## Accessibility & Performance
 
-**Spacing**:
-- Card padding: 1.5rem → 0.75rem → 0.5rem
-- Element gaps: Proportional reduction at each breakpoint
-
-**Interactive Elements**:
-- Checkbox: Auto-calculated from font size
-- Buttons: Maintain touch-friendly minimum sizes
-- Color pickers: 60px → 50px → 45px → 40px
-
-### Responsive Pattern
-
-```css
-/* Base (desktop/large OBS) */
-:root {
-    --header-font-size: 2.25rem;
-}
-
-/* Small vertical dock */
-@media (max-width: 400px) {
-    :root {
-        --header-font-size: 1.25rem;
-    }
-}
-
-/* Extreme vertical dock */
-@media (max-width: 320px) {
-    :root {
-        --header-font-size: 1rem;
-    }
-}
-```
-
-## Key CSS Classes
-
-### Layout
-- `.card`: Main container with background/opacity
-- `.challenge-list`: Challenge container
-- `.challenge-container`: Individual challenge wrapper
-- `.challenge-metadata`: Flexbox for amount/timer
-
-### State Classes
-- `.done`: Completed challenge styling
-- `.warning`: Timer warning state (≤2min)
-- `.critical`: Timer critical state (≤30s)
-- `.expired`: Timer expired state
-- `.expanded`: Collapsible section open state
-
-### Component Classes
-- `.checkbox-wrapper`: Checkbox container
-- `.checkbox-custom`: Styled checkbox
-- `.challenge-title`: Challenge title text
-- `.challenge-description`: Challenge description
-- `.timer-display`: Timer countdown display
-- `.edit-icon`: Edit button (admin only)
-
-### Admin Panel
-- `.admin-panel`: Panel container
-- `.collapsible-section`: Collapsible section wrapper
-- `.collapsible-header`: Section header (clickable)
-- `.collapsible-content`: Section content (expandable)
-- `.color-pickers-container`: Color picker group
-
-## Dynamic Styling
-
-### Overlay Background Opacity
-Applied via inline styles in `UIUpdateHandler`:
-
-```typescript
-const rgba = combineColorWithOpacity(hexColor, opacity);
-challengeCard.style.backgroundColor = rgba;
-challengeCard.classList.add(CSS_CLASSES.CUSTOM_OVERLAY_BACKGROUND);
-```
-
-### Challenge Row Colors
-Three tiers (primary, secondary, tertiary) with opacity control:
-- Applied by index: `index % 3` determines tier
-- Colors from ConfigManager
-- Opacity applied at render time
-
-## Accessibility
-
-- **ARIA labels**: All interactive elements
-- **Keyboard navigation**: Focus styles, tab order
-- **Color contrast**: WCAG AA compliance
-- **Screen readers**: Semantic HTML, ARIA attributes
-
-## Performance
-
-- **CSS variables**: Efficient theme switching
-- **Transform animations**: Hardware accelerated
-- **Will-change**: For animated properties
-- **Contain**: Layout containment where appropriate
+-   Every interactive element needs a visible focus style and matching ARIA label; ensure contrast meets WCAG AA.
+-   Prefer transforms/opacity for animations; reserve `will-change` for frequently animated elements.
+-   Keep styles modular—unused rules inflate bundle size. Prune when removing features.

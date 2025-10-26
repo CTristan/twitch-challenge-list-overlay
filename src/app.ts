@@ -706,21 +706,32 @@ export default class App {
 
         buttonContainer.appendChild(addButton);
 
-        const clearFinishedButton = document.createElement(
+        const clearCompletedButton = document.createElement(
             HTML_ELEMENTS.BUTTON
         );
-        clearFinishedButton.className = CSS_CLASSES.CLEAR_FINISHED_BTN;
-        clearFinishedButton.textContent = BUTTON_TEXT.CLEAR_FINISHED;
-        clearFinishedButton.type = HTML_ATTRIBUTES.BUTTON_TYPE;
-        clearFinishedButton.addEventListener(
+        clearCompletedButton.className = CSS_CLASSES.CLEAR_COMPLETED_BTN;
+        clearCompletedButton.textContent = BUTTON_TEXT.CLEAR_COMPLETED;
+        clearCompletedButton.type = HTML_ATTRIBUTES.BUTTON_TYPE;
+        clearCompletedButton.addEventListener(
             EVENT_NAMES.CLICK,
             this.handleClearCompletedClick
         );
 
-        buttonContainer.appendChild(clearFinishedButton);
+        buttonContainer.appendChild(clearCompletedButton);
+
+        const clearFailedButton = document.createElement(HTML_ELEMENTS.BUTTON);
+        clearFailedButton.className = CSS_CLASSES.CLEAR_FAILED_BTN;
+        clearFailedButton.textContent = BUTTON_TEXT.CLEAR_FAILED;
+        clearFailedButton.type = HTML_ATTRIBUTES.BUTTON_TYPE;
+        clearFailedButton.addEventListener(
+            EVENT_NAMES.CLICK,
+            this.handleClearFailedClick
+        );
+
+        buttonContainer.appendChild(clearFailedButton);
 
         const refreshButton = document.createElement(HTML_ELEMENTS.BUTTON);
-        refreshButton.className = CSS_CLASSES.CLEAR_FINISHED_BTN;
+        refreshButton.className = CSS_CLASSES.REFRESH_BTN;
         refreshButton.textContent = BUTTON_TEXT.REFRESH;
         refreshButton.type = HTML_ATTRIBUTES.BUTTON_TYPE;
         refreshButton.addEventListener(

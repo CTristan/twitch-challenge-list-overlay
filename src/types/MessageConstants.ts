@@ -269,6 +269,8 @@ export const ARIA_LABELS = {
     DECREMENT_PROGRESS: "Decrement challenge progress",
     DELETE_CHALLENGE: "Delete challenge",
     CONFIRM_DELETE_CHALLENGE: "Confirm challenge deletion",
+    FAIL_CHALLENGE: "Mark challenge as failed",
+    UNFAIL_CHALLENGE: "Restore challenge to in-progress",
 } as const;
 
 /**

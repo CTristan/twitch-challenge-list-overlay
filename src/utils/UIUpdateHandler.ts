@@ -747,6 +747,9 @@ export default class UIUpdateHandler {
             if (this.failHandler) {
                 options.failHandler = this.failHandler;
             }
+            if (this.unfailHandler) {
+                options.unfailHandler = this.unfailHandler;
+            }
             options.textOnlyMode = adminTextOnlyMode;
         }
 

@@ -40,6 +40,8 @@ export const CSS_CLASSES = {
     CHALLENGE_METADATA: "challenge-metadata",
     CHALLENGE_AMOUNT: "challenge-amount",
     CHALLENGE_TIMER: "challenge-timer",
+    CHALLENGE_CONTENT_WRAPPER: "challenge-content-wrapper",
+    CHALLENGE_ACTIONS: "challenge-actions",
     CHALLENGES: "challenges",
 
     // State classes
@@ -55,7 +57,9 @@ export const CSS_CLASSES = {
     // Add Challenge Button classes
     ADD_CHALLENGE_BTN: "add-challenge-btn",
     ADD_CHALLENGE_CONTAINER: "add-challenge-container",
-    CLEAR_FINISHED_BTN: "clear-finished-btn",
+    CLEAR_COMPLETED_BTN: "clear-completed-btn",
+    CLEAR_FAILED_BTN: "clear-failed-btn",
+    REFRESH_BTN: "refresh-btn",
     ADMIN_TEXT_ONLY_ACTION_CONTAINER: "admin-text-only-action-container",
     ADMIN_TEXT_ONLY_ACTION_LABEL: "admin-text-only-action-label",
     ADMIN_TEXT_ONLY_ACTION: "admin-text-only-action",
@@ -122,6 +126,8 @@ export const CSS_SELECTORS = {
     CHALLENGE: ".challenge",
     CHALLENGES_LIST: ".challenges",
     CHALLENGES_ORDERED_LIST: "ol.challenges",
+    CHALLENGE_CONTENT_WRAPPER: ".challenge-content-wrapper",
+    CHALLENGE_ACTIONS: ".challenge-actions",
 
     // Header and text selectors
     CUSTOM_HEADER: ".custom-header",
@@ -351,8 +357,9 @@ export const KEYBOARD_KEYS = {
  */
 export const BUTTON_TEXT = {
     ADD_CHALLENGE: "Add Challenge",
-    CLEAR_FINISHED: "Clear Finished Challenges",
-    REFRESH: "Refresh Page",
+    CLEAR_COMPLETED: "Clear Completed",
+    CLEAR_FAILED: "Clear Failed",
+    REFRESH: "Refresh",
 } as const;
 
 /**
