@@ -24,6 +24,7 @@ Tech: TypeScript, Vite (IIFE), Vitest (jsdom), LocalStorage, WebSocket. Style: E
 -   **Optional properties:** Use spread with conditional: `...(value !== undefined && { prop: value })` to avoid passing undefined to optional properties.
 -   **Dataset access:** Use bracket notation: `element.dataset[DATA_ATTRIBUTES.KEY]`, never dot notation.
 -   **No deprecated/legacy code:** Remove deprecated methods immediately; do not maintain backward compatibility layers.
+-   **OBS dock optimization:** Validate every stylesheet change against OBS dock constraints (≤400px width, ≤350px height). Layouts must remain legible and interactive within the dock.
 
 ## Storage
 

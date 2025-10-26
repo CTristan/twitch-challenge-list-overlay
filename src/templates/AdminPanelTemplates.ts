@@ -22,6 +22,11 @@ export interface ChallengeRowStylingSectionParams {
     rowColorsOpacityPercent: number;
     challengeBackgroundColor: string;
     challengeTextColor: string;
+    viewerFontSizePercent: number;
+    viewerFontSizeDisplay: string;
+    viewerFontSizeMinPercent: number;
+    viewerFontSizeMaxPercent: number;
+    viewerFontSizeStepPercent: number;
     elementIds: typeof ELEMENT_IDS;
 }
 
@@ -121,6 +126,20 @@ export const AdminPanelTemplates = {
             <!-- Text Readability Configuration -->
             <div class="text-readability-section" style="margin-top: 1rem;">
               <h5 class="subsection-title">Text Readability</h5>
+              
+              <div class="form-row">
+                <div class="form-row">
+                    <div class="form-column">
+                    <label class="form-label">Viewer Font Size</label>
+                    <div class="opacity-control">
+                        <input type="range" id="${params.elementIds.VIEWER_FONT_SIZE}" class="form-input opacity-slider"
+                            min="${params.viewerFontSizeMinPercent}" max="${params.viewerFontSizeMaxPercent}" step="${params.viewerFontSizeStepPercent}" value="${params.viewerFontSizePercent}">
+                        <span id="${params.elementIds.VIEWER_FONT_SIZE_DISPLAY}" class="opacity-value">${params.viewerFontSizeDisplay}</span>
+                    </div>
+                        <span class="help-text">Sets the challenge title size in the viewer overlay. Descriptions and timers scale proportionally.</span>
+                    </div>
+                </div>
+            </div>
 
               <div class="form-row">
                 <div class="checkbox-group">

@@ -63,11 +63,24 @@ body {
 
 .admin-text-only-card {
   --username-font-size: 1.25rem;
-  --challenge-font-size: 1.05rem;
-  --challenge-description-font-size: 0.825rem;
-  --challenge-timer-font-size: 0.8rem;
-  --challenge-timer-font-weight: 600;
+  --challenge-font-size: var(--admin-challenge-font-size);
+  --challenge-description-font-size: var(
+    --admin-challenge-description-font-size
+  );
+  --challenge-amount-font-size: var(--admin-challenge-amount-font-size);
+  --challenge-timer-font-size: var(--admin-challenge-timer-font-size);
+  --challenge-timer-font-weight: var(--admin-challenge-timer-font-weight);
   padding: 1rem var(--card-padding);
+}
+
+.admin-standard-card {
+  --challenge-font-size: var(--admin-challenge-font-size);
+  --challenge-description-font-size: var(
+    --admin-challenge-description-font-size
+  );
+  --challenge-amount-font-size: var(--admin-challenge-amount-font-size);
+  --challenge-timer-font-size: var(--admin-challenge-timer-font-size);
+  --challenge-timer-font-weight: var(--admin-challenge-timer-font-weight);
 }
 
 .admin-text-only-card .username {
@@ -394,7 +407,7 @@ body {
   opacity: 0.85;
   white-space: normal;
   overflow-wrap: anywhere;
-  line-height: 1.2;
+  line-height: 1;
 }
 
 .challenge-metadata {
@@ -407,7 +420,10 @@ body {
 }
 
 .challenge-amount {
-  font-size: var(--challenge-description-font-size);
+  font-size: var(
+    --challenge-amount-font-size,
+    var(--challenge-description-font-size)
+  );
   font-weight: 400;
   color: inherit;
   opacity: 0.75;
@@ -1048,7 +1064,7 @@ body {
 }
 
 .challenge-text-only-content .challenge-description {
-  font-size: 0.85rem;
+  font-size: var(--admin-challenge-description-font-size);
   color: var(--text-only-description-color);
   margin: 0;
 }
@@ -1063,7 +1079,7 @@ body {
 
 .challenge-text-only-content .challenge-amount,
 .challenge-text-only-content .challenge-timer {
-  font-size: 0.825rem;
+  font-size: var(--admin-challenge-amount-font-size);
   color: var(--text-only-metadata-color);
   opacity: 1;
   margin-left: 0;

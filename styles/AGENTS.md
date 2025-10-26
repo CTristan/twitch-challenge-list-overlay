@@ -15,10 +15,13 @@ High-level reference for styling the Twitch overlay. Keep styles lean, selector-
 
 -   Always use CSS custom properties declared in `variables.css`; extend tokens instead of hardcoding raw values.
 -   Selector strings must match constants from `CSS_CLASSES`/`CSS_SELECTORS`; never drift from TypeScript names.
+-   Design for OBS dock dimensions first: verify layouts in ≤400px width and ≤350px height contexts before shipping.
 -   Keep challenge row DOM split into:
     -   `.challenge-content-wrapper` (checkbox + text stack)
     -   `.challenge-actions` (secondary controls, same order in standard/text-only modes)
 -   Maintain parity: color, hover/active states, and enabled buttons should be identical between standard and text-only admin layouts.
+-   Maintain parity: color, hover/active states, enabled buttons, **and typography** must remain identical between standard and text-only admin layouts. Use the shared tokens (`--admin-challenge-font-size`, `--admin-challenge-description-font-size`, `--admin-challenge-amount-font-size`, `--admin-challenge-timer-font-size`, `--admin-challenge-timer-font-weight`).
+-   Challenge rows must never be taller than admin action buttons. Keep `--admin-control-height` within the 1.2–2.0rem clamp so both share the same vertical rhythm.
 -   Use flexbox for row alignment; avoid absolute positioning to preserve responsive wrapping.
 
 ## Responsive System
@@ -36,7 +39,7 @@ High-level reference for styling the Twitch overlay. Keep styles lean, selector-
 -   Layout: `.card`, `.challenge-list`, `.challenge-container`, `.challenge-metadata`
 -   State: `.done`, `.warning`, `.critical`, `.expired`, `.expanded`
 -   Components: `.checkbox-wrapper`, `.checkbox-custom`, `.challenge-content-wrapper`, `.challenge-actions`, `.challenge-title`, `.challenge-description`, `.timer-display`, `.edit-icon`
--   Admin panel: `.admin-panel`, `.collapsible-section`, `.collapsible-header`, `.collapsible-content`, `.color-pickers-container`
+-   Admin panel: `.admin-panel`, `.collapsible-section`, `.collapsible-header`, `.collapsible-content`, `.color-pickers-container`, `.admin-standard-card`, `.admin-text-only-card`
 
 ## Dynamic Styling Notes
 

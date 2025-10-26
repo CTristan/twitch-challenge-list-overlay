@@ -13,6 +13,7 @@ export const CSS_CLASSES = {
     ADMIN_PANEL_HEADER: "admin-panel-header",
     ADMIN_PANEL_CONTENT: "admin-panel-content",
     ADMIN_TEXT_ONLY_CARD: "admin-text-only-card",
+    ADMIN_STANDARD_CARD: "admin-standard-card",
     ADMIN_TEXT_ONLY_PANEL: "admin-panel-text-only",
 
     // Challenge-related classes
@@ -94,6 +95,10 @@ export const CSS_CLASSES = {
     COLOR_PICKER_LABEL: "color-picker-label",
     PREVIEW_CHALLENGE: "preview-challenge",
     PREVIEW_TEXT: "preview-text",
+    PREVIEW_TITLE: "preview-title",
+    PREVIEW_DESCRIPTION: "preview-description",
+    PREVIEW_PROGRESS: "preview-progress",
+    PREVIEW_CHECKBOX: "preview-checkbox",
 
     // Collapsible section classes
     COLLAPSIBLE_SECTION: "collapsible-section",
@@ -139,6 +144,10 @@ export const CSS_SELECTORS = {
     ADMIN_CONTENT: ".admin-content",
     PREVIEW_CHALLENGE: ".preview-challenge",
     PREVIEW_TEXT: ".preview-text",
+    PREVIEW_TITLE: ".preview-title",
+    PREVIEW_DESCRIPTION: ".preview-description",
+    PREVIEW_PROGRESS: ".preview-progress",
+    PREVIEW_CHECKBOX: ".preview-checkbox",
 
     // Combined selectors
     CHALLENGE_BY_ID: (challengeId: string) =>
@@ -198,6 +207,8 @@ export const ELEMENT_IDS = {
     TERTIARY_TEXT_COLOR: "tertiary-text-color",
     ROW_COLORS_OPACITY: "row-colors-opacity",
     ROW_COLORS_OPACITY_DISPLAY: "row-colors-opacity-display",
+    VIEWER_FONT_SIZE: "viewer-font-size",
+    VIEWER_FONT_SIZE_DISPLAY: "viewer-font-size-display",
 
     // Background configuration elements
     CHALLENGE_BACKGROUND_COLOR: "challenge-background-color",

@@ -285,5 +285,36 @@ describe("AdminPanelEventSetup", () => {
 
             expect(textColorInput.disabled).toBe(true);
         });
+
+        it("should update viewer font size display when slider changes", () => {
+            const viewerFontSizeSlider = document.createElement("input");
+            viewerFontSizeSlider.type = "range";
+            viewerFontSizeSlider.id =
+                BACKGROUND_UI_ELEMENTS.VIEWER_FONT_SIZE_SLIDER;
+            viewerFontSizeSlider.min = "0";
+            viewerFontSizeSlider.max = "200";
+            viewerFontSizeSlider.step = "5";
+            viewerFontSizeSlider.value = "150";
+            const viewerFontSizeDisplay = document.createElement("span");
+            viewerFontSizeDisplay.id =
+                BACKGROUND_UI_ELEMENTS.VIEWER_FONT_SIZE_DISPLAY;
+
+            document.body.appendChild(viewerFontSizeSlider);
+            document.body.appendChild(viewerFontSizeDisplay);
+
+            const autoSaveCallback = vi.fn();
+            const updatePreviewCallback = vi.fn();
+
+            AdminPanelEventSetup.setupBackgroundEventListeners(
+                autoSaveCallback,
+                updatePreviewCallback
+            );
+
+            viewerFontSizeSlider.dispatchEvent(new Event("input"));
+
+            expect(viewerFontSizeDisplay.textContent).toBe("150%");
+            expect(updatePreviewCallback).toHaveBeenCalled();
+            expect(autoSaveCallback).toHaveBeenCalled();
+        });
     });
 });

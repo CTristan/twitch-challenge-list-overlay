@@ -652,6 +652,21 @@ describe("UIUpdateHandler", () => {
             expect(challengeElement).toBeTruthy();
         });
 
+        it("should apply standard admin typography when text-only mode is disabled", () => {
+            window.location.hash = "#admin";
+            configManager.set(BEHAVIOR_CONFIG.ADMIN_TEXT_ONLY_MODE, false);
+
+            const challenge = new Challenge("Test Challenge");
+            challengeList.addChallengeObjects(challenge);
+            uiUpdateHandler.renderChallengeList();
+
+            const card = document.querySelector(`.${CSS_CLASSES.CARD}`);
+            expect(card).toBeTruthy();
+            expect(
+                card?.classList.contains(CSS_CLASSES.ADMIN_STANDARD_CARD)
+            ).toBe(true);
+        });
+
         it("should render text-only mode in admin when enabled", () => {
             window.location.hash = "#admin";
             configManager.set(BEHAVIOR_CONFIG.ADMIN_TEXT_ONLY_MODE, true);

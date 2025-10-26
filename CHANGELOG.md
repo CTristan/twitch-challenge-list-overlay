@@ -6,9 +6,13 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
--   New option in the Admin panel for "text-only" mode in the Admin dock to make viewing challenges easier. Added under General Settings.
--   New "Refresh Page" button in the Admin panel to make it easier to refresh when docked.
--   Delete button for each challenge in the Admin view, with a confirmation step to prevent accidental deletions.
+-   New options added to Admin Panel Settings:
+    -   "Text-Only Mode in Admin View" option for the Admin dock to make viewing challenges easier.
+    -   "Viewer Font Size" option that only affects the Viewer Overlay.
+-   New buttons added to Admin dock:
+    -   "Refresh Page" button in the Admin panel to make it easier to refresh when docked.
+    -   "Delete" button for each challenge, with a confirmation step to prevent accidental deletions.
+    -   "Clear Failed" button to remove only failed challenges from the list.
 
 ### Changed
 
@@ -17,7 +21,7 @@ All notable changes to this project will be documented in this file.
 
 ### Fixed
 
--   Admin dock should now look better when docked in OBS.
+-   Admin dock challenge rows should now be smaller when docked in OBS.
 -   Challenges in the Admin view would sometimes not auto-refresh.
 
 ## [v0.1] - 2025-10-12

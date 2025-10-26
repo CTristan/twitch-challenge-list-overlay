@@ -34,7 +34,11 @@ import {
     VALIDATION_MESSAGES,
     WARNING_MESSAGES,
 } from "../types/MessageConstants";
-import { COLOR_CONSTANTS, TIMING_CONSTANTS } from "../types/NumericConstants";
+import {
+    COLOR_CONSTANTS,
+    FONT_SIZE_CONSTANTS,
+    TIMING_CONSTANTS,
+} from "../types/NumericConstants";
 import { LOCALSTORAGE_PREFIX, STORAGE_KEYS } from "../types/StorageConstants";
 import {
     AdminPanelColorManager,
@@ -633,6 +637,11 @@ export default class AdminPanel {
                 config.challengeTextShadow ?? BACKGROUND_DEFAULTS.TEXT_SHADOW;
         }
 
+        const viewerFontSize =
+            config.challengeFontSize ??
+            BACKGROUND_DEFAULTS.VIEWER_CHALLENGE_FONT_SIZE;
+        this.updateViewerFontSizeUI(viewerFontSize, { syncSlider: true });
+
         // Update preview
         this.updateBackgroundPreview();
     }
@@ -752,15 +761,26 @@ export default class AdminPanel {
      * @returns {void}
      */
     private updateBackgroundPreview(): void {
-        const preview = document.getElementById(ELEMENT_IDS.BACKGROUND_PREVIEW);
+        const preview = document.getElementById(
+            ELEMENT_IDS.BACKGROUND_PREVIEW
+        ) as HTMLElement | null;
         const previewChallenge = preview?.querySelector(
             ".preview-challenge"
-        ) as HTMLElement;
+        ) as HTMLElement | null;
         const previewText = preview?.querySelector(
             ".preview-text"
-        ) as HTMLElement;
+        ) as HTMLElement | null;
+        const viewerFontSizeSlider = this.getViewerFontSizeSlider();
+        const viewerFontPercent = this.normalizeViewerFontPercentage(
+            viewerFontSizeSlider
+                ? parseFloat(viewerFontSizeSlider.value)
+                : undefined
+        );
 
-        if (!previewChallenge || !previewText) return;
+        if (!previewChallenge || !previewText) {
+            this.updateViewerFontSizeDisplay(viewerFontPercent);
+            return;
+        }
 
         // Get current values from Primary Color tier pickers
         const backgroundColorInput = document.getElementById(
@@ -811,6 +831,142 @@ export default class AdminPanel {
         } else {
             previewText.style.textShadow = "none";
         }
+
+        this.updateViewerFontSizeDisplay(viewerFontPercent);
+        this.applyViewerFontSizeToPreview(viewerFontPercent, preview);
+    }
+
+    private updateViewerFontSizeUI(
+        value: number,
+        options: { syncSlider?: boolean } = {}
+    ): void {
+        const normalizedValue = this.normalizeViewerFontPercentage(value);
+        if (options.syncSlider) {
+            const slider = this.getViewerFontSizeSlider();
+            if (slider) {
+                slider.value = normalizedValue.toString();
+            }
+        }
+        this.updateViewerFontSizeDisplay(normalizedValue);
+        this.applyViewerFontSizeToPreview(normalizedValue);
+    }
+
+    private updateViewerFontSizeDisplay(value: number): void {
+        const displayElement = document.getElementById(
+            BACKGROUND_UI_ELEMENTS.VIEWER_FONT_SIZE_DISPLAY
+        );
+        if (displayElement) {
+            displayElement.textContent =
+                this.formatViewerFontSizeDisplay(value);
+        }
+    }
+
+    private applyViewerFontSizeToPreview(
+        fontSizePercent: number,
+        previewRoot?: HTMLElement | null
+    ): void {
+        const preview =
+            previewRoot ||
+            (document.getElementById(
+                ELEMENT_IDS.BACKGROUND_PREVIEW
+            ) as HTMLElement | null);
+        if (!preview) {
+            return;
+        }
+
+        const previewChallenge = preview.querySelector(
+            CSS_SELECTORS.PREVIEW_CHALLENGE
+        ) as HTMLElement | null;
+        const previewTitle = preview.querySelector(
+            CSS_SELECTORS.PREVIEW_TITLE
+        ) as HTMLElement | null;
+        const previewDescription = preview.querySelector(
+            CSS_SELECTORS.PREVIEW_DESCRIPTION
+        ) as HTMLElement | null;
+        const previewProgress = preview.querySelector(
+            CSS_SELECTORS.PREVIEW_PROGRESS
+        ) as HTMLElement | null;
+        const previewCheckbox = preview.querySelector(
+            CSS_SELECTORS.PREVIEW_CHECKBOX
+        ) as HTMLElement | null;
+
+        const normalizedPercent =
+            this.normalizeViewerFontPercentage(fontSizePercent);
+        const normalizedFontSize =
+            this.convertViewerFontPercentToRem(normalizedPercent);
+        const descriptionSize =
+            normalizedFontSize * FONT_SIZE_CONSTANTS.DESCRIPTION_RATIO;
+        const timerSize = normalizedFontSize * FONT_SIZE_CONSTANTS.TIMER_RATIO;
+        const controlHeight = this.clampAdminControlHeight(
+            normalizedFontSize * FONT_SIZE_CONSTANTS.ADMIN_CONTROL_HEIGHT_RATIO
+        );
+
+        if (previewChallenge) {
+            previewChallenge.style.minHeight = `${controlHeight}rem`;
+        }
+
+        if (previewCheckbox) {
+            previewCheckbox.style.width = `${controlHeight}rem`;
+            previewCheckbox.style.height = `${controlHeight}rem`;
+        }
+
+        if (previewTitle) {
+            previewTitle.style.fontSize = `${normalizedFontSize}rem`;
+        }
+
+        if (previewDescription) {
+            previewDescription.style.fontSize = `${descriptionSize}rem`;
+        }
+
+        if (previewProgress) {
+            previewProgress.style.fontSize = `${timerSize}rem`;
+        }
+    }
+
+    private clampAdminControlHeight(value: number): number {
+        const min = FONT_SIZE_CONSTANTS.ADMIN_CONTROL_HEIGHT_MIN_REM;
+        const max = FONT_SIZE_CONSTANTS.ADMIN_CONTROL_HEIGHT_MAX_REM;
+        if (value < min) {
+            return min;
+        }
+        if (value > max) {
+            return max;
+        }
+        return value;
+    }
+
+    private getViewerFontSizeSlider(): HTMLInputElement | null {
+        return document.getElementById(
+            BACKGROUND_UI_ELEMENTS.VIEWER_FONT_SIZE_SLIDER
+        ) as HTMLInputElement | null;
+    }
+
+    private normalizeViewerFontPercentage(value?: number): number {
+        if (typeof value !== "number" || Number.isNaN(value)) {
+            return BACKGROUND_DEFAULTS.VIEWER_CHALLENGE_FONT_SIZE;
+        }
+
+        const min = FONT_SIZE_CONSTANTS.VIEWER_PERCENT_MIN;
+        const max = FONT_SIZE_CONSTANTS.VIEWER_PERCENT_MAX;
+        if (value < min) {
+            return min;
+        }
+        if (value > max) {
+            return max;
+        }
+        return value;
+    }
+
+    private convertViewerFontPercentToRem(percent: number): number {
+        return FONT_SIZE_CONSTANTS.VIEWER_BASE_REM + percent / 100;
+    }
+
+    private formatViewerFontSizeDisplay(value: number): string {
+        const normalizedPercent = this.normalizeViewerFontPercentage(value);
+        const formattedPercent = normalizedPercent
+            .toFixed(1)
+            .replace(/\.0$/, "");
+        return `${formattedPercent}%`;
     }
 
     /**
@@ -937,6 +1093,7 @@ export default class AdminPanel {
         challengeTextColor: string;
         challengeAutoTextColor: boolean;
         challengeTextShadow: boolean;
+        challengeFontSize: number;
     } {
         // Overlay background elements
         const overlayBackgroundColorInput = document.getElementById(
@@ -961,6 +1118,9 @@ export default class AdminPanel {
         ) as HTMLInputElement;
         const textShadowCheckbox = document.getElementById(
             BACKGROUND_UI_ELEMENTS.TEXT_SHADOW_CHECKBOX
+        ) as HTMLInputElement;
+        const viewerFontSizeSlider = document.getElementById(
+            BACKGROUND_UI_ELEMENTS.VIEWER_FONT_SIZE_SLIDER
         ) as HTMLInputElement;
 
         // Get overlay background color and opacity (store separately, not as RGBA)
@@ -990,6 +1150,11 @@ export default class AdminPanel {
                 BACKGROUND_DEFAULTS.AUTO_TEXT_COLOR,
             challengeTextShadow:
                 textShadowCheckbox?.checked ?? BACKGROUND_DEFAULTS.TEXT_SHADOW,
+            challengeFontSize: this.normalizeViewerFontPercentage(
+                viewerFontSizeSlider
+                    ? parseFloat(viewerFontSizeSlider.value)
+                    : undefined
+            ),
         };
     }
 
@@ -1399,6 +1564,10 @@ export default class AdminPanel {
                 BACKGROUND_CONFIG.CHALLENGE_TEXT_SHADOW,
                 backgroundConfig.challengeTextShadow
             );
+            const viewerFontSizeSuccess = this.#configManager.set(
+                BACKGROUND_CONFIG.VIEWER_CHALLENGE_FONT_SIZE,
+                backgroundConfig.challengeFontSize
+            );
 
             if (
                 overlayBackgroundColorSuccess &&
@@ -1407,7 +1576,8 @@ export default class AdminPanel {
                 backgroundOpacitySuccess &&
                 textColorSuccess &&
                 autoTextColorSuccess &&
-                textShadowSuccess
+                textShadowSuccess &&
+                viewerFontSizeSuccess
             ) {
                 // Update admin UI directly (no refresh) - IMMEDIATE
                 this.updateAdminUIForSliderChange(ConfigType.BACKGROUND);

@@ -1,6 +1,8 @@
 import { AdminPanelTemplates } from "../templates/AdminPanelTemplates";
 import { DEFAULT_COLORS } from "../types/ColorConstants";
+import { BACKGROUND_DEFAULTS } from "../types/ConfigConstants";
 import { ELEMENT_IDS } from "../types/DOMConstants";
+import { FONT_SIZE_CONSTANTS } from "../types/NumericConstants";
 
 /**
  * Utility class for building DOM elements for the admin panel
@@ -80,6 +82,12 @@ export class AdminPanelDOMBuilder {
      * @returns HTML string for challenge row styling section
      */
     static createChallengeRowStylingSection(): string {
+        const viewerFontSizePercent =
+            BACKGROUND_DEFAULTS.VIEWER_CHALLENGE_FONT_SIZE;
+        const viewerFontSizeDisplay = formatFontSizeDisplay(
+            viewerFontSizePercent
+        );
+
         return AdminPanelTemplates.challengeRowStylingSection({
             primaryBackgroundColor: DEFAULT_COLORS.PRIMARY_BACKGROUND,
             primaryTextColor: DEFAULT_COLORS.PRIMARY_TEXT,
@@ -90,6 +98,11 @@ export class AdminPanelDOMBuilder {
             rowColorsOpacityPercent: 100,
             challengeBackgroundColor: DEFAULT_COLORS.CHALLENGE_BACKGROUND,
             challengeTextColor: DEFAULT_COLORS.WHITE_TEXT,
+            viewerFontSizePercent,
+            viewerFontSizeDisplay,
+            viewerFontSizeMinPercent: FONT_SIZE_CONSTANTS.VIEWER_PERCENT_MIN,
+            viewerFontSizeMaxPercent: FONT_SIZE_CONSTANTS.VIEWER_PERCENT_MAX,
+            viewerFontSizeStepPercent: FONT_SIZE_CONSTANTS.VIEWER_PERCENT_STEP,
             elementIds: ELEMENT_IDS,
         });
     }
@@ -189,4 +202,13 @@ export class AdminPanelDOMBuilder {
 
         return container;
     }
+}
+
+function formatFontSizeDisplay(percent: number): string {
+    const clampedPercent = Math.min(
+        Math.max(percent, FONT_SIZE_CONSTANTS.VIEWER_PERCENT_MIN),
+        FONT_SIZE_CONSTANTS.VIEWER_PERCENT_MAX
+    );
+    const formattedPercent = clampedPercent.toFixed(1).replace(/\.0$/, "");
+    return `${formattedPercent}%`;
 }

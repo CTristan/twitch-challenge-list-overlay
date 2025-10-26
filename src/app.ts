@@ -311,6 +311,8 @@ export default class App {
 
         if (adminTextOnlyMode) {
             cardEl.classList.add(CSS_CLASSES.ADMIN_TEXT_ONLY_CARD);
+        } else if (isAdminMode) {
+            cardEl.classList.add(CSS_CLASSES.ADMIN_STANDARD_CARD);
         }
 
         // Apply overlay background styling if configured

@@ -65,6 +65,7 @@ export const BACKGROUND_CONFIG = {
     CHALLENGE_TEXT_COLOR: "challengeTextColor",
     CHALLENGE_AUTO_TEXT_COLOR: "challengeAutoTextColor",
     CHALLENGE_TEXT_SHADOW: "challengeTextShadow",
+    VIEWER_CHALLENGE_FONT_SIZE: "challengeFontSize",
 } as const;
 
 /**
@@ -107,6 +108,9 @@ export const BACKGROUND_DEFAULTS = {
 
     // Challenge row colors opacity default
     ROW_COLORS_OPACITY: 1.0,
+
+    // Viewer overlay font sizing (stored as percentage relative to 1rem baseline)
+    VIEWER_CHALLENGE_FONT_SIZE: 100,
 } as const;
 
 /**
@@ -130,6 +134,10 @@ export const CSS_VARIABLES = {
     CHALLENGE_TEXT_COLOR_OVERRIDE: "challengeTextColorOverride",
     CHALLENGE_AUTO_TEXT_COLOR_ENABLED: "challengeAutoTextColorEnabled",
     CHALLENGE_TEXT_SHADOW_ENABLED: "challengeTextShadowEnabled",
+    CHALLENGE_FONT_SIZE: "challengeFontSize",
+    CHALLENGE_DESCRIPTION_FONT_SIZE: "challengeDescriptionFontSize",
+    CHALLENGE_TIMER_FONT_SIZE: "challengeTimerFontSize",
+    ADMIN_CONTROL_HEIGHT: "adminControlHeight",
 } as const;
 
 /**
@@ -158,6 +166,8 @@ export const BACKGROUND_UI_ELEMENTS = {
     AUTO_TEXT_COLOR_CHECKBOX: "challenge-auto-text-color",
     TEXT_COLOR_INPUT: "challenge-text-color",
     TEXT_SHADOW_CHECKBOX: "challenge-text-shadow",
+    VIEWER_FONT_SIZE_SLIDER: "viewer-font-size",
+    VIEWER_FONT_SIZE_DISPLAY: "viewer-font-size-display",
 } as const;
 
 /**

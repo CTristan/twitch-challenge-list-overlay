@@ -160,6 +160,9 @@ interface Config {
     /** Enable text shadow/outline for enhanced readability (default: true) */
     challengeTextShadow?: boolean;
 
+    /** Viewer font scaling percentage (0% = 1rem, 100% = 2rem, 200% = 3rem) */
+    challengeFontSize?: number;
+
     /** Chat command configuration mapping command types to user-typed aliases */
     commands: ChatCommandsConfig;
 

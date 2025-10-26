@@ -6,6 +6,7 @@ import {
     EVENT_NAMES,
     type ColorTier,
 } from "../types/DOMConstants";
+import { FONT_SIZE_CONSTANTS } from "../types/NumericConstants";
 
 /**
  * Callback type for auto-save operations
@@ -197,6 +198,12 @@ export class AdminPanelEventSetup {
         const textShadowCheckbox = document.getElementById(
             BACKGROUND_UI_ELEMENTS.TEXT_SHADOW_CHECKBOX
         ) as HTMLInputElement;
+        const viewerFontSizeSlider = document.getElementById(
+            BACKGROUND_UI_ELEMENTS.VIEWER_FONT_SIZE_SLIDER
+        ) as HTMLInputElement;
+        const viewerFontSizeDisplay = document.getElementById(
+            BACKGROUND_UI_ELEMENTS.VIEWER_FONT_SIZE_DISPLAY
+        );
 
         // Overlay background listeners
         if (overlayBackgroundColorInput) {
@@ -257,6 +264,21 @@ export class AdminPanelEventSetup {
                 autoSaveCallback();
             });
         }
+
+        if (viewerFontSizeSlider && viewerFontSizeDisplay) {
+            const handleFontSizeChange = (): void => {
+                const value = parseFloat(viewerFontSizeSlider.value);
+                viewerFontSizeDisplay.textContent =
+                    this.formatFontSizeDisplay(value);
+                updatePreviewCallback();
+                autoSaveCallback();
+            };
+
+            viewerFontSizeSlider.addEventListener(
+                EVENT_NAMES.INPUT,
+                handleFontSizeChange
+            );
+        }
     }
 
     /**
@@ -297,5 +319,14 @@ export class AdminPanelEventSetup {
                     textColor: ELEMENT_IDS.TERTIARY_TEXT_COLOR,
                 };
         }
+    }
+
+    private static formatFontSizeDisplay(value: number): string {
+        const clampedPercent = Math.min(
+            Math.max(value, FONT_SIZE_CONSTANTS.VIEWER_PERCENT_MIN),
+            FONT_SIZE_CONSTANTS.VIEWER_PERCENT_MAX
+        );
+        const formattedPercent = clampedPercent.toFixed(1).replace(/\.0$/, "");
+        return `${formattedPercent}%`;
     }
 }

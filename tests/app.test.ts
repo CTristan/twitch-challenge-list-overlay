@@ -305,6 +305,27 @@ describe("App", () => {
     });
 
     describe("Admin Mode Functionality", () => {
+        it("should apply standard admin typography when text-only mode is disabled", () => {
+            Object.defineProperty(window, "location", {
+                value: { hash: URL_HASH.ADMIN },
+                writable: true,
+            });
+
+            app.getConfigManager().set(
+                BEHAVIOR_CONFIG.ADMIN_TEXT_ONLY_MODE,
+                false
+            );
+
+            app.challengeList.addChallenges("Test Challenge");
+            app.renderChallengeList();
+
+            const card = document.querySelector(`.${CSS_CLASSES.CARD}`);
+            expect(card).toBeTruthy();
+            expect(
+                card?.classList.contains(CSS_CLASSES.ADMIN_STANDARD_CARD)
+            ).toBe(true);
+        });
+
         it("should enable checkbox interaction in admin mode", () => {
             // Set admin mode
             Object.defineProperty(window, "location", {

@@ -68,3 +68,18 @@ export const TEXT_SHADOW_CONSTANTS = {
     SHADOW_BLUR: 2,
     SHADOW_SPREAD: 0,
 } as const;
+
+/**
+ * Font sizing constants for viewer overlay customization
+ */
+export const FONT_SIZE_CONSTANTS = {
+    VIEWER_PERCENT_MIN: 0,
+    VIEWER_PERCENT_MAX: 200,
+    VIEWER_PERCENT_STEP: 5,
+    VIEWER_BASE_REM: 2,
+    DESCRIPTION_RATIO: 0.78,
+    TIMER_RATIO: 0.72,
+    ADMIN_CONTROL_HEIGHT_RATIO: 0.8,
+    ADMIN_CONTROL_HEIGHT_MIN_REM: 1.2,
+    ADMIN_CONTROL_HEIGHT_MAX_REM: 2.0,
+} as const;
