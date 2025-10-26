@@ -109,8 +109,10 @@ function getDefaultStyles(): Record<string, string> {
         usernameFontWeight: "normal",
 
         // Challenge text styling
-        challengeFontSize: "2rem",
-        challengeDescriptionFontSize: "1.7rem",
+        challengeFontSize:
+            "clamp(0.95rem, calc(var(--admin-control-height) * 0.52), 1.35rem)",
+        challengeDescriptionFontSize:
+            "clamp(0.8rem, calc(var(--admin-control-height) * 0.4375), 1.15rem)",
         challengeFontColor: "#FFFFFF",
         challengeFontWeight: "normal",
         challengeDoneFontColor: "#b0b0b0",
@@ -121,10 +123,11 @@ function getDefaultStyles(): Record<string, string> {
         challengeFocusBorderRadius: "0.5rem",
 
         // Checkbox styling
-        challengeCheckboxSize: "2.5rem",
-        challengeCheckboxCheckmarkSize: "2.75rem",
-        challengeCheckboxMarginRight: "1rem",
-        challengeCheckboxBorderWidth: "0.25rem",
+        challengeCheckboxSize: "var(--admin-control-height)",
+        challengeCheckboxCheckmarkSize:
+            "calc(var(--admin-control-height) * 0.65)",
+        challengeCheckboxMarginRight: "0.6rem",
+        challengeCheckboxBorderWidth: "0.1875rem",
         challengeCheckboxBorderColor: "#ffffff",
         challengeCheckboxBorderRadius: "0.375rem",
         challengeCheckboxBackgroundColor: "transparent",

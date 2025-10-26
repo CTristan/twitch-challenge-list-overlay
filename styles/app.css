@@ -105,32 +105,31 @@ body {
 
 .challenge {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   overflow: hidden;
   font-size: var(--challenge-font-size);
   color: var(--challenge-font-color);
   font-weight: var(--challenge-font-weight, normal);
-  padding: 2px 0;
-  min-height: calc(
-    var(--challenge-font-size, 1rem) * 1.2 +
-      var(--challenge-description-font-size, 0.85rem) * 2.2
-  );
+  padding: 0.2rem 0;
+  min-height: var(--admin-control-height);
 }
 
 .challenge-content-wrapper {
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 0.35rem;
+  justify-content: center;
+  gap: 0.2rem;
   min-width: 0;
 }
 
 .challenge-actions {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   align-items: center;
-  gap: 0.35rem 0.75rem;
-  margin-top: 0.25rem;
+  gap: 0.25rem;
+  margin-top: 0.1rem;
+  height: var(--admin-control-height);
 }
 
 .challenge-actions .challenge-edit-icon,
@@ -146,7 +145,7 @@ body {
   flex-shrink: 0;
   width: var(--challenge-checkbox-size);
   height: var(--challenge-checkbox-size);
-  margin-left: 0.75rem;
+  margin-left: 0.5rem;
   margin-right: var(--challenge-checkbox-margin-right);
   border: var(--challenge-checkbox-border-width) solid
     var(--challenge-checkbox-border-color, #ffffff);
@@ -156,6 +155,7 @@ body {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  align-self: center;
 }
 
 .challenge-checkbox.checked {
@@ -241,7 +241,7 @@ body {
 .challenge-text-only-decrement,
 .challenge-text-only-delete {
   flex-shrink: 0;
-  height: var(--challenge-checkbox-size);
+  height: calc(var(--admin-control-height) - 2px);
   margin-left: 0.25rem;
   margin-right: 0.25rem;
   padding: 0 0.5rem;
@@ -257,6 +257,12 @@ body {
   border-radius: 4px;
   background-color: rgba(255, 255, 255, 0.15);
   border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.challenge-text-only-edit,
+.challenge-text-only-increment,
+.challenge-text-only-decrement {
+  width: calc(var(--admin-control-height) - 2px);
 }
 
 .challenge-text-only-delete {
@@ -300,7 +306,7 @@ body {
 .challenge-actions .challenge-text-only-fail,
 .challenge-actions .challenge-text-only-unfail {
   flex-shrink: 0;
-  height: var(--challenge-checkbox-size);
+  height: calc(var(--admin-control-height) - 2px);
   padding: 0 0.55rem;
   display: inline-flex;
   align-items: center;
@@ -364,8 +370,11 @@ body {
   flex: 1;
   display: flex;
   flex-direction: column;
+  justify-content: center;
   overflow: hidden;
-  line-height: 1.2;
+  line-height: 1.15;
+  min-height: var(--admin-control-height);
+  gap: 0.15rem;
 }
 
 .challenge-title {
@@ -375,7 +384,7 @@ body {
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
-  margin-bottom: 2px;
+  line-height: 1.1;
 }
 
 .challenge-description {
@@ -385,7 +394,7 @@ body {
   opacity: 0.85;
   white-space: normal;
   overflow-wrap: anywhere;
-  line-height: 1.1;
+  line-height: 1.2;
 }
 
 .challenge-metadata {
@@ -393,7 +402,7 @@ body {
   justify-content: space-between;
   align-items: center;
   gap: 1rem;
-  margin-top: 4px;
+  margin-top: 2px;
   width: 100%;
 }
 
@@ -518,15 +527,19 @@ body {
   background-color: #4a90e2;
   color: #ffffff;
   border: none;
-  padding: 10px 16px;
+  padding: 0 1rem;
   border-radius: 4px;
   cursor: pointer;
   font-family: var(--card-font-family, "arial");
-  font-size: 14px;
+  font-size: clamp(0.85rem, calc(var(--admin-control-height) * 0.38), 1.05rem);
   font-weight: 500;
   transition: all 0.3s ease;
   min-width: 140px;
   box-shadow: 0 2px 4px rgba(74, 144, 226, 0.2);
+  min-height: var(--admin-control-height);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .add-challenge-btn:hover {
@@ -552,15 +565,19 @@ body {
 .refresh-btn {
   color: #ffffff;
   border: none;
-  padding: 10px 16px;
+  padding: 0 1rem;
   border-radius: 4px;
   cursor: pointer;
   font-family: var(--card-font-family, "arial");
-  font-size: 14px;
+  font-size: clamp(0.85rem, calc(var(--admin-control-height) * 0.38), 1.05rem);
   font-weight: 500;
   transition: all 0.3s ease;
   min-width: 140px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.18);
+  min-height: var(--admin-control-height);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .clear-completed-btn {
