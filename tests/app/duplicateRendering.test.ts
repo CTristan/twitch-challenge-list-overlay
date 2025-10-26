@@ -59,7 +59,7 @@ describe("Duplicate Rendering Issue", () => {
             expect(afterClearHeaders.length).toBe(1);
 
             // Verify header content is correct
-            expect(afterClearHeaders[0]?.textContent).toBe("Challenges 0/2");
+            expect(afterClearHeaders[0]?.textContent).toBe("0/2 Challenges");
         });
 
         it("should not create duplicates when render() is called multiple times", () => {
@@ -130,7 +130,7 @@ describe("Duplicate Rendering Issue", () => {
             expect(headers.length).toBe(1);
 
             // Verify header shows 0/0 for empty list
-            expect(headers[0]?.textContent).toBe("Challenges 0/0");
+            expect(headers[0]?.textContent).toBe("0/0 Challenges");
         });
     });
 });

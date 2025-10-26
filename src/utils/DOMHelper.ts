@@ -105,7 +105,7 @@ export default class DOMHelper {
 
         const headerDiv = document.createElement("div");
         headerDiv.classList.add(CSS_CLASSES.USERNAME);
-        headerDiv.innerText = `Challenges ${completedCount}/${totalCount}`;
+        headerDiv.innerText = `${completedCount}/${totalCount} Challenges`;
         cardEl.appendChild(headerDiv);
 
         const list = document.createElement("ol");
@@ -129,7 +129,7 @@ export default class DOMHelper {
         );
         cardHeaders.forEach((header) => {
             if (header instanceof HTMLElement) {
-                header.textContent = `Challenges ${completedCount}/${totalCount}`;
+                header.textContent = `${completedCount}/${totalCount} Challenges`;
             }
         });
     }
