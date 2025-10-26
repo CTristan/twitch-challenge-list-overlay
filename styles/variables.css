@@ -54,6 +54,18 @@
   --challenge-timer-critical-color: #ff6b6b;
   --challenge-timer-expired-color: #ff4757;
 
+  /* Modal Controls */
+  --modal-text-color: #ffffff;
+  --modal-control-text-color: #ffffff;
+  --modal-control-background-color: #2d2d2d;
+  --modal-control-border-color: #555555;
+  --modal-control-placeholder-color: #888888;
+  --modal-control-option-text-color: #ffffff;
+  --modal-control-option-background-color: #2d2d2d;
+  --modal-label-color: rgba(255, 255, 255, 0.92);
+  --modal-muted-text-color: rgba(255, 255, 255, 0.72);
+  --modal-divider-color: rgba(255, 255, 255, 0.12);
+
   /* Background Customization */
   /* Overlay Background (main container) */
   --overlay-background-color: rgba(100, 100, 100, 0.6);

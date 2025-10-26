@@ -726,7 +726,7 @@ body {
   display: block;
   margin-bottom: 0.5rem;
   font-weight: 500;
-  color: #333;
+  color: var(--modal-label-color, #f0f0f0);
 }
 
 .modal .form-input {

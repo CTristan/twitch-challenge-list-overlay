@@ -1,5 +1,6 @@
 import { ChallengeStatus } from "../types/ChallengeStatus";
 import { CHALLENGE_STATES } from "../types/DOMConstants";
+import { TimerEndBehavior } from "../types/TimerEndBehavior";
 import Timer from "../utils/Timer";
 import { ValidationUtils } from "../utils/ValidationUtils";
 
@@ -15,6 +16,7 @@ export default class Challenge {
     progress: number;
     timer?: Timer;
     status: ChallengeStatus;
+    timerEndBehavior: TimerEndBehavior;
     id: string;
     createdAt: number;
 
@@ -29,9 +31,15 @@ export default class Challenge {
             description?: string;
             amount?: number;
             timer?: string | number;
+            timerEndBehavior?: TimerEndBehavior;
         } = {}
     ) {
-        const { description = "", amount = 1, timer } = options;
+        const {
+            description = "",
+            amount = 1,
+            timer,
+            timerEndBehavior = TimerEndBehavior.AUTO_FAIL,
+        } = options;
 
         // Validate and set title and description
         this.title = ValidationUtils.validateChallengeTitle(title);
@@ -46,6 +54,7 @@ export default class Challenge {
         this.amount = ValidationUtils.validateChallengeAmount(amount);
         this.progress = 0;
         this.status = ChallengeStatus.IN_PROGRESS;
+        this.timerEndBehavior = timerEndBehavior;
         this.createdAt = Date.now();
 
         // Generate internal ID for storage (keep timestamp-based for uniqueness)
@@ -55,6 +64,14 @@ export default class Challenge {
         if (timer) {
             this.setTimer(timer);
         }
+    }
+
+    getTimerEndBehavior(): TimerEndBehavior {
+        return this.timerEndBehavior;
+    }
+
+    setTimerEndBehavior(timerEndBehavior: TimerEndBehavior): void {
+        this.timerEndBehavior = timerEndBehavior;
     }
 
     /**
@@ -396,6 +413,9 @@ export default class Challenge {
             challenge.timer = Timer.fromData(data.timer);
         }
 
+        challenge.timerEndBehavior =
+            data.timerEndBehavior ?? TimerEndBehavior.AUTO_FAIL;
+
         return challenge;
     }
 
@@ -412,6 +432,7 @@ export default class Challenge {
             status: this.status,
             createdAt: this.createdAt,
             timer: this.timer?.toData(),
+            timerEndBehavior: this.timerEndBehavior,
         };
     }
 }

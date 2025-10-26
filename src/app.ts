@@ -36,6 +36,7 @@ import {
     UI_ELEMENTS,
 } from "./types/MessageConstants";
 import { TIMING_CONSTANTS } from "./types/NumericConstants";
+import { TimerEndBehavior } from "./types/TimerEndBehavior";
 import {
     VALIDATION_CONSTRAINTS,
     VALIDATION_PATTERNS,
@@ -987,6 +988,9 @@ export default class App {
         const timerInput = document.getElementById(
             ELEMENT_IDS.ADD_CHALLENGE_TIMER
         ) as HTMLInputElement;
+        const timerBehaviorSelect = document.getElementById(
+            ELEMENT_IDS.ADD_CHALLENGE_TIMER_BEHAVIOR
+        ) as HTMLSelectElement | null;
 
         // Populate title
         if (titleInput) {
@@ -1012,16 +1016,30 @@ export default class App {
                 challenge.timer.duration
             );
             timerInput.value = timerString;
+            if (timerBehaviorSelect) {
+                timerBehaviorSelect.value = challenge.getTimerEndBehavior();
+            }
         } else if (timerInput) {
             timerInput.value = COMMON_STRINGS.EMPTY;
+            if (timerBehaviorSelect) {
+                timerBehaviorSelect.value = TimerEndBehavior.AUTO_FAIL;
+            }
         }
 
         // Clear any error states
-        [titleInput, descInput, amountInput, timerInput].forEach((input) => {
+        [
+            titleInput,
+            descInput,
+            amountInput,
+            timerInput,
+            timerBehaviorSelect,
+        ].forEach((input) => {
             if (input) {
                 input.classList.remove(CSS_CLASSES.ERROR);
             }
         });
+
+        this.updateTimerBehaviorVisibility();
     }
 
     /**
@@ -1041,18 +1059,60 @@ export default class App {
         const timerInput = document.getElementById(
             ELEMENT_IDS.ADD_CHALLENGE_TIMER
         ) as HTMLInputElement;
+        const timerBehaviorSelect = document.getElementById(
+            ELEMENT_IDS.ADD_CHALLENGE_TIMER_BEHAVIOR
+        ) as HTMLSelectElement | null;
 
         if (titleInput) titleInput.value = COMMON_STRINGS.EMPTY;
         if (descInput) descInput.value = COMMON_STRINGS.EMPTY;
         if (amountInput) amountInput.value = COMMON_STRINGS.EMPTY;
         if (timerInput) timerInput.value = COMMON_STRINGS.EMPTY;
+        if (timerBehaviorSelect) {
+            timerBehaviorSelect.value = TimerEndBehavior.AUTO_FAIL;
+        }
 
         // Clear any error states
-        [titleInput, descInput, amountInput, timerInput].forEach((input) => {
+        [
+            titleInput,
+            descInput,
+            amountInput,
+            timerInput,
+            timerBehaviorSelect,
+        ].forEach((input) => {
             if (input) {
                 input.classList.remove(CSS_CLASSES.ERROR);
             }
         });
+
+        this.updateTimerBehaviorVisibility();
+    }
+
+    private updateTimerBehaviorVisibility(): void {
+        const timerInput = document.getElementById(
+            ELEMENT_IDS.ADD_CHALLENGE_TIMER
+        ) as HTMLInputElement | null;
+        const timerBehaviorGroup = document.getElementById(
+            ELEMENT_IDS.ADD_CHALLENGE_TIMER_BEHAVIOR_GROUP
+        );
+        const timerBehaviorSelect = document.getElementById(
+            ELEMENT_IDS.ADD_CHALLENGE_TIMER_BEHAVIOR
+        ) as HTMLSelectElement | null;
+
+        if (!timerBehaviorGroup) {
+            return;
+        }
+
+        const hasTimer = Boolean(timerInput?.value?.trim());
+
+        if (hasTimer) {
+            timerBehaviorGroup.classList.remove(CSS_CLASSES.HIDDEN);
+        } else {
+            timerBehaviorGroup.classList.add(CSS_CLASSES.HIDDEN);
+            if (timerBehaviorSelect) {
+                timerBehaviorSelect.value = TimerEndBehavior.AUTO_FAIL;
+                timerBehaviorSelect.classList.remove(CSS_CLASSES.ERROR);
+            }
+        }
     }
 
     /**
@@ -1064,6 +1124,9 @@ export default class App {
         const cancelButton = document.getElementById(
             ELEMENT_IDS.ADD_CHALLENGE_CANCEL
         );
+        const timerInput = document.getElementById(
+            ELEMENT_IDS.ADD_CHALLENGE_TIMER
+        ) as HTMLInputElement | null;
 
         if (form) {
             // Remove existing listeners to prevent duplicates
@@ -1087,7 +1150,30 @@ export default class App {
                 this.handleAddChallengeCancelClick
             );
         }
+
+        if (timerInput) {
+            timerInput.removeEventListener(
+                EVENT_NAMES.INPUT,
+                this.handleTimerInputChange
+            );
+            timerInput.removeEventListener(
+                EVENT_NAMES.CHANGE,
+                this.handleTimerInputChange
+            );
+            timerInput.addEventListener(
+                EVENT_NAMES.INPUT,
+                this.handleTimerInputChange
+            );
+            timerInput.addEventListener(
+                EVENT_NAMES.CHANGE,
+                this.handleTimerInputChange
+            );
+        }
     }
+
+    private handleTimerInputChange = (): void => {
+        this.updateTimerBehaviorVisibility();
+    };
 
     /**
      * Handle add/edit challenge form submission
@@ -1293,6 +1379,7 @@ export default class App {
         description?: string;
         amount?: number;
         timer?: string;
+        timerEndBehavior?: TimerEndBehavior;
     } | null {
         const titleInput = document.getElementById(
             ELEMENT_IDS.ADD_CHALLENGE_TITLE
@@ -1306,9 +1393,18 @@ export default class App {
         const timerInput = document.getElementById(
             ELEMENT_IDS.ADD_CHALLENGE_TIMER
         ) as HTMLInputElement;
+        const timerBehaviorSelect = document.getElementById(
+            ELEMENT_IDS.ADD_CHALLENGE_TIMER_BEHAVIOR
+        ) as HTMLSelectElement | null;
 
         // Clear any previous error states
-        [titleInput, descInput, amountInput, timerInput].forEach((input) => {
+        [
+            titleInput,
+            descInput,
+            amountInput,
+            timerInput,
+            timerBehaviorSelect,
+        ].forEach((input) => {
             if (input) {
                 input.classList.remove(CSS_CLASSES.ERROR);
             }
@@ -1348,6 +1444,7 @@ export default class App {
 
         // Basic timer format validation if provided
         let timer: string | undefined;
+        let timerEndBehavior: TimerEndBehavior | undefined;
         if (timerStr) {
             // Simple validation - should match patterns like "5m", "30s", "1h"
             const timerPattern = VALIDATION_PATTERNS.TIMER_FORMAT;
@@ -1359,6 +1456,24 @@ export default class App {
                 throw new Error(ERROR_MESSAGES.TIMER_FORMAT_INVALID);
             }
             timer = timerStr;
+
+            if (!timerBehaviorSelect) {
+                throw new Error(ERROR_MESSAGES.TIMER_BEHAVIOR_INVALID);
+            }
+
+            const selectedBehavior =
+                timerBehaviorSelect.value as TimerEndBehavior;
+            const validTimerBehaviors = Object.values(
+                TimerEndBehavior
+            ) as TimerEndBehavior[];
+
+            if (!validTimerBehaviors.includes(selectedBehavior)) {
+                timerBehaviorSelect.classList.add(CSS_CLASSES.ERROR);
+                timerBehaviorSelect.focus();
+                throw new Error(ERROR_MESSAGES.TIMER_BEHAVIOR_INVALID);
+            }
+
+            timerEndBehavior = selectedBehavior;
         }
 
         const result: {
@@ -1366,6 +1481,7 @@ export default class App {
             description?: string;
             amount?: number;
             timer?: string;
+            timerEndBehavior?: TimerEndBehavior;
         } = { title };
 
         if (description) {
@@ -1376,6 +1492,9 @@ export default class App {
         }
         if (timer) {
             result.timer = timer;
+        }
+        if (timerEndBehavior !== undefined) {
+            result.timerEndBehavior = timerEndBehavior;
         }
 
         return result;
@@ -1391,6 +1510,7 @@ export default class App {
         description?: string;
         amount?: number;
         timer?: string;
+        timerEndBehavior?: TimerEndBehavior;
     }): void {
         // Check challenge limit
         const maxChallenges =
@@ -1410,6 +1530,7 @@ export default class App {
             description?: string;
             amount?: number;
             timer?: string;
+            timerEndBehavior?: TimerEndBehavior;
         } = {};
 
         if (challengeData.description) {
@@ -1420,6 +1541,9 @@ export default class App {
         }
         if (challengeData.timer) {
             challengeOptions.timer = challengeData.timer;
+        }
+        if (challengeData.timerEndBehavior) {
+            challengeOptions.timerEndBehavior = challengeData.timerEndBehavior;
         }
 
         // Create the challenge
@@ -1453,6 +1577,7 @@ export default class App {
             description?: string;
             amount?: number;
             timer?: string;
+            timerEndBehavior?: TimerEndBehavior;
         }
     ): void {
         const challenge = this.challengeList.getChallengeById(challengeId);
@@ -1469,6 +1594,10 @@ export default class App {
         // Update amount
         if (challengeData.amount !== undefined) {
             challenge.setAmount(challengeData.amount);
+        }
+
+        if (challengeData.timerEndBehavior) {
+            challenge.setTimerEndBehavior(challengeData.timerEndBehavior);
         }
 
         // Update timer if provided

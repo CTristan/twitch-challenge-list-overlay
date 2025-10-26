@@ -192,6 +192,8 @@ export const ELEMENT_IDS = {
     ADD_CHALLENGE_DESCRIPTION: "add-challenge-description",
     ADD_CHALLENGE_AMOUNT: "add-challenge-amount",
     ADD_CHALLENGE_TIMER: "add-challenge-timer",
+    ADD_CHALLENGE_TIMER_BEHAVIOR_GROUP: "add-challenge-timer-behavior-group",
+    ADD_CHALLENGE_TIMER_BEHAVIOR: "add-challenge-timer-behavior",
     ADD_CHALLENGE_SUBMIT: "add-challenge-submit",
     ADD_CHALLENGE_CANCEL: "add-challenge-cancel",
 

@@ -625,6 +625,19 @@ describe("App", () => {
                             <textarea id="add-challenge-description"></textarea>
                             <input type="number" id="add-challenge-amount" />
                             <input type="text" id="add-challenge-timer" />
+                            <div
+                                id="add-challenge-timer-behavior-group"
+                                class="hidden"
+                            >
+                                <select id="add-challenge-timer-behavior">
+                                    <option value="auto-fail">
+                                        Fail the challenge
+                                    </option>
+                                    <option value="auto-complete">
+                                        Complete the challenge
+                                    </option>
+                                </select>
+                            </div>
                             <button type="submit" id="add-challenge-submit">Add</button>
                             <button type="button" id="add-challenge-cancel">Cancel</button>
                         </form>
@@ -1060,6 +1073,19 @@ describe("App", () => {
                             <textarea id="add-challenge-description"></textarea>
                             <input type="number" id="add-challenge-amount" />
                             <input type="text" id="add-challenge-timer" />
+                            <div
+                                id="add-challenge-timer-behavior-group"
+                                class="hidden"
+                            >
+                                <select id="add-challenge-timer-behavior">
+                                    <option value="auto-fail">
+                                        Fail the challenge
+                                    </option>
+                                    <option value="auto-complete">
+                                        Complete the challenge
+                                    </option>
+                                </select>
+                            </div>
                             <button type="submit" id="add-challenge-submit">Add</button>
                             <button type="button" id="add-challenge-cancel">Cancel</button>
                         </form>

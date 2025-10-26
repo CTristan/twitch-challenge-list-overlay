@@ -463,6 +463,22 @@ export default class ChallengeList {
         return challenge;
     }
 
+    completeChallengeById(challengeId: string): Challenge | null {
+        const challenge = this.#challengeMap.get(challengeId);
+        if (!challenge) {
+            return null;
+        }
+
+        if (challenge.isComplete()) {
+            return challenge;
+        }
+
+        challenge.setStatus(ChallengeStatus.COMPLETED);
+        this.#challengesCompleted++;
+        this.#commitToLocalStorage();
+        return challenge;
+    }
+
     /**
      * Uncomplete a challenge (mark as not completed)
      * Handles timer logic and automatically updates counters and persists

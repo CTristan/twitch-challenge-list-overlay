@@ -53,6 +53,7 @@ export const ERROR_MESSAGES = {
     CHALLENGE_TITLE_REQUIRED: "Challenge title is required",
     AMOUNT_INVALID_RANGE: "Amount must be a number between 1 and 999",
     TIMER_FORMAT_INVALID: "Timer format should be like '5m', '30s', or '1h'",
+    TIMER_BEHAVIOR_INVALID: "Select a valid timer expiration behavior",
     FAILED_TO_CREATE_CHALLENGE: "Failed to create challenge",
     MAXIMUM_CHALLENGES_ALLOWED: "Maximum of {maxChallenges} challenges allowed",
     ERROR_CREATING_CHALLENGE: "Error creating challenge:",
@@ -284,6 +285,9 @@ export const MODAL_TEXT = {
     // Edit Challenge Modal
     EDIT_CHALLENGE_TITLE: "Edit Challenge",
     EDIT_CHALLENGE_BUTTON: "Save Changes",
+    TIMER_BEHAVIOR_LABEL: "When the timer ends",
+    TIMER_BEHAVIOR_AUTO_FAIL_OPTION: "Fail the challenge",
+    TIMER_BEHAVIOR_AUTO_COMPLETE_OPTION: "Complete the challenge",
 
     // Error messages
     CHALLENGE_NOT_FOUND_FOR_EDIT: "Challenge not found",
