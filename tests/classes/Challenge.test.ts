@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import Challenge from "../../src/classes/Challenge";
+import { ChallengeStatus } from "../../src/types/ChallengeStatus";
 import { CHALLENGE_STATES } from "../../src/types/DOMConstants";
 
 describe("Challenge", () => {
@@ -15,7 +16,7 @@ describe("Challenge", () => {
         it("should see that all properties are assigned correctly", () => {
             expect(challenge.description).toBeTypeOf("string");
             expect(challenge.id).toBeTypeOf("string");
-            expect(challenge.completionStatus).toBeTypeOf("boolean");
+            expect(challenge.status).toBe(ChallengeStatus.IN_PROGRESS);
         });
     });
 
@@ -38,18 +39,12 @@ describe("Challenge", () => {
         });
     });
 
-    describe("setCompletionStatus", () => {
+    describe("setStatus - completion", () => {
         it("should set the challenge status to complete", () => {
-            challenge.setCompletionStatus(true);
+            challenge.setStatus(ChallengeStatus.COMPLETED);
             expect(challenge.isComplete()).toBe(true);
-            challenge.setCompletionStatus(false);
+            challenge.setStatus(ChallengeStatus.IN_PROGRESS);
             expect(challenge.isComplete()).toBe(false);
-        });
-
-        it("should return Error if status is not a boolean", () => {
-            expect(() => challenge.setCompletionStatus("true" as any)).toThrow(
-                "Completion status must be of type boolean"
-            );
         });
     });
 
@@ -59,26 +54,20 @@ describe("Challenge", () => {
         });
     });
 
-    describe("setFailureStatus", () => {
+    describe("setStatus - failure", () => {
         it("should set the challenge status to failed", () => {
-            challenge.setFailureStatus(true);
+            challenge.setStatus(ChallengeStatus.FAILED);
             expect(challenge.isFailed()).toBe(true);
-            challenge.setFailureStatus(false);
+            challenge.setStatus(ChallengeStatus.IN_PROGRESS);
             expect(challenge.isFailed()).toBe(false);
         });
 
         it("should clear completion status when setting failure status", () => {
-            challenge.setCompletionStatus(true);
+            challenge.setStatus(ChallengeStatus.COMPLETED);
             expect(challenge.isComplete()).toBe(true);
-            challenge.setFailureStatus(true);
+            challenge.setStatus(ChallengeStatus.FAILED);
             expect(challenge.isFailed()).toBe(true);
             expect(challenge.isComplete()).toBe(false);
-        });
-
-        it("should return Error if status is not a boolean", () => {
-            expect(() => challenge.setFailureStatus("true" as any)).toThrow(
-                "Failure status must be of type boolean"
-            );
         });
     });
 
@@ -88,12 +77,12 @@ describe("Challenge", () => {
         });
 
         it("should return 'done' for a completed challenge", () => {
-            challenge.setCompletionStatus(true);
+            challenge.setStatus(ChallengeStatus.COMPLETED);
             expect(challenge.getState()).toBe(CHALLENGE_STATES.DONE);
         });
 
         it("should return 'failed' for a failed challenge", () => {
-            challenge.setFailureStatus(true);
+            challenge.setStatus(ChallengeStatus.FAILED);
             expect(challenge.getState()).toBe(CHALLENGE_STATES.FAILED);
         });
     });
@@ -109,7 +98,7 @@ describe("Challenge", () => {
         });
 
         it("should cycle from done to failed", () => {
-            challenge.setCompletionStatus(true);
+            challenge.setStatus(ChallengeStatus.COMPLETED);
             expect(challenge.getState()).toBe(CHALLENGE_STATES.DONE);
             const newState = challenge.cycleState();
             expect(newState).toBe(CHALLENGE_STATES.FAILED);
@@ -119,7 +108,7 @@ describe("Challenge", () => {
         });
 
         it("should cycle from failed to in-progress", () => {
-            challenge.setFailureStatus(true);
+            challenge.setStatus(ChallengeStatus.FAILED);
             expect(challenge.getState()).toBe(CHALLENGE_STATES.FAILED);
             const newState = challenge.cycleState();
             expect(newState).toBe(CHALLENGE_STATES.IN_PROGRESS);

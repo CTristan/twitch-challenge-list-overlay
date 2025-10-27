@@ -1,6 +1,12 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import App from "../../src/app";
 import Challenge from "../../src/classes/Challenge";
+import { ChallengeStatus } from "../../src/types/ChallengeStatus";
+import {
+    CSS_CLASSES,
+    CSS_SELECTORS,
+    URL_HASH,
+} from "../../src/types/DOMConstants";
 
 describe("Two-Line Challenge Layout", () => {
     let app: App;
@@ -9,10 +15,11 @@ describe("Two-Line Challenge Layout", () => {
     beforeEach(() => {
         // Clear DOM
         document.body.innerHTML = `
-      <div class="challenge-container primary"></div>
-      <div class="challenge-container secondary"></div>
-    `;
+                        <div class="${CSS_CLASSES.CHALLENGE_CONTAINER} primary"></div>
+                        <div class="${CSS_CLASSES.CHALLENGE_CONTAINER} secondary"></div>
+                `;
 
+        window.location.hash = URL_HASH.ADMIN;
         app = new App("TestStore");
         challengeList = app.challengeList;
         challengeList.clearChallengeList();
@@ -28,26 +35,29 @@ describe("Two-Line Challenge Layout", () => {
 
             app.renderChallengeList();
 
-            const textElements = document.querySelectorAll(".challenge-text");
+            const textElements = document.querySelectorAll(
+                CSS_SELECTORS.CHALLENGE_TEXT
+            );
             expect(textElements).toHaveLength(1); // Single container
 
             textElements.forEach((textElement) => {
                 // Should be a div container
                 expect(textElement.tagName).toBe("DIV");
-                expect(textElement.classList.contains("challenge-text")).toBe(
-                    true
-                );
+                expect(
+                    textElement.classList.contains(CSS_CLASSES.CHALLENGE_TEXT)
+                ).toBe(true);
 
                 // Should contain title element
-                const titleElement =
-                    textElement.querySelector(".challenge-title");
+                const titleElement = textElement.querySelector(
+                    CSS_SELECTORS.CHALLENGE_TITLE
+                );
                 expect(titleElement).toBeTruthy();
                 expect(titleElement?.tagName).toBe("DIV");
                 expect(titleElement?.textContent).toBe("1. Test Title");
 
                 // Should contain description element
                 const descriptionElement = textElement.querySelector(
-                    ".challenge-description"
+                    CSS_SELECTORS.CHALLENGE_DESCRIPTION
                 );
                 expect(descriptionElement).toBeTruthy();
                 expect(descriptionElement?.tagName).toBe("DIV");
@@ -63,11 +73,14 @@ describe("Two-Line Challenge Layout", () => {
 
             app.renderChallengeList();
 
-            const textElements = document.querySelectorAll(".challenge-text");
+            const textElements = document.querySelectorAll(
+                CSS_SELECTORS.CHALLENGE_TEXT
+            );
             textElements.forEach((textElement) => {
                 // Should contain title element
-                const titleElement =
-                    textElement.querySelector(".challenge-title");
+                const titleElement = textElement.querySelector(
+                    CSS_SELECTORS.CHALLENGE_TITLE
+                );
                 expect(titleElement).toBeTruthy();
                 expect(titleElement?.textContent).toBe(
                     "1. Title Only Challenge"
@@ -75,7 +88,7 @@ describe("Two-Line Challenge Layout", () => {
 
                 // Should NOT contain description element (since description is empty)
                 const descriptionElement = textElement.querySelector(
-                    ".challenge-description"
+                    CSS_SELECTORS.CHALLENGE_DESCRIPTION
                 );
                 expect(descriptionElement).toBeNull();
             });
@@ -93,16 +106,19 @@ describe("Two-Line Challenge Layout", () => {
 
             app.renderChallengeList();
 
-            const textElements = document.querySelectorAll(".challenge-text");
+            const textElements = document.querySelectorAll(
+                CSS_SELECTORS.CHALLENGE_TEXT
+            );
             textElements.forEach((textElement) => {
                 // Should contain title element
-                const titleElement =
-                    textElement.querySelector(".challenge-title");
+                const titleElement = textElement.querySelector(
+                    CSS_SELECTORS.CHALLENGE_TITLE
+                );
                 expect(titleElement?.textContent).toBe("1. Title Only");
 
                 // Should NOT contain description element (empty description)
                 const descriptionElement = textElement.querySelector(
-                    ".challenge-description"
+                    CSS_SELECTORS.CHALLENGE_DESCRIPTION
                 );
                 expect(descriptionElement).toBeNull();
             });
@@ -120,27 +136,31 @@ describe("Two-Line Challenge Layout", () => {
             app.renderChallengeList();
 
             const textElement = document.querySelector(
-                ".challenge-text"
+                CSS_SELECTORS.CHALLENGE_TEXT
             ) as HTMLElement;
             expect(textElement).toBeTruthy();
 
             // Check that proper CSS classes are applied
-            expect(textElement.classList.contains("challenge-text")).toBe(true);
+            expect(
+                textElement.classList.contains(CSS_CLASSES.CHALLENGE_TEXT)
+            ).toBe(true);
 
             // Check title element
             const titleElement = textElement.querySelector(
-                ".challenge-title"
+                CSS_SELECTORS.CHALLENGE_TITLE
             ) as HTMLElement;
-            expect(titleElement.classList.contains("challenge-title")).toBe(
-                true
-            );
+            expect(
+                titleElement.classList.contains(CSS_CLASSES.CHALLENGE_TITLE)
+            ).toBe(true);
 
             // Check description element
             const descriptionElement = textElement.querySelector(
-                ".challenge-description"
+                CSS_SELECTORS.CHALLENGE_DESCRIPTION
             ) as HTMLElement;
             expect(
-                descriptionElement.classList.contains("challenge-description")
+                descriptionElement.classList.contains(
+                    CSS_CLASSES.CHALLENGE_DESCRIPTION
+                )
             ).toBe(true);
         });
 
@@ -154,24 +174,28 @@ describe("Two-Line Challenge Layout", () => {
             app.renderChallengeList();
 
             const challengeRow = document.querySelector(
-                ".challenge"
+                CSS_SELECTORS.CHALLENGE
             ) as HTMLElement;
             const checkbox = challengeRow.querySelector(
-                ".challenge-checkbox"
+                CSS_SELECTORS.CHALLENGE_CHECKBOX
             ) as HTMLElement;
             const textElement = challengeRow.querySelector(
-                ".challenge-text"
+                CSS_SELECTORS.CHALLENGE_TEXT
             ) as HTMLElement;
 
             expect(checkbox).toBeTruthy();
             expect(textElement).toBeTruthy();
 
             // Verify the structure is correct for proper alignment
-            expect(challengeRow.classList.contains("challenge")).toBe(true);
-            expect(checkbox.classList.contains("challenge-checkbox")).toBe(
+            expect(challengeRow.classList.contains(CSS_CLASSES.CHALLENGE)).toBe(
                 true
             );
-            expect(textElement.classList.contains("challenge-text")).toBe(true);
+            expect(
+                checkbox.classList.contains(CSS_CLASSES.CHALLENGE_CHECKBOX)
+            ).toBe(true);
+            expect(
+                textElement.classList.contains(CSS_CLASSES.CHALLENGE_TEXT)
+            ).toBe(true);
         });
     });
 
@@ -181,24 +205,26 @@ describe("Two-Line Challenge Layout", () => {
                 description: "Completed description",
                 amount: 1,
             });
-            challenge.setCompletionStatus(true);
+            challenge.setStatus(ChallengeStatus.COMPLETED);
             challengeList.addChallengeForTesting(challenge);
 
             app.renderChallengeList();
 
             const challengeRow = document.querySelector(
-                ".challenge"
+                CSS_SELECTORS.CHALLENGE
             ) as HTMLElement;
-            expect(challengeRow.classList.contains("done")).toBe(true);
+            expect(challengeRow.classList.contains(CSS_CLASSES.DONE)).toBe(
+                true
+            );
 
             const textElement = challengeRow.querySelector(
-                ".challenge-text"
+                CSS_SELECTORS.CHALLENGE_TEXT
             ) as HTMLElement;
             const titleElement = textElement.querySelector(
-                ".challenge-title"
+                CSS_SELECTORS.CHALLENGE_TITLE
             ) as HTMLElement;
             const descriptionElement = textElement.querySelector(
-                ".challenge-description"
+                CSS_SELECTORS.CHALLENGE_DESCRIPTION
             ) as HTMLElement;
 
             // Both elements should inherit the completed styling through CSS
@@ -221,12 +247,15 @@ describe("Two-Line Challenge Layout", () => {
             challenge.setDescription("Updated description");
             app.editChallengeFromDOM(challenge);
 
-            const textElements = document.querySelectorAll(".challenge-text");
+            const textElements = document.querySelectorAll(
+                CSS_SELECTORS.CHALLENGE_TEXT
+            );
             textElements.forEach((textElement) => {
-                const titleElement =
-                    textElement.querySelector(".challenge-title");
+                const titleElement = textElement.querySelector(
+                    CSS_SELECTORS.CHALLENGE_TITLE
+                );
                 const descriptionElement = textElement.querySelector(
-                    ".challenge-description"
+                    CSS_SELECTORS.CHALLENGE_DESCRIPTION
                 );
 
                 expect(titleElement?.textContent).toBe("Original Title");
@@ -245,14 +274,17 @@ describe("Two-Line Challenge Layout", () => {
 
             app.addChallengeToDOM(challenge);
 
-            const textElements = document.querySelectorAll(".challenge-text");
+            const textElements = document.querySelectorAll(
+                CSS_SELECTORS.CHALLENGE_TEXT
+            );
             expect(textElements.length).toBeGreaterThan(0);
 
             textElements.forEach((textElement) => {
-                const titleElement =
-                    textElement.querySelector(".challenge-title");
+                const titleElement = textElement.querySelector(
+                    CSS_SELECTORS.CHALLENGE_TITLE
+                );
                 const descriptionElement = textElement.querySelector(
-                    ".challenge-description"
+                    CSS_SELECTORS.CHALLENGE_DESCRIPTION
                 );
 
                 expect(titleElement?.textContent).toBe("1. New Title");
@@ -274,13 +306,13 @@ describe("Two-Line Challenge Layout", () => {
             app.renderChallengeList();
 
             const textElement = document.querySelector(
-                ".challenge-text"
+                CSS_SELECTORS.CHALLENGE_TEXT
             ) as HTMLElement;
             const titleElement = textElement.querySelector(
-                ".challenge-title"
+                CSS_SELECTORS.CHALLENGE_TITLE
             ) as HTMLElement;
             const descriptionElement = textElement.querySelector(
-                ".challenge-description"
+                CSS_SELECTORS.CHALLENGE_DESCRIPTION
             ) as HTMLElement;
 
             // Elements should exist and be ready for color application

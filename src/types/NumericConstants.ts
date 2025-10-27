@@ -56,6 +56,7 @@ export const TIMING_CONSTANTS = {
     FEEDBACK_TIMEOUT: 2000,
     IMPORT_REFRESH_DELAY: 1000,
     BUTTON_FEEDBACK_DURATION: 2000,
+    DELETE_CONFIRMATION_TIMEOUT: 5000,
 } as const;
 
 /**
@@ -66,4 +67,19 @@ export const TEXT_SHADOW_CONSTANTS = {
     SHADOW_OFFSET_Y: 1,
     SHADOW_BLUR: 2,
     SHADOW_SPREAD: 0,
+} as const;
+
+/**
+ * Font sizing constants for viewer overlay customization
+ */
+export const FONT_SIZE_CONSTANTS = {
+    VIEWER_PERCENT_MIN: 0,
+    VIEWER_PERCENT_MAX: 200,
+    VIEWER_PERCENT_STEP: 5,
+    VIEWER_BASE_REM: 2,
+    DESCRIPTION_RATIO: 0.78,
+    TIMER_RATIO: 0.72,
+    ADMIN_CONTROL_HEIGHT_RATIO: 0.8,
+    ADMIN_CONTROL_HEIGHT_MIN_REM: 1.2,
+    ADMIN_CONTROL_HEIGHT_MAX_REM: 2.0,
 } as const;

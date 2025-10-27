@@ -1,3 +1,4 @@
+import { ChallengeStatus } from "../types/ChallengeStatus";
 import { CHALLENGE_STATES } from "../types/DOMConstants";
 import { STORAGE_KEYS } from "../types/StorageConstants";
 import { StorageManager } from "../utils/StorageManager";
@@ -11,8 +12,7 @@ interface SerializedChallenge {
     description: string;
     amount: number;
     progress: number;
-    completionStatus: boolean;
-    failureStatus: boolean;
+    status: ChallengeStatus;
     createdAt: number;
     timer?: any;
 }
@@ -246,7 +246,7 @@ export default class ChallengeList {
         indexArray.forEach((index) => {
             const challenge = this.getChallenge(index);
             if (challenge && !challenge.isComplete()) {
-                challenge.setCompletionStatus(true);
+                challenge.setStatus(ChallengeStatus.COMPLETED);
                 this.#challengesCompleted++;
                 completedChallenges.push(challenge);
             }
@@ -342,6 +342,27 @@ export default class ChallengeList {
     }
 
     /**
+     * Clear all failed challenges
+     * @returns The deleted failed challenges
+     */
+    clearFailedChallenges(): Challenge[] {
+        const removedChallenges: Challenge[] = [];
+
+        this.challenges = this.challenges.filter((challenge) => {
+            if (challenge.isFailed()) {
+                removedChallenges.push(challenge);
+                this.#challengeMap.delete(challenge.id);
+                return false;
+            }
+            return true;
+        });
+
+        this.#decreaseChallengeCount(removedChallenges);
+        this.#commitToLocalStorage();
+        return removedChallenges;
+    }
+
+    /**
      * Validates the challenge index
      * @param index - The index to validate
      * @returns Whether the index is valid
@@ -367,30 +388,16 @@ export default class ChallengeList {
             return null;
         }
 
-        const wasComplete = challenge.isComplete();
+        const currentStatus = challenge.getStatus();
 
-        if (wasComplete) {
+        if (currentStatus === ChallengeStatus.COMPLETED) {
             // Revert to active status
-            challenge.setCompletionStatus(false);
+            challenge.setStatus(ChallengeStatus.IN_PROGRESS);
             this.#challengesCompleted--;
-
-            // Restart timer if it exists and has remaining time
-            if (
-                challenge.timer &&
-                !challenge.timer.isActive &&
-                challenge.timer.getRemainingTime() > 0
-            ) {
-                challenge.timer.start();
-            }
         } else {
-            // Mark as complete
-            challenge.setCompletionStatus(true);
+            // Mark as complete (from either in-progress or failed)
+            challenge.setStatus(ChallengeStatus.COMPLETED);
             this.#challengesCompleted++;
-
-            // Stop timer if running
-            if (challenge.timer && challenge.timer.isActive) {
-                challenge.timer.stop();
-            }
         }
 
         this.#commitToLocalStorage();
@@ -425,6 +432,93 @@ export default class ChallengeList {
             this.#challengesCompleted--;
         }
         // No counter change for failed → in-progress transition
+
+        this.#commitToLocalStorage();
+        return challenge;
+    }
+
+    /**
+     * Mark a challenge as failed
+     * Handles timer logic and automatically updates counters and persists
+     * @param challengeId - The ID of the challenge to fail
+     * @returns The failed challenge or null if not found
+     */
+    markChallengeAsFailed(challengeId: string): Challenge | null {
+        const challenge = this.#challengeMap.get(challengeId);
+        if (!challenge) {
+            return null;
+        }
+
+        const wasComplete = challenge.getStatus() === ChallengeStatus.COMPLETED;
+
+        // Mark as failed
+        challenge.setStatus(ChallengeStatus.FAILED);
+
+        // Update counter if it was previously completed
+        if (wasComplete) {
+            this.#challengesCompleted--;
+        }
+
+        this.#commitToLocalStorage();
+        return challenge;
+    }
+
+    completeChallengeById(challengeId: string): Challenge | null {
+        const challenge = this.#challengeMap.get(challengeId);
+        if (!challenge) {
+            return null;
+        }
+
+        if (challenge.isComplete()) {
+            return challenge;
+        }
+
+        challenge.setStatus(ChallengeStatus.COMPLETED);
+        this.#challengesCompleted++;
+        this.#commitToLocalStorage();
+        return challenge;
+    }
+
+    /**
+     * Uncomplete a challenge (mark as not completed)
+     * Handles timer logic and automatically updates counters and persists
+     * @param challengeId - The ID of the challenge to uncomplete
+     * @returns The uncompleted challenge or null if not found
+     */
+    uncompleteChallengeStatus(challengeId: string): Challenge | null {
+        const challenge = this.#challengeMap.get(challengeId);
+        if (!challenge) {
+            return null;
+        }
+
+        const wasComplete = challenge.getStatus() === ChallengeStatus.COMPLETED;
+
+        // Mark as not complete (return to in-progress)
+        challenge.setStatus(ChallengeStatus.IN_PROGRESS);
+
+        // Update counter if it was previously completed
+        if (wasComplete) {
+            this.#challengesCompleted--;
+        }
+
+        this.#commitToLocalStorage();
+        return challenge;
+    }
+
+    /**
+     * Unfail a challenge (clear failure status)
+     * Handles timer logic and automatically updates counters and persists
+     * @param challengeId - The ID of the challenge to unfail
+     * @returns The unfailed challenge or null if not found
+     */
+    unfailChallengeStatus(challengeId: string): Challenge | null {
+        const challenge = this.#challengeMap.get(challengeId);
+        if (!challenge) {
+            return null;
+        }
+
+        // Clear failure status (return to in-progress)
+        challenge.setStatus(ChallengeStatus.IN_PROGRESS);
 
         this.#commitToLocalStorage();
         return challenge;

@@ -1,6 +1,8 @@
 import { AdminPanelTemplates } from "../templates/AdminPanelTemplates";
 import { DEFAULT_COLORS } from "../types/ColorConstants";
+import { BACKGROUND_DEFAULTS } from "../types/ConfigConstants";
 import { ELEMENT_IDS } from "../types/DOMConstants";
+import { FONT_SIZE_CONSTANTS } from "../types/NumericConstants";
 
 /**
  * Utility class for building DOM elements for the admin panel
@@ -45,8 +47,8 @@ export class AdminPanelDOMBuilder {
     }
 
     /**
-     * Create behavior section HTML
-     * @returns HTML string for behavior section
+     * Create general settings section HTML
+     * @returns HTML string for general settings section
      */
     static createBehaviorSection(): string {
         return `
@@ -61,6 +63,16 @@ export class AdminPanelDOMBuilder {
             />
             <small>Maximum number of active challenges (1-100)</small>
           </div>
+          <div class="form-group">
+            <label class="checkbox-label">
+              <input
+                type="checkbox"
+                id="${ELEMENT_IDS.ADMIN_TEXT_ONLY_MODE}"
+              />
+              <span>Text-Only Mode in Admin View</span>
+            </label>
+            <small>When enabled, icons become text buttons in admin view (viewer overlay remains unchanged)</small>
+          </div>
         `;
     }
 
@@ -70,6 +82,12 @@ export class AdminPanelDOMBuilder {
      * @returns HTML string for challenge row styling section
      */
     static createChallengeRowStylingSection(): string {
+        const viewerFontSizePercent =
+            BACKGROUND_DEFAULTS.VIEWER_CHALLENGE_FONT_SIZE;
+        const viewerFontSizeDisplay = formatFontSizeDisplay(
+            viewerFontSizePercent
+        );
+
         return AdminPanelTemplates.challengeRowStylingSection({
             primaryBackgroundColor: DEFAULT_COLORS.PRIMARY_BACKGROUND,
             primaryTextColor: DEFAULT_COLORS.PRIMARY_TEXT,
@@ -80,6 +98,11 @@ export class AdminPanelDOMBuilder {
             rowColorsOpacityPercent: 100,
             challengeBackgroundColor: DEFAULT_COLORS.CHALLENGE_BACKGROUND,
             challengeTextColor: DEFAULT_COLORS.WHITE_TEXT,
+            viewerFontSizePercent,
+            viewerFontSizeDisplay,
+            viewerFontSizeMinPercent: FONT_SIZE_CONSTANTS.VIEWER_PERCENT_MIN,
+            viewerFontSizeMaxPercent: FONT_SIZE_CONSTANTS.VIEWER_PERCENT_MAX,
+            viewerFontSizeStepPercent: FONT_SIZE_CONSTANTS.VIEWER_PERCENT_STEP,
             elementIds: ELEMENT_IDS,
         });
     }
@@ -104,14 +127,10 @@ export class AdminPanelDOMBuilder {
     static createBottomActionButtons(): HTMLElement {
         const container = document.createElement("div");
         container.className = "bottom-action-buttons";
-        container.style.marginTop = "30px";
-        container.style.paddingTop = "20px";
-        container.style.borderTop = "1px solid rgba(255, 255, 255, 0.1)";
 
         // Configuration actions section
         const actionsSection = document.createElement("div");
         actionsSection.className = "config-actions";
-        actionsSection.style.marginBottom = "20px";
 
         const backupBtn = document.createElement("button");
         backupBtn.id = ELEMENT_IDS.EXPORT_JSON_BTN;
@@ -123,11 +142,6 @@ export class AdminPanelDOMBuilder {
         restoreBtn.className = "admin-button secondary";
         restoreBtn.textContent = "Restore Configuration";
 
-        const resetBtn = document.createElement("button");
-        resetBtn.id = ELEMENT_IDS.RESET_CONFIG_BTN;
-        resetBtn.className = "admin-button secondary";
-        resetBtn.textContent = "Reset to Defaults";
-
         // Hidden file input for import functionality
         const fileInput = document.createElement("input");
         fileInput.type = "file";
@@ -137,22 +151,37 @@ export class AdminPanelDOMBuilder {
 
         actionsSection.appendChild(backupBtn);
         actionsSection.appendChild(restoreBtn);
-        actionsSection.appendChild(resetBtn);
         actionsSection.appendChild(fileInput);
+
+        // Reset section
+        const resetSection = document.createElement("div");
+        resetSection.className = "reset-section";
+
+        const resetNote = document.createElement("p");
+        resetNote.className = "reset-note";
+        resetNote.textContent =
+            "Reset the challenge overlay configuration back to default values.";
+
+        const resetActions = document.createElement("div");
+        resetActions.className = "reset-actions";
+
+        const resetBtn = document.createElement("button");
+        resetBtn.id = ELEMENT_IDS.RESET_CONFIG_BTN;
+        resetBtn.className = "admin-button secondary";
+        resetBtn.textContent = "Reset to Defaults";
+
+        resetActions.appendChild(resetBtn);
+        resetSection.appendChild(resetNote);
+        resetSection.appendChild(resetActions);
 
         // Danger zone section
         const dangerSection = document.createElement("div");
         dangerSection.className = "danger-zone-section";
-        dangerSection.style.marginTop = "20px";
-        dangerSection.style.paddingTop = "20px";
-        dangerSection.style.borderTop = "2px solid rgba(220, 53, 69, 0.3)";
 
         const dangerWarning = document.createElement("p");
         dangerWarning.className = "danger-warning";
         dangerWarning.textContent =
             "The action below will permanently delete all stored configuration data. This cannot be undone.";
-        dangerWarning.style.color = "#dc3545";
-        dangerWarning.style.marginBottom = "15px";
 
         const dangerActions = document.createElement("div");
         dangerActions.className = "danger-actions";
@@ -168,8 +197,18 @@ export class AdminPanelDOMBuilder {
 
         // Add both sections to container
         container.appendChild(actionsSection);
+        container.appendChild(resetSection);
         container.appendChild(dangerSection);
 
         return container;
     }
+}
+
+function formatFontSizeDisplay(percent: number): string {
+    const clampedPercent = Math.min(
+        Math.max(percent, FONT_SIZE_CONSTANTS.VIEWER_PERCENT_MIN),
+        FONT_SIZE_CONSTANTS.VIEWER_PERCENT_MAX
+    );
+    const formattedPercent = clampedPercent.toFixed(1).replace(/\.0$/, "");
+    return `${formattedPercent}%`;
 }

@@ -90,7 +90,7 @@ The admin panel is where ALL challenge configuration happens:
 - Mark challenges complete by clicking the checkbox
 - Delete challenges using chat commands or by editing
 - Configure all settings in the collapsible sections:
-  * Behavior Settings (max challenges, etc.)
+  * General Settings (max challenges, etc.)
   * Challenge Row Styling (colors, opacity)
   * Overlay Background (background color, opacity)
   * Twitch Chat Integration (see optional section below)

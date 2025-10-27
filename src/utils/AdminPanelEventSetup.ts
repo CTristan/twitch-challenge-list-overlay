@@ -6,6 +6,7 @@ import {
     EVENT_NAMES,
     type ColorTier,
 } from "../types/DOMConstants";
+import { FONT_SIZE_CONSTANTS } from "../types/NumericConstants";
 
 /**
  * Callback type for auto-save operations
@@ -59,6 +60,17 @@ export class AdminPanelEventSetup {
 
         if (maxChallengesInput) {
             maxChallengesInput.addEventListener(
+                EVENT_NAMES.CHANGE,
+                autoSaveCallback
+            );
+        }
+
+        const adminTextOnlyModeCheckbox = document.getElementById(
+            ELEMENT_IDS.ADMIN_TEXT_ONLY_MODE
+        ) as HTMLInputElement;
+
+        if (adminTextOnlyModeCheckbox) {
+            adminTextOnlyModeCheckbox.addEventListener(
                 EVENT_NAMES.CHANGE,
                 autoSaveCallback
             );
@@ -137,11 +149,18 @@ export class AdminPanelEventSetup {
         );
 
         if (opacitySlider && opacityDisplay) {
-            opacitySlider.addEventListener(EVENT_NAMES.INPUT, () => {
+            const handleOpacityChange = (): void => {
                 const opacityValue = parseInt(opacitySlider.value);
                 opacityDisplay.textContent = `${opacityValue}${COMMON_STRINGS.PERCENT_SYMBOL}`;
+                AdminPanelEventSetup.updateSliderFill(opacitySlider);
                 autoSaveCallback();
-            });
+            };
+
+            opacitySlider.addEventListener(
+                EVENT_NAMES.INPUT,
+                handleOpacityChange
+            );
+            AdminPanelEventSetup.updateSliderFill(opacitySlider);
         }
     }
 
@@ -186,6 +205,12 @@ export class AdminPanelEventSetup {
         const textShadowCheckbox = document.getElementById(
             BACKGROUND_UI_ELEMENTS.TEXT_SHADOW_CHECKBOX
         ) as HTMLInputElement;
+        const viewerFontSizeSlider = document.getElementById(
+            BACKGROUND_UI_ELEMENTS.VIEWER_FONT_SIZE_SLIDER
+        ) as HTMLInputElement;
+        const viewerFontSizeDisplay = document.getElementById(
+            BACKGROUND_UI_ELEMENTS.VIEWER_FONT_SIZE_DISPLAY
+        );
 
         // Overlay background listeners
         if (overlayBackgroundColorInput) {
@@ -198,11 +223,18 @@ export class AdminPanelEventSetup {
         }
 
         if (overlayOpacitySlider && overlayOpacityDisplay) {
-            overlayOpacitySlider.addEventListener(EVENT_NAMES.INPUT, () => {
+            const handleOverlayOpacityChange = (): void => {
                 const opacityValue = parseInt(overlayOpacitySlider.value);
                 overlayOpacityDisplay.textContent = `${opacityValue}${COMMON_STRINGS.PERCENT_SYMBOL}`;
+                AdminPanelEventSetup.updateSliderFill(overlayOpacitySlider);
                 autoSaveCallback();
-            });
+            };
+
+            overlayOpacitySlider.addEventListener(
+                EVENT_NAMES.INPUT,
+                handleOverlayOpacityChange
+            );
+            AdminPanelEventSetup.updateSliderFill(overlayOpacitySlider);
         }
 
         // Challenge background listeners
@@ -214,12 +246,19 @@ export class AdminPanelEventSetup {
         }
 
         if (opacitySlider && opacityDisplay) {
-            opacitySlider.addEventListener(EVENT_NAMES.INPUT, () => {
+            const handleOpacityInput = (): void => {
                 const opacityValue = parseInt(opacitySlider.value);
                 opacityDisplay.textContent = `${opacityValue}${COMMON_STRINGS.PERCENT_SYMBOL}`;
+                AdminPanelEventSetup.updateSliderFill(opacitySlider);
                 updatePreviewCallback();
                 autoSaveCallback();
-            });
+            };
+
+            opacitySlider.addEventListener(
+                EVENT_NAMES.INPUT,
+                handleOpacityInput
+            );
+            AdminPanelEventSetup.updateSliderFill(opacitySlider);
         }
 
         // Text color listeners
@@ -246,6 +285,55 @@ export class AdminPanelEventSetup {
                 autoSaveCallback();
             });
         }
+
+        if (viewerFontSizeSlider && viewerFontSizeDisplay) {
+            const handleFontSizeChange = (): void => {
+                const value = parseFloat(viewerFontSizeSlider.value);
+                viewerFontSizeDisplay.textContent =
+                    this.formatFontSizeDisplay(value);
+                AdminPanelEventSetup.updateSliderFill(viewerFontSizeSlider);
+                updatePreviewCallback();
+                autoSaveCallback();
+            };
+
+            viewerFontSizeSlider.addEventListener(
+                EVENT_NAMES.INPUT,
+                handleFontSizeChange
+            );
+            AdminPanelEventSetup.updateSliderFill(viewerFontSizeSlider);
+        }
+    }
+
+    /**
+     * Update the CSS custom property used for slider fill backgrounds
+     * Ensures the track fill visually matches the current slider value
+     * @param slider - Range input element to update
+     */
+    static updateSliderFill(slider: HTMLInputElement): void {
+        const min = slider.min !== "" ? parseFloat(slider.min) : 0;
+        const max = slider.max !== "" ? parseFloat(slider.max) : 100;
+        const value = parseFloat(slider.value);
+
+        if (Number.isNaN(value)) {
+            slider.style.removeProperty("--slider-fill-percentage");
+            return;
+        }
+
+        const safeMin = Number.isFinite(min) ? min : 0;
+        const safeMax = Number.isFinite(max) ? max : 100;
+        const range = safeMax - safeMin;
+
+        if (range <= 0) {
+            slider.style.setProperty("--slider-fill-percentage", "100%");
+            return;
+        }
+
+        const percent = ((value - safeMin) / range) * 100;
+        const clampedPercent = Math.max(0, Math.min(100, percent));
+        slider.style.setProperty(
+            "--slider-fill-percentage",
+            `${clampedPercent}%`
+        );
     }
 
     /**
@@ -286,5 +374,14 @@ export class AdminPanelEventSetup {
                     textColor: ELEMENT_IDS.TERTIARY_TEXT_COLOR,
                 };
         }
+    }
+
+    private static formatFontSizeDisplay(value: number): string {
+        const clampedPercent = Math.min(
+            Math.max(value, FONT_SIZE_CONSTANTS.VIEWER_PERCENT_MIN),
+            FONT_SIZE_CONSTANTS.VIEWER_PERCENT_MAX
+        );
+        const formattedPercent = clampedPercent.toFixed(1).replace(/\.0$/, "");
+        return `${formattedPercent}%`;
     }
 }

@@ -8,6 +8,7 @@ import {
     BACKGROUND_CONFIG,
     BACKGROUND_DEFAULTS,
     BACKGROUND_UI_ELEMENTS,
+    BEHAVIOR_CONFIG,
     COLOR_CONFIG,
     CORE_CONFIG,
 } from "../types/ConfigConstants";
@@ -33,7 +34,11 @@ import {
     VALIDATION_MESSAGES,
     WARNING_MESSAGES,
 } from "../types/MessageConstants";
-import { COLOR_CONSTANTS, TIMING_CONSTANTS } from "../types/NumericConstants";
+import {
+    COLOR_CONSTANTS,
+    FONT_SIZE_CONSTANTS,
+    TIMING_CONSTANTS,
+} from "../types/NumericConstants";
 import { LOCALSTORAGE_PREFIX, STORAGE_KEYS } from "../types/StorageConstants";
 import {
     AdminPanelColorManager,
@@ -322,7 +327,7 @@ export default class AdminPanel {
     }
 
     /**
-     * Create the Behavior Settings section
+     * Create the General Settings section
      * @param container - The parent container element
      */
     private createBehaviorSection(container: HTMLElement): void {
@@ -429,6 +434,17 @@ export default class AdminPanel {
             config.maxChallenges?.toString() || "10"
         );
 
+        // Populate admin text-only mode checkbox
+        const adminTextOnlyModeCheckbox = document.getElementById(
+            ELEMENT_IDS.ADMIN_TEXT_ONLY_MODE
+        ) as HTMLInputElement;
+        const adminTextOnlyMode = config.adminTextOnlyMode ?? false;
+        if (adminTextOnlyModeCheckbox) {
+            adminTextOnlyModeCheckbox.checked = adminTextOnlyMode;
+        }
+
+        this.applyAdminTextOnlyModeClass(adminTextOnlyMode);
+
         // Populate color configuration
         this.populateColorConfiguration(
             config.challengeRowColors || [],
@@ -437,6 +453,23 @@ export default class AdminPanel {
 
         // Populate background configuration
         this.populateBackgroundConfiguration(config);
+    }
+
+    /**
+     * Apply or remove admin text-only mode styling hooks on the panel
+     * @param isTextOnlyMode - Whether admin text-only mode is enabled
+     * @returns {void}
+     */
+    private applyAdminTextOnlyModeClass(isTextOnlyMode: boolean): void {
+        const adminPanelElement = document.getElementById(
+            ELEMENT_IDS.ADMIN_PANEL
+        );
+        if (adminPanelElement) {
+            adminPanelElement.classList.toggle(
+                CSS_CLASSES.ADMIN_TEXT_ONLY_PANEL,
+                isTextOnlyMode
+            );
+        }
     }
 
     /**
@@ -506,6 +539,7 @@ export default class AdminPanel {
             const opacityPercent = Math.round(opacity * 100);
             opacitySlider.value = opacityPercent.toString();
             opacityDisplay.textContent = `${opacityPercent}%`;
+            AdminPanelEventSetup.updateSliderFill(opacitySlider);
         }
     }
 
@@ -542,6 +576,7 @@ export default class AdminPanel {
             const overlayOpacityPercent = Math.round(overlayOpacity * 100);
             overlayOpacitySlider.value = overlayOpacityPercent.toString();
             overlayOpacityDisplay.textContent = `${overlayOpacityPercent}%`;
+            AdminPanelEventSetup.updateSliderFill(overlayOpacitySlider);
         }
 
         // Challenge row background color
@@ -571,6 +606,7 @@ export default class AdminPanel {
             const opacityPercent = Math.round(opacity * 100);
             opacitySlider.value = opacityPercent.toString();
             opacityDisplay.textContent = `${opacityPercent}%`;
+            AdminPanelEventSetup.updateSliderFill(opacitySlider);
         }
 
         // Auto text color
@@ -603,6 +639,11 @@ export default class AdminPanel {
             textShadowCheckbox.checked =
                 config.challengeTextShadow ?? BACKGROUND_DEFAULTS.TEXT_SHADOW;
         }
+
+        const viewerFontSize =
+            config.challengeFontSize ??
+            BACKGROUND_DEFAULTS.VIEWER_CHALLENGE_FONT_SIZE;
+        this.updateViewerFontSizeUI(viewerFontSize, { syncSlider: true });
 
         // Update preview
         this.updateBackgroundPreview();
@@ -723,15 +764,26 @@ export default class AdminPanel {
      * @returns {void}
      */
     private updateBackgroundPreview(): void {
-        const preview = document.getElementById(ELEMENT_IDS.BACKGROUND_PREVIEW);
+        const preview = document.getElementById(
+            ELEMENT_IDS.BACKGROUND_PREVIEW
+        ) as HTMLElement | null;
         const previewChallenge = preview?.querySelector(
             ".preview-challenge"
-        ) as HTMLElement;
+        ) as HTMLElement | null;
         const previewText = preview?.querySelector(
             ".preview-text"
-        ) as HTMLElement;
+        ) as HTMLElement | null;
+        const viewerFontSizeSlider = this.getViewerFontSizeSlider();
+        const viewerFontPercent = this.normalizeViewerFontPercentage(
+            viewerFontSizeSlider
+                ? parseFloat(viewerFontSizeSlider.value)
+                : undefined
+        );
 
-        if (!previewChallenge || !previewText) return;
+        if (!previewChallenge || !previewText) {
+            this.updateViewerFontSizeDisplay(viewerFontPercent);
+            return;
+        }
 
         // Get current values from Primary Color tier pickers
         const backgroundColorInput = document.getElementById(
@@ -782,6 +834,143 @@ export default class AdminPanel {
         } else {
             previewText.style.textShadow = "none";
         }
+
+        this.updateViewerFontSizeDisplay(viewerFontPercent);
+        this.applyViewerFontSizeToPreview(viewerFontPercent, preview);
+    }
+
+    private updateViewerFontSizeUI(
+        value: number,
+        options: { syncSlider?: boolean } = {}
+    ): void {
+        const normalizedValue = this.normalizeViewerFontPercentage(value);
+        if (options.syncSlider) {
+            const slider = this.getViewerFontSizeSlider();
+            if (slider) {
+                slider.value = normalizedValue.toString();
+                AdminPanelEventSetup.updateSliderFill(slider);
+            }
+        }
+        this.updateViewerFontSizeDisplay(normalizedValue);
+        this.applyViewerFontSizeToPreview(normalizedValue);
+    }
+
+    private updateViewerFontSizeDisplay(value: number): void {
+        const displayElement = document.getElementById(
+            BACKGROUND_UI_ELEMENTS.VIEWER_FONT_SIZE_DISPLAY
+        );
+        if (displayElement) {
+            displayElement.textContent =
+                this.formatViewerFontSizeDisplay(value);
+        }
+    }
+
+    private applyViewerFontSizeToPreview(
+        fontSizePercent: number,
+        previewRoot?: HTMLElement | null
+    ): void {
+        const preview =
+            previewRoot ||
+            (document.getElementById(
+                ELEMENT_IDS.BACKGROUND_PREVIEW
+            ) as HTMLElement | null);
+        if (!preview) {
+            return;
+        }
+
+        const previewChallenge = preview.querySelector(
+            CSS_SELECTORS.PREVIEW_CHALLENGE
+        ) as HTMLElement | null;
+        const previewTitle = preview.querySelector(
+            CSS_SELECTORS.PREVIEW_TITLE
+        ) as HTMLElement | null;
+        const previewDescription = preview.querySelector(
+            CSS_SELECTORS.PREVIEW_DESCRIPTION
+        ) as HTMLElement | null;
+        const previewProgress = preview.querySelector(
+            CSS_SELECTORS.PREVIEW_PROGRESS
+        ) as HTMLElement | null;
+        const previewCheckbox = preview.querySelector(
+            CSS_SELECTORS.PREVIEW_CHECKBOX
+        ) as HTMLElement | null;
+
+        const normalizedPercent =
+            this.normalizeViewerFontPercentage(fontSizePercent);
+        const normalizedFontSize =
+            this.convertViewerFontPercentToRem(normalizedPercent);
+        const descriptionSize =
+            normalizedFontSize * FONT_SIZE_CONSTANTS.DESCRIPTION_RATIO;
+        const timerSize = normalizedFontSize * FONT_SIZE_CONSTANTS.TIMER_RATIO;
+        const controlHeight = this.clampAdminControlHeight(
+            normalizedFontSize * FONT_SIZE_CONSTANTS.ADMIN_CONTROL_HEIGHT_RATIO
+        );
+
+        if (previewChallenge) {
+            previewChallenge.style.minHeight = `${controlHeight}rem`;
+        }
+
+        if (previewCheckbox) {
+            previewCheckbox.style.width = `${controlHeight}rem`;
+            previewCheckbox.style.height = `${controlHeight}rem`;
+        }
+
+        if (previewTitle) {
+            previewTitle.style.fontSize = `${normalizedFontSize}rem`;
+        }
+
+        if (previewDescription) {
+            previewDescription.style.fontSize = `${descriptionSize}rem`;
+        }
+
+        if (previewProgress) {
+            previewProgress.style.fontSize = `${timerSize}rem`;
+        }
+    }
+
+    private clampAdminControlHeight(value: number): number {
+        const min = FONT_SIZE_CONSTANTS.ADMIN_CONTROL_HEIGHT_MIN_REM;
+        const max = FONT_SIZE_CONSTANTS.ADMIN_CONTROL_HEIGHT_MAX_REM;
+        if (value < min) {
+            return min;
+        }
+        if (value > max) {
+            return max;
+        }
+        return value;
+    }
+
+    private getViewerFontSizeSlider(): HTMLInputElement | null {
+        return document.getElementById(
+            BACKGROUND_UI_ELEMENTS.VIEWER_FONT_SIZE_SLIDER
+        ) as HTMLInputElement | null;
+    }
+
+    private normalizeViewerFontPercentage(value?: number): number {
+        if (typeof value !== "number" || Number.isNaN(value)) {
+            return BACKGROUND_DEFAULTS.VIEWER_CHALLENGE_FONT_SIZE;
+        }
+
+        const min = FONT_SIZE_CONSTANTS.VIEWER_PERCENT_MIN;
+        const max = FONT_SIZE_CONSTANTS.VIEWER_PERCENT_MAX;
+        if (value < min) {
+            return min;
+        }
+        if (value > max) {
+            return max;
+        }
+        return value;
+    }
+
+    private convertViewerFontPercentToRem(percent: number): number {
+        return FONT_SIZE_CONSTANTS.VIEWER_BASE_REM + percent / 100;
+    }
+
+    private formatViewerFontSizeDisplay(value: number): string {
+        const normalizedPercent = this.normalizeViewerFontPercentage(value);
+        const formattedPercent = normalizedPercent
+            .toFixed(1)
+            .replace(/\.0$/, "");
+        return `${formattedPercent}%`;
     }
 
     /**
@@ -908,6 +1097,7 @@ export default class AdminPanel {
         challengeTextColor: string;
         challengeAutoTextColor: boolean;
         challengeTextShadow: boolean;
+        challengeFontSize: number;
     } {
         // Overlay background elements
         const overlayBackgroundColorInput = document.getElementById(
@@ -932,6 +1122,9 @@ export default class AdminPanel {
         ) as HTMLInputElement;
         const textShadowCheckbox = document.getElementById(
             BACKGROUND_UI_ELEMENTS.TEXT_SHADOW_CHECKBOX
+        ) as HTMLInputElement;
+        const viewerFontSizeSlider = document.getElementById(
+            BACKGROUND_UI_ELEMENTS.VIEWER_FONT_SIZE_SLIDER
         ) as HTMLInputElement;
 
         // Get overlay background color and opacity (store separately, not as RGBA)
@@ -961,6 +1154,11 @@ export default class AdminPanel {
                 BACKGROUND_DEFAULTS.AUTO_TEXT_COLOR,
             challengeTextShadow:
                 textShadowCheckbox?.checked ?? BACKGROUND_DEFAULTS.TEXT_SHADOW,
+            challengeFontSize: this.normalizeViewerFontPercentage(
+                viewerFontSizeSlider
+                    ? parseFloat(viewerFontSizeSlider.value)
+                    : undefined
+            ),
         };
     }
 
@@ -1097,6 +1295,9 @@ export default class AdminPanel {
 
             // Update challenge row colors in the DOM to reflect new opacity
             this.updateChallengeRowColorsInDOM();
+        } else if (configType === ConfigType.BEHAVIOR) {
+            // Re-render the challenge list to apply text-only mode changes
+            this.reRenderChallengeListInDOM();
         }
     }
 
@@ -1131,6 +1332,19 @@ export default class AdminPanel {
                 overlayBackgroundOpacity
             );
             challengeCard.style.backgroundColor = overlayBackgroundRGBA;
+        }
+    }
+
+    /**
+     * Re-render the challenge list in the DOM without page refresh
+     * Useful for changes that affect challenge structure (e.g., text-only mode)
+     * @returns {void}
+     */
+    private reRenderChallengeListInDOM(): void {
+        // Trigger a re-render through the app instance
+        // This will recreate all challenge elements with the new settings
+        if (this.#app) {
+            this.#app.renderChallengeList();
         }
     }
 
@@ -1231,14 +1445,36 @@ export default class AdminPanel {
                 10
             );
 
-            const success = this.#configManager.set(
+            const adminTextOnlyModeCheckbox = document.getElementById(
+                ELEMENT_IDS.ADMIN_TEXT_ONLY_MODE
+            ) as HTMLInputElement;
+            const adminTextOnlyMode =
+                adminTextOnlyModeCheckbox?.checked ?? false;
+
+            // Get previous value to detect if text-only mode actually changed
+            const previousTextOnlyMode =
+                this.#configManager.get(BEHAVIOR_CONFIG.ADMIN_TEXT_ONLY_MODE) ??
+                false;
+
+            const maxSuccess = this.#configManager.set(
                 CORE_CONFIG.MAX_CHALLENGES,
                 maxChallenges
             );
+            const textModeSuccess = this.#configManager.set(
+                BEHAVIOR_CONFIG.ADMIN_TEXT_ONLY_MODE,
+                adminTextOnlyMode
+            );
 
-            if (success) {
-                // Notify other windows to refresh after successful save
-                notifyConfigurationSaved();
+            if (maxSuccess && textModeSuccess) {
+                this.applyAdminTextOnlyModeClass(adminTextOnlyMode);
+
+                // If text-only mode changed, re-render the challenge list
+                // without full page reload (similar to color/background changes)
+                if (adminTextOnlyMode !== previousTextOnlyMode) {
+                    this.updateAdminUIForSliderChange(ConfigType.BEHAVIOR);
+                }
+
+                // Viewer window doesn't need update (no admin controls there)
             }
         } catch (error) {
             console.error(
@@ -1332,6 +1568,10 @@ export default class AdminPanel {
                 BACKGROUND_CONFIG.CHALLENGE_TEXT_SHADOW,
                 backgroundConfig.challengeTextShadow
             );
+            const viewerFontSizeSuccess = this.#configManager.set(
+                BACKGROUND_CONFIG.VIEWER_CHALLENGE_FONT_SIZE,
+                backgroundConfig.challengeFontSize
+            );
 
             if (
                 overlayBackgroundColorSuccess &&
@@ -1340,7 +1580,8 @@ export default class AdminPanel {
                 backgroundOpacitySuccess &&
                 textColorSuccess &&
                 autoTextColorSuccess &&
-                textShadowSuccess
+                textShadowSuccess &&
+                viewerFontSizeSuccess
             ) {
                 // Update admin UI directly (no refresh) - IMMEDIATE
                 this.updateAdminUIForSliderChange(ConfigType.BACKGROUND);

@@ -2,6 +2,11 @@ import { beforeEach, describe, expect, it } from "vitest";
 import App from "../../src/app";
 import Challenge from "../../src/classes/Challenge";
 import ConfigManager from "../../src/classes/ConfigManager";
+import {
+    CSS_CLASSES,
+    CSS_SELECTORS,
+    URL_HASH,
+} from "../../src/types/DOMConstants";
 
 describe("Shared Helper Functions", () => {
     let app: App;
@@ -13,8 +18,8 @@ describe("Shared Helper Functions", () => {
 
         // Reset DOM
         document.body.innerHTML = `
-            <div class="challenge-container primary"></div>
-            <div class="challenge-container secondary"></div>
+            <div class="${CSS_CLASSES.CHALLENGE_CONTAINER} primary"></div>
+            <div class="${CSS_CLASSES.CHALLENGE_CONTAINER} secondary"></div>
         `;
 
         // Get ConfigManager instance and reset colors
@@ -23,6 +28,7 @@ describe("Shared Helper Functions", () => {
         configManager.set("challengeRowTextColors", []);
 
         app = new App("test-store");
+        window.location.hash = URL_HASH.ADMIN;
     });
 
     describe("Row Color Consistency", () => {
@@ -40,17 +46,17 @@ describe("Shared Helper Functions", () => {
 
             // Get styling from full render (index 0)
             const fullRenderElement = document.querySelector(
-                ".challenge"
+                CSS_SELECTORS.CHALLENGE
             ) as HTMLElement;
             const fullRenderBgColor = fullRenderElement.style.backgroundColor;
             const fullRenderTextElement = fullRenderElement.querySelector(
-                ".challenge-text"
+                CSS_SELECTORS.CHALLENGE_TEXT
             ) as HTMLElement;
             const fullRenderTextColor = fullRenderTextElement.style.color;
 
             // Clear DOM and challenge list, then add challenge incrementally
             document
-                .querySelectorAll(".challenge-container")
+                .querySelectorAll(CSS_SELECTORS.CHALLENGE_CONTAINER)
                 .forEach((container) => {
                     container.innerHTML = "";
                 });
@@ -63,11 +69,11 @@ describe("Shared Helper Functions", () => {
 
             // Get styling from incremental add
             const incrementalElement = document.querySelector(
-                ".challenge"
+                CSS_SELECTORS.CHALLENGE
             ) as HTMLElement;
             const incrementalBgColor = incrementalElement.style.backgroundColor;
             const incrementalTextElement = incrementalElement.querySelector(
-                ".challenge-text"
+                CSS_SELECTORS.CHALLENGE_TEXT
             ) as HTMLElement;
             const incrementalTextColor = incrementalTextElement.style.color;
 
@@ -93,7 +99,7 @@ describe("Shared Helper Functions", () => {
 
             // Get checkbox styling from full render
             const fullRenderCheckbox = document.querySelector(
-                ".challenge-checkbox"
+                CSS_SELECTORS.CHALLENGE_CHECKBOX
             ) as HTMLElement;
             const fullRenderBorderColor =
                 fullRenderCheckbox.style.getPropertyValue(
@@ -102,7 +108,7 @@ describe("Shared Helper Functions", () => {
 
             // Clear DOM and challenge list, then add challenge incrementally
             document
-                .querySelectorAll(".challenge-container")
+                .querySelectorAll(CSS_SELECTORS.CHALLENGE_CONTAINER)
                 .forEach((container) => {
                     container.innerHTML = "";
                 });
@@ -115,7 +121,7 @@ describe("Shared Helper Functions", () => {
 
             // Get checkbox styling from incremental add
             const incrementalCheckbox = document.querySelector(
-                ".challenge-checkbox"
+                CSS_SELECTORS.CHALLENGE_CHECKBOX
             ) as HTMLElement;
             const incrementalBorderColor =
                 incrementalCheckbox.style.getPropertyValue(
@@ -146,16 +152,16 @@ describe("Shared Helper Functions", () => {
             app.renderChallengeList();
 
             const fullRenderTextElement = document.querySelector(
-                ".challenge-text"
+                CSS_SELECTORS.CHALLENGE_TEXT
             ) as HTMLElement;
             const fullRenderTitle = fullRenderTextElement.querySelector(
-                ".challenge-title"
+                CSS_SELECTORS.CHALLENGE_TITLE
             ) as HTMLElement;
             const fullRenderDescription = fullRenderTextElement.querySelector(
-                ".challenge-description"
+                CSS_SELECTORS.CHALLENGE_DESCRIPTION
             ) as HTMLElement;
             const fullRenderProgress = fullRenderTextElement.querySelector(
-                ".challenge-amount"
+                CSS_SELECTORS.CHALLENGE_AMOUNT
             ) as HTMLElement;
 
             // Verify all elements have the text color applied
@@ -166,7 +172,7 @@ describe("Shared Helper Functions", () => {
 
             // Clear DOM and test incremental add path
             document
-                .querySelectorAll(".challenge-container")
+                .querySelectorAll(CSS_SELECTORS.CHALLENGE_CONTAINER)
                 .forEach((container) => {
                     container.innerHTML = "";
                 });
@@ -181,16 +187,16 @@ describe("Shared Helper Functions", () => {
             app.addChallengeToDOM(newChallenge);
 
             const incrementalTextElement = document.querySelector(
-                ".challenge-text"
+                CSS_SELECTORS.CHALLENGE_TEXT
             ) as HTMLElement;
             const incrementalTitle = incrementalTextElement.querySelector(
-                ".challenge-title"
+                CSS_SELECTORS.CHALLENGE_TITLE
             ) as HTMLElement;
             const incrementalDescription = incrementalTextElement.querySelector(
-                ".challenge-description"
+                CSS_SELECTORS.CHALLENGE_DESCRIPTION
             ) as HTMLElement;
             const incrementalProgress = incrementalTextElement.querySelector(
-                ".challenge-amount"
+                CSS_SELECTORS.CHALLENGE_AMOUNT
             ) as HTMLElement;
 
             // Verify all elements have the text color applied consistently
@@ -213,13 +219,15 @@ describe("Shared Helper Functions", () => {
             app.challengeList.addChallengeObjects(challenge);
             app.renderChallengeList();
 
-            const fullRenderTimer = document.querySelector(".challenge-timer");
+            const fullRenderTimer = document.querySelector(
+                CSS_SELECTORS.CHALLENGE_TIMER
+            );
             expect(fullRenderTimer).toBeTruthy();
             expect(fullRenderTimer?.textContent).toContain("Timer:");
 
             // Clear DOM and test incremental add path
             document
-                .querySelectorAll(".challenge-container")
+                .querySelectorAll(CSS_SELECTORS.CHALLENGE_CONTAINER)
                 .forEach((container) => {
                     container.innerHTML = "";
                 });
@@ -232,7 +240,9 @@ describe("Shared Helper Functions", () => {
             app.challengeList.addChallengeObjects(newChallenge);
             app.addChallengeToDOM(newChallenge);
 
-            const incrementalTimer = document.querySelector(".challenge-timer");
+            const incrementalTimer = document.querySelector(
+                CSS_SELECTORS.CHALLENGE_TIMER
+            );
             expect(incrementalTimer).toBeTruthy();
             expect(incrementalTimer?.textContent).toContain("Timer:");
         });
@@ -249,13 +259,13 @@ describe("Shared Helper Functions", () => {
             app.renderChallengeList();
 
             const challengeElement = document.querySelector(
-                ".challenge"
+                CSS_SELECTORS.CHALLENGE
             ) as HTMLElement;
             const textElement = challengeElement.querySelector(
-                ".challenge-text"
+                CSS_SELECTORS.CHALLENGE_TEXT
             ) as HTMLElement;
             const checkbox = challengeElement.querySelector(
-                ".challenge-checkbox"
+                CSS_SELECTORS.CHALLENGE_CHECKBOX
             ) as HTMLElement;
 
             // Verify no colors are applied

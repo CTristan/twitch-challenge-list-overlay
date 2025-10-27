@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import Challenge from "../../src/classes/Challenge";
 import ChallengeList from "../../src/classes/ChallengeList";
+import { ChallengeStatus } from "../../src/types/ChallengeStatus";
 import { CHALLENGE_STATES } from "../../src/types/DOMConstants";
 
 describe("ChallengeList", () => {
@@ -30,8 +31,7 @@ describe("ChallengeList", () => {
                         description: "Description for challenge 1",
                         amount: 1,
                         progress: 0,
-                        completionStatus: false,
-                        failureStatus: false,
+                        status: ChallengeStatus.IN_PROGRESS,
                         createdAt: Date.now(),
                     },
                 ])
@@ -43,7 +43,7 @@ describe("ChallengeList", () => {
             expect(challenge.description).toEqual(
                 "Description for challenge 1"
             );
-            expect(challenge.completionStatus).toEqual(false);
+            expect(challenge.status).toEqual(ChallengeStatus.IN_PROGRESS);
         });
 
         it("should correctly restore completed challenge counts from localStorage", () => {
@@ -375,6 +375,44 @@ describe("ChallengeList", () => {
         });
     });
 
+    describe("clearFailedChallenges", () => {
+        it("should clear all failed challenges", () => {
+            challengeList.addChallenges([
+                "Challenge 1",
+                "Challenge 2",
+                "Challenge 3",
+            ]);
+
+            const [firstChallenge, , thirdChallenge] = challengeList.challenges;
+            if (!firstChallenge || !thirdChallenge) {
+                throw new Error("Failed challenges were not initialized");
+            }
+
+            challengeList.markChallengeAsFailed(firstChallenge.id);
+            challengeList.markChallengeAsFailed(thirdChallenge.id);
+
+            const removedChallenges = challengeList.clearFailedChallenges();
+
+            expect(removedChallenges).toHaveLength(2);
+            expect(challengeList.challenges).toHaveLength(1);
+            const remainingChallenge = challengeList.challenges[0];
+            if (!remainingChallenge) {
+                throw new Error("Remaining challenge not found");
+            }
+            expect(remainingChallenge.title).toEqual("Challenge 2");
+            expect(challengeList.challengesCompleted).toEqual(0);
+            expect(challengeList.totalChallenges).toEqual(1);
+        });
+
+        it("should return empty array if no failed challenges", () => {
+            challengeList.addChallenges("Challenge 1");
+            const removedChallenges = challengeList.clearFailedChallenges();
+
+            expect(removedChallenges).toHaveLength(0);
+            expect(challengeList.challenges).toHaveLength(1);
+        });
+    });
+
     describe("ID-based challenge operations (performance optimization)", () => {
         let challenge1: Challenge;
         let challenge2: Challenge;
@@ -457,7 +495,7 @@ describe("ChallengeList", () => {
             });
 
             it("should cycle challenge state from done to failed", () => {
-                challenge1.setCompletionStatus(true);
+                challenge1.setStatus(ChallengeStatus.COMPLETED);
                 challengeList.saveToLocalStorage();
                 const initialCompleted = challengeList.challengesCompleted;
 
@@ -472,7 +510,7 @@ describe("ChallengeList", () => {
             });
 
             it("should cycle challenge state from failed to in-progress", () => {
-                challenge1.setFailureStatus(true);
+                challenge1.setStatus(ChallengeStatus.FAILED);
                 const initialCompleted = challengeList.challengesCompleted;
 
                 const result = challengeList.cycleChallengeState(challenge1.id);

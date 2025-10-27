@@ -7,6 +7,7 @@ import {
     type Command,
     ProgressOperation,
 } from "../../src/commands/Command";
+import { ChallengeStatus } from "../../src/types/ChallengeStatus";
 import type { CommandResponse } from "../../src/types/CommandResponse";
 import { HELP_MESSAGES } from "../../src/types/MessageConstants";
 import { UIUpdateAction } from "../../src/types/UIUpdateAction";
@@ -676,7 +677,7 @@ describe("Command Interface and BaseCommand", () => {
             const challenge = challengeList.challenges[0];
             if (challenge) {
                 challenge.setProgress(5);
-                challenge.setCompletionStatus(true);
+                challenge.setStatus(ChallengeStatus.COMPLETED);
             }
 
             // Create a decrement command

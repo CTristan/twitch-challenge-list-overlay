@@ -2,14 +2,22 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import App from "../src/app";
 import Challenge from "../src/classes/Challenge";
 import ConfigManager from "../src/classes/ConfigManager";
-import { BACKGROUND_CONFIG } from "../src/types/ConfigConstants";
+import {
+    BACKGROUND_CONFIG,
+    BEHAVIOR_CONFIG,
+} from "../src/types/ConfigConstants";
 import {
     CSS_CLASSES,
     CSS_SELECTORS,
     DATA_ATTRIBUTES,
+    HTML_ELEMENTS,
     URL_HASH,
 } from "../src/types/DOMConstants";
-import { ERROR_MESSAGES, STATUS_MESSAGES } from "../src/types/MessageConstants";
+import {
+    ERROR_MESSAGES,
+    STATUS_MESSAGES,
+    UI_ELEMENTS,
+} from "../src/types/MessageConstants";
 import { VALIDATION_CONSTRAINTS } from "../src/types/ValidationConstants";
 import {
     createAdminUser,
@@ -179,9 +187,9 @@ describe("App", () => {
         });
 
         it("should handle errors in try/catch block during checkbox processing", () => {
-            // Mock the cycleChallengeState to return null (challenge not found)
-            const originalCycle = app.challengeList.cycleChallengeState;
-            app.challengeList.cycleChallengeState = vi
+            // Mock the toggleChallengeCompletion to return null (challenge not found)
+            const originalToggle = app.challengeList.toggleChallengeCompletion;
+            app.challengeList.toggleChallengeCompletion = vi
                 .fn()
                 .mockReturnValue(null);
 
@@ -216,7 +224,7 @@ describe("App", () => {
             );
 
             // Restore original method
-            app.challengeList.cycleChallengeState = originalCycle;
+            app.challengeList.toggleChallengeCompletion = originalToggle;
         });
 
         it("should handle non-checkbox targets in delegated click handler", () => {
@@ -297,6 +305,27 @@ describe("App", () => {
     });
 
     describe("Admin Mode Functionality", () => {
+        it("should apply standard admin typography when text-only mode is disabled", () => {
+            Object.defineProperty(window, "location", {
+                value: { hash: URL_HASH.ADMIN },
+                writable: true,
+            });
+
+            app.getConfigManager().set(
+                BEHAVIOR_CONFIG.ADMIN_TEXT_ONLY_MODE,
+                false
+            );
+
+            app.challengeList.addChallenges("Test Challenge");
+            app.renderChallengeList();
+
+            const card = document.querySelector(`.${CSS_CLASSES.CARD}`);
+            expect(card).toBeTruthy();
+            expect(
+                card?.classList.contains(CSS_CLASSES.ADMIN_STANDARD_CARD)
+            ).toBe(true);
+        });
+
         it("should enable checkbox interaction in admin mode", () => {
             // Set admin mode
             Object.defineProperty(window, "location", {
@@ -596,6 +625,19 @@ describe("App", () => {
                             <textarea id="add-challenge-description"></textarea>
                             <input type="number" id="add-challenge-amount" />
                             <input type="text" id="add-challenge-timer" />
+                            <div
+                                id="add-challenge-timer-behavior-group"
+                                class="hidden"
+                            >
+                                <select id="add-challenge-timer-behavior">
+                                    <option value="auto-fail">
+                                        Fail the challenge
+                                    </option>
+                                    <option value="auto-complete">
+                                        Complete the challenge
+                                    </option>
+                                </select>
+                            </div>
                             <button type="submit" id="add-challenge-submit">Add</button>
                             <button type="button" id="add-challenge-cancel">Cancel</button>
                         </form>
@@ -638,6 +680,129 @@ describe("App", () => {
                 // Verify only one button exists
                 const buttons = document.querySelectorAll(".add-challenge-btn");
                 expect(buttons.length).toBe(1);
+            });
+
+            it("should update admin actions to text-only when text-only mode is enabled", () => {
+                // Initial render with default button styling
+                app.render();
+
+                let container = document.querySelector(
+                    `.${CSS_CLASSES.ADD_CHALLENGE_CONTAINER}`
+                ) as HTMLElement | null;
+
+                expect(container).toBeTruthy();
+                const initialContainer = container as HTMLElement;
+                expect(
+                    initialContainer.querySelectorAll(HTML_ELEMENTS.BUTTON)
+                        .length
+                ).toBe(4);
+
+                // Enable text-only mode and re-render
+                app.getConfigManager().set(
+                    BEHAVIOR_CONFIG.ADMIN_TEXT_ONLY_MODE,
+                    true
+                );
+                app.render();
+
+                container = document.querySelector(
+                    `.${CSS_CLASSES.ADD_CHALLENGE_CONTAINER}`
+                ) as HTMLElement | null;
+
+                expect(container).toBeTruthy();
+                const textOnlyContainer = container as HTMLElement;
+                expect(
+                    textOnlyContainer.classList.contains(
+                        CSS_CLASSES.ADMIN_TEXT_ONLY_ACTION_CONTAINER
+                    )
+                ).toBe(true);
+                expect(
+                    textOnlyContainer.querySelectorAll(HTML_ELEMENTS.BUTTON)
+                        .length
+                ).toBe(0);
+
+                const textOnlyActions = textOnlyContainer.querySelectorAll(
+                    `.${CSS_CLASSES.ADMIN_TEXT_ONLY_ACTION}`
+                );
+                expect(textOnlyActions.length).toBe(4);
+
+                expect(
+                    textOnlyContainer.querySelector(
+                        `.${CSS_CLASSES.ADMIN_TEXT_ONLY_ACTION_LABEL}`
+                    )?.textContent
+                ).toBe(UI_ELEMENTS.TEXT_ONLY_ADMIN_ACTIONS_LABEL);
+                expect(
+                    textOnlyContainer.querySelector(
+                        `.${CSS_CLASSES.ADMIN_TEXT_ONLY_ACTION_ADD}`
+                    )?.textContent
+                ).toBe(UI_ELEMENTS.TEXT_ONLY_ADD_CHALLENGE_ACTION);
+                expect(
+                    textOnlyContainer.querySelector(
+                        `.${CSS_CLASSES.ADMIN_TEXT_ONLY_ACTION_CLEAR}`
+                    )?.textContent
+                ).toBe(UI_ELEMENTS.TEXT_ONLY_CLEAR_COMPLETED_ACTION);
+                expect(
+                    textOnlyContainer.querySelector(
+                        `.${CSS_CLASSES.ADMIN_TEXT_ONLY_ACTION_CLEAR_FAILED}`
+                    )?.textContent
+                ).toBe(UI_ELEMENTS.TEXT_ONLY_CLEAR_FAILED_ACTION);
+                expect(
+                    textOnlyContainer.querySelector(
+                        `.${CSS_CLASSES.ADMIN_TEXT_ONLY_ACTION_REFRESH}`
+                    )?.textContent
+                ).toBe(UI_ELEMENTS.TEXT_ONLY_REFRESH_ACTION);
+
+                // Reset admin text-only mode for subsequent tests
+                app.getConfigManager().set(
+                    BEHAVIOR_CONFIG.ADMIN_TEXT_ONLY_MODE,
+                    false
+                );
+                app.render();
+            });
+
+            it("should open the modal when text-only admin actions are activated", () => {
+                app.getConfigManager().set(
+                    BEHAVIOR_CONFIG.ADMIN_TEXT_ONLY_MODE,
+                    true
+                );
+                app.render();
+
+                const container = document.querySelector(
+                    `.${CSS_CLASSES.ADD_CHALLENGE_CONTAINER}`
+                ) as HTMLElement;
+                const addAction = container.querySelector(
+                    `.${CSS_CLASSES.ADMIN_TEXT_ONLY_ACTION_ADD}`
+                ) as HTMLElement;
+                const modal = document.getElementById("add-challenge-modal");
+
+                expect(modal?.classList.contains("hidden")).toBe(true);
+
+                addAction.click();
+
+                expect(modal?.classList.contains("hidden")).toBe(false);
+                expect(modal?.classList.contains("flex")).toBe(true);
+
+                const cancelButton = document.getElementById(
+                    "add-challenge-cancel"
+                ) as HTMLButtonElement;
+                cancelButton?.click();
+
+                expect(modal?.classList.contains("hidden")).toBe(true);
+
+                const keydownEvent = new KeyboardEvent("keydown", {
+                    key: "Enter",
+                });
+                addAction.dispatchEvent(keydownEvent);
+
+                expect(modal?.classList.contains("hidden")).toBe(false);
+                expect(modal?.classList.contains("flex")).toBe(true);
+
+                // Close modal and reset admin text-only mode for subsequent tests
+                cancelButton?.click();
+                app.getConfigManager().set(
+                    BEHAVIOR_CONFIG.ADMIN_TEXT_ONLY_MODE,
+                    false
+                );
+                app.render();
             });
         });
 
@@ -908,6 +1073,19 @@ describe("App", () => {
                             <textarea id="add-challenge-description"></textarea>
                             <input type="number" id="add-challenge-amount" />
                             <input type="text" id="add-challenge-timer" />
+                            <div
+                                id="add-challenge-timer-behavior-group"
+                                class="hidden"
+                            >
+                                <select id="add-challenge-timer-behavior">
+                                    <option value="auto-fail">
+                                        Fail the challenge
+                                    </option>
+                                    <option value="auto-complete">
+                                        Complete the challenge
+                                    </option>
+                                </select>
+                            </div>
                             <button type="submit" id="add-challenge-submit">Add</button>
                             <button type="button" id="add-challenge-cancel">Cancel</button>
                         </form>

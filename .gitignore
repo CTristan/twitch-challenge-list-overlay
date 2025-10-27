@@ -15,6 +15,7 @@ node_modules/
 .DS_Store
 .todo.md
 .vscode/settings.json
+.serena/
 
 # notes
 devNotes.md

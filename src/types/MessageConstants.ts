@@ -53,6 +53,7 @@ export const ERROR_MESSAGES = {
     CHALLENGE_TITLE_REQUIRED: "Challenge title is required",
     AMOUNT_INVALID_RANGE: "Amount must be a number between 1 and 999",
     TIMER_FORMAT_INVALID: "Timer format should be like '5m', '30s', or '1h'",
+    TIMER_BEHAVIOR_INVALID: "Select a valid timer expiration behavior",
     FAILED_TO_CREATE_CHALLENGE: "Failed to create challenge",
     MAXIMUM_CHALLENGES_ALLOWED: "Maximum of {maxChallenges} challenges allowed",
     ERROR_CREATING_CHALLENGE: "Error creating challenge:",
@@ -139,8 +140,12 @@ export const HELP_MESSAGES = {
         '!ch edit 1 "New Title" d/desc="New Description" a/amount=10 - Edit challenge properties',
     DONE_COMMAND_HELP:
         "!ch done 1,2,3 - Mark challenges as completed (supports multiple IDs)",
+    UNDONE_COMMAND_HELP:
+        "!ch undone 1,2,3 - Revert completed challenges to in-progress (supports multiple IDs)",
     FAIL_COMMAND_HELP:
         "!ch fail 1,2,3 - Mark challenges as failed (supports multiple IDs)",
+    UNFAIL_COMMAND_HELP:
+        "!ch unfail 1,2,3 - Revert failed challenges to in-progress (supports multiple IDs)",
     DELETE_COMMAND_HELP:
         "!ch delete 1,2,3 - Delete challenges (supports multiple IDs)",
     INCREMENT_COMMAND_HELP:
@@ -236,6 +241,20 @@ export const UI_ELEMENTS = {
     EDIT_ICON: "✏️",
     INCREMENT_BUTTON: "+",
     DECREMENT_BUTTON: "-",
+    TEXT_ONLY_EDIT_BUTTON: "Edit",
+    TEXT_ONLY_COMPLETE_BUTTON: "Complete",
+    TEXT_ONLY_UNCOMPLETE_BUTTON: "Uncomplete",
+    TEXT_ONLY_FAIL_BUTTON: "Fail",
+    TEXT_ONLY_UNFAIL_BUTTON: "Unfail",
+    TEXT_ONLY_DELETE_BUTTON: "Delete",
+    DELETE_CONFIRM_PROMPT: "Confirm deletion?",
+    TEXT_ONLY_INCREMENT_BUTTON: "+",
+    TEXT_ONLY_DECREMENT_BUTTON: "-",
+    TEXT_ONLY_ADMIN_ACTIONS_LABEL: "Admin Actions",
+    TEXT_ONLY_ADD_CHALLENGE_ACTION: "Add Challenge",
+    TEXT_ONLY_CLEAR_COMPLETED_ACTION: "Clear Completed",
+    TEXT_ONLY_CLEAR_FAILED_ACTION: "Clear Failed",
+    TEXT_ONLY_REFRESH_ACTION: "Refresh",
     CONNECTION_WARNING_TEXT:
         "⚠️ Admin panel not connected - overlay may require manual refresh",
 } as const;
@@ -249,6 +268,10 @@ export const ARIA_LABELS = {
     EDIT_CHALLENGE: "Edit challenge",
     INCREMENT_PROGRESS: "Increment challenge progress",
     DECREMENT_PROGRESS: "Decrement challenge progress",
+    DELETE_CHALLENGE: "Delete challenge",
+    CONFIRM_DELETE_CHALLENGE: "Confirm challenge deletion",
+    FAIL_CHALLENGE: "Mark challenge as failed",
+    UNFAIL_CHALLENGE: "Restore challenge to in-progress",
 } as const;
 
 /**
@@ -262,6 +285,9 @@ export const MODAL_TEXT = {
     // Edit Challenge Modal
     EDIT_CHALLENGE_TITLE: "Edit Challenge",
     EDIT_CHALLENGE_BUTTON: "Save Changes",
+    TIMER_BEHAVIOR_LABEL: "When the timer ends",
+    TIMER_BEHAVIOR_AUTO_FAIL_OPTION: "Fail the challenge",
+    TIMER_BEHAVIOR_AUTO_COMPLETE_OPTION: "Complete the challenge",
 
     // Error messages
     CHALLENGE_NOT_FOUND_FOR_EDIT: "Challenge not found",
@@ -275,7 +301,7 @@ export const ADMIN_PANEL_LABELS = {
     CONFIGURATION_SETTINGS: "Configuration Settings",
     AUTHENTICATION_SETTINGS: "Twitch Chat Integration Settings",
     AUTHENTICATION: "Authentication",
-    BEHAVIOR_SETTINGS: "Behavior Settings",
+    BEHAVIOR_SETTINGS: "General Settings",
     CHALLENGE_ROW_STYLING: "Challenge Row Styling",
     OVERLAY_BACKGROUND: "Overlay Background",
     CONFIGURATION_ACTIONS: "Configuration Actions",

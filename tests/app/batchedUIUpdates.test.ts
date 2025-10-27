@@ -3,7 +3,13 @@ import App from "../../src/app";
 import Challenge from "../../src/classes/Challenge";
 import ChallengeList from "../../src/classes/ChallengeList";
 import ConfigManager from "../../src/classes/ConfigManager";
+import { ChallengeStatus } from "../../src/types/ChallengeStatus";
 import type { CommandResponse } from "../../src/types/CommandResponse";
+import {
+    CSS_CLASSES,
+    CSS_SELECTORS,
+    URL_HASH,
+} from "../../src/types/DOMConstants";
 import { UIUpdateAction } from "../../src/types/UIUpdateAction";
 import UIUpdateHandler from "../../src/utils/UIUpdateHandler";
 import { ensureTestIsolation } from "../utils/chatHandlerTestUtils";
@@ -25,6 +31,7 @@ describe("Batched UI Updates Performance", () => {
         challengeList = app.challengeList;
         const configManager = ConfigManager.getInstance();
         uiUpdateHandler = new UIUpdateHandler(challengeList, configManager);
+        window.location.hash = URL_HASH.ADMIN;
     });
 
     describe("Batched Challenge Addition", () => {
@@ -213,7 +220,7 @@ describe("Batched UI Updates Performance", () => {
             ];
 
             // Mark one as complete
-            challenges[0]!.setCompletionStatus(true);
+            challenges[0]!.setStatus(ChallengeStatus.COMPLETED);
 
             challenges.forEach((challenge) =>
                 challengeList.addChallengeObjects(challenge)
@@ -233,22 +240,28 @@ describe("Batched UI Updates Performance", () => {
 
             uiUpdateHandler.handleCommandResult(response);
 
-            const challengeElements = document.querySelectorAll(".challenge");
+            const challengeElements = document.querySelectorAll(
+                CSS_SELECTORS.CHALLENGE
+            );
 
             // First challenge should have "done" class
-            expect(challengeElements[0]?.classList.contains("done")).toBe(true);
+            expect(
+                challengeElements[0]?.classList.contains(CSS_CLASSES.DONE)
+            ).toBe(true);
 
             // Second challenge should not have "done" class
-            expect(challengeElements[1]?.classList.contains("done")).toBe(
-                false
-            );
+            expect(
+                challengeElements[1]?.classList.contains(CSS_CLASSES.DONE)
+            ).toBe(false);
 
             // Both should have proper challenge structure
             challengeElements.forEach((element) => {
                 expect(
-                    element.querySelector(".challenge-checkbox")
+                    element.querySelector(CSS_SELECTORS.CHALLENGE_CHECKBOX)
                 ).toBeTruthy();
-                expect(element.querySelector(".challenge-text")).toBeTruthy();
+                expect(
+                    element.querySelector(CSS_SELECTORS.CHALLENGE_TEXT)
+                ).toBeTruthy();
             });
         });
 
@@ -284,16 +297,22 @@ describe("Batched UI Updates Performance", () => {
 
             uiUpdateHandler.handleCommandResult(response);
 
-            const challengeElements = document.querySelectorAll(".challenge");
+            const challengeElements = document.querySelectorAll(
+                CSS_SELECTORS.CHALLENGE
+            );
 
             // First challenge should have timer display
             expect(
-                challengeElements[0]?.querySelector(".challenge-timer")
+                challengeElements[0]?.querySelector(
+                    CSS_SELECTORS.CHALLENGE_TIMER
+                )
             ).toBeTruthy();
 
             // Second challenge should not have timer display
             expect(
-                challengeElements[1]?.querySelector(".challenge-timer")
+                challengeElements[1]?.querySelector(
+                    CSS_SELECTORS.CHALLENGE_TIMER
+                )
             ).toBeFalsy();
         });
     });

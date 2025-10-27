@@ -1,5 +1,8 @@
-import ChallengeList from "../classes/ChallengeList";
+import type ChallengeList from "../classes/ChallengeList";
+import { ChallengeStatus } from "../types/ChallengeStatus";
 import { CSS_CLASSES, CSS_SELECTORS } from "../types/DOMConstants";
+import { TimerEndBehavior } from "../types/TimerEndBehavior";
+import DOMHelper from "./DOMHelper";
 import Timer from "./Timer";
 import { notifyChallengeStateChanged } from "./windowRefresh";
 
@@ -82,27 +85,38 @@ export class TimerDisplayUtils {
                 // Check if timer has expired and challenge is not already failed/completed
                 if (
                     challenge.timer.isExpired() &&
-                    !challenge.isFailed() &&
-                    !challenge.isComplete()
+                    challenge.getStatus() === ChallengeStatus.IN_PROGRESS
                 ) {
-                    // Automatically fail the challenge
-                    challenge.setFailureStatus(true);
-                    stateChanged = true;
+                    const timerEndBehavior = challenge.getTimerEndBehavior();
+                    let statusUpdated = false;
 
-                    // Update DOM to reflect failed state
-                    const challengeElements = document.querySelectorAll(
-                        `[data-challenge-id="${challengeId}"]`
-                    );
-                    challengeElements.forEach((el) => {
-                        el.classList.remove(CSS_CLASSES.DONE);
-                        el.classList.add(CSS_CLASSES.FAILED);
-                        const checkbox = el.querySelector(
-                            CSS_SELECTORS.CHALLENGE_CHECKBOX
+                    if (timerEndBehavior === TimerEndBehavior.AUTO_COMPLETE) {
+                        const completedChallenge =
+                            challengeList.completeChallengeById(challengeId);
+                        statusUpdated = Boolean(
+                            completedChallenge &&
+                                completedChallenge.getStatus() ===
+                                    ChallengeStatus.COMPLETED
                         );
-                        if (checkbox) {
-                            checkbox.classList.remove(CSS_CLASSES.CHECKED);
+                        if (statusUpdated) {
+                            DOMHelper.completeChallengeFromDOM(challengeId);
                         }
-                    });
+                    } else {
+                        const failedChallenge =
+                            challengeList.markChallengeAsFailed(challengeId);
+                        statusUpdated = Boolean(
+                            failedChallenge &&
+                                failedChallenge.getStatus() ===
+                                    ChallengeStatus.FAILED
+                        );
+                        if (statusUpdated) {
+                            DOMHelper.failChallengeFromDOM(challengeId);
+                        }
+                    }
+
+                    if (statusUpdated) {
+                        stateChanged = true;
+                    }
                 }
 
                 // Use standardized update method for consistent behavior
@@ -110,14 +124,24 @@ export class TimerDisplayUtils {
                     element as HTMLElement,
                     challenge.timer
                 );
+            } else if (challenge.timer.isExpired()) {
+                // Timer is expired but inactive - keep it visible with expired styling
+                this.updateTimerElement(
+                    element as HTMLElement,
+                    challenge.timer
+                );
             } else {
-                // Timer is no longer active, remove the element
+                // Timer is no longer active and not expired, remove the element
                 element.remove();
             }
         });
 
         // If any challenge state changed, persist to localStorage and notify other windows
         if (stateChanged) {
+            DOMHelper.updateChallengeCount(
+                challengeList.challengesCompleted,
+                challengeList.totalChallenges
+            );
             challengeList.saveToLocalStorage();
 
             // Notify other windows about the state change

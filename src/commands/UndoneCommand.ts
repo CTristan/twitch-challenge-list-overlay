@@ -1,4 +1,5 @@
 import type Challenge from "../classes/Challenge";
+import { ChallengeStatus } from "../types/ChallengeStatus";
 import type { CommandResponse } from "../types/CommandResponse";
 import { ERROR_MESSAGES } from "../types/MessageConstants";
 import { UIUpdateAction } from "../types/UIUpdateAction";
@@ -46,14 +47,8 @@ export class UndoneCommand extends BaseCommand {
                     );
                 }
 
-                if (challenge.isComplete()) {
-                    challenge.setCompletionStatus(false);
-
-                    // Restart timer if it exists and was stopped due to completion
-                    if (challenge.timer && !challenge.timer.isActive) {
-                        // Restart the timer (it was stopped when challenge was completed)
-                        challenge.timer.start();
-                    }
+                if (challenge.getStatus() === ChallengeStatus.COMPLETED) {
+                    challenge.setStatus(ChallengeStatus.IN_PROGRESS);
 
                     revertedChallenges.push(challenge);
                     revertedIndices.push(challengeIndex);

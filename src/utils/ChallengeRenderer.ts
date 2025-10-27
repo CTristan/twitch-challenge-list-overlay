@@ -12,6 +12,7 @@ import {
     HTML_ATTRIBUTE_NAMES,
     HTML_ATTRIBUTES,
     HTML_ELEMENTS,
+    KEYBOARD_KEYS,
 } from "../types/DOMConstants";
 import { ARIA_LABELS, UI_ELEMENTS } from "../types/MessageConstants";
 import {
@@ -20,6 +21,7 @@ import {
     generateTextShadow,
     isColorDark,
 } from "./ColorUtils";
+import TimerDisplayUtils from "./TimerDisplayUtils";
 
 /**
  * Get a value from an array by rotating through it based on an index
@@ -79,7 +81,10 @@ export class ChallengeRenderer {
 
         // Create metadata row for amount and timer (if either exists)
         const hasAmount = challenge.amount > 1;
-        const hasTimer = challenge.timer && challenge.timer.isActive;
+        // Show timer if it's active OR if it's expired (to show expired state)
+        const hasTimer =
+            challenge.timer &&
+            (challenge.timer.isActive || challenge.timer.isExpired());
 
         if (hasAmount || hasTimer) {
             const metadataRow = document.createElement(HTML_ELEMENTS.DIV);
@@ -117,12 +122,20 @@ export class ChallengeRenderer {
 
     /**
      * Create an edit icon element for a challenge
-     * @returns The edit icon element
+     * @param textOnly - If true, creates a text button instead of an icon
+     * @returns The edit icon or button element
      */
-    static createChallengeEditIcon(): HTMLDivElement {
+    static createChallengeEditIcon(textOnly: boolean = false): HTMLDivElement {
         const editIcon = document.createElement(HTML_ELEMENTS.DIV);
-        editIcon.classList.add(CSS_CLASSES.CHALLENGE_EDIT_ICON);
-        editIcon.textContent = UI_ELEMENTS.EDIT_ICON;
+
+        if (textOnly) {
+            editIcon.classList.add(CSS_CLASSES.CHALLENGE_TEXT_ONLY_EDIT);
+            editIcon.textContent = UI_ELEMENTS.TEXT_ONLY_EDIT_BUTTON;
+        } else {
+            editIcon.classList.add(CSS_CLASSES.CHALLENGE_EDIT_ICON);
+            editIcon.textContent = UI_ELEMENTS.EDIT_ICON;
+        }
+
         editIcon.setAttribute(
             HTML_ATTRIBUTE_NAMES.ROLE,
             HTML_ATTRIBUTES.ROLE_BUTTON
@@ -140,12 +153,27 @@ export class ChallengeRenderer {
 
     /**
      * Create an increment button element for a challenge
+     * @param textOnly - If true, creates a text button instead of a symbol
      * @returns The increment button element
      */
-    static createChallengeIncrementButton(): HTMLDivElement {
+    static createChallengeIncrementButton(
+        textOnly: boolean = false
+    ): HTMLDivElement {
         const incrementButton = document.createElement(HTML_ELEMENTS.DIV);
-        incrementButton.classList.add(CSS_CLASSES.CHALLENGE_INCREMENT_BUTTON);
-        incrementButton.textContent = UI_ELEMENTS.INCREMENT_BUTTON;
+
+        if (textOnly) {
+            incrementButton.classList.add(
+                CSS_CLASSES.CHALLENGE_TEXT_ONLY_INCREMENT
+            );
+            incrementButton.textContent =
+                UI_ELEMENTS.TEXT_ONLY_INCREMENT_BUTTON;
+        } else {
+            incrementButton.classList.add(
+                CSS_CLASSES.CHALLENGE_INCREMENT_BUTTON
+            );
+            incrementButton.textContent = UI_ELEMENTS.INCREMENT_BUTTON;
+        }
+
         incrementButton.setAttribute(
             HTML_ATTRIBUTE_NAMES.ROLE,
             HTML_ATTRIBUTES.ROLE_BUTTON
@@ -163,12 +191,27 @@ export class ChallengeRenderer {
 
     /**
      * Create a decrement button element for a challenge
+     * @param textOnly - If true, creates a text button instead of a symbol
      * @returns The decrement button element
      */
-    static createChallengeDecrementButton(): HTMLDivElement {
+    static createChallengeDecrementButton(
+        textOnly: boolean = false
+    ): HTMLDivElement {
         const decrementButton = document.createElement(HTML_ELEMENTS.DIV);
-        decrementButton.classList.add(CSS_CLASSES.CHALLENGE_DECREMENT_BUTTON);
-        decrementButton.textContent = UI_ELEMENTS.DECREMENT_BUTTON;
+
+        if (textOnly) {
+            decrementButton.classList.add(
+                CSS_CLASSES.CHALLENGE_TEXT_ONLY_DECREMENT
+            );
+            decrementButton.textContent =
+                UI_ELEMENTS.TEXT_ONLY_DECREMENT_BUTTON;
+        } else {
+            decrementButton.classList.add(
+                CSS_CLASSES.CHALLENGE_DECREMENT_BUTTON
+            );
+            decrementButton.textContent = UI_ELEMENTS.DECREMENT_BUTTON;
+        }
+
         decrementButton.setAttribute(
             HTML_ATTRIBUTE_NAMES.ROLE,
             HTML_ATTRIBUTES.ROLE_BUTTON
@@ -185,6 +228,378 @@ export class ChallengeRenderer {
     }
 
     /**
+     * Create a text-only challenge list item for admin view
+     * Renders as plain text with text buttons instead of styled challenge rows
+     * @param challenge - Challenge to create element for
+     * @param options - Optional configuration for element creation
+     * @returns HTMLElement representing the text-only challenge
+     */
+    static createTextOnlyChallengeElement(
+        challenge: Challenge,
+        options: {
+            editHandler?: (event: Event) => void;
+            incrementHandler?: (event: Event) => void;
+            decrementHandler?: (event: Event) => void;
+            completeHandler?: (event: Event) => void;
+            uncompleteHandler?: (event: Event) => void;
+            failHandler?: (event: Event) => void;
+            unfailHandler?: (event: Event) => void;
+            deleteHandler?: (event: Event) => void;
+            displayPosition?: number;
+        } = {}
+    ): HTMLElement {
+        const challengeElement = document.createElement(HTML_ELEMENTS.LI);
+        challengeElement.classList.add(CSS_CLASSES.CHALLENGE_TEXT_ONLY_ITEM);
+        challengeElement.dataset[DATA_ATTRIBUTES.CHALLENGE_ID] = challenge.id;
+
+        // Create content container for text
+        const contentContainer = document.createElement(HTML_ELEMENTS.DIV);
+        contentContainer.classList.add(CSS_CLASSES.CHALLENGE_TEXT_ONLY_CONTENT);
+
+        const textElement = this.createChallengeTextElement(
+            challenge,
+            options.displayPosition
+        );
+        contentContainer.appendChild(textElement);
+
+        if (
+            challenge.timer &&
+            (challenge.timer.isActive || challenge.timer.isExpired())
+        ) {
+            let metadataRow = textElement.querySelector(
+                CSS_SELECTORS.CHALLENGE_METADATA
+            ) as HTMLElement | null;
+
+            if (!metadataRow) {
+                metadataRow = document.createElement(HTML_ELEMENTS.DIV);
+                metadataRow.classList.add(CSS_CLASSES.CHALLENGE_METADATA);
+                textElement.appendChild(metadataRow);
+            }
+
+            const timerElement = TimerDisplayUtils.createTimerElement(
+                challenge.timer,
+                challenge.id
+            );
+            metadataRow.appendChild(timerElement);
+        }
+
+        // Apply state styling based on challenge state
+        const state = challenge.getState();
+        if (state === CHALLENGE_STATES.DONE) {
+            challengeElement.classList.add(CSS_CLASSES.DONE);
+        } else if (state === CHALLENGE_STATES.FAILED) {
+            challengeElement.classList.add(CSS_CLASSES.FAILED);
+        }
+
+        challengeElement.appendChild(contentContainer);
+
+        // Create buttons container
+        const buttonsContainer = document.createElement(HTML_ELEMENTS.DIV);
+        buttonsContainer.classList.add(CSS_CLASSES.CHALLENGE_TEXT_ONLY_BUTTONS);
+
+        // Edit action (rendered as plain text, accessible as a button)
+        if (options.editHandler) {
+            const editAction = document.createElement(HTML_ELEMENTS.DIV);
+            editAction.classList.add(CSS_CLASSES.CHALLENGE_TEXT_ONLY_EDIT);
+            editAction.textContent = UI_ELEMENTS.TEXT_ONLY_EDIT_BUTTON;
+            editAction.setAttribute(
+                HTML_ATTRIBUTE_NAMES.ROLE,
+                HTML_ATTRIBUTES.ROLE_BUTTON
+            );
+            editAction.setAttribute(
+                HTML_ATTRIBUTE_NAMES.ARIA_LABEL,
+                ARIA_LABELS.EDIT_CHALLENGE
+            );
+            editAction.setAttribute(
+                HTML_ATTRIBUTE_NAMES.TABINDEX,
+                HTML_ATTRIBUTES.TABINDEX_ZERO
+            );
+            editAction.addEventListener(EVENT_NAMES.CLICK, options.editHandler);
+            // Keyboard accessibility (Enter/Space)
+            editAction.addEventListener(
+                EVENT_NAMES.KEYDOWN,
+                (e: KeyboardEvent) => {
+                    if (
+                        e.key === KEYBOARD_KEYS.ENTER ||
+                        e.key === KEYBOARD_KEYS.SPACE
+                    ) {
+                        e.preventDefault();
+                        (e.currentTarget as HTMLElement).click();
+                    }
+                }
+            );
+            buttonsContainer.appendChild(editAction);
+        }
+
+        // Complete/Uncomplete action
+        if (challenge.isComplete()) {
+            // Show "Uncomplete" button if challenge is completed
+            if (options.uncompleteHandler) {
+                const uncompleteAction = document.createElement(
+                    HTML_ELEMENTS.DIV
+                );
+                uncompleteAction.classList.add(
+                    CSS_CLASSES.CHALLENGE_TEXT_ONLY_UNCOMPLETE
+                );
+                uncompleteAction.textContent =
+                    UI_ELEMENTS.TEXT_ONLY_UNCOMPLETE_BUTTON;
+                uncompleteAction.setAttribute(
+                    HTML_ATTRIBUTE_NAMES.ROLE,
+                    HTML_ATTRIBUTES.ROLE_BUTTON
+                );
+                uncompleteAction.setAttribute(
+                    HTML_ATTRIBUTE_NAMES.TABINDEX,
+                    HTML_ATTRIBUTES.TABINDEX_ZERO
+                );
+                uncompleteAction.addEventListener(
+                    EVENT_NAMES.CLICK,
+                    options.uncompleteHandler
+                );
+                uncompleteAction.addEventListener(
+                    EVENT_NAMES.KEYDOWN,
+                    (e: KeyboardEvent) => {
+                        if (
+                            e.key === KEYBOARD_KEYS.ENTER ||
+                            e.key === KEYBOARD_KEYS.SPACE
+                        ) {
+                            e.preventDefault();
+                            (e.currentTarget as HTMLElement).click();
+                        }
+                    }
+                );
+                buttonsContainer.appendChild(uncompleteAction);
+            }
+        } else {
+            // Show "Complete" button if challenge is not completed
+            if (options.completeHandler) {
+                const completeAction = document.createElement(
+                    HTML_ELEMENTS.DIV
+                );
+                completeAction.classList.add(
+                    CSS_CLASSES.CHALLENGE_TEXT_ONLY_COMPLETE
+                );
+                completeAction.textContent =
+                    UI_ELEMENTS.TEXT_ONLY_COMPLETE_BUTTON;
+                completeAction.setAttribute(
+                    HTML_ATTRIBUTE_NAMES.ROLE,
+                    HTML_ATTRIBUTES.ROLE_BUTTON
+                );
+                completeAction.setAttribute(
+                    HTML_ATTRIBUTE_NAMES.TABINDEX,
+                    HTML_ATTRIBUTES.TABINDEX_ZERO
+                );
+                completeAction.addEventListener(
+                    EVENT_NAMES.CLICK,
+                    options.completeHandler
+                );
+                completeAction.addEventListener(
+                    EVENT_NAMES.KEYDOWN,
+                    (e: KeyboardEvent) => {
+                        if (
+                            e.key === KEYBOARD_KEYS.ENTER ||
+                            e.key === KEYBOARD_KEYS.SPACE
+                        ) {
+                            e.preventDefault();
+                            (e.currentTarget as HTMLElement).click();
+                        }
+                    }
+                );
+                buttonsContainer.appendChild(completeAction);
+            }
+        }
+
+        // Fail/Unfail action
+        if (state === CHALLENGE_STATES.FAILED) {
+            // Show "Unfail" button if challenge is failed
+            if (options.unfailHandler) {
+                const unfailAction = document.createElement(HTML_ELEMENTS.DIV);
+                unfailAction.classList.add(
+                    CSS_CLASSES.CHALLENGE_TEXT_ONLY_UNFAIL
+                );
+                unfailAction.textContent = UI_ELEMENTS.TEXT_ONLY_UNFAIL_BUTTON;
+                unfailAction.setAttribute(
+                    HTML_ATTRIBUTE_NAMES.ROLE,
+                    HTML_ATTRIBUTES.ROLE_BUTTON
+                );
+                unfailAction.setAttribute(
+                    HTML_ATTRIBUTE_NAMES.TABINDEX,
+                    HTML_ATTRIBUTES.TABINDEX_ZERO
+                );
+                unfailAction.addEventListener(
+                    EVENT_NAMES.CLICK,
+                    options.unfailHandler
+                );
+                unfailAction.addEventListener(
+                    EVENT_NAMES.KEYDOWN,
+                    (e: KeyboardEvent) => {
+                        if (
+                            e.key === KEYBOARD_KEYS.ENTER ||
+                            e.key === KEYBOARD_KEYS.SPACE
+                        ) {
+                            e.preventDefault();
+                            (e.currentTarget as HTMLElement).click();
+                        }
+                    }
+                );
+                buttonsContainer.appendChild(unfailAction);
+            }
+        } else {
+            // Show "Fail" button if challenge is not failed
+            if (options.failHandler) {
+                const failAction = document.createElement(HTML_ELEMENTS.DIV);
+                failAction.classList.add(CSS_CLASSES.CHALLENGE_TEXT_ONLY_FAIL);
+                failAction.textContent = UI_ELEMENTS.TEXT_ONLY_FAIL_BUTTON;
+                failAction.setAttribute(
+                    HTML_ATTRIBUTE_NAMES.ROLE,
+                    HTML_ATTRIBUTES.ROLE_BUTTON
+                );
+                failAction.setAttribute(
+                    HTML_ATTRIBUTE_NAMES.TABINDEX,
+                    HTML_ATTRIBUTES.TABINDEX_ZERO
+                );
+                failAction.addEventListener(
+                    EVENT_NAMES.CLICK,
+                    options.failHandler
+                );
+                failAction.addEventListener(
+                    EVENT_NAMES.KEYDOWN,
+                    (e: KeyboardEvent) => {
+                        if (
+                            e.key === KEYBOARD_KEYS.ENTER ||
+                            e.key === KEYBOARD_KEYS.SPACE
+                        ) {
+                            e.preventDefault();
+                            (e.currentTarget as HTMLElement).click();
+                        }
+                    }
+                );
+                buttonsContainer.appendChild(failAction);
+            }
+        }
+
+        if (options.deleteHandler) {
+            const deleteAction = document.createElement(HTML_ELEMENTS.DIV);
+            deleteAction.classList.add(CSS_CLASSES.CHALLENGE_TEXT_ONLY_DELETE);
+            deleteAction.textContent = UI_ELEMENTS.TEXT_ONLY_DELETE_BUTTON;
+            deleteAction.setAttribute(
+                HTML_ATTRIBUTE_NAMES.ROLE,
+                HTML_ATTRIBUTES.ROLE_BUTTON
+            );
+            deleteAction.setAttribute(
+                HTML_ATTRIBUTE_NAMES.ARIA_LABEL,
+                ARIA_LABELS.DELETE_CHALLENGE
+            );
+            deleteAction.setAttribute(
+                HTML_ATTRIBUTE_NAMES.TABINDEX,
+                HTML_ATTRIBUTES.TABINDEX_ZERO
+            );
+            deleteAction.addEventListener(
+                EVENT_NAMES.CLICK,
+                options.deleteHandler
+            );
+            deleteAction.addEventListener(
+                EVENT_NAMES.KEYDOWN,
+                (e: KeyboardEvent) => {
+                    if (
+                        e.key === KEYBOARD_KEYS.ENTER ||
+                        e.key === KEYBOARD_KEYS.SPACE
+                    ) {
+                        e.preventDefault();
+                        (e.currentTarget as HTMLElement).click();
+                    }
+                }
+            );
+            buttonsContainer.appendChild(deleteAction);
+        }
+
+        // Increment/Decrement buttons for multi-step challenges (rendered as plain text)
+        if (challenge.amount > 1) {
+            if (options.incrementHandler) {
+                const incrementAction = document.createElement(
+                    HTML_ELEMENTS.DIV
+                );
+                incrementAction.classList.add(
+                    CSS_CLASSES.CHALLENGE_TEXT_ONLY_INCREMENT
+                );
+                incrementAction.textContent =
+                    UI_ELEMENTS.TEXT_ONLY_INCREMENT_BUTTON;
+                incrementAction.setAttribute(
+                    HTML_ATTRIBUTE_NAMES.ROLE,
+                    HTML_ATTRIBUTES.ROLE_BUTTON
+                );
+                incrementAction.setAttribute(
+                    HTML_ATTRIBUTE_NAMES.ARIA_LABEL,
+                    ARIA_LABELS.INCREMENT_PROGRESS
+                );
+                incrementAction.setAttribute(
+                    HTML_ATTRIBUTE_NAMES.TABINDEX,
+                    HTML_ATTRIBUTES.TABINDEX_ZERO
+                );
+                incrementAction.addEventListener(
+                    EVENT_NAMES.CLICK,
+                    options.incrementHandler
+                );
+                incrementAction.addEventListener(
+                    EVENT_NAMES.KEYDOWN,
+                    (e: KeyboardEvent) => {
+                        if (
+                            e.key === KEYBOARD_KEYS.ENTER ||
+                            e.key === KEYBOARD_KEYS.SPACE
+                        ) {
+                            e.preventDefault();
+                            (e.currentTarget as HTMLElement).click();
+                        }
+                    }
+                );
+                buttonsContainer.appendChild(incrementAction);
+            }
+
+            if (options.decrementHandler) {
+                const decrementAction = document.createElement(
+                    HTML_ELEMENTS.DIV
+                );
+                decrementAction.classList.add(
+                    CSS_CLASSES.CHALLENGE_TEXT_ONLY_DECREMENT
+                );
+                decrementAction.textContent =
+                    UI_ELEMENTS.TEXT_ONLY_DECREMENT_BUTTON;
+                decrementAction.setAttribute(
+                    HTML_ATTRIBUTE_NAMES.ROLE,
+                    HTML_ATTRIBUTES.ROLE_BUTTON
+                );
+                decrementAction.setAttribute(
+                    HTML_ATTRIBUTE_NAMES.ARIA_LABEL,
+                    ARIA_LABELS.DECREMENT_PROGRESS
+                );
+                decrementAction.setAttribute(
+                    HTML_ATTRIBUTE_NAMES.TABINDEX,
+                    HTML_ATTRIBUTES.TABINDEX_ZERO
+                );
+                decrementAction.addEventListener(
+                    EVENT_NAMES.CLICK,
+                    options.decrementHandler
+                );
+                decrementAction.addEventListener(
+                    EVENT_NAMES.KEYDOWN,
+                    (e: KeyboardEvent) => {
+                        if (
+                            e.key === KEYBOARD_KEYS.ENTER ||
+                            e.key === KEYBOARD_KEYS.SPACE
+                        ) {
+                            e.preventDefault();
+                            (e.currentTarget as HTMLElement).click();
+                        }
+                    }
+                );
+                buttonsContainer.appendChild(decrementAction);
+            }
+        }
+
+        challengeElement.appendChild(buttonsContainer);
+        return challengeElement;
+    }
+
+    /**
      * Create a complete challenge list item element with all components
      * @param challenge - Challenge to create element for
      * @param options - Optional configuration for element creation
@@ -198,7 +613,12 @@ export class ChallengeRenderer {
             editHandler?: (event: Event) => void;
             incrementHandler?: (event: Event) => void;
             decrementHandler?: (event: Event) => void;
+            failHandler?: (event: Event) => void;
+            unfailHandler?: (event: Event) => void;
+            deleteHandler?: (event: Event) => void;
             displayPosition?: number;
+            textOnlyMode?: boolean;
+            includeCheckbox?: boolean;
         } = {}
     ): HTMLElement {
         const challengeElement = document.createElement(HTML_ELEMENTS.LI);
@@ -215,12 +635,19 @@ export class ChallengeRenderer {
         challengeElement.className = `${CSS_CLASSES.CHALLENGE} ${stateClass}`;
         challengeElement.dataset[DATA_ATTRIBUTES.CHALLENGE_ID] = challenge.id;
 
-        // Create checkbox
-        const checkbox = this.createChallengeCheckbox(challenge.isComplete());
+        // Determine if checkbox should be rendered (admin-only)
+        const includeCheckbox = options.includeCheckbox ?? true;
+        let checkbox: HTMLElement | null = null;
+        if (includeCheckbox) {
+            checkbox = this.createChallengeCheckbox(challenge.isComplete());
 
-        // Add event listener if requested
-        if (options.includeEventListeners && options.eventHandler) {
-            checkbox.addEventListener(EVENT_NAMES.CLICK, options.eventHandler);
+            // Add event listener if requested
+            if (options.includeEventListeners && options.eventHandler) {
+                checkbox.addEventListener(
+                    EVENT_NAMES.CLICK,
+                    options.eventHandler
+                );
+            }
         }
 
         // Create challenge text with optional display position
@@ -229,39 +656,155 @@ export class ChallengeRenderer {
             options.displayPosition
         );
 
-        // Assemble the challenge element
-        challengeElement.appendChild(checkbox);
+        // Create wrapper for text and actions
+        const contentWrapper = document.createElement(HTML_ELEMENTS.DIV);
+        contentWrapper.classList.add(CSS_CLASSES.CHALLENGE_CONTENT_WRAPPER);
+        contentWrapper.appendChild(textElement);
 
-        // Create and add edit icon only if edit handler is provided (admin mode only)
+        const actionsContainer = document.createElement(HTML_ELEMENTS.DIV);
+        actionsContainer.classList.add(CSS_CLASSES.CHALLENGE_ACTIONS);
+        let hasActions = false;
+
+        // Determine if text-only mode should be used
+        const useTextOnlyMode = options.textOnlyMode ?? false;
+
+        // Create and add edit icon/button only if edit handler is provided (admin mode only)
         if (options.editHandler) {
-            const editIcon = this.createChallengeEditIcon();
+            const editIcon = this.createChallengeEditIcon(useTextOnlyMode);
             editIcon.addEventListener(EVENT_NAMES.CLICK, options.editHandler);
-            challengeElement.appendChild(editIcon);
+            actionsContainer.appendChild(editIcon);
+            hasActions = true;
         }
 
         // Create and add increment/decrement buttons only if handlers are provided (admin mode only)
         // and challenge has progress tracking (amount > 1)
         if (challenge.amount > 1) {
             if (options.incrementHandler) {
-                const incrementButton = this.createChallengeIncrementButton();
+                const incrementButton =
+                    this.createChallengeIncrementButton(useTextOnlyMode);
                 incrementButton.addEventListener(
                     EVENT_NAMES.CLICK,
                     options.incrementHandler
                 );
-                challengeElement.appendChild(incrementButton);
+                actionsContainer.appendChild(incrementButton);
+                hasActions = true;
             }
 
             if (options.decrementHandler) {
-                const decrementButton = this.createChallengeDecrementButton();
+                const decrementButton =
+                    this.createChallengeDecrementButton(useTextOnlyMode);
                 decrementButton.addEventListener(
                     EVENT_NAMES.CLICK,
                     options.decrementHandler
                 );
-                challengeElement.appendChild(decrementButton);
+                actionsContainer.appendChild(decrementButton);
+                hasActions = true;
             }
         }
 
-        challengeElement.appendChild(textElement);
+        // Add Fail/Unfail button in admin view (non text-only and text-only styles reused for consistency)
+        if (state === CHALLENGE_STATES.FAILED) {
+            if (options.unfailHandler) {
+                const unfailButton = document.createElement(
+                    HTML_ELEMENTS.BUTTON
+                );
+                unfailButton.classList.add(
+                    CSS_CLASSES.CHALLENGE_TEXT_ONLY_UNFAIL
+                );
+                unfailButton.textContent = UI_ELEMENTS.TEXT_ONLY_UNFAIL_BUTTON;
+                unfailButton.type = HTML_ATTRIBUTES.BUTTON_TYPE;
+                unfailButton.setAttribute(
+                    HTML_ATTRIBUTE_NAMES.ARIA_LABEL,
+                    ARIA_LABELS.UNFAIL_CHALLENGE
+                );
+                unfailButton.addEventListener(
+                    EVENT_NAMES.CLICK,
+                    options.unfailHandler
+                );
+                actionsContainer.appendChild(unfailButton);
+                hasActions = true;
+            }
+        } else if (options.failHandler) {
+            const failButton = document.createElement(HTML_ELEMENTS.BUTTON);
+            failButton.classList.add(CSS_CLASSES.CHALLENGE_TEXT_ONLY_FAIL);
+            failButton.textContent = UI_ELEMENTS.TEXT_ONLY_FAIL_BUTTON;
+            failButton.type = HTML_ATTRIBUTES.BUTTON_TYPE;
+            failButton.setAttribute(
+                HTML_ATTRIBUTE_NAMES.ARIA_LABEL,
+                ARIA_LABELS.FAIL_CHALLENGE
+            );
+            failButton.addEventListener(EVENT_NAMES.CLICK, options.failHandler);
+            actionsContainer.appendChild(failButton);
+            hasActions = true;
+        }
+
+        if (options.deleteHandler) {
+            if (useTextOnlyMode) {
+                const deleteAction = document.createElement(HTML_ELEMENTS.DIV);
+                deleteAction.classList.add(
+                    CSS_CLASSES.CHALLENGE_TEXT_ONLY_DELETE
+                );
+                deleteAction.textContent = UI_ELEMENTS.TEXT_ONLY_DELETE_BUTTON;
+                deleteAction.setAttribute(
+                    HTML_ATTRIBUTE_NAMES.ROLE,
+                    HTML_ATTRIBUTES.ROLE_BUTTON
+                );
+                deleteAction.setAttribute(
+                    HTML_ATTRIBUTE_NAMES.TABINDEX,
+                    HTML_ATTRIBUTES.TABINDEX_ZERO
+                );
+                deleteAction.setAttribute(
+                    HTML_ATTRIBUTE_NAMES.ARIA_LABEL,
+                    ARIA_LABELS.DELETE_CHALLENGE
+                );
+                deleteAction.addEventListener(
+                    EVENT_NAMES.CLICK,
+                    options.deleteHandler
+                );
+                deleteAction.addEventListener(
+                    EVENT_NAMES.KEYDOWN,
+                    (e: KeyboardEvent) => {
+                        if (
+                            e.key === KEYBOARD_KEYS.ENTER ||
+                            e.key === KEYBOARD_KEYS.SPACE
+                        ) {
+                            e.preventDefault();
+                            (e.currentTarget as HTMLElement).click();
+                        }
+                    }
+                );
+                actionsContainer.appendChild(deleteAction);
+                hasActions = true;
+            } else {
+                const deleteButton = document.createElement(
+                    HTML_ELEMENTS.BUTTON
+                );
+                deleteButton.classList.add(
+                    CSS_CLASSES.CHALLENGE_TEXT_ONLY_DELETE
+                );
+                deleteButton.textContent = UI_ELEMENTS.TEXT_ONLY_DELETE_BUTTON;
+                deleteButton.setAttribute(
+                    HTML_ATTRIBUTE_NAMES.ARIA_LABEL,
+                    ARIA_LABELS.DELETE_CHALLENGE
+                );
+                deleteButton.addEventListener(
+                    EVENT_NAMES.CLICK,
+                    options.deleteHandler
+                );
+                actionsContainer.appendChild(deleteButton);
+                hasActions = true;
+            }
+        }
+
+        if (hasActions) {
+            contentWrapper.appendChild(actionsContainer);
+        }
+
+        // Assemble the challenge element
+        if (checkbox) {
+            challengeElement.appendChild(checkbox);
+        }
+        challengeElement.appendChild(contentWrapper);
 
         return challengeElement;
     }

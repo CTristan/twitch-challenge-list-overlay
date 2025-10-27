@@ -127,6 +127,9 @@ interface Config {
     /** Maximum number of challenges that can be active simultaneously */
     maxChallenges: number;
 
+    /** Enable text-only rendering mode in admin view (icons become text buttons) */
+    adminTextOnlyMode?: boolean;
+
     /** Optional array of background colors for challenge rows (supports 1-3 colors for cycling) */
     challengeRowColors?: string[];
 
@@ -156,6 +159,9 @@ interface Config {
 
     /** Enable text shadow/outline for enhanced readability (default: true) */
     challengeTextShadow?: boolean;
+
+    /** Viewer font scaling percentage (0% = 1rem, 100% = 2rem, 200% = 3rem) */
+    challengeFontSize?: number;
 
     /** Chat command configuration mapping command types to user-typed aliases */
     commands: ChatCommandsConfig;
@@ -226,6 +232,8 @@ interface ChallengeTimer {
     isPaused: boolean;
     /** Timestamp when timer was paused (0 if not paused) */
     pausedTime: number;
+    /** Whether timer had expired when it was stopped (for display purposes) */
+    wasExpired?: boolean;
 }
 
 /**

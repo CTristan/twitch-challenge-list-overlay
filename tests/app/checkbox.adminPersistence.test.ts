@@ -137,7 +137,7 @@ describe("Admin Checkbox Persistence Bug Investigation", () => {
             app.updateChallengeCount();
 
             // Verify initial UI state
-            expect(headerElement.textContent).toBe("Challenges 0/2");
+            expect(headerElement.textContent).toBe("0/2 Challenges");
 
             // Toggle first challenge via admin checkbox
             const firstChallenge = challengeList.challenges[0];
@@ -161,7 +161,7 @@ describe("Admin Checkbox Persistence Bug Investigation", () => {
             // With the fix: At least one header should show "Challenges 1/2"
             const allHeaders = document.querySelectorAll(".card .username");
             const updatedHeaders = Array.from(allHeaders).filter(
-                (h) => h.textContent === "Challenges 1/2"
+                (h) => h.textContent === "1/2 Challenges"
             );
             expect(updatedHeaders.length).toBeGreaterThan(0);
         });

@@ -16,6 +16,7 @@ export const CommandType = {
     DONE: "done",
     UNDONE: "undone",
     FAIL: "fail",
+    UNFAIL: "unfail",
     DELETE: "delete",
 
     // Progress commands
@@ -48,6 +49,7 @@ export const CommandAliases: Record<string, CommandTypeValue> = {
     done: CommandType.DONE,
     undone: CommandType.UNDONE,
     fail: CommandType.FAIL,
+    unfail: CommandType.UNFAIL,
     delete: CommandType.DELETE,
     "+": CommandType.INCREMENT,
     "-": CommandType.DECREMENT,
@@ -113,6 +115,7 @@ export const TARGET_ID_COMMANDS: Set<CommandTypeValue> = new Set([
     CommandType.DONE,
     CommandType.UNDONE,
     CommandType.FAIL,
+    CommandType.UNFAIL,
     CommandType.DELETE,
     CommandType.INCREMENT,
     CommandType.DECREMENT,

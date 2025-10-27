@@ -22,6 +22,7 @@ import { ListCommand } from "./ListCommand";
 import { SetCommand } from "./SetCommand";
 import { ShowCommand } from "./ShowCommand";
 import { UndoneCommand } from "./UndoneCommand";
+import { UnfailCommand } from "./UnfailCommand";
 
 /**
  * Configuration interface for command registration
@@ -46,6 +47,7 @@ const COMMAND_CONFIGURATIONS: CommandConfig[] = [
     { type: CommandType.UNDONE, constructor: UndoneCommand },
     { type: CommandType.DELETE, constructor: DeleteCommand },
     { type: CommandType.FAIL, constructor: FailCommand },
+    { type: CommandType.UNFAIL, constructor: UnfailCommand },
     { type: CommandType.INCREMENT, constructor: IncrementCommand },
     { type: CommandType.DECREMENT, constructor: DecrementCommand },
     { type: CommandType.SET, constructor: SetCommand },

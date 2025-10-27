@@ -31,13 +31,13 @@
   background-color: #4a4a4a;
   color: #4a90e2;
   margin: 0;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  border-bottom: 1px solid var(--modal-divider-color, rgba(255, 255, 255, 0.1));
 }
 
 .modal-body {
   font-size: 14px;
   background-color: rgba(45, 45, 45, 0.8);
-  color: #ffffff;
+  color: var(--modal-text-color, #ffffff);
   padding: 25px;
 }
 
@@ -63,20 +63,21 @@
 .modal-body label {
   display: block;
   margin-bottom: 5px;
-  color: #cccccc;
+  color: var(--modal-label-color, #f0f0f0);
   font-weight: 500;
   font-size: 14px;
 }
 
 .modal-body input[type="text"],
 .modal-body input[type="number"],
-.modal-body textarea {
+.modal-body textarea,
+.modal-body select.form-input {
   width: 100%;
   padding: 10px 12px;
-  border: 2px solid #555555;
+  border: 2px solid var(--modal-control-border-color, #555555);
   border-radius: 4px;
-  background-color: #2d2d2d;
-  color: #ffffff;
+  background-color: var(--modal-control-background-color, #2d2d2d);
+  color: var(--modal-control-text-color, #ffffff);
   font-family: "Roboto Mono", monospace;
   font-size: 14px;
   transition: border-color 0.3s ease;
@@ -85,7 +86,8 @@
 
 .modal-body input[type="text"]:focus,
 .modal-body input[type="number"]:focus,
-.modal-body textarea:focus {
+.modal-body textarea:focus,
+.modal-body select.form-input:focus {
   outline: none;
   border-color: #4a90e2;
   box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.1);
@@ -93,12 +95,17 @@
 
 .modal-body input::placeholder,
 .modal-body textarea::placeholder {
-  color: #888888;
+  color: var(--modal-control-placeholder-color, #888888);
 }
 
 .modal-body textarea {
   resize: vertical;
   min-height: 80px;
+}
+
+.modal-body select.form-input option {
+  color: var(--modal-control-option-text-color, #ffffff);
+  background-color: var(--modal-control-option-background-color, #2d2d2d);
 }
 
 /* Modal Buttons */
@@ -185,7 +192,7 @@
 
 /* Modal Text Styles */
 .modal-body p {
-  color: #cccccc;
+  color: var(--modal-muted-text-color, rgba(255, 255, 255, 0.75));
   line-height: 1.6;
   margin: 10px 0;
 }

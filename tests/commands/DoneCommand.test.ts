@@ -3,6 +3,7 @@ import Challenge from "../../src/classes/Challenge";
 import ChallengeList from "../../src/classes/ChallengeList";
 import ConfigManager from "../../src/classes/ConfigManager";
 import { DoneCommand } from "../../src/commands/DoneCommand";
+import { ChallengeStatus } from "../../src/types/ChallengeStatus";
 import { UIUpdateAction } from "../../src/types/UIUpdateAction";
 import { ensureTestIsolation } from "../utils/chatHandlerTestUtils";
 
@@ -401,7 +402,7 @@ describe("DoneCommand", () => {
         it("should return error when challenge is already completed", () => {
             // Add completed challenge
             const completedChallenge = new Challenge("Completed Challenge");
-            completedChallenge.setCompletionStatus(true);
+            completedChallenge.setStatus(ChallengeStatus.COMPLETED);
             challengeList.addChallengeObjects(completedChallenge);
 
             // Try to mark as done again
@@ -426,8 +427,8 @@ describe("DoneCommand", () => {
             // Add completed challenges
             const challenge1 = new Challenge("Challenge 1");
             const challenge2 = new Challenge("Challenge 2");
-            challenge1.setCompletionStatus(true);
-            challenge2.setCompletionStatus(true);
+            challenge1.setStatus(ChallengeStatus.COMPLETED);
+            challenge2.setStatus(ChallengeStatus.COMPLETED);
             challengeList.addChallengeObjects([challenge1, challenge2]);
 
             // Try to mark as done
@@ -501,9 +502,9 @@ describe("DoneCommand", () => {
             const challenge = new Challenge("Test Challenge");
             challengeList.addChallengeObjects(challenge);
 
-            // Mock setCompletionStatus to throw an error
-            const originalMethod = challenge.setCompletionStatus;
-            challenge.setCompletionStatus = () => {
+            // Mock setStatus to throw an error
+            const originalMethod = challenge.setStatus;
+            challenge.setStatus = () => {
                 throw new Error("Completion operation failed");
             };
 
@@ -526,7 +527,7 @@ describe("DoneCommand", () => {
             expect(response.message).toContain("Completion operation failed");
 
             // Restore original method
-            challenge.setCompletionStatus = originalMethod;
+            challenge.setStatus = originalMethod;
         });
 
         it("should handle non-Error exceptions", () => {
@@ -534,9 +535,9 @@ describe("DoneCommand", () => {
             const challenge = new Challenge("Test Challenge");
             challengeList.addChallengeObjects(challenge);
 
-            // Mock setCompletionStatus to throw a non-Error object
-            const originalMethod = challenge.setCompletionStatus;
-            challenge.setCompletionStatus = () => {
+            // Mock setStatus to throw a non-Error object
+            const originalMethod = challenge.setStatus;
+            challenge.setStatus = () => {
                 throw "String error";
             };
 
@@ -558,7 +559,7 @@ describe("DoneCommand", () => {
             expect(response.message).toContain("marking challenges as done");
 
             // Restore original method
-            challenge.setCompletionStatus = originalMethod;
+            challenge.setStatus = originalMethod;
         });
     });
 
@@ -789,7 +790,7 @@ describe("DoneCommand", () => {
             const challenge3 = new Challenge("Challenge 3");
 
             // Mark challenge2 as already completed
-            challenge2.setCompletionStatus(true);
+            challenge2.setStatus(ChallengeStatus.COMPLETED);
 
             challengeList.addChallengeObjects([
                 challenge1,

@@ -12,6 +12,9 @@ export const CSS_CLASSES = {
     ADMIN_PANEL_COLLAPSED: "admin-panel-collapsed",
     ADMIN_PANEL_HEADER: "admin-panel-header",
     ADMIN_PANEL_CONTENT: "admin-panel-content",
+    ADMIN_TEXT_ONLY_CARD: "admin-text-only-card",
+    ADMIN_STANDARD_CARD: "admin-standard-card",
+    ADMIN_TEXT_ONLY_PANEL: "admin-panel-text-only",
 
     // Challenge-related classes
     CHALLENGE: "challenge",
@@ -20,12 +23,26 @@ export const CSS_CLASSES = {
     CHALLENGE_EDIT_ICON: "challenge-edit-icon",
     CHALLENGE_INCREMENT_BUTTON: "challenge-increment-button",
     CHALLENGE_DECREMENT_BUTTON: "challenge-decrement-button",
+    CHALLENGE_TEXT_ONLY_EDIT: "challenge-text-only-edit",
+    CHALLENGE_TEXT_ONLY_COMPLETE: "challenge-text-only-complete",
+    CHALLENGE_TEXT_ONLY_UNCOMPLETE: "challenge-text-only-uncomplete",
+    CHALLENGE_TEXT_ONLY_FAIL: "challenge-text-only-fail",
+    CHALLENGE_TEXT_ONLY_UNFAIL: "challenge-text-only-unfail",
+    CHALLENGE_TEXT_ONLY_DELETE: "challenge-text-only-delete",
+    CHALLENGE_DELETE_CONFIRM: "challenge-delete-confirm",
+    CHALLENGE_TEXT_ONLY_INCREMENT: "challenge-text-only-increment",
+    CHALLENGE_TEXT_ONLY_DECREMENT: "challenge-text-only-decrement",
+    CHALLENGE_TEXT_ONLY_ITEM: "challenge-text-only-item",
+    CHALLENGE_TEXT_ONLY_CONTENT: "challenge-text-only-content",
+    CHALLENGE_TEXT_ONLY_BUTTONS: "challenge-text-only-buttons",
     CHALLENGE_TEXT: "challenge-text",
     CHALLENGE_TITLE: "challenge-title",
     CHALLENGE_DESCRIPTION: "challenge-description",
     CHALLENGE_METADATA: "challenge-metadata",
     CHALLENGE_AMOUNT: "challenge-amount",
     CHALLENGE_TIMER: "challenge-timer",
+    CHALLENGE_CONTENT_WRAPPER: "challenge-content-wrapper",
+    CHALLENGE_ACTIONS: "challenge-actions",
     CHALLENGES: "challenges",
 
     // State classes
@@ -41,7 +58,16 @@ export const CSS_CLASSES = {
     // Add Challenge Button classes
     ADD_CHALLENGE_BTN: "add-challenge-btn",
     ADD_CHALLENGE_CONTAINER: "add-challenge-container",
-    CLEAR_FINISHED_BTN: "clear-finished-btn",
+    CLEAR_COMPLETED_BTN: "clear-completed-btn",
+    CLEAR_FAILED_BTN: "clear-failed-btn",
+    REFRESH_BTN: "refresh-btn",
+    ADMIN_TEXT_ONLY_ACTION_CONTAINER: "admin-text-only-action-container",
+    ADMIN_TEXT_ONLY_ACTION_LABEL: "admin-text-only-action-label",
+    ADMIN_TEXT_ONLY_ACTION: "admin-text-only-action",
+    ADMIN_TEXT_ONLY_ACTION_ADD: "admin-text-only-action-add",
+    ADMIN_TEXT_ONLY_ACTION_CLEAR: "admin-text-only-action-clear",
+    ADMIN_TEXT_ONLY_ACTION_CLEAR_FAILED: "admin-text-only-action-clear-failed",
+    ADMIN_TEXT_ONLY_ACTION_REFRESH: "admin-text-only-action-refresh",
 
     // Background customization classes
     CUSTOM_OVERLAY_BACKGROUND: "custom-overlay-background",
@@ -69,6 +95,10 @@ export const CSS_CLASSES = {
     COLOR_PICKER_LABEL: "color-picker-label",
     PREVIEW_CHALLENGE: "preview-challenge",
     PREVIEW_TEXT: "preview-text",
+    PREVIEW_TITLE: "preview-title",
+    PREVIEW_DESCRIPTION: "preview-description",
+    PREVIEW_PROGRESS: "preview-progress",
+    PREVIEW_CHECKBOX: "preview-checkbox",
 
     // Collapsible section classes
     COLLAPSIBLE_SECTION: "collapsible-section",
@@ -101,6 +131,8 @@ export const CSS_SELECTORS = {
     CHALLENGE: ".challenge",
     CHALLENGES_LIST: ".challenges",
     CHALLENGES_ORDERED_LIST: "ol.challenges",
+    CHALLENGE_CONTENT_WRAPPER: ".challenge-content-wrapper",
+    CHALLENGE_ACTIONS: ".challenge-actions",
 
     // Header and text selectors
     CUSTOM_HEADER: ".custom-header",
@@ -112,6 +144,10 @@ export const CSS_SELECTORS = {
     ADMIN_CONTENT: ".admin-content",
     PREVIEW_CHALLENGE: ".preview-challenge",
     PREVIEW_TEXT: ".preview-text",
+    PREVIEW_TITLE: ".preview-title",
+    PREVIEW_DESCRIPTION: ".preview-description",
+    PREVIEW_PROGRESS: ".preview-progress",
+    PREVIEW_CHECKBOX: ".preview-checkbox",
 
     // Combined selectors
     CHALLENGE_BY_ID: (challengeId: string) =>
@@ -146,6 +182,7 @@ export const ELEMENT_IDS = {
 
     // Behavior form elements
     MAX_CHALLENGES: "max-challenges",
+    ADMIN_TEXT_ONLY_MODE: "admin-text-only-mode",
 
     // Add Challenge Modal elements
     ADD_CHALLENGE_MODAL: "add-challenge-modal",
@@ -155,6 +192,8 @@ export const ELEMENT_IDS = {
     ADD_CHALLENGE_DESCRIPTION: "add-challenge-description",
     ADD_CHALLENGE_AMOUNT: "add-challenge-amount",
     ADD_CHALLENGE_TIMER: "add-challenge-timer",
+    ADD_CHALLENGE_TIMER_BEHAVIOR_GROUP: "add-challenge-timer-behavior-group",
+    ADD_CHALLENGE_TIMER_BEHAVIOR: "add-challenge-timer-behavior",
     ADD_CHALLENGE_SUBMIT: "add-challenge-submit",
     ADD_CHALLENGE_CANCEL: "add-challenge-cancel",
 
@@ -170,6 +209,8 @@ export const ELEMENT_IDS = {
     TERTIARY_TEXT_COLOR: "tertiary-text-color",
     ROW_COLORS_OPACITY: "row-colors-opacity",
     ROW_COLORS_OPACITY_DISPLAY: "row-colors-opacity-display",
+    VIEWER_FONT_SIZE: "viewer-font-size",
+    VIEWER_FONT_SIZE_DISPLAY: "viewer-font-size-display",
 
     // Background configuration elements
     CHALLENGE_BACKGROUND_COLOR: "challenge-background-color",
@@ -219,6 +260,7 @@ export type ColorTier = (typeof COLOR_TIERS)[number];
  */
 export const DATA_ATTRIBUTES = {
     CHALLENGE_ID: "challengeId",
+    DELETE_CONFIRM_PENDING: "deleteConfirmPending",
 } as const;
 
 /**
@@ -328,7 +370,9 @@ export const KEYBOARD_KEYS = {
  */
 export const BUTTON_TEXT = {
     ADD_CHALLENGE: "Add Challenge",
-    CLEAR_FINISHED: "Clear Finished Challenges",
+    CLEAR_COMPLETED: "Clear Completed",
+    CLEAR_FAILED: "Clear Failed",
+    REFRESH: "Refresh",
 } as const;
 
 /**

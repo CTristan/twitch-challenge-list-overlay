@@ -61,6 +61,39 @@ body {
   font-family: var(--card-font-family, "arial");
 }
 
+.admin-text-only-card {
+  --username-font-size: 1.25rem;
+  --challenge-font-size: var(--admin-challenge-font-size);
+  --challenge-description-font-size: var(
+    --admin-challenge-description-font-size
+  );
+  --challenge-amount-font-size: var(--admin-challenge-amount-font-size);
+  --challenge-timer-font-size: var(--admin-challenge-timer-font-size);
+  --challenge-timer-font-weight: var(--admin-challenge-timer-font-weight);
+  padding: 1rem var(--card-padding);
+}
+
+.admin-standard-card {
+  --challenge-font-size: var(--admin-challenge-font-size);
+  --challenge-description-font-size: var(
+    --admin-challenge-description-font-size
+  );
+  --challenge-amount-font-size: var(--admin-challenge-amount-font-size);
+  --challenge-timer-font-size: var(--admin-challenge-timer-font-size);
+  --challenge-timer-font-weight: var(--admin-challenge-timer-font-weight);
+}
+
+.admin-text-only-card .username {
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+/* Hide card when empty in viewer mode */
+.card.hidden {
+  display: none;
+}
+
 /* Overlay Background Customization Styles */
 .card.custom-overlay-background {
   background-color: var(--overlay-background-color);
@@ -90,18 +123,42 @@ body {
   font-size: var(--challenge-font-size);
   color: var(--challenge-font-color);
   font-weight: var(--challenge-font-weight, normal);
-  padding: 2px 0;
-  min-height: calc(
-    var(--challenge-font-size, 1rem) * 1.2 +
-      var(--challenge-description-font-size, 0.85rem) * 2.2
-  );
+  padding: 0.2rem 0;
+  min-height: var(--admin-control-height);
+}
+
+.challenge-content-wrapper {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.2rem;
+  min-width: 0;
+}
+
+.challenge-actions {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 0.25rem;
+  margin-top: 0.1rem;
+  height: var(--admin-control-height);
+}
+
+.challenge-actions .challenge-edit-icon,
+.challenge-actions .challenge-increment-button,
+.challenge-actions .challenge-decrement-button,
+.challenge-actions .challenge-text-only-fail,
+.challenge-actions .challenge-text-only-unfail,
+.challenge-actions .challenge-text-only-delete {
+  margin: 0;
 }
 
 .challenge-checkbox {
   flex-shrink: 0;
   width: var(--challenge-checkbox-size);
   height: var(--challenge-checkbox-size);
-  margin-left: 0.75rem;
+  margin-left: 0.5rem;
   margin-right: var(--challenge-checkbox-margin-right);
   border: var(--challenge-checkbox-border-width) solid
     var(--challenge-checkbox-border-color, #ffffff);
@@ -111,6 +168,7 @@ body {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  align-self: center;
 }
 
 .challenge-checkbox.checked {
@@ -190,12 +248,146 @@ body {
   background-color: rgba(255, 255, 255, 0.15);
 }
 
+/* Text-only button styling (when admin text-only mode is enabled) */
+.challenge-text-only-edit,
+.challenge-text-only-increment,
+.challenge-text-only-decrement,
+.challenge-text-only-delete {
+  flex-shrink: 0;
+  height: calc(var(--admin-control-height) - 2px);
+  margin-left: 0.25rem;
+  margin-right: 0.25rem;
+  padding: 0 0.5rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: calc(var(--challenge-checkbox-size) * 0.5);
+  font-weight: 600;
+  opacity: 0.8;
+  transition: opacity 0.2s ease, transform 0.2s ease, background-color 0.2s ease;
+  user-select: none;
+  border-radius: 4px;
+  background-color: rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.challenge-text-only-edit,
+.challenge-text-only-increment,
+.challenge-text-only-decrement {
+  width: calc(var(--admin-control-height) - 2px);
+}
+
+.challenge-text-only-delete {
+  color: #ffffff;
+  background-color: #660000;
+  border-color: #660000;
+  opacity: 1;
+  box-shadow: 0 2px 6px rgba(102, 0, 0, 0.35);
+}
+
+.challenge-text-only-delete:hover,
+.challenge-text-only-delete:focus-visible {
+  opacity: 1;
+  transform: scale(1.05);
+  background-color: #7a0000;
+  border-color: #7a0000;
+}
+
+.challenge-text-only-delete:active {
+  transform: scale(0.98);
+  background-color: #600000;
+  border-color: #600000;
+}
+
+.challenge-text-only-edit:hover,
+.challenge-text-only-increment:hover,
+.challenge-text-only-decrement:hover {
+  opacity: 1;
+  transform: scale(1.05);
+  background-color: rgba(255, 255, 255, 0.25);
+  border-color: rgba(255, 255, 255, 0.5);
+}
+
+.challenge-text-only-edit:active,
+.challenge-text-only-increment:active,
+.challenge-text-only-decrement:active {
+  transform: scale(0.98);
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+.challenge-actions .challenge-text-only-fail,
+.challenge-actions .challenge-text-only-unfail {
+  flex-shrink: 0;
+  height: calc(var(--admin-control-height) - 2px);
+  padding: 0 0.55rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: calc(var(--challenge-checkbox-size) * 0.5);
+  font-weight: 600;
+  border-radius: 4px;
+  border: 1px solid transparent;
+  transition: opacity 0.2s ease, transform 0.2s ease, background-color 0.2s ease,
+    border-color 0.2s ease;
+  user-select: none;
+  opacity: 0.9;
+  color: inherit;
+  background-color: transparent;
+}
+
+.challenge-actions .challenge-text-only-fail {
+  color: #f44336;
+  background-color: rgba(244, 67, 54, 0.18);
+  border-color: rgba(244, 67, 54, 0.35);
+}
+
+.challenge-actions .challenge-text-only-unfail {
+  color: #9c27b0;
+  background-color: rgba(156, 39, 176, 0.18);
+  border-color: rgba(156, 39, 176, 0.35);
+}
+
+.challenge-actions .challenge-text-only-fail:hover,
+.challenge-actions .challenge-text-only-unfail:hover {
+  opacity: 1;
+  transform: scale(1.05);
+  border-color: currentColor;
+}
+
+.challenge-actions .challenge-text-only-fail:focus-visible,
+.challenge-actions .challenge-text-only-unfail:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.25);
+  border-color: currentColor;
+}
+
+.challenge-actions .challenge-text-only-fail:hover,
+.challenge-actions .challenge-text-only-fail:focus-visible {
+  background-color: rgba(244, 67, 54, 0.28);
+}
+
+.challenge-actions .challenge-text-only-unfail:hover,
+.challenge-actions .challenge-text-only-unfail:focus-visible {
+  background-color: rgba(156, 39, 176, 0.28);
+}
+
+.challenge-actions .challenge-text-only-fail:active,
+.challenge-actions .challenge-text-only-unfail:active {
+  transform: scale(0.97);
+  opacity: 1;
+}
+
 .challenge-text {
   flex: 1;
   display: flex;
   flex-direction: column;
+  justify-content: center;
   overflow: hidden;
-  line-height: 1.2;
+  line-height: 1.15;
+  min-height: var(--admin-control-height);
+  gap: 0.15rem;
 }
 
 .challenge-title {
@@ -205,7 +397,7 @@ body {
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
-  margin-bottom: 2px;
+  line-height: 1.1;
 }
 
 .challenge-description {
@@ -215,7 +407,7 @@ body {
   opacity: 0.85;
   white-space: normal;
   overflow-wrap: anywhere;
-  line-height: 1.1;
+  line-height: 1;
 }
 
 .challenge-metadata {
@@ -223,12 +415,15 @@ body {
   justify-content: space-between;
   align-items: center;
   gap: 1rem;
-  margin-top: 4px;
+  margin-top: 2px;
   width: 100%;
 }
 
 .challenge-amount {
-  font-size: var(--challenge-description-font-size);
+  font-size: var(
+    --challenge-amount-font-size,
+    var(--challenge-description-font-size)
+  );
   font-weight: 400;
   color: inherit;
   opacity: 0.75;
@@ -348,15 +543,19 @@ body {
   background-color: #4a90e2;
   color: #ffffff;
   border: none;
-  padding: 10px 16px;
+  padding: 0 1rem;
   border-radius: 4px;
   cursor: pointer;
   font-family: var(--card-font-family, "arial");
-  font-size: 14px;
+  font-size: clamp(0.85rem, calc(var(--admin-control-height) * 0.38), 1.05rem);
   font-weight: 500;
   transition: all 0.3s ease;
   min-width: 140px;
   box-shadow: 0 2px 4px rgba(74, 144, 226, 0.2);
+  min-height: var(--admin-control-height);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .add-challenge-btn:hover {
@@ -377,38 +576,145 @@ body {
   box-shadow: none;
 }
 
-/* Clear Finished Challenges Button Styles */
-.clear-finished-btn {
-  background-color: #dc3545;
+.clear-completed-btn,
+.clear-failed-btn,
+.refresh-btn {
   color: #ffffff;
   border: none;
-  padding: 10px 16px;
+  padding: 0 1rem;
   border-radius: 4px;
   cursor: pointer;
-  font-family: "Roboto Mono", monospace;
-  font-size: 14px;
+  font-family: var(--card-font-family, "arial");
+  font-size: clamp(0.85rem, calc(var(--admin-control-height) * 0.38), 1.05rem);
   font-weight: 500;
   transition: all 0.3s ease;
   min-width: 140px;
-  box-shadow: 0 2px 4px rgba(220, 53, 69, 0.2);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.18);
+  min-height: var(--admin-control-height);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.clear-finished-btn:hover {
-  background-color: #c82333;
+.clear-completed-btn {
+  background-color: #4caf50;
+  box-shadow: 0 2px 4px rgba(76, 175, 80, 0.25);
+}
+
+.clear-completed-btn:hover {
+  background-color: #43a047;
   transform: translateY(-1px);
-  box-shadow: 0 4px 8px rgba(220, 53, 69, 0.3);
+  box-shadow: 0 4px 8px rgba(76, 175, 80, 0.3);
 }
 
-.clear-finished-btn:active {
+.clear-completed-btn:active {
   transform: translateY(0);
-  box-shadow: 0 2px 4px rgba(220, 53, 69, 0.3);
+  box-shadow: 0 2px 4px rgba(76, 175, 80, 0.35);
 }
 
-.clear-finished-btn:disabled {
+.clear-failed-btn {
+  background-color: #f44336;
+  box-shadow: 0 2px 4px rgba(244, 67, 54, 0.25);
+}
+
+.clear-failed-btn:hover {
+  background-color: #d32f2f;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(244, 67, 54, 0.35);
+}
+
+.clear-failed-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(244, 67, 54, 0.4);
+}
+
+.refresh-btn {
+  background-color: #ff9800;
+  box-shadow: 0 2px 4px rgba(255, 152, 0, 0.25);
+}
+
+.refresh-btn:hover {
+  background-color: #fb8c00;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(255, 152, 0, 0.32);
+}
+
+.refresh-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(255, 152, 0, 0.35);
+}
+
+.clear-completed-btn:disabled,
+.clear-failed-btn:disabled,
+.refresh-btn:disabled {
   background-color: #666666;
   cursor: not-allowed;
   transform: none;
   box-shadow: none;
+}
+
+/* Text-only admin action styles */
+.add-challenge-container.admin-text-only-action-container {
+  background: rgba(255, 255, 255, 0.04);
+  border-top: 1px dashed rgba(255, 255, 255, 0.15);
+  align-items: baseline;
+  gap: 0.75rem;
+}
+
+.admin-text-only-action-label {
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.admin-text-only-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  color: rgba(255, 255, 255, 0.9);
+  transition: color 0.2s ease, transform 0.2s ease;
+}
+
+.admin-text-only-action::before {
+  content: "•";
+  font-size: 0.7rem;
+  opacity: 0.5;
+}
+
+.admin-text-only-action-add {
+  color: #4a90e2;
+}
+
+.admin-text-only-action-clear {
+  color: #4caf50;
+}
+
+.admin-text-only-action-refresh {
+  color: #ff9800;
+}
+
+.admin-text-only-action-clear-failed {
+  color: #f44336;
+}
+
+.admin-text-only-action:hover,
+.admin-text-only-action:focus-visible {
+  color: rgba(255, 255, 255, 1);
+  transform: translateY(-1px);
+}
+
+.admin-text-only-action:focus-visible {
+  outline: 2px solid rgba(255, 255, 255, 0.5);
+  outline-offset: 2px;
+}
+
+.admin-text-only-action:active {
+  transform: translateY(0);
 }
 
 /* Modal Form Styles */
@@ -420,7 +726,7 @@ body {
   display: block;
   margin-bottom: 0.5rem;
   font-weight: 500;
-  color: #333;
+  color: var(--modal-label-color, #f0f0f0);
 }
 
 .modal .form-input {
@@ -494,6 +800,193 @@ body {
   }
 }
 
+/* ========================================
+   Viewport Optimizations for OBS Docks
+   ======================================== */
+
+/* Small Viewport - Vertical OBS Dock (narrow width) */
+@media (max-width: 400px) {
+  .add-challenge-container {
+    padding: 0.75rem 1rem 0.4rem;
+    margin-top: 0.4rem;
+    gap: 8px;
+  }
+
+  .add-challenge-btn,
+  .clear-completed-btn,
+  .clear-failed-btn,
+  .refresh-btn {
+    padding: 8px 12px;
+    font-size: 12px;
+    min-width: 100px;
+  }
+
+  .connection-warning {
+    font-size: 0.85rem;
+    padding: 0.6rem 0.75rem;
+    max-width: 280px;
+  }
+
+  .modal .form-group label {
+    font-size: 12px;
+  }
+
+  .modal .form-input {
+    padding: 6px 10px;
+    font-size: 12px;
+  }
+
+  .modal .admin-button {
+    padding: 10px 16px;
+    font-size: 12px;
+    min-width: 80px;
+  }
+}
+
+/* Very Small Viewport - Extreme Vertical Dock (very narrow) */
+@media (max-width: 320px) {
+  .add-challenge-container {
+    padding: 0.5rem 0.75rem 0.3rem;
+    margin-top: 0.3rem;
+    gap: 6px;
+  }
+
+  .add-challenge-btn,
+  .clear-completed-btn,
+  .clear-failed-btn,
+  .refresh-btn {
+    padding: 6px 10px;
+    font-size: 11px;
+    min-width: 80px;
+  }
+
+  .connection-warning {
+    font-size: 0.75rem;
+    padding: 0.5rem 0.6rem;
+    max-width: 240px;
+    top: 0.5rem;
+    right: 0.5rem;
+  }
+
+  .modal .form-group {
+    margin-bottom: 0.75rem;
+  }
+
+  .modal .form-group label {
+    font-size: 11px;
+    margin-bottom: 0.4rem;
+  }
+
+  .modal .form-input {
+    padding: 5px 8px;
+    font-size: 11px;
+  }
+
+  .modal .admin-button {
+    padding: 8px 12px;
+    font-size: 11px;
+    min-width: 70px;
+  }
+
+  .modal .form-actions {
+    margin-top: 1rem;
+    padding-top: 0.75rem;
+    gap: 6px;
+  }
+}
+
+/* Small Height - Horizontal OBS Dock (short height) */
+@media (max-height: 350px) {
+  .add-challenge-container {
+    padding: 0.5rem 0.75rem 0.3rem;
+    margin-top: 0.3rem;
+    gap: 6px;
+  }
+
+  .add-challenge-btn,
+  .clear-completed-btn,
+  .clear-failed-btn,
+  .refresh-btn {
+    padding: 6px 10px;
+    font-size: 11px;
+    min-width: 80px;
+  }
+
+  .connection-warning {
+    font-size: 0.75rem;
+    padding: 0.5rem 0.6rem;
+  }
+
+  .modal .form-group {
+    margin-bottom: 0.75rem;
+  }
+
+  .modal .form-group label {
+    font-size: 11px;
+    margin-bottom: 0.3rem;
+  }
+
+  .modal .form-input {
+    padding: 5px 8px;
+    font-size: 11px;
+  }
+
+  .modal .admin-button {
+    padding: 6px 12px;
+    font-size: 11px;
+  }
+}
+
+/* Very Small Height - Extreme Horizontal Dock */
+@media (max-height: 250px) {
+  .add-challenge-container {
+    padding: 0.4rem 0.6rem 0.25rem;
+    margin-top: 0.25rem;
+    gap: 5px;
+  }
+
+  .add-challenge-btn,
+  .clear-completed-btn,
+  .clear-failed-btn,
+  .refresh-btn {
+    padding: 5px 8px;
+    font-size: 10px;
+    min-width: 70px;
+  }
+
+  .connection-warning {
+    font-size: 0.7rem;
+    padding: 0.4rem 0.5rem;
+    max-width: 200px;
+  }
+
+  .modal .form-group {
+    margin-bottom: 0.6rem;
+  }
+
+  .modal .form-group label {
+    font-size: 10px;
+    margin-bottom: 0.3rem;
+  }
+
+  .modal .form-input {
+    padding: 4px 6px;
+    font-size: 10px;
+  }
+
+  .modal .admin-button {
+    padding: 5px 10px;
+    font-size: 10px;
+    min-width: 60px;
+  }
+
+  .modal .form-actions {
+    margin-top: 0.75rem;
+    padding-top: 0.5rem;
+    gap: 5px;
+  }
+}
+
 /* Connection Warning Indicator */
 .connection-warning {
   position: fixed;
@@ -515,4 +1008,278 @@ body {
 
 .connection-warning-hidden {
   display: none;
+}
+
+/* ========================================
+   Text-Only Challenge Rendering (Admin View)
+   ======================================== */
+
+.challenge-text-only-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  list-style: none;
+  --text-only-base-color: rgba(255, 255, 255, 0.92);
+  --text-only-description-color: rgba(255, 255, 255, 0.65);
+  --text-only-metadata-color: rgba(255, 255, 255, 0.7);
+}
+
+.challenge-text-only-item:last-child {
+  border-bottom: none;
+}
+
+.challenge-text-only-item.done {
+  --text-only-base-color: rgba(76, 175, 80, 0.9);
+  --text-only-description-color: rgba(76, 175, 80, 0.75);
+  --text-only-metadata-color: rgba(76, 175, 80, 0.7);
+}
+
+.challenge-text-only-item.failed {
+  --text-only-base-color: rgba(244, 67, 54, 0.9);
+  --text-only-description-color: rgba(244, 67, 54, 0.7);
+  --text-only-metadata-color: rgba(244, 67, 54, 0.7);
+}
+
+.challenge-text-only-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  font-size: 1rem;
+  color: var(--text-only-base-color);
+  font-family: var(--card-font-family, "arial");
+  line-height: 1.45;
+}
+
+.challenge-text-only-content .challenge-text {
+  gap: 0.35rem;
+  line-height: 1.3;
+}
+
+.challenge-text-only-content .challenge-title {
+  font-weight: 600;
+  white-space: normal;
+  text-overflow: initial;
+}
+
+.challenge-text-only-content .challenge-description {
+  font-size: var(--admin-challenge-description-font-size);
+  color: var(--text-only-description-color);
+  margin: 0;
+}
+
+.challenge-text-only-content .challenge-metadata {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.5rem;
+  margin-top: 0.25rem;
+}
+
+.challenge-text-only-content .challenge-amount,
+.challenge-text-only-content .challenge-timer {
+  font-size: var(--admin-challenge-amount-font-size);
+  color: var(--text-only-metadata-color);
+  opacity: 1;
+  margin-left: 0;
+}
+
+.challenge-text-only-content .challenge-timer {
+  font-weight: 600;
+}
+
+.challenge-text-only-item.done .challenge-text-only-content,
+.challenge-text-only-item.failed .challenge-text-only-content {
+  text-decoration: line-through;
+  opacity: 0.75;
+}
+
+.challenge-text-only-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem 0.75rem;
+}
+
+.challenge-text-only-buttons button {
+  padding: 0.4rem 0.75rem;
+  font-size: 0.875rem;
+  font-family: var(--card-font-family, "arial");
+  font-weight: 500;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+/* Default chip-style for non list-context usage retained above; override inside text-only list buttons:
+   Render Edit/Complete/Uncomplete/Fail/Unfail/Increment/Decrement as plain text labels rather than buttons. */
+.challenge-text-only-buttons .challenge-text-only-edit,
+.challenge-text-only-buttons .challenge-text-only-complete,
+.challenge-text-only-buttons .challenge-text-only-uncomplete,
+.challenge-text-only-buttons .challenge-text-only-fail,
+.challenge-text-only-buttons .challenge-text-only-unfail,
+.challenge-text-only-buttons .challenge-text-only-increment,
+.challenge-text-only-buttons .challenge-text-only-decrement,
+.challenge-text-only-buttons .challenge-text-only-delete {
+  background: none !important;
+  border: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  height: auto !important;
+  box-shadow: none !important;
+  transform: none !important;
+  display: inline-flex !important;
+  align-items: center;
+  line-height: 1;
+  white-space: nowrap;
+  vertical-align: middle;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.challenge-text-only-buttons .challenge-text-only-edit {
+  color: #4a90e2;
+}
+.challenge-text-only-buttons .challenge-text-only-complete {
+  color: #4caf50;
+}
+.challenge-text-only-buttons .challenge-text-only-uncomplete {
+  color: #ff9800;
+}
+.challenge-text-only-buttons .challenge-text-only-fail {
+  color: #f44336;
+}
+.challenge-text-only-buttons .challenge-text-only-unfail {
+  color: #9c27b0;
+}
+.challenge-text-only-buttons .challenge-text-only-delete,
+.challenge-text-only-item .challenge-text-only-delete {
+  color: #b71c1c;
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  height: auto;
+  box-shadow: none;
+  transform: none;
+  display: inline-flex;
+  align-items: center;
+  line-height: 1;
+  white-space: nowrap;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+.challenge-text-only-buttons .challenge-text-only-increment {
+  color: #4caf50;
+}
+.challenge-text-only-buttons .challenge-text-only-decrement {
+  color: #ff9800;
+}
+
+.challenge-text-only-delete.challenge-delete-confirm {
+  background-color: #7a0000;
+  border-color: #7a0000;
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.18),
+    0 3px 10px rgba(122, 0, 0, 0.45);
+}
+
+.challenge-text-only-delete.challenge-delete-confirm:hover,
+.challenge-text-only-delete.challenge-delete-confirm:focus-visible {
+  background-color: #8b0000;
+  border-color: #8b0000;
+}
+
+.challenge-text-only-buttons
+  .challenge-text-only-delete.challenge-delete-confirm,
+.challenge-text-only-item .challenge-text-only-delete.challenge-delete-confirm {
+  color: #ffffff !important;
+  padding: 0.1rem 0.45rem !important;
+  border-radius: 4px !important;
+  background: #7a0000 !important;
+  border-color: #7a0000 !important;
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.18),
+    0 3px 10px rgba(122, 0, 0, 0.45) !important;
+  text-decoration: none !important;
+}
+
+.challenge-text-only-buttons
+  .challenge-text-only-delete.challenge-delete-confirm:hover,
+.challenge-text-only-buttons
+  .challenge-text-only-delete.challenge-delete-confirm:focus-visible {
+  background: #8b0000 !important;
+  border-color: #8b0000 !important;
+}
+
+.challenge-text-only-buttons .challenge-text-only-edit:hover,
+.challenge-text-only-buttons .challenge-text-only-complete:hover,
+.challenge-text-only-buttons .challenge-text-only-uncomplete:hover,
+.challenge-text-only-buttons .challenge-text-only-fail:hover,
+.challenge-text-only-buttons .challenge-text-only-unfail:hover,
+.challenge-text-only-buttons .challenge-text-only-delete:hover,
+.challenge-text-only-buttons .challenge-text-only-increment:hover,
+.challenge-text-only-buttons .challenge-text-only-decrement:hover,
+.challenge-text-only-buttons .challenge-text-only-edit:focus-visible,
+.challenge-text-only-buttons .challenge-text-only-complete:focus-visible,
+.challenge-text-only-buttons .challenge-text-only-uncomplete:focus-visible,
+.challenge-text-only-buttons .challenge-text-only-fail:focus-visible,
+.challenge-text-only-buttons .challenge-text-only-unfail:focus-visible,
+.challenge-text-only-buttons .challenge-text-only-delete:focus-visible,
+.challenge-text-only-buttons .challenge-text-only-increment:focus-visible,
+.challenge-text-only-buttons .challenge-text-only-decrement:focus-visible {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  opacity: 1;
+}
+
+/* Complete button */
+/* (Complete appearance overridden in list context above) */
+
+/* Fail button */
+/* (Fail appearance overridden in list context above) */
+
+/* Active state for all text-only buttons */
+.challenge-text-only-buttons button:active {
+  transform: translateY(0);
+  box-shadow: none;
+}
+
+/* Responsive adjustments for text-only mode */
+@media (max-width: 400px) {
+  .challenge-text-only-item {
+    padding: 0.5rem 0;
+  }
+
+  .challenge-text-only-content {
+    font-size: 0.875rem;
+  }
+
+  .challenge-text-only-buttons button {
+    padding: 0.35rem 0.6rem;
+    font-size: 0.8125rem;
+  }
+}
+
+@media (max-width: 320px) {
+  .challenge-text-only-item {
+    padding: 0.4rem 0;
+    gap: 0.4rem;
+  }
+
+  .challenge-text-only-content {
+    font-size: 0.8125rem;
+  }
+
+  .challenge-text-only-buttons {
+    gap: 0.4rem;
+  }
+
+  .challenge-text-only-buttons button {
+    padding: 0.3rem 0.5rem;
+    font-size: 0.75rem;
+  }
 }

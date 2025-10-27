@@ -16,7 +16,7 @@ const TEST_AUTH_CONFIG = {
 } as const;
 
 /**
- * Test configuration limits and behavior settings
+ * Test configuration limits and general settings
  */
 const TEST_LIMITS = {
     maxChallenges: 10,

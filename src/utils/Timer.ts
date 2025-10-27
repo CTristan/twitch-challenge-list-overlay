@@ -10,6 +10,7 @@ export default class Timer {
     isActive: boolean; // Whether timer is currently running
     isPaused: boolean; // Whether timer is paused
     private pausedTime: number = 0; // Time spent paused
+    private wasExpired: boolean = false; // Track if timer expired before being stopped
 
     /**
      * @constructor
@@ -152,6 +153,7 @@ export default class Timer {
         this.isActive = true;
         this.isPaused = false;
         this.pausedTime = 0;
+        this.wasExpired = false;
     }
 
     /**
@@ -180,6 +182,10 @@ export default class Timer {
      * Stop the timer
      */
     stop(): void {
+        // Remember if timer was expired before stopping
+        if (this.isActive && this.getRemainingTime() <= 0) {
+            this.wasExpired = true;
+        }
         this.isActive = false;
         this.isPaused = false;
         this.pausedTime = 0;
@@ -209,7 +215,8 @@ export default class Timer {
      * @returns Whether timer has expired
      */
     isExpired(): boolean {
-        if (!this.isActive) return false;
+        // If inactive, check if it was expired when stopped
+        if (!this.isActive) return this.wasExpired;
         return this.getRemainingTime() <= 0;
     }
 
@@ -242,9 +249,10 @@ export default class Timer {
      * @returns Status string with appropriate emoji
      */
     getStatusDisplay(): string {
+        // Show expired emoji if timer has expired, even if inactive
+        if (this.isExpired()) return "⏰";
         if (!this.isActive) return "";
         if (this.isPaused) return "⏸️";
-        if (this.isExpired()) return "⏰";
 
         const remaining = this.getRemainingTime();
         if (remaining <= 30) return "🔴"; // Critical
@@ -264,6 +272,7 @@ export default class Timer {
         timer.isActive = data.isActive;
         timer.isPaused = data.isPaused;
         timer.pausedTime = data.pausedTime || 0;
+        timer.wasExpired = data.wasExpired || false;
         return timer;
     }
 
@@ -279,6 +288,7 @@ export default class Timer {
             isActive: this.isActive,
             isPaused: this.isPaused,
             pausedTime: this.pausedTime,
+            wasExpired: this.wasExpired,
         };
     }
 }

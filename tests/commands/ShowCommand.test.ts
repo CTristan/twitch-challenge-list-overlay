@@ -3,6 +3,7 @@ import Challenge from "../../src/classes/Challenge";
 import ChallengeList from "../../src/classes/ChallengeList";
 import ConfigManager from "../../src/classes/ConfigManager";
 import { ShowCommand } from "../../src/commands/ShowCommand";
+import { ChallengeStatus } from "../../src/types/ChallengeStatus";
 import { STATUS_MESSAGES } from "../../src/types/MessageConstants";
 import Timer from "../../src/utils/Timer";
 import { ensureTestIsolation } from "../utils/chatHandlerTestUtils";
@@ -372,7 +373,7 @@ describe("ShowCommand", () => {
         it("should show failed status for failed challenge", () => {
             const challenge = new Challenge("Failed Challenge");
             challengeList.addChallengeObjects(challenge);
-            challenge.setFailureStatus(true);
+            challenge.setStatus(ChallengeStatus.FAILED);
 
             const result = showCommand.execute(
                 {

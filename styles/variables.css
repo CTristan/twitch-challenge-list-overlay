@@ -30,8 +30,10 @@
   --username-font-weight: normal;
 
   /* User Challenge */
-  --challenge-font-size: 2rem;
-  --challenge-description-font-size: 1.7rem;
+  --admin-control-height: 1.6rem;
+  --challenge-font-size: clamp(2rem, 3rem, 4rem);
+  --challenge-description-font-size: 1.56rem;
+  --challenge-amount-font-size: var(--challenge-description-font-size);
   --challenge-font-color: #ffffff;
   --challenge-font-weight: normal;
 
@@ -40,12 +42,29 @@
   --challenge-done-text-decoration: line-through;
 
   /* Challenge Timer */
-  --challenge-timer-font-size: 1.6rem;
+  --challenge-timer-font-size: 1.44rem;
   --challenge-timer-font-weight: 500;
+  --admin-challenge-font-size: 1rem;
+  --admin-challenge-description-font-size: 0.85rem;
+  --admin-challenge-amount-font-size: 0.825rem;
+  --admin-challenge-timer-font-size: 0.825rem;
+  --admin-challenge-timer-font-weight: 600;
   --challenge-timer-color: #ffffff;
   --challenge-timer-warning-color: #ffd700;
   --challenge-timer-critical-color: #ff6b6b;
   --challenge-timer-expired-color: #ff4757;
+
+  /* Modal Controls */
+  --modal-text-color: #ffffff;
+  --modal-control-text-color: #ffffff;
+  --modal-control-background-color: #2d2d2d;
+  --modal-control-border-color: #555555;
+  --modal-control-placeholder-color: #888888;
+  --modal-control-option-text-color: #ffffff;
+  --modal-control-option-background-color: #2d2d2d;
+  --modal-label-color: rgba(255, 255, 255, 0.92);
+  --modal-muted-text-color: rgba(255, 255, 255, 0.72);
+  --modal-divider-color: rgba(255, 255, 255, 0.12);
 
   /* Background Customization */
   /* Overlay Background (main container) */
@@ -64,20 +83,102 @@
   --border-color-dark: rgba(0, 0, 0, 0.2);
 
   /* Challenge Checkbox */
-  --challenge-checkbox-size: calc(
-    (
-        var(--challenge-font-size, 2rem) * 1.2 +
-          var(--challenge-description-font-size, 1.7rem) * 2.2
-      ) * 2 / 3
-  );
+  --challenge-checkbox-size: var(--admin-control-height);
   --challenge-checkbox-checkmark-size: calc(
-    var(--challenge-checkbox-size) * 1.1
+    var(--challenge-checkbox-size) * 0.65
   );
-  --challenge-checkbox-margin-right: 1rem;
-  --challenge-checkbox-border-width: 0.25rem;
+  --challenge-checkbox-margin-right: 0.6rem;
+  --challenge-checkbox-border-width: 0.1875rem;
   --challenge-checkbox-border-color: #ffffff;
   --challenge-checkbox-border-radius: 0.375rem;
   --challenge-checkbox-background-color: transparent;
   --challenge-checkbox-checked-border-color: #4a90e2;
   --challenge-checkbox-checkmark-color: #4a90e2;
+}
+
+/* ========================================
+   Viewport Optimizations for OBS Docks
+   ======================================== */
+
+/* Small Viewport - Vertical OBS Dock (narrow width) */
+@media (max-width: 400px) {
+  :root {
+    --header-font-size: 1.25rem;
+    --header-padding: 0.75rem;
+    --header-margin-bottom: 0.5rem;
+    --app-padding: 0.5rem;
+
+    --username-font-size: 1.25rem;
+
+    --card-padding: 0.75rem;
+    --card-gap-between: 0.5rem;
+
+    --admin-control-height: 1.3rem;
+
+    --challenge-checkbox-size: var(--admin-control-height);
+    --challenge-checkbox-margin-right: 0.5rem;
+    --challenge-checkbox-border-width: 0.175rem;
+  }
+}
+
+/* Very Small Viewport - Extreme Vertical Dock (very narrow) */
+@media (max-width: 320px) {
+  :root {
+    --header-font-size: 1rem;
+    --header-padding: 0.5rem;
+    --header-margin-bottom: 0.4rem;
+    --app-padding: 0.4rem;
+
+    --username-font-size: 1rem;
+
+    --card-padding: 0.5rem;
+    --card-gap-between: 0.4rem;
+
+    --admin-control-height: 1.2rem;
+
+    --challenge-checkbox-size: var(--admin-control-height);
+    --challenge-checkbox-margin-right: 0.4rem;
+    --challenge-checkbox-border-width: 0.15rem;
+  }
+}
+/* Small Height - Horizontal OBS Dock (short height) */
+@media (max-height: 350px) {
+  :root {
+    --header-font-size: 1.25rem;
+    --header-padding: 0.5rem;
+    --header-margin-bottom: 0.4rem;
+    --app-padding: 0.4rem;
+
+    --username-font-size: 1.25rem;
+
+    --card-padding: 0.6rem;
+    --card-gap-between: 0.4rem;
+
+    --admin-control-height: 1.3rem;
+
+    --challenge-checkbox-size: var(--admin-control-height);
+    --challenge-checkbox-margin-right: 0.5rem;
+    --challenge-checkbox-border-width: 0.175rem;
+  }
+}
+
+/* Very Small Height - Extreme Horizontal Dock */
+@media (max-height: 250px) {
+  :root {
+    --header-font-size: 1rem;
+    --header-padding: 0.4rem;
+    --header-margin-bottom: 0.3rem;
+    --app-padding: 0.3rem;
+
+    --username-font-size: 1rem;
+
+    --card-padding: 0.5rem;
+    --card-gap-between: 0.3rem;
+
+    --admin-control-height: 1.2rem;
+
+    --challenge-checkbox-size: var(--admin-control-height);
+    --challenge-checkbox-margin-right: 0.4rem;
+    --challenge-checkbox-border-width: 0.15rem;
+  }
 }

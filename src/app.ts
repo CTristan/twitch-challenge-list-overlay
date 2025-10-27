@@ -11,9 +11,9 @@ import {
     COLOR_CONFIG,
     RESPONSE_CONFIG,
 } from "./types/ConfigConstants";
+import type { CSSClassValue } from "./types/DOMConstants";
 import {
     BUTTON_TEXT,
-    CHALLENGE_STATES,
     COMMAND_CONSTANTS,
     COMMON_STRINGS,
     CSS_CLASSES,
@@ -21,17 +21,22 @@ import {
     DATA_ATTRIBUTES,
     ELEMENT_IDS,
     EVENT_NAMES,
+    HTML_ATTRIBUTE_NAMES,
     HTML_ATTRIBUTES,
     HTML_ELEMENTS,
+    KEYBOARD_KEYS,
     MODAL_MODES,
     URL_HASH,
 } from "./types/DOMConstants";
 import {
+    ARIA_LABELS,
     ERROR_MESSAGES,
     MODAL_TEXT,
     STATUS_MESSAGES,
     UI_ELEMENTS,
 } from "./types/MessageConstants";
+import { TIMING_CONSTANTS } from "./types/NumericConstants";
+import { TimerEndBehavior } from "./types/TimerEndBehavior";
 import {
     VALIDATION_CONSTRAINTS,
     VALIDATION_PATTERNS,
@@ -67,6 +72,10 @@ export default class App {
     // Track challenges being processed
     private processingCheckboxClicks = new Set<string>();
 
+    // Track delete confirmation timeout handles per button
+    private deleteConfirmationTimers: WeakMap<HTMLElement, number> =
+        new WeakMap();
+
     // Track current editing challenge ID for modal mode switching
     private editingChallengeId: string | null = null;
 
@@ -89,7 +98,12 @@ export default class App {
             this.#configManager,
             this.handleEditIconClick,
             this.handleIncrementButtonClick,
-            this.handleDecrementButtonClick
+            this.handleDecrementButtonClick,
+            this.handleCompleteButtonClick,
+            this.handleFailButtonClick,
+            this.handleUncompleteButtonClick,
+            this.handleUnfailButtonClick,
+            this.handleDeleteButtonClick
         );
         this.#timerController = new TimerController(this.challengeList);
         loadStyles(this.#configManager.getAll());
@@ -290,6 +304,18 @@ export default class App {
             ),
         };
 
+        const isAdminMode = window.location.hash === URL_HASH.ADMIN;
+        const adminTextOnlyMode =
+            isAdminMode &&
+            (this.#configManager.get(BEHAVIOR_CONFIG.ADMIN_TEXT_ONLY_MODE) ??
+                false);
+
+        if (adminTextOnlyMode) {
+            cardEl.classList.add(CSS_CLASSES.ADMIN_TEXT_ONLY_CARD);
+        } else if (isAdminMode) {
+            cardEl.classList.add(CSS_CLASSES.ADMIN_STANDARD_CARD);
+        }
+
         // Apply overlay background styling if configured
         // This must be done outside the challenges.length check to ensure it's always applied
         if (backgroundConfig.overlayBackgroundColor) {
@@ -326,16 +352,26 @@ export default class App {
                 .forEach((challenge, index) => {
                     // Use ChallengeRenderer for consistent element creation
                     // Pass displayPosition as index + 1 for 1-based numbering
-                    const isAdminMode = window.location.hash === URL_HASH.ADMIN;
+
                     const options: {
                         displayPosition: number;
+                        includeCheckbox: boolean;
                         includeEventListeners?: boolean;
                         editHandler?: (event: Event) => void;
                         incrementHandler?: (event: Event) => void;
                         decrementHandler?: (event: Event) => void;
+                        completeHandler?: (event: Event) => void;
+                        uncompleteHandler?: (event: Event) => void;
+                        failHandler?: (event: Event) => void;
+                        unfailHandler?: (event: Event) => void;
+                        deleteHandler?: (event: Event) => void;
+                        textOnlyMode?: boolean;
                     } = {
                         displayPosition: index + 1,
+                        includeCheckbox: isAdminMode && !adminTextOnlyMode,
                     };
+
+                    let listItem: HTMLElement;
 
                     // Add handlers in admin mode
                     if (isAdminMode) {
@@ -345,25 +381,60 @@ export default class App {
                             this.handleIncrementButtonClick;
                         options.decrementHandler =
                             this.handleDecrementButtonClick;
+                        options.failHandler = this.handleFailButtonClick;
+                        options.unfailHandler = this.handleUnfailButtonClick;
+                        options.deleteHandler = this.handleDeleteButtonClick;
+
+                        // Use completely different rendering for text-only mode
+                        if (adminTextOnlyMode) {
+                            options.completeHandler =
+                                this.handleCompleteButtonClick;
+                            options.uncompleteHandler =
+                                this.handleUncompleteButtonClick;
+                            // Create text-only element (no styling needed)
+                            listItem =
+                                ChallengeRenderer.createTextOnlyChallengeElement(
+                                    challenge,
+                                    options
+                                );
+                        } else {
+                            options.textOnlyMode = adminTextOnlyMode;
+                            listItem = ChallengeRenderer.createChallengeElement(
+                                challenge,
+                                options
+                            );
+                            // Apply background customization (includes row colors if configured)
+                            ChallengeRenderer.applyBackgroundCustomization(
+                                listItem,
+                                backgroundConfig,
+                                index,
+                                rowColors,
+                                rowTextColors,
+                                rowColorsOpacity
+                            );
+                        }
+                    } else {
+                        listItem = ChallengeRenderer.createChallengeElement(
+                            challenge,
+                            options
+                        );
+                        // Apply background customization (includes row colors if configured)
+                        ChallengeRenderer.applyBackgroundCustomization(
+                            listItem,
+                            backgroundConfig,
+                            index,
+                            rowColors,
+                            rowTextColors,
+                            rowColorsOpacity
+                        );
                     }
 
-                    const listItem = ChallengeRenderer.createChallengeElement(
-                        challenge,
-                        options
-                    );
-
-                    // Apply background customization (includes row colors if configured)
-                    ChallengeRenderer.applyBackgroundCustomization(
-                        listItem,
-                        backgroundConfig,
-                        index,
-                        rowColors,
-                        rowTextColors,
-                        rowColorsOpacity
-                    );
-
                     // Add timer display if timer exists and is active (inside metadata row)
-                    if (challenge.timer && challenge.timer.isActive) {
+                    if (
+                        !adminTextOnlyMode &&
+                        challenge.timer &&
+                        challenge.timer.isActive
+                    ) {
                         const timerElement =
                             TimerDisplayUtils.createTimerElement(
                                 challenge.timer,
@@ -386,8 +457,7 @@ export default class App {
             list.appendChild(fragment);
         }
 
-        // Always append the card to container, even if the list is empty
-        // This ensures the header is always visible
+        // Always append the card to container
         const challengeContainer = document.querySelector(
             CSS_SELECTORS.CHALLENGE_CONTAINER
         );
@@ -396,6 +466,12 @@ export default class App {
             return;
         }
         challengeContainer.innerHTML = COMMON_STRINGS.EMPTY;
+
+        // Hide card in viewer mode when there are no challenges
+        if (!isAdminMode && this.challengeList.challenges.length === 0) {
+            cardEl.classList.add(CSS_CLASSES.HIDDEN);
+        }
+
         challengeContainer.appendChild(cardEl);
 
         animateScroll();
@@ -590,52 +666,158 @@ export default class App {
             return;
         }
 
+        const adminTextOnlyMode =
+            this.#configManager.get(BEHAVIOR_CONFIG.ADMIN_TEXT_ONLY_MODE) ??
+            false;
+
         // Find all challenge cards
         const challengeCards = document.querySelectorAll(CSS_SELECTORS.CARD);
         challengeCards.forEach((card) => {
-            // Check if button container already exists
-            let buttonContainer = card.querySelector(
+            let buttonContainer = card.querySelector<HTMLElement>(
                 `.${CSS_CLASSES.ADD_CHALLENGE_CONTAINER}`
             );
 
             if (!buttonContainer) {
-                // Create button container
                 buttonContainer = document.createElement(HTML_ELEMENTS.DIV);
                 buttonContainer.className = CSS_CLASSES.ADD_CHALLENGE_CONTAINER;
-
-                // Create the Add Challenge button
-                const addButton = document.createElement(HTML_ELEMENTS.BUTTON);
-                addButton.className = CSS_CLASSES.ADD_CHALLENGE_BTN;
-                addButton.textContent = BUTTON_TEXT.ADD_CHALLENGE;
-                addButton.type = HTML_ATTRIBUTES.BUTTON_TYPE;
-
-                // Add click event listener
-                addButton.addEventListener(
-                    EVENT_NAMES.CLICK,
-                    this.handleAddChallengeClick
-                );
-
-                buttonContainer.appendChild(addButton);
-
-                // Create the Clear Finished Challenges button
-                const clearFinishedButton = document.createElement(
-                    HTML_ELEMENTS.BUTTON
-                );
-                clearFinishedButton.className = CSS_CLASSES.CLEAR_FINISHED_BTN;
-                clearFinishedButton.textContent = BUTTON_TEXT.CLEAR_FINISHED;
-                clearFinishedButton.type = HTML_ATTRIBUTES.BUTTON_TYPE;
-
-                // Add click event listener
-                clearFinishedButton.addEventListener(
-                    EVENT_NAMES.CLICK,
-                    this.handleClearFinishedClick
-                );
-
-                buttonContainer.appendChild(clearFinishedButton);
-
                 card.appendChild(buttonContainer);
             }
+
+            buttonContainer.classList.toggle(
+                CSS_CLASSES.ADMIN_TEXT_ONLY_ACTION_CONTAINER,
+                adminTextOnlyMode
+            );
+
+            buttonContainer.innerHTML = COMMON_STRINGS.EMPTY;
+
+            if (adminTextOnlyMode) {
+                this.renderAdminTextOnlyActions(buttonContainer);
+            } else {
+                this.renderStandardAdminActions(buttonContainer);
+            }
         });
+    }
+
+    private renderStandardAdminActions(buttonContainer: HTMLElement): void {
+        const addButton = document.createElement(HTML_ELEMENTS.BUTTON);
+        addButton.className = CSS_CLASSES.ADD_CHALLENGE_BTN;
+        addButton.textContent = BUTTON_TEXT.ADD_CHALLENGE;
+        addButton.type = HTML_ATTRIBUTES.BUTTON_TYPE;
+        addButton.addEventListener(
+            EVENT_NAMES.CLICK,
+            this.handleAddChallengeClick
+        );
+
+        buttonContainer.appendChild(addButton);
+
+        const clearCompletedButton = document.createElement(
+            HTML_ELEMENTS.BUTTON
+        );
+        clearCompletedButton.className = CSS_CLASSES.CLEAR_COMPLETED_BTN;
+        clearCompletedButton.textContent = BUTTON_TEXT.CLEAR_COMPLETED;
+        clearCompletedButton.type = HTML_ATTRIBUTES.BUTTON_TYPE;
+        clearCompletedButton.addEventListener(
+            EVENT_NAMES.CLICK,
+            this.handleClearCompletedClick
+        );
+
+        buttonContainer.appendChild(clearCompletedButton);
+
+        const clearFailedButton = document.createElement(HTML_ELEMENTS.BUTTON);
+        clearFailedButton.className = CSS_CLASSES.CLEAR_FAILED_BTN;
+        clearFailedButton.textContent = BUTTON_TEXT.CLEAR_FAILED;
+        clearFailedButton.type = HTML_ATTRIBUTES.BUTTON_TYPE;
+        clearFailedButton.addEventListener(
+            EVENT_NAMES.CLICK,
+            this.handleClearFailedClick
+        );
+
+        buttonContainer.appendChild(clearFailedButton);
+
+        const refreshButton = document.createElement(HTML_ELEMENTS.BUTTON);
+        refreshButton.className = CSS_CLASSES.REFRESH_BTN;
+        refreshButton.textContent = BUTTON_TEXT.REFRESH;
+        refreshButton.type = HTML_ATTRIBUTES.BUTTON_TYPE;
+        refreshButton.addEventListener(
+            EVENT_NAMES.CLICK,
+            this.handleRefreshClick
+        );
+
+        buttonContainer.appendChild(refreshButton);
+    }
+
+    private renderAdminTextOnlyActions(buttonContainer: HTMLElement): void {
+        const fragment = document.createDocumentFragment();
+
+        const label = document.createElement(HTML_ELEMENTS.DIV);
+        label.classList.add(CSS_CLASSES.ADMIN_TEXT_ONLY_ACTION_LABEL);
+        label.textContent = UI_ELEMENTS.TEXT_ONLY_ADMIN_ACTIONS_LABEL;
+        fragment.appendChild(label);
+
+        const addAction = this.createAdminTextOnlyAction(
+            UI_ELEMENTS.TEXT_ONLY_ADD_CHALLENGE_ACTION,
+            CSS_CLASSES.ADMIN_TEXT_ONLY_ACTION_ADD,
+            this.handleAddChallengeClick
+        );
+        fragment.appendChild(addAction);
+
+        const clearCompletedAction = this.createAdminTextOnlyAction(
+            UI_ELEMENTS.TEXT_ONLY_CLEAR_COMPLETED_ACTION,
+            CSS_CLASSES.ADMIN_TEXT_ONLY_ACTION_CLEAR,
+            this.handleClearCompletedClick
+        );
+        fragment.appendChild(clearCompletedAction);
+
+        const clearFailedAction = this.createAdminTextOnlyAction(
+            UI_ELEMENTS.TEXT_ONLY_CLEAR_FAILED_ACTION,
+            CSS_CLASSES.ADMIN_TEXT_ONLY_ACTION_CLEAR_FAILED,
+            this.handleClearFailedClick
+        );
+        fragment.appendChild(clearFailedAction);
+
+        const refreshAction = this.createAdminTextOnlyAction(
+            UI_ELEMENTS.TEXT_ONLY_REFRESH_ACTION,
+            CSS_CLASSES.ADMIN_TEXT_ONLY_ACTION_REFRESH,
+            this.handleRefreshClick
+        );
+        fragment.appendChild(refreshAction);
+
+        buttonContainer.appendChild(fragment);
+    }
+
+    private createAdminTextOnlyAction(
+        text: string,
+        variantClass: CSSClassValue,
+        handler: EventListener
+    ): HTMLElement {
+        const actionElement = document.createElement(HTML_ELEMENTS.DIV);
+        actionElement.classList.add(
+            CSS_CLASSES.ADMIN_TEXT_ONLY_ACTION,
+            variantClass
+        );
+        actionElement.textContent = text;
+        actionElement.setAttribute(
+            HTML_ATTRIBUTE_NAMES.ROLE,
+            HTML_ATTRIBUTES.ROLE_BUTTON
+        );
+        actionElement.setAttribute(
+            HTML_ATTRIBUTE_NAMES.TABINDEX,
+            HTML_ATTRIBUTES.TABINDEX_ZERO
+        );
+
+        actionElement.addEventListener(EVENT_NAMES.CLICK, handler);
+        actionElement.addEventListener(EVENT_NAMES.KEYDOWN, (event) => {
+            const keyboardEvent = event as KeyboardEvent;
+            if (
+                keyboardEvent.key === KEYBOARD_KEYS.ENTER ||
+                keyboardEvent.key === KEYBOARD_KEYS.SPACE
+            ) {
+                keyboardEvent.preventDefault();
+                (keyboardEvent.currentTarget as HTMLElement)?.click();
+            }
+        });
+
+        return actionElement;
     }
 
     /**
@@ -648,29 +830,49 @@ export default class App {
     };
 
     /**
-     * Handle clear finished challenges button click
+     * Handle refresh button click
+     * Reloads the current page
+     * @returns {void}
+     */
+    private handleRefreshClick = (): void => {
+        window.location.reload();
+    };
+
+    /**
+     * Handle clear completed challenges button click
      * Clears all completed challenges from the list
      * @returns {void}
      */
-    private handleClearFinishedClick = (): void => {
-        // Get completed challenges count before clearing
+    private handleClearCompletedClick = (): void => {
         const completedChallenges = this.challengeList.challenges.filter((c) =>
             c.isComplete()
         );
-        const completedCount = completedChallenges.length;
 
-        // Check if there are any completed challenges to clear
-        if (completedCount === 0) {
+        if (completedChallenges.length === 0) {
             return;
         }
 
-        // Clear completed challenges (automatically saves to localStorage)
         this.challengeList.clearDoneChallenges();
-
-        // Re-render the challenge list to reflect the changes
         this.renderChallengeList();
+        notifyChallengeStateChanged();
+    };
 
-        // Notify viewer overlay about the state change
+    /**
+     * Handle clear failed challenges button click
+     * Clears all failed challenges from the list
+     * @returns {void}
+     */
+    private handleClearFailedClick = (): void => {
+        const failedChallenges = this.challengeList.challenges.filter((c) =>
+            c.isFailed()
+        );
+
+        if (failedChallenges.length === 0) {
+            return;
+        }
+
+        this.challengeList.clearFailedChallenges();
+        this.renderChallengeList();
         notifyChallengeStateChanged();
     };
 
@@ -787,6 +989,9 @@ export default class App {
         const timerInput = document.getElementById(
             ELEMENT_IDS.ADD_CHALLENGE_TIMER
         ) as HTMLInputElement;
+        const timerBehaviorSelect = document.getElementById(
+            ELEMENT_IDS.ADD_CHALLENGE_TIMER_BEHAVIOR
+        ) as HTMLSelectElement | null;
 
         // Populate title
         if (titleInput) {
@@ -812,16 +1017,30 @@ export default class App {
                 challenge.timer.duration
             );
             timerInput.value = timerString;
+            if (timerBehaviorSelect) {
+                timerBehaviorSelect.value = challenge.getTimerEndBehavior();
+            }
         } else if (timerInput) {
             timerInput.value = COMMON_STRINGS.EMPTY;
+            if (timerBehaviorSelect) {
+                timerBehaviorSelect.value = TimerEndBehavior.AUTO_FAIL;
+            }
         }
 
         // Clear any error states
-        [titleInput, descInput, amountInput, timerInput].forEach((input) => {
+        [
+            titleInput,
+            descInput,
+            amountInput,
+            timerInput,
+            timerBehaviorSelect,
+        ].forEach((input) => {
             if (input) {
                 input.classList.remove(CSS_CLASSES.ERROR);
             }
         });
+
+        this.updateTimerBehaviorVisibility();
     }
 
     /**
@@ -841,18 +1060,60 @@ export default class App {
         const timerInput = document.getElementById(
             ELEMENT_IDS.ADD_CHALLENGE_TIMER
         ) as HTMLInputElement;
+        const timerBehaviorSelect = document.getElementById(
+            ELEMENT_IDS.ADD_CHALLENGE_TIMER_BEHAVIOR
+        ) as HTMLSelectElement | null;
 
         if (titleInput) titleInput.value = COMMON_STRINGS.EMPTY;
         if (descInput) descInput.value = COMMON_STRINGS.EMPTY;
         if (amountInput) amountInput.value = COMMON_STRINGS.EMPTY;
         if (timerInput) timerInput.value = COMMON_STRINGS.EMPTY;
+        if (timerBehaviorSelect) {
+            timerBehaviorSelect.value = TimerEndBehavior.AUTO_FAIL;
+        }
 
         // Clear any error states
-        [titleInput, descInput, amountInput, timerInput].forEach((input) => {
+        [
+            titleInput,
+            descInput,
+            amountInput,
+            timerInput,
+            timerBehaviorSelect,
+        ].forEach((input) => {
             if (input) {
                 input.classList.remove(CSS_CLASSES.ERROR);
             }
         });
+
+        this.updateTimerBehaviorVisibility();
+    }
+
+    private updateTimerBehaviorVisibility(): void {
+        const timerInput = document.getElementById(
+            ELEMENT_IDS.ADD_CHALLENGE_TIMER
+        ) as HTMLInputElement | null;
+        const timerBehaviorGroup = document.getElementById(
+            ELEMENT_IDS.ADD_CHALLENGE_TIMER_BEHAVIOR_GROUP
+        );
+        const timerBehaviorSelect = document.getElementById(
+            ELEMENT_IDS.ADD_CHALLENGE_TIMER_BEHAVIOR
+        ) as HTMLSelectElement | null;
+
+        if (!timerBehaviorGroup) {
+            return;
+        }
+
+        const hasTimer = Boolean(timerInput?.value?.trim());
+
+        if (hasTimer) {
+            timerBehaviorGroup.classList.remove(CSS_CLASSES.HIDDEN);
+        } else {
+            timerBehaviorGroup.classList.add(CSS_CLASSES.HIDDEN);
+            if (timerBehaviorSelect) {
+                timerBehaviorSelect.value = TimerEndBehavior.AUTO_FAIL;
+                timerBehaviorSelect.classList.remove(CSS_CLASSES.ERROR);
+            }
+        }
     }
 
     /**
@@ -864,6 +1125,9 @@ export default class App {
         const cancelButton = document.getElementById(
             ELEMENT_IDS.ADD_CHALLENGE_CANCEL
         );
+        const timerInput = document.getElementById(
+            ELEMENT_IDS.ADD_CHALLENGE_TIMER
+        ) as HTMLInputElement | null;
 
         if (form) {
             // Remove existing listeners to prevent duplicates
@@ -887,7 +1151,30 @@ export default class App {
                 this.handleAddChallengeCancelClick
             );
         }
+
+        if (timerInput) {
+            timerInput.removeEventListener(
+                EVENT_NAMES.INPUT,
+                this.handleTimerInputChange
+            );
+            timerInput.removeEventListener(
+                EVENT_NAMES.CHANGE,
+                this.handleTimerInputChange
+            );
+            timerInput.addEventListener(
+                EVENT_NAMES.INPUT,
+                this.handleTimerInputChange
+            );
+            timerInput.addEventListener(
+                EVENT_NAMES.CHANGE,
+                this.handleTimerInputChange
+            );
+        }
     }
+
+    private handleTimerInputChange = (): void => {
+        this.updateTimerBehaviorVisibility();
+    };
 
     /**
      * Handle add/edit challenge form submission
@@ -972,8 +1259,9 @@ export default class App {
         // Mark this challenge as being processed
         this.processingCheckboxClicks.add(challengeId);
 
-        // Cycle through challenge states: in-progress → done → failed → in-progress
-        const challenge = this.challengeList.cycleChallengeState(challengeId);
+        // Toggle completion only: in-progress ↔ done (failure handled via explicit Fail button)
+        const challenge =
+            this.challengeList.toggleChallengeCompletion(challengeId);
         if (!challenge) {
             console.error(
                 ERROR_MESSAGES.CHALLENGE_NOT_FOUND_BY_ID.replace(
@@ -986,14 +1274,10 @@ export default class App {
         }
 
         try {
-            // Update DOM to reflect the new state
-            const state = challenge.getState();
-            if (state === CHALLENGE_STATES.DONE) {
+            // Update DOM to reflect the new state (only done or in-progress)
+            if (challenge.isComplete()) {
                 this.completeChallengeFromDOM(challengeId);
-            } else if (state === CHALLENGE_STATES.FAILED) {
-                this.failChallengeFromDOM(challengeId);
             } else {
-                // in-progress
                 this.revertChallengeFromDOM(challengeId);
             }
 
@@ -1096,6 +1380,7 @@ export default class App {
         description?: string;
         amount?: number;
         timer?: string;
+        timerEndBehavior?: TimerEndBehavior;
     } | null {
         const titleInput = document.getElementById(
             ELEMENT_IDS.ADD_CHALLENGE_TITLE
@@ -1109,9 +1394,18 @@ export default class App {
         const timerInput = document.getElementById(
             ELEMENT_IDS.ADD_CHALLENGE_TIMER
         ) as HTMLInputElement;
+        const timerBehaviorSelect = document.getElementById(
+            ELEMENT_IDS.ADD_CHALLENGE_TIMER_BEHAVIOR
+        ) as HTMLSelectElement | null;
 
         // Clear any previous error states
-        [titleInput, descInput, amountInput, timerInput].forEach((input) => {
+        [
+            titleInput,
+            descInput,
+            amountInput,
+            timerInput,
+            timerBehaviorSelect,
+        ].forEach((input) => {
             if (input) {
                 input.classList.remove(CSS_CLASSES.ERROR);
             }
@@ -1151,6 +1445,7 @@ export default class App {
 
         // Basic timer format validation if provided
         let timer: string | undefined;
+        let timerEndBehavior: TimerEndBehavior | undefined;
         if (timerStr) {
             // Simple validation - should match patterns like "5m", "30s", "1h"
             const timerPattern = VALIDATION_PATTERNS.TIMER_FORMAT;
@@ -1162,6 +1457,24 @@ export default class App {
                 throw new Error(ERROR_MESSAGES.TIMER_FORMAT_INVALID);
             }
             timer = timerStr;
+
+            if (!timerBehaviorSelect) {
+                throw new Error(ERROR_MESSAGES.TIMER_BEHAVIOR_INVALID);
+            }
+
+            const selectedBehavior =
+                timerBehaviorSelect.value as TimerEndBehavior;
+            const validTimerBehaviors = Object.values(
+                TimerEndBehavior
+            ) as TimerEndBehavior[];
+
+            if (!validTimerBehaviors.includes(selectedBehavior)) {
+                timerBehaviorSelect.classList.add(CSS_CLASSES.ERROR);
+                timerBehaviorSelect.focus();
+                throw new Error(ERROR_MESSAGES.TIMER_BEHAVIOR_INVALID);
+            }
+
+            timerEndBehavior = selectedBehavior;
         }
 
         const result: {
@@ -1169,6 +1482,7 @@ export default class App {
             description?: string;
             amount?: number;
             timer?: string;
+            timerEndBehavior?: TimerEndBehavior;
         } = { title };
 
         if (description) {
@@ -1179,6 +1493,9 @@ export default class App {
         }
         if (timer) {
             result.timer = timer;
+        }
+        if (timerEndBehavior !== undefined) {
+            result.timerEndBehavior = timerEndBehavior;
         }
 
         return result;
@@ -1194,6 +1511,7 @@ export default class App {
         description?: string;
         amount?: number;
         timer?: string;
+        timerEndBehavior?: TimerEndBehavior;
     }): void {
         // Check challenge limit
         const maxChallenges =
@@ -1213,6 +1531,7 @@ export default class App {
             description?: string;
             amount?: number;
             timer?: string;
+            timerEndBehavior?: TimerEndBehavior;
         } = {};
 
         if (challengeData.description) {
@@ -1223,6 +1542,9 @@ export default class App {
         }
         if (challengeData.timer) {
             challengeOptions.timer = challengeData.timer;
+        }
+        if (challengeData.timerEndBehavior) {
+            challengeOptions.timerEndBehavior = challengeData.timerEndBehavior;
         }
 
         // Create the challenge
@@ -1256,6 +1578,7 @@ export default class App {
             description?: string;
             amount?: number;
             timer?: string;
+            timerEndBehavior?: TimerEndBehavior;
         }
     ): void {
         const challenge = this.challengeList.getChallengeById(challengeId);
@@ -1272,6 +1595,10 @@ export default class App {
         // Update amount
         if (challengeData.amount !== undefined) {
             challenge.setAmount(challengeData.amount);
+        }
+
+        if (challengeData.timerEndBehavior) {
+            challenge.setTimerEndBehavior(challengeData.timerEndBehavior);
         }
 
         // Update timer if provided
@@ -1305,9 +1632,10 @@ export default class App {
         }
 
         const target = event.target as HTMLElement;
+        // Find challenge element (both regular and text-only modes)
         const challengeElement = target.closest(
-            CSS_SELECTORS.CHALLENGE
-        ) as HTMLElement;
+            `${CSS_SELECTORS.CHALLENGE}, .${CSS_CLASSES.CHALLENGE_TEXT_ONLY_ITEM}`
+        ) as HTMLElement | null;
 
         if (!challengeElement) {
             return;
@@ -1338,9 +1666,10 @@ export default class App {
         }
 
         const target = event.target as HTMLElement;
+        // Find challenge element (both regular and text-only modes)
         const challengeElement = target.closest(
-            CSS_SELECTORS.CHALLENGE
-        ) as HTMLElement;
+            `${CSS_SELECTORS.CHALLENGE}, .${CSS_CLASSES.CHALLENGE_TEXT_ONLY_ITEM}`
+        ) as HTMLElement | null;
 
         if (!challengeElement) {
             return;
@@ -1379,9 +1708,10 @@ export default class App {
         }
 
         const target = event.target as HTMLElement;
+        // Find challenge element (both regular and text-only modes)
         const challengeElement = target.closest(
-            CSS_SELECTORS.CHALLENGE
-        ) as HTMLElement;
+            `${CSS_SELECTORS.CHALLENGE}, .${CSS_CLASSES.CHALLENGE_TEXT_ONLY_ITEM}`
+        ) as HTMLElement | null;
 
         if (!challengeElement) {
             return;
@@ -1401,6 +1731,300 @@ export default class App {
             this.renderChallengeList();
 
             // Notify other windows (viewer overlay) about the state change
+            notifyChallengeStateChanged();
+        }
+    };
+
+    private clearDeleteConfirmationTimer(deleteElement: HTMLElement): void {
+        const timerId = this.deleteConfirmationTimers.get(deleteElement);
+
+        if (timerId !== undefined) {
+            window.clearTimeout(timerId);
+            this.deleteConfirmationTimers.delete(deleteElement);
+        }
+    }
+
+    private clearDeleteConfirmationState(deleteElement: HTMLElement): void {
+        this.clearDeleteConfirmationTimer(deleteElement);
+
+        if (
+            deleteElement.dataset[DATA_ATTRIBUTES.DELETE_CONFIRM_PENDING] !==
+            "true"
+        ) {
+            return;
+        }
+
+        delete deleteElement.dataset[DATA_ATTRIBUTES.DELETE_CONFIRM_PENDING];
+        deleteElement.textContent = UI_ELEMENTS.TEXT_ONLY_DELETE_BUTTON;
+        deleteElement.classList.remove(CSS_CLASSES.CHALLENGE_DELETE_CONFIRM);
+        deleteElement.setAttribute(
+            HTML_ATTRIBUTE_NAMES.ARIA_LABEL,
+            ARIA_LABELS.DELETE_CHALLENGE
+        );
+    }
+
+    private setDeleteConfirmationTimer(deleteElement: HTMLElement): void {
+        this.clearDeleteConfirmationTimer(deleteElement);
+
+        const timerId = window.setTimeout(() => {
+            this.clearDeleteConfirmationState(deleteElement);
+        }, TIMING_CONSTANTS.DELETE_CONFIRMATION_TIMEOUT);
+
+        this.deleteConfirmationTimers.set(deleteElement, timerId);
+    }
+
+    private resetDeleteConfirmations(
+        excludeElement?: HTMLElement | null
+    ): void {
+        const deleteButtons = document.querySelectorAll(
+            `.${CSS_CLASSES.CHALLENGE_TEXT_ONLY_DELETE}`
+        );
+
+        deleteButtons.forEach((element) => {
+            if (excludeElement && element === excludeElement) {
+                return;
+            }
+
+            this.clearDeleteConfirmationState(element as HTMLElement);
+        });
+    }
+
+    private handleDeleteButtonClick = (event: Event): void => {
+        event.stopPropagation();
+
+        if (window.location.hash !== URL_HASH.ADMIN) {
+            return;
+        }
+
+        const deleteButton = event.currentTarget as HTMLElement | null;
+
+        if (!deleteButton) {
+            return;
+        }
+
+        const challengeElement = deleteButton.closest(
+            `${CSS_SELECTORS.CHALLENGE}, .${CSS_CLASSES.CHALLENGE_TEXT_ONLY_ITEM}`
+        ) as HTMLElement | null;
+
+        if (!challengeElement) {
+            return;
+        }
+
+        const challengeId =
+            challengeElement.dataset[DATA_ATTRIBUTES.CHALLENGE_ID];
+        if (!challengeId) {
+            return;
+        }
+
+        const isConfirming =
+            deleteButton.dataset[DATA_ATTRIBUTES.DELETE_CONFIRM_PENDING] ===
+            "true";
+
+        if (!isConfirming) {
+            this.resetDeleteConfirmations(deleteButton);
+            deleteButton.dataset[DATA_ATTRIBUTES.DELETE_CONFIRM_PENDING] =
+                "true";
+            deleteButton.textContent = UI_ELEMENTS.DELETE_CONFIRM_PROMPT;
+            deleteButton.classList.add(CSS_CLASSES.CHALLENGE_DELETE_CONFIRM);
+            deleteButton.setAttribute(
+                HTML_ATTRIBUTE_NAMES.ARIA_LABEL,
+                ARIA_LABELS.CONFIRM_DELETE_CHALLENGE
+            );
+            this.setDeleteConfirmationTimer(deleteButton);
+            return;
+        }
+
+        this.resetDeleteConfirmations();
+
+        const challenges = this.challengeList.getAllChallenges();
+        const challengeIndex = challenges.findIndex(
+            (challenge) => challenge.id === challengeId
+        );
+
+        if (challengeIndex === -1) {
+            return;
+        }
+
+        const deletedChallenges =
+            this.challengeList.deleteChallenges(challengeIndex);
+
+        if (deletedChallenges.length === 0) {
+            return;
+        }
+
+        this.renderChallengeList();
+        notifyChallengeStateChanged();
+    };
+
+    /**
+     * Handle Complete button click in text-only mode
+     * @param {Event} event - The click event
+     * @returns {void}
+     */
+    private handleCompleteButtonClick = (event: Event): void => {
+        event.stopPropagation();
+
+        // Only handle clicks in admin mode
+        if (window.location.hash !== URL_HASH.ADMIN) {
+            return;
+        }
+
+        const target = event.target as HTMLElement;
+        // Find challenge element (standard or text-only modes)
+        const challengeElement = target.closest(
+            `${CSS_SELECTORS.CHALLENGE}, .${CSS_CLASSES.CHALLENGE_TEXT_ONLY_ITEM}`
+        ) as HTMLElement | null;
+
+        if (!challengeElement) {
+            return;
+        }
+
+        const challengeId =
+            challengeElement.dataset[DATA_ATTRIBUTES.CHALLENGE_ID];
+        if (!challengeId) {
+            return;
+        }
+
+        // Prevent duplicate processing
+        if (this.processingCheckboxClicks.has(challengeId)) {
+            return;
+        }
+
+        this.processingCheckboxClicks.add(challengeId);
+
+        try {
+            // Toggle completion
+            const challenge =
+                this.challengeList.toggleChallengeCompletion(challengeId);
+            if (challenge) {
+                // Re-render the challenge list to reflect the updated state
+                this.renderChallengeList();
+
+                // Notify other windows about the state change
+                notifyChallengeStateChanged();
+            }
+        } finally {
+            this.processingCheckboxClicks.delete(challengeId);
+        }
+    };
+
+    /**
+     * Handle Fail button click in admin mode
+     * @param {Event} event - The click event
+     * @returns {void}
+     */
+    private handleFailButtonClick = (event: Event): void => {
+        event.stopPropagation();
+
+        // Only handle clicks in admin mode
+        if (window.location.hash !== URL_HASH.ADMIN) {
+            return;
+        }
+
+        const target = event.target as HTMLElement;
+        // Find challenge element (both regular and text-only modes)
+        const challengeElement = target.closest(
+            `${CSS_SELECTORS.CHALLENGE}, .${CSS_CLASSES.CHALLENGE_TEXT_ONLY_ITEM}`
+        ) as HTMLElement | null;
+
+        if (!challengeElement) {
+            return;
+        }
+
+        const challengeId =
+            challengeElement.dataset[DATA_ATTRIBUTES.CHALLENGE_ID];
+        if (!challengeId) {
+            return;
+        }
+
+        // Mark challenge as failed
+        const challenge = this.challengeList.markChallengeAsFailed(challengeId);
+        if (challenge) {
+            // Re-render the challenge list to reflect the failed state
+            this.renderChallengeList();
+
+            // Notify other windows about the state change
+            notifyChallengeStateChanged();
+        }
+    };
+
+    /**
+     * Handle Uncomplete button click in text-only mode
+     * @param {Event} event - The click event
+     * @returns {void}
+     */
+    private handleUncompleteButtonClick = (event: Event): void => {
+        event.stopPropagation();
+
+        // Only handle clicks in admin mode
+        if (window.location.hash !== URL_HASH.ADMIN) {
+            return;
+        }
+
+        const target = event.target as HTMLElement;
+        // Find challenge element (text-only mode)
+        const challengeElement = target.closest(
+            `.${CSS_CLASSES.CHALLENGE_TEXT_ONLY_ITEM}`
+        ) as HTMLElement | null;
+
+        if (!challengeElement) {
+            return;
+        }
+
+        const challengeId =
+            challengeElement.dataset[DATA_ATTRIBUTES.CHALLENGE_ID];
+        if (!challengeId) {
+            return;
+        }
+
+        // Uncomplete the challenge
+        const challenge =
+            this.challengeList.uncompleteChallengeStatus(challengeId);
+        if (challenge) {
+            // Re-render the challenge list to reflect the updated state
+            this.renderChallengeList();
+
+            // Notify other windows about the state change
+            notifyChallengeStateChanged();
+        }
+    };
+
+    /**
+     * Handle Unfail button click in admin mode
+     * @param {Event} event - The click event
+     * @returns {void}
+     */
+    private handleUnfailButtonClick = (event: Event): void => {
+        event.stopPropagation();
+
+        // Only handle clicks in admin mode
+        if (window.location.hash !== URL_HASH.ADMIN) {
+            return;
+        }
+
+        const target = event.target as HTMLElement;
+        // Find challenge element (standard or text-only modes)
+        const challengeElement = target.closest(
+            `${CSS_SELECTORS.CHALLENGE}, .${CSS_CLASSES.CHALLENGE_TEXT_ONLY_ITEM}`
+        ) as HTMLElement | null;
+
+        if (!challengeElement) {
+            return;
+        }
+
+        const challengeId =
+            challengeElement.dataset[DATA_ATTRIBUTES.CHALLENGE_ID];
+        if (!challengeId) {
+            return;
+        }
+
+        // Unfail the challenge
+        const challenge = this.challengeList.unfailChallengeStatus(challengeId);
+        if (challenge) {
+            // Re-render the challenge list to reflect the updated state
+            this.renderChallengeList();
+
+            // Notify other windows about the state change
             notifyChallengeStateChanged();
         }
     };

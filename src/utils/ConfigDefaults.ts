@@ -1,3 +1,5 @@
+import { BACKGROUND_DEFAULTS } from "../types/ConfigConstants";
+
 /**
  * Configuration Defaults Utility
  *
@@ -37,6 +39,7 @@ export function createFallbackConfig(): Config {
             twitch_channel: "",
         },
         maxChallenges: 10,
+        adminTextOnlyMode: false,
         commands: {
             // Admin commands (restricted to moderators and broadcaster)
             clearAll: ["!ch clearlist", "!ch clearall"],
@@ -83,6 +86,7 @@ export function createFallbackConfig(): Config {
         challengeRowColors: ["#000000"],
         challengeRowTextColors: ["#ffffff"],
         challengeRowColorsOpacity: 1.0,
+        challengeFontSize: BACKGROUND_DEFAULTS.VIEWER_CHALLENGE_FONT_SIZE,
     };
 }
 
