@@ -14,6 +14,8 @@ Development patterns and guidelines for the source code directory.
 
 ```
 src/
+├── backend/     # Non-visual services, stores, and adapters consumed by Svelte UI
+├── frontend/    # Svelte components, entrypoints, and UI utilities
 ├── classes/     # Core business logic (AdminPanel, Challenge, ChallengeList, ConfigManager)
 ├── commands/    # Command pattern implementation (15+ command classes)
 ├── twitch/      # Twitch IRC integration (TwitchChat, EventEmitter, parsers)
@@ -75,3 +77,10 @@ import ChallengeList from "./classes/ChallengeList";
 import { ValidationUtils } from "./utils/ValidationUtils";
 import ChallengeRenderer from "./utils/ChallengeRenderer";
 ```
+
+## Svelte Integration
+
+-   Use the `@frontend/*` alias when importing Svelte components or utilities and `@backend/*` for non-visual services.
+-   Svelte components must keep DOM contract parity with existing constants—import selectors, dataset keys, and hash values from `src/types` rather than inlining strings.
+-   Keep Svelte component script sections in TypeScript mode (`lang="ts"`) and expose explicit props with typed interfaces.
+-   Shared stores should live in `src/backend` if they own persistence or side effects; re-export UI-friendly helpers from `src/frontend` when needed to avoid cross-layer coupling.

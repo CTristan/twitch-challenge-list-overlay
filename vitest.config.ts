@@ -1,4 +1,11 @@
+import { dirname, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
+
 import { defineConfig } from "vitest/config";
+
+const rootDir = dirname(fileURLToPath(import.meta.url));
+const resolveFromRoot = (relativePath: string): string =>
+    resolve(rootDir, relativePath);
 
 export default defineConfig({
     test: {
@@ -26,8 +33,13 @@ export default defineConfig({
         include: /\.(js|ts)$/,
         target: "es2022",
     },
-    // Resolve TypeScript files
+    // Resolve TypeScript files and aliases
     resolve: {
+        alias: {
+            "@": resolveFromRoot("./src"),
+            "@backend": resolveFromRoot("./src/backend"),
+            "@frontend": resolveFromRoot("./src/frontend"),
+        },
         extensions: [".js", ".ts", ".json"],
     },
 });

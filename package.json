@@ -1,31 +1,35 @@
 {
-  "name": "twitch-challenge-list-overlay",
-  "version": "1.0.0",
-  "description": "Interactive challenge list overlay for Twitch streaming",
-  "license": "MIT",
-  "engines": {
-    "node": ">=20.0.0"
-  },
-  "type": "module",
-  "main": "./src/index.ts",
-  "scripts": {
-    "dev": "vite",
-    "build": "vite build",
-    "build:watch": "vite build --watch",
-    "test": "vitest run",
-    "test:coverage": "vitest run --coverage",
-    "release": "standard-version",
-    "release:minor": "standard-version --release-as minor",
-    "type-check": "tsc --noEmit",
-    "type-check:watch": "tsc --noEmit --watch"
-  },
-  "devDependencies": {
-    "@types/node": "^24.3.3",
-    "@vitest/coverage-v8": "^3.0.7",
-    "jsdom": "^26.0.0",
-    "standard-version": "^9.5.0",
-    "typescript": "^5.9.2",
-    "vite": "^7.1.12",
-    "vitest": "^3.0.7"
-  }
+    "name": "twitch-challenge-list-overlay",
+    "version": "1.0.0",
+    "description": "Interactive challenge list overlay for Twitch streaming",
+    "license": "MIT",
+    "engines": {
+        "node": ">=20.0.0"
+    },
+    "type": "module",
+    "main": "./src/index.ts",
+    "scripts": {
+        "dev": "vite",
+        "build": "vite build",
+        "build:watch": "vite build --watch",
+        "test": "vitest run",
+        "test:coverage": "vitest run --coverage",
+        "release": "standard-version",
+        "release:minor": "standard-version --release-as minor",
+        "check:svelte": "svelte-check --tsconfig ./tsconfig.json",
+        "type-check": "tsc --noEmit && svelte-check --tsconfig ./tsconfig.json",
+        "type-check:watch": "tsc --noEmit --watch"
+    },
+    "devDependencies": {
+        "@sveltejs/vite-plugin-svelte": "^6.2.1",
+        "@types/node": "^24.3.3",
+        "@vitest/coverage-v8": "^3.0.7",
+        "jsdom": "^26.0.0",
+        "svelte": "^5.1.4",
+        "svelte-check": "^4.1.2",
+        "standard-version": "^9.5.0",
+        "typescript": "^5.9.2",
+        "vite": "^7.1.12",
+        "vitest": "^3.0.7"
+    }
 }

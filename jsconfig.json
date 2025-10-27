@@ -1,12 +1,19 @@
 {
-  "compilerOptions": {
-    "allowJs": true,
-    "checkJs": true,
-    "noEmit": true,
-    "target": "ES2022",
-    "module": "ES2022",
-    "moduleResolution": "Bundler"
-  },
-  "include": ["src", "types", "tests"],
-  "exclude": ["node_modules"]
+    "compilerOptions": {
+        "allowJs": true,
+        "checkJs": true,
+        "noEmit": true,
+        "target": "ES2022",
+        "module": "ES2022",
+        "moduleResolution": "Bundler",
+        "baseUrl": ".",
+        "paths": {
+            "@/*": ["src/*"],
+            "@backend/*": ["src/backend/*"],
+            "@frontend/*": ["src/frontend/*"],
+            "@/types/*": ["src/types/*", "types/*"]
+        }
+    },
+    "include": ["src", "types", "tests"],
+    "exclude": ["node_modules"]
 }

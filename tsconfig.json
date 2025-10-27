@@ -31,10 +31,12 @@
         "baseUrl": "./",
         "paths": {
             "@/*": ["src/*"],
-            "@/types/*": ["types/*"]
+            "@backend/*": ["src/backend/*"],
+            "@frontend/*": ["src/frontend/*"],
+            "@/types/*": ["src/types/*", "types/*"]
         },
 
-        "types": ["vite/client", "node", "vitest/globals"]
+        "types": ["svelte", "vite/client", "node", "vitest/globals"]
     },
     "include": [
         "src/**/*",
