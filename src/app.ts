@@ -382,6 +382,7 @@ export default class App {
                         options.decrementHandler =
                             this.handleDecrementButtonClick;
                         options.failHandler = this.handleFailButtonClick;
+                        options.unfailHandler = this.handleUnfailButtonClick;
                         options.deleteHandler = this.handleDeleteButtonClick;
 
                         // Use completely different rendering for text-only mode
@@ -390,8 +391,6 @@ export default class App {
                                 this.handleCompleteButtonClick;
                             options.uncompleteHandler =
                                 this.handleUncompleteButtonClick;
-                            options.unfailHandler =
-                                this.handleUnfailButtonClick;
                             // Create text-only element (no styling needed)
                             listItem =
                                 ChallengeRenderer.createTextOnlyChallengeElement(
@@ -1635,8 +1634,8 @@ export default class App {
         const target = event.target as HTMLElement;
         // Find challenge element (both regular and text-only modes)
         const challengeElement = target.closest(
-            `${CSS_SELECTORS.CHALLENGE}, .challenge-text-only-item`
-        ) as HTMLElement;
+            `${CSS_SELECTORS.CHALLENGE}, .${CSS_CLASSES.CHALLENGE_TEXT_ONLY_ITEM}`
+        ) as HTMLElement | null;
 
         if (!challengeElement) {
             return;
@@ -1669,8 +1668,8 @@ export default class App {
         const target = event.target as HTMLElement;
         // Find challenge element (both regular and text-only modes)
         const challengeElement = target.closest(
-            `${CSS_SELECTORS.CHALLENGE}, .challenge-text-only-item`
-        ) as HTMLElement;
+            `${CSS_SELECTORS.CHALLENGE}, .${CSS_CLASSES.CHALLENGE_TEXT_ONLY_ITEM}`
+        ) as HTMLElement | null;
 
         if (!challengeElement) {
             return;
@@ -1711,8 +1710,8 @@ export default class App {
         const target = event.target as HTMLElement;
         // Find challenge element (both regular and text-only modes)
         const challengeElement = target.closest(
-            `${CSS_SELECTORS.CHALLENGE}, .challenge-text-only-item`
-        ) as HTMLElement;
+            `${CSS_SELECTORS.CHALLENGE}, .${CSS_CLASSES.CHALLENGE_TEXT_ONLY_ITEM}`
+        ) as HTMLElement | null;
 
         if (!challengeElement) {
             return;
@@ -1871,10 +1870,10 @@ export default class App {
         }
 
         const target = event.target as HTMLElement;
-        // Find challenge element (text-only mode)
+        // Find challenge element (standard or text-only modes)
         const challengeElement = target.closest(
-            ".challenge-text-only-item"
-        ) as HTMLElement;
+            `${CSS_SELECTORS.CHALLENGE}, .${CSS_CLASSES.CHALLENGE_TEXT_ONLY_ITEM}`
+        ) as HTMLElement | null;
 
         if (!challengeElement) {
             return;
@@ -1910,7 +1909,7 @@ export default class App {
     };
 
     /**
-     * Handle Fail button click in text-only mode
+     * Handle Fail button click in admin mode
      * @param {Event} event - The click event
      * @returns {void}
      */
@@ -1925,8 +1924,8 @@ export default class App {
         const target = event.target as HTMLElement;
         // Find challenge element (both regular and text-only modes)
         const challengeElement = target.closest(
-            `${CSS_SELECTORS.CHALLENGE}, .challenge-text-only-item`
-        ) as HTMLElement;
+            `${CSS_SELECTORS.CHALLENGE}, .${CSS_CLASSES.CHALLENGE_TEXT_ONLY_ITEM}`
+        ) as HTMLElement | null;
 
         if (!challengeElement) {
             return;
@@ -1965,8 +1964,8 @@ export default class App {
         const target = event.target as HTMLElement;
         // Find challenge element (text-only mode)
         const challengeElement = target.closest(
-            ".challenge-text-only-item"
-        ) as HTMLElement;
+            `.${CSS_CLASSES.CHALLENGE_TEXT_ONLY_ITEM}`
+        ) as HTMLElement | null;
 
         if (!challengeElement) {
             return;
@@ -1991,7 +1990,7 @@ export default class App {
     };
 
     /**
-     * Handle Unfail button click in text-only mode
+     * Handle Unfail button click in admin mode
      * @param {Event} event - The click event
      * @returns {void}
      */
@@ -2004,10 +2003,10 @@ export default class App {
         }
 
         const target = event.target as HTMLElement;
-        // Find challenge element (text-only mode)
+        // Find challenge element (standard or text-only modes)
         const challengeElement = target.closest(
-            ".challenge-text-only-item"
-        ) as HTMLElement;
+            `${CSS_SELECTORS.CHALLENGE}, .${CSS_CLASSES.CHALLENGE_TEXT_ONLY_ITEM}`
+        ) as HTMLElement | null;
 
         if (!challengeElement) {
             return;

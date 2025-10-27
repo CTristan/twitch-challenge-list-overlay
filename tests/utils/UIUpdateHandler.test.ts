@@ -746,6 +746,86 @@ describe("UIUpdateHandler", () => {
         });
     });
 
+    describe("admin text-only mode toggling", () => {
+        it("should preserve fail and unfail actions when switching back to standard mode", () => {
+            window.location.hash = URL_HASH.ADMIN;
+            configManager.set(BEHAVIOR_CONFIG.ADMIN_TEXT_ONLY_MODE, true);
+
+            const handler = new UIUpdateHandler(
+                challengeList,
+                configManager,
+                undefined,
+                undefined,
+                undefined,
+                vi.fn(),
+                vi.fn(),
+                vi.fn(),
+                vi.fn(),
+                vi.fn()
+            );
+
+            const failedChallenge = new Challenge("Failed Challenge");
+            const activeChallenge = new Challenge("Active Challenge");
+            challengeList.addChallengeObjects([
+                failedChallenge,
+                activeChallenge,
+            ]);
+
+            handler.renderChallengeList();
+
+            const initialFailButton = document.querySelector(
+                `${CSS_SELECTORS.CHALLENGE_BY_ID(failedChallenge.id)} .${
+                    CSS_CLASSES.CHALLENGE_TEXT_ONLY_FAIL
+                }`
+            ) as HTMLElement | null;
+            expect(initialFailButton).toBeTruthy();
+            initialFailButton?.dispatchEvent(
+                new Event(EVENT_NAMES.CLICK, { bubbles: true })
+            );
+
+            expect(failedChallenge.getStatus()).toBe(ChallengeStatus.FAILED);
+
+            configManager.set(BEHAVIOR_CONFIG.ADMIN_TEXT_ONLY_MODE, false);
+            handler.renderChallengeList();
+
+            const failedElement = document.querySelector(
+                CSS_SELECTORS.CHALLENGE_BY_ID(failedChallenge.id)
+            ) as HTMLElement | null;
+            expect(failedElement).toBeTruthy();
+
+            const unfailButton = failedElement?.querySelector(
+                `.${CSS_CLASSES.CHALLENGE_TEXT_ONLY_UNFAIL}`
+            );
+            expect(unfailButton).toBeTruthy();
+
+            const activeElement = document.querySelector(
+                CSS_SELECTORS.CHALLENGE_BY_ID(activeChallenge.id)
+            ) as HTMLElement | null;
+            expect(activeElement).toBeTruthy();
+
+            const activeFailButton = activeElement?.querySelector(
+                `.${CSS_CLASSES.CHALLENGE_TEXT_ONLY_FAIL}`
+            ) as HTMLElement | null;
+            expect(activeFailButton).toBeTruthy();
+
+            activeFailButton?.dispatchEvent(
+                new Event(EVENT_NAMES.CLICK, { bubbles: true })
+            );
+
+            expect(activeChallenge.getStatus()).toBe(ChallengeStatus.FAILED);
+
+            const refreshedActiveElement = document.querySelector(
+                CSS_SELECTORS.CHALLENGE_BY_ID(activeChallenge.id)
+            ) as HTMLElement | null;
+            expect(refreshedActiveElement).toBeTruthy();
+            expect(
+                refreshedActiveElement?.querySelector(
+                    `.${CSS_CLASSES.CHALLENGE_TEXT_ONLY_UNFAIL}`
+                )
+            ).toBeTruthy();
+        });
+    });
+
     describe("createChallengeElement integration", () => {
         it("should create challenge with all components in viewer mode", () => {
             window.location.hash = "";
