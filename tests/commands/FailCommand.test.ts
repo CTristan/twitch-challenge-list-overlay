@@ -4,6 +4,7 @@ import ChallengeList from "../../src/classes/ChallengeList";
 import ConfigManager from "../../src/classes/ConfigManager";
 import { FailCommand } from "../../src/commands/FailCommand";
 import { ChallengeStatus } from "../../src/types/ChallengeStatus";
+import { UIUpdateAction } from "../../src/types/UIUpdateAction";
 import { ensureTestIsolation } from "../utils/chatHandlerTestUtils";
 
 describe("FailCommand", () => {
@@ -72,7 +73,7 @@ describe("FailCommand", () => {
             expect(challenge.isFailed()).toBe(true);
         });
 
-        it("should return success response without UI update data", () => {
+        it("should return success response with UI update data", () => {
             // Add challenge
             const challenge = new Challenge("Test Challenge");
             challengeList.addChallengeObjects(challenge);
@@ -92,8 +93,12 @@ describe("FailCommand", () => {
 
             expect(response.error).toBe(false);
             expect(response.message).toContain("#1");
-            // Note: FailCommand does not include UI update data
-            expect(response.uiUpdate).toBeUndefined();
+            expect(response.uiUpdate).toBeDefined();
+            expect(response.uiUpdate?.action).toBe(UIUpdateAction.FAIL);
+            expect(response.uiUpdate?.challengeIndices).toEqual([0]);
+            expect(response.uiUpdate?.challenges?.[0]?.id).toBe(challenge.id);
+            expect(response.uiUpdate?.updateCount).toBe(true);
+            expect(response.uiUpdate?.updateTimers).toBe(true);
         });
 
         it("should stop timer when marking challenge as failed", () => {
@@ -243,8 +248,14 @@ describe("FailCommand", () => {
             expect(response.error).toBe(false);
             expect(response.message).toContain("#1");
             expect(response.message).toContain("#3");
-            // Note: FailCommand does not include UI update data
-            expect(response.uiUpdate).toBeUndefined();
+            expect(response.uiUpdate).toBeDefined();
+            expect(response.uiUpdate?.action).toBe(UIUpdateAction.FAIL);
+            expect(response.uiUpdate?.challengeIndices).toEqual([0, 2]);
+            expect(
+                response.uiUpdate?.challenges?.map((item) => item.id)
+            ).toEqual([challenge1.id, challenge3.id]);
+            expect(response.uiUpdate?.updateCount).toBe(true);
+            expect(response.uiUpdate?.updateTimers).toBe(true);
         });
 
         it("should stop timers for all failed challenges", () => {

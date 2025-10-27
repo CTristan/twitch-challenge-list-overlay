@@ -22,6 +22,7 @@ import DOMHelper from "./DOMHelper";
 import Timer from "./Timer";
 import TimerController from "./TimerController";
 import TimerDisplayUtils from "./TimerDisplayUtils";
+import { notifyChallengeStateChanged } from "./windowRefresh";
 
 // Unified options type for creating challenge elements across modes
 type ChallengeElementOptions = {
@@ -80,6 +81,8 @@ export default class UIUpdateHandler {
             this.handleEditUpdate(challengeIndices, challenges),
         complete: (challengeIndices, challenges) =>
             this.handleCompleteUpdate(challengeIndices, challenges),
+        fail: (challengeIndices, challenges) =>
+            this.handleFailUpdate(challengeIndices, challenges),
         revert: (challengeIndices, challenges) =>
             this.handleRevertUpdate(challengeIndices, challenges),
         delete: (challengeIndices, challenges) =>
@@ -178,6 +181,8 @@ export default class UIUpdateHandler {
         if (updateCount) {
             this.updateChallengeCount();
         }
+
+        notifyChallengeStateChanged();
     }
 
     /**
@@ -250,6 +255,19 @@ export default class UIUpdateHandler {
 
         challenges.forEach((challenge) => {
             DOMHelper.completeChallengeFromDOM(challenge.id);
+        });
+        this.updateChallengeCount();
+        this.timerController.updateTimerDisplays();
+    }
+
+    private handleFailUpdate(
+        _challengeIndices?: number[],
+        challenges?: Challenge[]
+    ): void {
+        if (!challenges) return;
+
+        challenges.forEach((challenge) => {
+            DOMHelper.failChallengeFromDOM(challenge.id);
         });
         this.updateChallengeCount();
         this.timerController.updateTimerDisplays();
@@ -774,6 +792,38 @@ export default class UIUpdateHandler {
         return challengeElement;
     }
 
+    private refreshChallengeElement(
+        challenge: Challenge,
+        existingElement: HTMLElement
+    ): void {
+        const parentElement = existingElement.parentElement;
+        if (!parentElement) {
+            console.error(
+                "Parent element not found when refreshing challenge element"
+            );
+            return;
+        }
+
+        const challengeIndex = this.challengeList.challenges.findIndex(
+            (item) => item.id === challenge.id
+        );
+
+        if (challengeIndex === -1) {
+            console.error(
+                "Could not find challenge index when refreshing element:",
+                challenge.id
+            );
+            return;
+        }
+
+        const replacementElement = this.createChallengeElement(
+            challenge,
+            challengeIndex
+        );
+
+        parentElement.replaceChild(replacementElement, existingElement);
+    }
+
     /**
      * Apply styling to a challenge element using centralized styling helpers
      * @param challengeElement - The challenge element to style
@@ -884,10 +934,13 @@ export default class UIUpdateHandler {
 
             // Update DOM to reflect the new state
             DOMHelper.completeChallengeFromDOM(challengeId);
+            this.refreshChallengeElement(challenge, challengeElement);
 
             // Update count and timers
             this.updateChallengeCount();
             this.timerController.updateTimerDisplays();
+
+            notifyChallengeStateChanged();
         } catch (error) {
             console.error("Error completing challenge:", error);
         }
@@ -928,10 +981,13 @@ export default class UIUpdateHandler {
 
             // Update DOM to reflect the new state
             DOMHelper.failChallengeFromDOM(challengeId);
+            this.refreshChallengeElement(challenge, challengeElement);
 
             // Update count and timers
             this.updateChallengeCount();
             this.timerController.updateTimerDisplays();
+
+            notifyChallengeStateChanged();
         } catch (error) {
             console.error("Error failing challenge:", error);
         }
@@ -974,10 +1030,13 @@ export default class UIUpdateHandler {
 
             // Update DOM to reflect the new state
             DOMHelper.revertChallengeFromDOM(challengeId);
+            this.refreshChallengeElement(challenge, challengeElement);
 
             // Update count and timers
             this.updateChallengeCount();
             this.timerController.updateTimerDisplays();
+
+            notifyChallengeStateChanged();
         } catch (error) {
             console.error("Error uncompleting challenge:", error);
         }
@@ -1018,10 +1077,13 @@ export default class UIUpdateHandler {
 
             // Update DOM to reflect the new state
             DOMHelper.revertChallengeFromDOM(challengeId);
+            this.refreshChallengeElement(challenge, challengeElement);
 
             // Update count and timers
             this.updateChallengeCount();
             this.timerController.updateTimerDisplays();
+
+            notifyChallengeStateChanged();
         } catch (error) {
             console.error("Error unfailing challenge:", error);
         }

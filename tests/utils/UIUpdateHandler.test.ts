@@ -14,9 +14,15 @@ import {
 } from "../../src/types/DOMConstants";
 import { UIUpdateAction } from "../../src/types/UIUpdateAction";
 import ChallengeRenderer from "../../src/utils/ChallengeRenderer";
+import DOMHelper from "../../src/utils/DOMHelper";
 import TimerController from "../../src/utils/TimerController";
 import UIUpdateHandler from "../../src/utils/UIUpdateHandler";
+import { notifyChallengeStateChanged } from "../../src/utils/windowRefresh";
 import { ensureTestIsolation } from "./chatHandlerTestUtils";
+
+vi.mock("../../src/utils/windowRefresh", () => ({
+    notifyChallengeStateChanged: vi.fn(),
+}));
 
 describe("UIUpdateHandler", () => {
     let challengeList: ChallengeList;
@@ -25,6 +31,7 @@ describe("UIUpdateHandler", () => {
 
     beforeEach(() => {
         ensureTestIsolation();
+        window.location.hash = "";
 
         // Set up DOM structure directly to ensure it's correct
         document.body.innerHTML = `
@@ -48,6 +55,7 @@ describe("UIUpdateHandler", () => {
         configManager = ConfigManager.getInstance();
         configManager.reset(); // Reset config to defaults to ensure test isolation
         uiUpdateHandler = new UIUpdateHandler(challengeList, configManager);
+        vi.mocked(notifyChallengeStateChanged).mockClear();
     });
 
     describe("handleCommandResult", () => {
@@ -97,6 +105,28 @@ describe("UIUpdateHandler", () => {
             expect(() => {
                 uiUpdateHandler.handleCommandResult(response);
             }).not.toThrow();
+        });
+
+        it("should notify challenge state changed when challenge is completed", () => {
+            const challenge = new Challenge("Test Challenge", {
+                description: "Test Description",
+            });
+            challengeList.addChallengeObjects(challenge);
+
+            const response: CommandResponse = {
+                message: "Challenge completed",
+                error: false,
+                uiUpdate: {
+                    action: UIUpdateAction.COMPLETE,
+                    challengeIndices: [0],
+                    challenges: [challenge],
+                    updateTimers: true,
+                    updateCount: true,
+                },
+            };
+
+            uiUpdateHandler.handleCommandResult(response);
+            expect(notifyChallengeStateChanged).toHaveBeenCalledTimes(1);
         });
 
         it("should handle clearAll command result", () => {
@@ -382,6 +412,35 @@ describe("UIUpdateHandler", () => {
             expect(() => {
                 uiUpdateHandler.handleCommandResult(response);
             }).not.toThrow();
+        });
+
+        it("should handle fail command result", () => {
+            const challenge = new Challenge("Fail Me");
+            challengeList.addChallengeObjects(challenge);
+            uiUpdateHandler.renderChallengeList();
+            window.location.hash = URL_HASH.ADMIN;
+
+            const failSpy = vi.spyOn(DOMHelper, "failChallengeFromDOM");
+
+            const response: CommandResponse = {
+                message: "Challenge failed",
+                error: false,
+                uiUpdate: {
+                    action: UIUpdateAction.FAIL,
+                    challengeIndices: [0],
+                    challenges: [challenge],
+                    updateTimers: true,
+                    updateCount: true,
+                },
+            };
+
+            uiUpdateHandler.handleCommandResult(response);
+
+            expect(failSpy).toHaveBeenCalledWith(challenge.id);
+            expect(notifyChallengeStateChanged).toHaveBeenCalledTimes(1);
+
+            window.location.hash = "";
+            failSpy.mockRestore();
         });
 
         it("should handle clearDone command result", () => {
@@ -933,6 +992,148 @@ describe("UIUpdateHandler", () => {
         });
     });
 
+    describe("button click handlers in standard mode", () => {
+        beforeEach(() => {
+            window.location.hash = URL_HASH.ADMIN;
+            configManager.set(BEHAVIOR_CONFIG.ADMIN_TEXT_ONLY_MODE, false);
+        });
+
+        const getFailButton = (challengeId: string): HTMLElement | null =>
+            document.querySelector(
+                `${CSS_SELECTORS.CHALLENGE_BY_ID(challengeId)} .${
+                    CSS_CLASSES.CHALLENGE_TEXT_ONLY_FAIL
+                }`
+            );
+
+        const getUnfailButton = (challengeId: string): HTMLElement | null =>
+            document.querySelector(
+                `${CSS_SELECTORS.CHALLENGE_BY_ID(challengeId)} .${
+                    CSS_CLASSES.CHALLENGE_TEXT_ONLY_UNFAIL
+                }`
+            );
+
+        const getChallengeElementForButton = (
+            button: HTMLElement
+        ): HTMLElement | null =>
+            button.closest(
+                `${CSS_SELECTORS.CHALLENGE}, .${CSS_CLASSES.CHALLENGE_TEXT_ONLY_ITEM}`
+            ) as HTMLElement | null;
+
+        describe("handleFailButtonClick", () => {
+            it("should swap Fail button for Unfail button after failure", () => {
+                const challenge = new Challenge("Test Challenge");
+                challengeList.addChallengeObjects(challenge);
+
+                const handler = new UIUpdateHandler(
+                    challengeList,
+                    configManager,
+                    undefined,
+                    undefined,
+                    undefined,
+                    vi.fn(),
+                    vi.fn(),
+                    vi.fn(),
+                    vi.fn()
+                );
+                handler.renderChallengeList();
+
+                const failButton = getFailButton(challenge.id);
+                expect(failButton).toBeTruthy();
+                const failButtonElement = failButton as HTMLElement;
+                const challengeElement =
+                    getChallengeElementForButton(failButtonElement);
+                expect(challengeElement).toBeTruthy();
+                const parentList = challengeElement?.parentElement;
+                expect(parentList).toBeTruthy();
+
+                failButtonElement.dispatchEvent(
+                    new Event(EVENT_NAMES.CLICK, { bubbles: true })
+                );
+
+                expect(challenge.getStatus()).toBe(ChallengeStatus.FAILED);
+
+                const updatedElement = parentList?.querySelector(
+                    CSS_SELECTORS.CHALLENGE_BY_ID(challenge.id)
+                ) as HTMLElement | null;
+                expect(updatedElement).toBeTruthy();
+
+                const unfailButton = updatedElement?.querySelector(
+                    `.${CSS_CLASSES.CHALLENGE_TEXT_ONLY_UNFAIL}`
+                ) as HTMLElement | null;
+                expect(unfailButton).toBeTruthy();
+                expect(
+                    updatedElement?.querySelector(
+                        `.${CSS_CLASSES.CHALLENGE_TEXT_ONLY_FAIL}`
+                    )
+                ).toBeNull();
+                expect(
+                    updatedElement?.classList.contains(CSS_CLASSES.FAILED)
+                ).toBe(true);
+
+                expect(notifyChallengeStateChanged).toHaveBeenCalledTimes(1);
+            });
+        });
+
+        describe("handleUnfailButtonClick", () => {
+            it("should swap Unfail button for Fail button after unfailing", () => {
+                const challenge = new Challenge("Test Challenge");
+                challenge.setStatus(ChallengeStatus.FAILED);
+                challengeList.addChallengeObjects(challenge);
+
+                const handler = new UIUpdateHandler(
+                    challengeList,
+                    configManager,
+                    undefined,
+                    undefined,
+                    undefined,
+                    vi.fn(),
+                    vi.fn(),
+                    vi.fn(),
+                    vi.fn()
+                );
+                handler.renderChallengeList();
+
+                const unfailButton = getUnfailButton(challenge.id);
+                expect(unfailButton).toBeTruthy();
+                const unfailButtonElement = unfailButton as HTMLElement;
+                const challengeElement =
+                    getChallengeElementForButton(unfailButtonElement);
+                expect(challengeElement).toBeTruthy();
+                const parentList = challengeElement?.parentElement;
+                expect(parentList).toBeTruthy();
+
+                unfailButtonElement.dispatchEvent(
+                    new Event(EVENT_NAMES.CLICK, { bubbles: true })
+                );
+
+                expect(challenge.getStatus()).toBe(ChallengeStatus.IN_PROGRESS);
+
+                const updatedElement = parentList?.querySelector(
+                    CSS_SELECTORS.CHALLENGE_BY_ID(challenge.id)
+                ) as HTMLElement | null;
+                expect(updatedElement).toBeTruthy();
+
+                const failButtonAfter = updatedElement?.querySelector(
+                    `.${CSS_CLASSES.CHALLENGE_TEXT_ONLY_FAIL}`
+                ) as HTMLElement | null;
+                expect(failButtonAfter).toBeTruthy();
+                expect(
+                    updatedElement?.querySelector(
+                        `.${CSS_CLASSES.CHALLENGE_TEXT_ONLY_UNFAIL}`
+                    )
+                ).toBeNull();
+                expect(
+                    updatedElement?.classList.contains(CSS_CLASSES.FAILED)
+                ).toBe(false);
+                expect(
+                    updatedElement?.classList.contains(CSS_CLASSES.DONE)
+                ).toBe(false);
+
+                expect(notifyChallengeStateChanged).toHaveBeenCalledTimes(1);
+            });
+        });
+    });
+
     describe("button click handlers in text-only mode", () => {
         beforeEach(() => {
             // Enable admin mode and text-only mode for button tests
@@ -967,6 +1168,8 @@ describe("UIUpdateHandler", () => {
                     undefined,
                     undefined,
                     undefined,
+                    vi.fn(),
+                    undefined,
                     vi.fn()
                 );
                 handler.renderChallengeList();
@@ -974,7 +1177,7 @@ describe("UIUpdateHandler", () => {
                 expect(challenge.getStatus()).toBe(ChallengeStatus.IN_PROGRESS);
 
                 const completeButton = getCompleteButton(challenge.id);
-                expect(completeButton).not.toBeNull();
+                expect(completeButton).toBeTruthy();
                 const buttonEl = completeButton as HTMLElement;
 
                 buttonEl.dispatchEvent(
@@ -982,6 +1185,57 @@ describe("UIUpdateHandler", () => {
                 );
 
                 expect(challenge.getStatus()).toBe(ChallengeStatus.COMPLETED);
+
+                expect(notifyChallengeStateChanged).toHaveBeenCalledTimes(1);
+            });
+
+            it("should show Uncomplete button immediately after completion", () => {
+                const challenge = new Challenge("Test Challenge");
+                challengeList.addChallengeObjects(challenge);
+
+                const handler = new UIUpdateHandler(
+                    challengeList,
+                    configManager,
+                    undefined,
+                    undefined,
+                    undefined,
+                    vi.fn(),
+                    undefined,
+                    vi.fn()
+                );
+                handler.renderChallengeList();
+
+                const completeButton = getCompleteButton(challenge.id);
+                expect(completeButton).toBeTruthy();
+                const buttonEl = completeButton as HTMLElement;
+                const challengeElement = getChallengeElementForButton(buttonEl);
+                expect(challengeElement).toBeTruthy();
+                const parentList = challengeElement?.parentElement;
+                expect(parentList).toBeTruthy();
+
+                buttonEl.dispatchEvent(
+                    new Event(EVENT_NAMES.CLICK, { bubbles: true })
+                );
+
+                const updatedElement = parentList?.querySelector(
+                    CSS_SELECTORS.CHALLENGE_BY_ID(challenge.id)
+                ) as HTMLElement | null;
+                expect(updatedElement).toBeTruthy();
+
+                const uncompleteButton = updatedElement?.querySelector(
+                    `.${CSS_CLASSES.CHALLENGE_TEXT_ONLY_UNCOMPLETE}`
+                ) as HTMLElement | null;
+                expect(uncompleteButton).toBeTruthy();
+                expect(
+                    updatedElement?.querySelector(
+                        `.${CSS_CLASSES.CHALLENGE_TEXT_ONLY_COMPLETE}`
+                    )
+                ).toBeNull();
+                expect(
+                    updatedElement?.classList.contains(CSS_CLASSES.DONE)
+                ).toBe(true);
+
+                expect(notifyChallengeStateChanged).toHaveBeenCalledTimes(1);
             });
 
             it("should handle missing challenge element gracefully", () => {
@@ -1143,6 +1397,60 @@ describe("UIUpdateHandler", () => {
                 );
 
                 expect(challenge.getStatus()).toBe(ChallengeStatus.FAILED);
+
+                expect(notifyChallengeStateChanged).toHaveBeenCalledTimes(1);
+            });
+
+            it("should swap Fail button for Unfail button immediately", () => {
+                const challenge = new Challenge("Test Challenge");
+                challengeList.addChallengeObjects(challenge);
+
+                const handler = new UIUpdateHandler(
+                    challengeList,
+                    configManager,
+                    undefined,
+                    undefined,
+                    undefined,
+                    vi.fn(),
+                    vi.fn(),
+                    undefined,
+                    vi.fn()
+                );
+                handler.renderChallengeList();
+
+                const failButton = getFailButton(challenge.id);
+                expect(failButton).toBeTruthy();
+                const buttonEl = failButton as HTMLElement;
+                const challengeElement = getChallengeElementForButton(buttonEl);
+                expect(challengeElement).toBeTruthy();
+                const parentList = challengeElement?.parentElement;
+                expect(parentList).toBeTruthy();
+
+                buttonEl.dispatchEvent(
+                    new Event(EVENT_NAMES.CLICK, { bubbles: true })
+                );
+
+                expect(challenge.getStatus()).toBe(ChallengeStatus.FAILED);
+
+                const updatedElement = parentList?.querySelector(
+                    CSS_SELECTORS.CHALLENGE_BY_ID(challenge.id)
+                ) as HTMLElement | null;
+                expect(updatedElement).toBeTruthy();
+
+                const unfailButton = updatedElement?.querySelector(
+                    `.${CSS_CLASSES.CHALLENGE_TEXT_ONLY_UNFAIL}`
+                ) as HTMLElement | null;
+                expect(unfailButton).toBeTruthy();
+                expect(
+                    updatedElement?.querySelector(
+                        `.${CSS_CLASSES.CHALLENGE_TEXT_ONLY_FAIL}`
+                    )
+                ).toBeNull();
+                expect(
+                    updatedElement?.classList.contains(CSS_CLASSES.FAILED)
+                ).toBe(true);
+
+                expect(notifyChallengeStateChanged).toHaveBeenCalledTimes(1);
             });
 
             it("should handle missing challenge element gracefully", () => {
@@ -1311,6 +1619,61 @@ describe("UIUpdateHandler", () => {
                 );
 
                 expect(challenge.getStatus()).toBe(ChallengeStatus.IN_PROGRESS);
+
+                expect(notifyChallengeStateChanged).toHaveBeenCalledTimes(1);
+            });
+
+            it("should swap Uncomplete button for Complete button immediately", () => {
+                const challenge = new Challenge("Test Challenge");
+                challenge.setStatus(ChallengeStatus.COMPLETED);
+                challengeList.addChallengeObjects(challenge);
+
+                const handler = new UIUpdateHandler(
+                    challengeList,
+                    configManager,
+                    undefined,
+                    undefined,
+                    undefined,
+                    vi.fn(),
+                    undefined,
+                    vi.fn()
+                );
+                handler.renderChallengeList();
+
+                const uncompleteButton = getUncompleteButton(challenge.id);
+                expect(uncompleteButton).toBeTruthy();
+                const buttonEl = uncompleteButton as HTMLElement;
+                const challengeElement = getChallengeElementForButton(buttonEl);
+                expect(challengeElement).toBeTruthy();
+                const parentList = challengeElement?.parentElement;
+                expect(parentList).toBeTruthy();
+
+                buttonEl.dispatchEvent(
+                    new Event(EVENT_NAMES.CLICK, { bubbles: true })
+                );
+
+                expect(challenge.getStatus()).toBe(ChallengeStatus.IN_PROGRESS);
+
+                const updatedElement = parentList?.querySelector(
+                    CSS_SELECTORS.CHALLENGE_BY_ID(challenge.id)
+                ) as HTMLElement | null;
+                expect(updatedElement).toBeTruthy();
+
+                const completeButton = updatedElement?.querySelector(
+                    `.${CSS_CLASSES.CHALLENGE_TEXT_ONLY_COMPLETE}`
+                ) as HTMLElement | null;
+                expect(completeButton).toBeTruthy();
+                expect(
+                    updatedElement?.querySelector(
+                        `.${CSS_CLASSES.CHALLENGE_TEXT_ONLY_UNCOMPLETE}`
+                    )
+                ).toBeNull();
+                expect(
+                    updatedElement?.classList.contains(CSS_CLASSES.DONE)
+                ).toBe(false);
+                expect(
+                    updatedElement?.classList.contains(CSS_CLASSES.FAILED)
+                ).toBe(false);
             });
 
             it("should handle missing challenge element gracefully", () => {
@@ -1484,6 +1847,60 @@ describe("UIUpdateHandler", () => {
                 );
 
                 expect(challenge.getStatus()).toBe(ChallengeStatus.IN_PROGRESS);
+            });
+
+            it("should swap Unfail button for Fail button immediately", () => {
+                const challenge = new Challenge("Test Challenge");
+                challenge.setStatus(ChallengeStatus.FAILED);
+                challengeList.addChallengeObjects(challenge);
+
+                const handler = new UIUpdateHandler(
+                    challengeList,
+                    configManager,
+                    undefined,
+                    undefined,
+                    undefined,
+                    vi.fn(),
+                    vi.fn(),
+                    undefined,
+                    vi.fn()
+                );
+                handler.renderChallengeList();
+
+                const unfailButton = getUnfailButton(challenge.id);
+                expect(unfailButton).toBeTruthy();
+                const buttonEl = unfailButton as HTMLElement;
+                const challengeElement = getChallengeElementForButton(buttonEl);
+                expect(challengeElement).toBeTruthy();
+                const parentList = challengeElement?.parentElement;
+                expect(parentList).toBeTruthy();
+
+                buttonEl.dispatchEvent(
+                    new Event(EVENT_NAMES.CLICK, { bubbles: true })
+                );
+
+                expect(challenge.getStatus()).toBe(ChallengeStatus.IN_PROGRESS);
+
+                const updatedElement = parentList?.querySelector(
+                    CSS_SELECTORS.CHALLENGE_BY_ID(challenge.id)
+                ) as HTMLElement | null;
+                expect(updatedElement).toBeTruthy();
+
+                const failButton = updatedElement?.querySelector(
+                    `.${CSS_CLASSES.CHALLENGE_TEXT_ONLY_FAIL}`
+                ) as HTMLElement | null;
+                expect(failButton).toBeTruthy();
+                expect(
+                    updatedElement?.querySelector(
+                        `.${CSS_CLASSES.CHALLENGE_TEXT_ONLY_UNFAIL}`
+                    )
+                ).toBeNull();
+                expect(
+                    updatedElement?.classList.contains(CSS_CLASSES.FAILED)
+                ).toBe(false);
+                expect(
+                    updatedElement?.classList.contains(CSS_CLASSES.DONE)
+                ).toBe(false);
             });
 
             it("should handle missing challenge element gracefully", () => {

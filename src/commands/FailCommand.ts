@@ -1,6 +1,8 @@
 import type Challenge from "../classes/Challenge";
 import { ChallengeStatus } from "../types/ChallengeStatus";
 import type { CommandResponse } from "../types/CommandResponse";
+import { UIUpdateAction } from "../types/UIUpdateAction";
+import type { UIUpdateData } from "../types/UIUpdateData";
 import { ResponseFormatter } from "../utils/ResponseFormatter";
 import { BaseCommand } from "./Command";
 
@@ -45,9 +47,18 @@ export class FailCommand extends BaseCommand {
                 }
 
                 if (challenge.getStatus() !== ChallengeStatus.FAILED) {
-                    challenge.setStatus(ChallengeStatus.FAILED);
+                    const updatedChallenge =
+                        this.challengeList.markChallengeAsFailed(challenge.id);
 
-                    failedChallenges.push(challenge);
+                    if (!updatedChallenge) {
+                        throw new Error(
+                            `Failed to mark challenge at position ${
+                                challengeIndex + 1
+                            } as failed`
+                        );
+                    }
+
+                    failedChallenges.push(updatedChallenge);
                     failedIndices.push(challengeIndex);
                 } else {
                     alreadyFailedIndices.push(challengeIndex);
@@ -76,7 +87,18 @@ export class FailCommand extends BaseCommand {
                 }
             );
 
-            return this.createSuccessResponse(responseMessage);
+            const uiUpdate: UIUpdateData = {
+                action: UIUpdateAction.FAIL,
+                challengeIndices: failedIndices,
+                challenges: failedChallenges,
+                updateTimers: true,
+                updateCount: true,
+            };
+
+            return this.createSuccessResponseWithUIUpdate(
+                responseMessage,
+                uiUpdate
+            );
         } catch (error: unknown) {
             return this.createErrorResponse(
                 ResponseFormatter.formatError(

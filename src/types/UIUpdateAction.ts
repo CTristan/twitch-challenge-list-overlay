@@ -6,6 +6,7 @@ export enum UIUpdateAction {
     ADD = "add",
     EDIT = "edit",
     COMPLETE = "complete",
+    FAIL = "fail",
     REVERT = "revert",
     DELETE = "delete",
     CLEAR_ALL = "clearAll",
