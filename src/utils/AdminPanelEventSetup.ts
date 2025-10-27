@@ -149,11 +149,18 @@ export class AdminPanelEventSetup {
         );
 
         if (opacitySlider && opacityDisplay) {
-            opacitySlider.addEventListener(EVENT_NAMES.INPUT, () => {
+            const handleOpacityChange = (): void => {
                 const opacityValue = parseInt(opacitySlider.value);
                 opacityDisplay.textContent = `${opacityValue}${COMMON_STRINGS.PERCENT_SYMBOL}`;
+                AdminPanelEventSetup.updateSliderFill(opacitySlider);
                 autoSaveCallback();
-            });
+            };
+
+            opacitySlider.addEventListener(
+                EVENT_NAMES.INPUT,
+                handleOpacityChange
+            );
+            AdminPanelEventSetup.updateSliderFill(opacitySlider);
         }
     }
 
@@ -216,11 +223,18 @@ export class AdminPanelEventSetup {
         }
 
         if (overlayOpacitySlider && overlayOpacityDisplay) {
-            overlayOpacitySlider.addEventListener(EVENT_NAMES.INPUT, () => {
+            const handleOverlayOpacityChange = (): void => {
                 const opacityValue = parseInt(overlayOpacitySlider.value);
                 overlayOpacityDisplay.textContent = `${opacityValue}${COMMON_STRINGS.PERCENT_SYMBOL}`;
+                AdminPanelEventSetup.updateSliderFill(overlayOpacitySlider);
                 autoSaveCallback();
-            });
+            };
+
+            overlayOpacitySlider.addEventListener(
+                EVENT_NAMES.INPUT,
+                handleOverlayOpacityChange
+            );
+            AdminPanelEventSetup.updateSliderFill(overlayOpacitySlider);
         }
 
         // Challenge background listeners
@@ -232,12 +246,19 @@ export class AdminPanelEventSetup {
         }
 
         if (opacitySlider && opacityDisplay) {
-            opacitySlider.addEventListener(EVENT_NAMES.INPUT, () => {
+            const handleOpacityInput = (): void => {
                 const opacityValue = parseInt(opacitySlider.value);
                 opacityDisplay.textContent = `${opacityValue}${COMMON_STRINGS.PERCENT_SYMBOL}`;
+                AdminPanelEventSetup.updateSliderFill(opacitySlider);
                 updatePreviewCallback();
                 autoSaveCallback();
-            });
+            };
+
+            opacitySlider.addEventListener(
+                EVENT_NAMES.INPUT,
+                handleOpacityInput
+            );
+            AdminPanelEventSetup.updateSliderFill(opacitySlider);
         }
 
         // Text color listeners
@@ -270,6 +291,7 @@ export class AdminPanelEventSetup {
                 const value = parseFloat(viewerFontSizeSlider.value);
                 viewerFontSizeDisplay.textContent =
                     this.formatFontSizeDisplay(value);
+                AdminPanelEventSetup.updateSliderFill(viewerFontSizeSlider);
                 updatePreviewCallback();
                 autoSaveCallback();
             };
@@ -278,7 +300,40 @@ export class AdminPanelEventSetup {
                 EVENT_NAMES.INPUT,
                 handleFontSizeChange
             );
+            AdminPanelEventSetup.updateSliderFill(viewerFontSizeSlider);
         }
+    }
+
+    /**
+     * Update the CSS custom property used for slider fill backgrounds
+     * Ensures the track fill visually matches the current slider value
+     * @param slider - Range input element to update
+     */
+    static updateSliderFill(slider: HTMLInputElement): void {
+        const min = slider.min !== "" ? parseFloat(slider.min) : 0;
+        const max = slider.max !== "" ? parseFloat(slider.max) : 100;
+        const value = parseFloat(slider.value);
+
+        if (Number.isNaN(value)) {
+            slider.style.removeProperty("--slider-fill-percentage");
+            return;
+        }
+
+        const safeMin = Number.isFinite(min) ? min : 0;
+        const safeMax = Number.isFinite(max) ? max : 100;
+        const range = safeMax - safeMin;
+
+        if (range <= 0) {
+            slider.style.setProperty("--slider-fill-percentage", "100%");
+            return;
+        }
+
+        const percent = ((value - safeMin) / range) * 100;
+        const clampedPercent = Math.max(0, Math.min(100, percent));
+        slider.style.setProperty(
+            "--slider-fill-percentage",
+            `${clampedPercent}%`
+        );
     }
 
     /**

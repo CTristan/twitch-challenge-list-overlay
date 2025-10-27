@@ -539,6 +539,7 @@ export default class AdminPanel {
             const opacityPercent = Math.round(opacity * 100);
             opacitySlider.value = opacityPercent.toString();
             opacityDisplay.textContent = `${opacityPercent}%`;
+            AdminPanelEventSetup.updateSliderFill(opacitySlider);
         }
     }
 
@@ -575,6 +576,7 @@ export default class AdminPanel {
             const overlayOpacityPercent = Math.round(overlayOpacity * 100);
             overlayOpacitySlider.value = overlayOpacityPercent.toString();
             overlayOpacityDisplay.textContent = `${overlayOpacityPercent}%`;
+            AdminPanelEventSetup.updateSliderFill(overlayOpacitySlider);
         }
 
         // Challenge row background color
@@ -604,6 +606,7 @@ export default class AdminPanel {
             const opacityPercent = Math.round(opacity * 100);
             opacitySlider.value = opacityPercent.toString();
             opacityDisplay.textContent = `${opacityPercent}%`;
+            AdminPanelEventSetup.updateSliderFill(opacitySlider);
         }
 
         // Auto text color
@@ -845,6 +848,7 @@ export default class AdminPanel {
             const slider = this.getViewerFontSizeSlider();
             if (slider) {
                 slider.value = normalizedValue.toString();
+                AdminPanelEventSetup.updateSliderFill(slider);
             }
         }
         this.updateViewerFontSizeDisplay(normalizedValue);

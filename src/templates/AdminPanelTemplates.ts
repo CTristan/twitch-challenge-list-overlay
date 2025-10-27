@@ -115,8 +115,9 @@ export const AdminPanelTemplates = {
                 <div class="color-picker-group">
                   <label class="color-picker-label">Opacity (%)</label>
                   <div class="opacity-control">
-                    <input type="range" id="row-colors-opacity" class="form-input opacity-slider"
-                           min="0" max="100" value="${params.rowColorsOpacityPercent}" step="1">
+                          <input type="range" id="row-colors-opacity" class="form-input opacity-slider"
+                            min="0" max="100" value="${params.rowColorsOpacityPercent}" step="1"
+                            style="--slider-fill-percentage: ${params.rowColorsOpacityPercent}%;">
                     <span id="row-colors-opacity-display" class="opacity-value">${params.rowColorsOpacityPercent}%</span>
                   </div>
                 </div>
@@ -133,7 +134,8 @@ export const AdminPanelTemplates = {
                     <label class="form-label">Viewer Font Size</label>
                     <div class="opacity-control">
                         <input type="range" id="${params.elementIds.VIEWER_FONT_SIZE}" class="form-input opacity-slider"
-                            min="${params.viewerFontSizeMinPercent}" max="${params.viewerFontSizeMaxPercent}" step="${params.viewerFontSizeStepPercent}" value="${params.viewerFontSizePercent}">
+                          min="${params.viewerFontSizeMinPercent}" max="${params.viewerFontSizeMaxPercent}" step="${params.viewerFontSizeStepPercent}" value="${params.viewerFontSizePercent}"
+                          style="--slider-fill-percentage: ${params.viewerFontSizePercent}%;">
                         <span id="${params.elementIds.VIEWER_FONT_SIZE_DISPLAY}" class="opacity-value">${params.viewerFontSizeDisplay}</span>
                     </div>
                         <span class="help-text">Sets the challenge title size in the viewer overlay. Descriptions and timers scale proportionally.</span>
@@ -207,8 +209,9 @@ export const AdminPanelTemplates = {
               <div class="form-column">
                 <label class="form-label">Opacity (%)</label>
                 <div class="opacity-control">
-                  <input type="range" id="overlay-background-opacity" class="form-input opacity-slider"
-                         min="0" max="100" value="60" step="5">
+                      <input type="range" id="overlay-background-opacity" class="form-input opacity-slider"
+                        min="0" max="100" value="60" step="5"
+                        style="--slider-fill-percentage: 60%;">
                   <span id="overlay-opacity-display" class="opacity-value">60%</span>
                 </div>
               </div>

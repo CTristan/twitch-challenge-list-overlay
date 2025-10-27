@@ -1345,46 +1345,59 @@
 
 .form-row {
   display: flex;
+  flex-wrap: wrap;
   gap: 20px;
   margin-bottom: 15px;
   align-items: flex-start;
 }
 
 .form-column {
-  flex: 1;
+  flex: 1 1 220px;
+  min-width: 0;
   display: flex;
   flex-direction: column;
-}
-
-.form-label {
-  font-size: 14px;
-  font-weight: 500;
-  color: #cccccc;
-  margin-bottom: 5px;
-}
-
-.color-input {
-  width: 60px;
-  height: 40px;
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  border-radius: 4px;
-  background: transparent;
-  cursor: pointer;
 }
 
 .opacity-control {
   display: flex;
   align-items: center;
   gap: 10px;
+  width: 100%;
+  flex-wrap: wrap;
 }
 
 .opacity-slider {
-  flex: 1;
+  --slider-fill-color: #4a90e2;
+  --slider-track-color: rgba(255, 255, 255, 0.2);
+  --slider-fill-percentage: 0%;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  flex: 1 1 140px;
+  min-width: 0;
+  width: 100%;
   height: 6px;
   border-radius: 3px;
-  background: rgba(255, 255, 255, 0.2);
+  background: linear-gradient(
+    90deg,
+    var(--slider-fill-color) 0%,
+    var(--slider-fill-color) var(--slider-fill-percentage),
+    var(--slider-track-color) var(--slider-fill-percentage),
+    var(--slider-track-color) 100%
+  );
   outline: none;
   cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.opacity-slider:focus-visible {
+  box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.35);
+}
+
+.opacity-slider::-webkit-slider-runnable-track {
+  height: 6px;
+  border-radius: 3px;
+  background: transparent;
 }
 
 .opacity-slider::-webkit-slider-thumb {
@@ -1395,6 +1408,19 @@
   background: #4a90e2;
   cursor: pointer;
   border: 2px solid #ffffff;
+  margin-top: -6px;
+}
+
+.opacity-slider::-moz-range-track {
+  height: 6px;
+  border-radius: 3px;
+  background: var(--slider-track-color);
+}
+
+.opacity-slider::-moz-range-progress {
+  height: 6px;
+  border-radius: 3px;
+  background: var(--slider-fill-color);
 }
 
 .opacity-slider::-moz-range-thumb {
@@ -1406,12 +1432,25 @@
   border: 2px solid #ffffff;
 }
 
+@media (max-width: 420px) {
+  .opacity-control {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+
+  .opacity-value {
+    align-self: flex-end;
+    text-align: right;
+  }
+}
 .opacity-value {
   font-size: 14px;
   font-weight: 500;
   color: #ffffff;
   min-width: 40px;
   text-align: center;
+  flex: 0 0 auto;
 }
 
 .text-readability-section {
