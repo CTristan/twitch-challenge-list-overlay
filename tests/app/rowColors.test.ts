@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import App from "../../src/app";
 import ConfigManager from "../../src/classes/ConfigManager";
+import { CSS_SELECTORS, URL_HASH } from "../../src/types/DOMConstants";
 
 describe("Challenge Row Colors", () => {
     let app: App;
@@ -19,6 +20,7 @@ describe("Challenge Row Colors", () => {
         configManager.set("challengeRowTextColors", []);
 
         app = new App("test-store");
+        window.location.hash = URL_HASH.ADMIN;
     });
 
     describe("No colors configured", () => {
@@ -34,7 +36,9 @@ describe("Challenge Row Colors", () => {
             app.renderChallengeList();
 
             // Check that no background colors are applied
-            const challengeElements = document.querySelectorAll(".challenge");
+            const challengeElements = document.querySelectorAll(
+                CSS_SELECTORS.CHALLENGE
+            );
             challengeElements.forEach((element) => {
                 expect((element as HTMLElement).style.backgroundColor).toBe("");
             });
@@ -52,7 +56,9 @@ describe("Challenge Row Colors", () => {
             ]);
             app.renderChallengeList();
 
-            const challengeElements = document.querySelectorAll(".challenge");
+            const challengeElements = document.querySelectorAll(
+                CSS_SELECTORS.CHALLENGE
+            );
             challengeElements.forEach((element) => {
                 expect((element as HTMLElement).style.backgroundColor).toBe(
                     "rgb(255, 0, 0)"
@@ -73,7 +79,9 @@ describe("Challenge Row Colors", () => {
             ]);
             app.renderChallengeList();
 
-            const challengeElements = document.querySelectorAll(".challenge");
+            const challengeElements = document.querySelectorAll(
+                CSS_SELECTORS.CHALLENGE
+            );
             expect(
                 (challengeElements[0] as HTMLElement).style.backgroundColor
             ).toBe("rgb(255, 0, 0)"); // red
@@ -107,7 +115,9 @@ describe("Challenge Row Colors", () => {
             ]);
             app.renderChallengeList();
 
-            const challengeElements = document.querySelectorAll(".challenge");
+            const challengeElements = document.querySelectorAll(
+                CSS_SELECTORS.CHALLENGE
+            );
             expect(
                 (challengeElements[0] as HTMLElement).style.backgroundColor
             ).toBe("rgb(255, 0, 0)"); // red
@@ -145,7 +155,9 @@ describe("Challenge Row Colors", () => {
             if (!newChallenge) throw new Error("Challenge not created");
             app.addChallengeToDOM(newChallenge);
 
-            const challengeElements = document.querySelectorAll(".challenge");
+            const challengeElements = document.querySelectorAll(
+                CSS_SELECTORS.CHALLENGE
+            );
             expect(
                 (challengeElements[0] as HTMLElement).style.backgroundColor
             ).toBe("rgb(255, 0, 0)"); // red
@@ -254,7 +266,9 @@ describe("Challenge Row Text Colors", () => {
             app.challengeList.addChallenges(["Challenge 1", "Challenge 2"]);
             app.renderChallengeList();
 
-            const challengeElements = document.querySelectorAll(".challenge");
+            const challengeElements = document.querySelectorAll(
+                CSS_SELECTORS.CHALLENGE
+            );
             const textElements = document.querySelectorAll(".challenge-text");
 
             // First challenge: black background, white text
@@ -328,7 +342,7 @@ describe("Challenge Checkbox Color Inheritance", () => {
 
             // Check that no custom checkbox colors are applied
             const checkboxElements = document.querySelectorAll(
-                ".challenge-checkbox"
+                CSS_SELECTORS.CHALLENGE_CHECKBOX
             );
             checkboxElements.forEach((element) => {
                 const checkbox = element as HTMLElement;
@@ -359,7 +373,7 @@ describe("Challenge Checkbox Color Inheritance", () => {
             app.renderChallengeList();
 
             const checkboxElements = document.querySelectorAll(
-                ".challenge-checkbox"
+                CSS_SELECTORS.CHALLENGE_CHECKBOX
             );
 
             // First checkbox should have red colors
@@ -415,7 +429,7 @@ describe("Challenge Checkbox Color Inheritance", () => {
             app.addChallengeToDOM(newChallenge);
 
             const checkboxElements = document.querySelectorAll(
-                ".challenge-checkbox"
+                CSS_SELECTORS.CHALLENGE_CHECKBOX
             );
 
             // Third challenge should have red color (rotating back to first color)
@@ -448,7 +462,7 @@ describe("Challenge Checkbox Color Inheritance", () => {
             app.addChallengeToDOM(challenge);
 
             const checkboxElements = document.querySelectorAll(
-                ".challenge-checkbox"
+                CSS_SELECTORS.CHALLENGE_CHECKBOX
             );
             expect(checkboxElements).toHaveLength(1); // Single container
 

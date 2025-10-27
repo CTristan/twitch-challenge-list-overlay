@@ -251,6 +251,7 @@ describe("UIUpdateHandler", () => {
         });
 
         it("should maintain event handlers on container", () => {
+            window.location.hash = URL_HASH.ADMIN;
             const challenge = new Challenge("Test Challenge");
 
             // First render the challenge list to set up the card structure
@@ -260,16 +261,16 @@ describe("UIUpdateHandler", () => {
             uiUpdateHandler.addChallengeToDOM(challenge);
 
             const checkbox = document.querySelector(
-                ".challenge-container .challenge-checkbox"
+                `${CSS_SELECTORS.CHALLENGE_CONTAINER} ${CSS_SELECTORS.CHALLENGE_CHECKBOX}`
             );
 
             // Checkbox should exist
             expect(checkbox).toBeTruthy();
 
             // Should have proper class structure
-            expect(checkbox?.classList.contains("challenge-checkbox")).toBe(
-                true
-            );
+            expect(
+                checkbox?.classList.contains(CSS_CLASSES.CHALLENGE_CHECKBOX)
+            ).toBe(true);
         });
 
         it("should render multiple challenges efficiently", () => {
@@ -707,6 +708,28 @@ describe("UIUpdateHandler", () => {
             ).toBeTruthy();
             expect(element?.querySelector(".challenge-amount")).toBeTruthy();
             expect(element?.querySelector(".challenge-timer")).toBeTruthy();
+            expect(
+                element?.querySelector(CSS_SELECTORS.CHALLENGE_CHECKBOX)
+            ).toBeNull();
+        });
+
+        it("should include checkbox only in admin standard mode", () => {
+            window.location.hash = URL_HASH.ADMIN;
+            configManager.set(BEHAVIOR_CONFIG.ADMIN_TEXT_ONLY_MODE, false);
+
+            const challenge = new Challenge("Admin Challenge");
+            challengeList.addChallengeObjects(challenge);
+            uiUpdateHandler.renderChallengeList();
+
+            const element = document.querySelector(
+                CSS_SELECTORS.CHALLENGE_BY_ID(challenge.id)
+            );
+            expect(element).toBeTruthy();
+
+            const checkbox = element?.querySelector(
+                CSS_SELECTORS.CHALLENGE_CHECKBOX
+            );
+            expect(checkbox).toBeTruthy();
         });
 
         it("should create challenge with display position", () => {

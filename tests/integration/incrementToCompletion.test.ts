@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import App from "../../src/app";
 import ChallengeList from "../../src/classes/ChallengeList";
+import { URL_HASH } from "../../src/types/DOMConstants";
 import {
     createAdminUser,
     createMockApp,
@@ -21,6 +22,7 @@ describe("Increment to Completion DOM Updates", () => {
 
     beforeEach(() => {
         setupChallengeTestDOM();
+        window.location.hash = URL_HASH.ADMIN;
 
         app = createMockApp();
         challengeList = app.challengeList;

@@ -28,6 +28,7 @@ type ChallengeElementOptions = {
     // Base
     includeEventListeners: boolean;
     eventHandler: (event: Event) => void;
+    includeCheckbox: boolean;
     displayPosition?: number;
     // Admin (standard and text-only shared)
     editHandler?: (event: Event) => void;
@@ -649,6 +650,7 @@ export default class UIUpdateHandler {
         return {
             includeEventListeners: !isAdminMode,
             eventHandler: this.handleCheckboxClick,
+            includeCheckbox: false,
             ...(displayPosition !== undefined && { displayPosition }),
         };
     }
@@ -744,6 +746,8 @@ export default class UIUpdateHandler {
                     options
                 );
             }
+
+            options.includeCheckbox = true;
 
             // Non text-only admin mode: still provide fail handler
             if (this.failHandler) {

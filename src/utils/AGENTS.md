@@ -14,6 +14,8 @@ BroadcastChannel communication: `notifyConfigurationSaved()` (full reload), `not
 
 Dual rendering: `createChallengeElement()` (styled), `createTextOnlyChallengeElement()` (admin text-only). Styled mode builds a `CSS_CLASSES.CHALLENGE_CONTENT_WRAPPER` container and nests all non-checkbox controls inside `CSS_CLASSES.CHALLENGE_ACTIONS` so actions sit on their own line beneath the challenge text—mirror this pattern for new controls. Text-only: plain entries + action buttons (Edit, Complete/Uncomplete, Fail/Unfail, +/-) as DIVs with role="button". No checkboxes/styled rows.
 
+**Viewer overlay rule**: Pass `includeCheckbox: false` when rendering viewer mode—checkboxes are reserved for admin controls only.
+
 ### UIUpdateHandler
 
 DOM manipulation: overlay styling, challenge insertion (routes to text-only when `adminTextOnlyMode` enabled), CSS management. Text-only handlers: `handleCompleteButtonClick()`, `handleUncompleteButtonClick()`, `handleFailButtonClick()`, `handleUnfailButtonClick()`. `handleCheckboxClick()`: cycles states (in-progress → done → failed → in-progress).

@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import App from "../../src/app";
-import { CSS_SELECTORS } from "../../src/types/DOMConstants";
+import { CSS_SELECTORS, URL_HASH } from "../../src/types/DOMConstants";
 
 describe("Event Listener Memory Leak Prevention", () => {
     let app: App;
@@ -20,7 +20,7 @@ describe("Event Listener Memory Leak Prevention", () => {
         `;
 
         // Simulate admin mode
-        window.location.hash = "#admin";
+        window.location.hash = URL_HASH.ADMIN;
 
         app = new App("test-event-listener-memory-leak");
         app.challengeList.clearChallengeList();
@@ -46,7 +46,9 @@ describe("Event Listener Memory Leak Prevention", () => {
         app.enableAdminCheckboxInteraction();
 
         // Get the first checkbox
-        const firstCheckbox = document.querySelector(".challenge-checkbox");
+        const firstCheckbox = document.querySelector(
+            CSS_SELECTORS.CHALLENGE_CHECKBOX
+        );
         expect(firstCheckbox).toBeTruthy();
 
         // Simulate a click event
@@ -63,27 +65,36 @@ describe("Event Listener Memory Leak Prevention", () => {
 
     it("should not add event listeners when not in admin mode", () => {
         // Switch out of admin mode first
-        window.location.hash = "";
+        window.location.hash = URL_HASH.VIEWER;
 
         // Add a test challenge
         app.challengeList.addChallenges("Test Challenge");
         app.renderChallengeList();
 
-        // Get the checkbox
-        const checkbox = document.querySelector(".challenge-checkbox");
-        expect(checkbox).toBeTruthy();
+        // Viewer mode should not render checkboxes
+        const checkbox = document.querySelector(
+            CSS_SELECTORS.CHALLENGE_CHECKBOX
+        );
+        expect(checkbox).toBeNull();
 
-        // Spy on addEventListener to verify no listeners are added
-        const addEventListenerSpy = vi.spyOn(checkbox!, "addEventListener");
+        // Spy on addEventListener to verify no listeners are added to the list container
+        const challengeList = document.querySelector(
+            CSS_SELECTORS.CHALLENGES_ORDERED_LIST
+        );
+        expect(challengeList).toBeTruthy();
+        const addEventListenerSpy = vi.spyOn(
+            challengeList!,
+            "addEventListener"
+        );
 
         // Try to enable admin checkbox interaction (should return early)
         app.enableAdminCheckboxInteraction();
 
         // Verify that no event listeners were added
         expect(addEventListenerSpy).not.toHaveBeenCalled();
-
-        // Verify that the checkbox doesn't have the admin-interactive class
-        expect(checkbox!.classList.contains("admin-interactive")).toBe(false);
+        expect(
+            document.querySelectorAll(CSS_SELECTORS.CHALLENGE_CHECKBOX).length
+        ).toBe(0);
     });
 
     it("should use event delegation with consistent function references", () => {

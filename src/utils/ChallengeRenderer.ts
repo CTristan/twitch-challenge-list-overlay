@@ -618,6 +618,7 @@ export class ChallengeRenderer {
             deleteHandler?: (event: Event) => void;
             displayPosition?: number;
             textOnlyMode?: boolean;
+            includeCheckbox?: boolean;
         } = {}
     ): HTMLElement {
         const challengeElement = document.createElement(HTML_ELEMENTS.LI);
@@ -634,12 +635,19 @@ export class ChallengeRenderer {
         challengeElement.className = `${CSS_CLASSES.CHALLENGE} ${stateClass}`;
         challengeElement.dataset[DATA_ATTRIBUTES.CHALLENGE_ID] = challenge.id;
 
-        // Create checkbox
-        const checkbox = this.createChallengeCheckbox(challenge.isComplete());
+        // Determine if checkbox should be rendered (admin-only)
+        const includeCheckbox = options.includeCheckbox ?? true;
+        let checkbox: HTMLElement | null = null;
+        if (includeCheckbox) {
+            checkbox = this.createChallengeCheckbox(challenge.isComplete());
 
-        // Add event listener if requested
-        if (options.includeEventListeners && options.eventHandler) {
-            checkbox.addEventListener(EVENT_NAMES.CLICK, options.eventHandler);
+            // Add event listener if requested
+            if (options.includeEventListeners && options.eventHandler) {
+                checkbox.addEventListener(
+                    EVENT_NAMES.CLICK,
+                    options.eventHandler
+                );
+            }
         }
 
         // Create challenge text with optional display position
@@ -793,7 +801,9 @@ export class ChallengeRenderer {
         }
 
         // Assemble the challenge element
-        challengeElement.appendChild(checkbox);
+        if (checkbox) {
+            challengeElement.appendChild(checkbox);
+        }
         challengeElement.appendChild(contentWrapper);
 
         return challengeElement;

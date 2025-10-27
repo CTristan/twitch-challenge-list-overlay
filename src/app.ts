@@ -355,6 +355,7 @@ export default class App {
 
                     const options: {
                         displayPosition: number;
+                        includeCheckbox: boolean;
                         includeEventListeners?: boolean;
                         editHandler?: (event: Event) => void;
                         incrementHandler?: (event: Event) => void;
@@ -367,6 +368,7 @@ export default class App {
                         textOnlyMode?: boolean;
                     } = {
                         displayPosition: index + 1,
+                        includeCheckbox: isAdminMode && !adminTextOnlyMode,
                     };
 
                     let listItem: HTMLElement;
