@@ -574,7 +574,7 @@ describe("backend services integration", () => {
         });
 
         it("handles storage reload errors in sync gracefully", () => {
-            const service = getConfigService();
+            getConfigService();
             const sync = getMockWindowSync();
             const consoleErrorSpy = vi
                 .spyOn(console, "error")
