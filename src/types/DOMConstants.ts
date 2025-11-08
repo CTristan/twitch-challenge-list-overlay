@@ -277,6 +277,7 @@ export const EVENT_NAMES = {
     RESIZE: "resize",
     SCROLL: "scroll",
     HASHCHANGE: "hashchange",
+    MESSAGE: "message",
     CHALLENGE_LIST_REFRESH: "challenge-list-refresh",
     BEFOREUNLOAD: "beforeunload",
 } as const;

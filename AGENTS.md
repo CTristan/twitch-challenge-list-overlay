@@ -8,8 +8,8 @@ Root reference for architecture plus cross-cutting rules. Folder-specific guidan
 
 ## Architecture
 
-Tech: TypeScript, Svelte, Vite (IIFE bundle), Vitest (jsdom), LocalStorage, WebSocket. Style: event-driven, modular, configuration-driven.
-Core classes/services: App, ChallengeList, AdminPanel, ConfigManager, CommandRegistry/Handler, TwitchChat, WindowRefreshManager.
+Tech: TypeScript, Svelte (v5 mount/unmount), Vite (IIFE bundle), Vitest (jsdom), LocalStorage, WebSocket. Style: event-driven, modular, configuration-driven.
+Core classes/services: App, ChallengeList, AdminPanel, ConfigManager, CommandRegistry/Handler, TwitchChat, WindowSyncService.
 Svelte layout: `src/frontend` hosts UI shell/components; `src/backend` contains stores/services. Import with `@frontend/*`, `@backend/*`, `@/types/*`. UI must pull selectors, storage keys, and hashes from `src/types` constants—never inline DOM strings.
 
 ## Standards
@@ -28,7 +28,7 @@ LocalStorage prefix `twitch-overlay-`. Keys: CONFIG, CHALLENGE_LIST, CHALLENGE_L
 
 ## Sync
 
-WindowRefreshManager: `notifyConfigurationSaved()` → reload; `notifyChallengeStateChanged()` → DOM update.
+WindowSyncService (BroadcastChannel): `notifyConfigurationSaved()` → schedules reload; `notifyConfigurationSavedViewerOnly()` → viewer windows only; `notifyChallengeStateChanged()` → DOM update + custom event. Viewer mode tracks heartbeats and connectivity.
 App: call `notifyChallengeStateChanged()` after mutating challenges.
 ChallengeList: auto-saves list operations; call save after direct model setters.
 
@@ -42,7 +42,7 @@ ChallengeList: auto-saves list operations; call save after direct model setters.
 
 ## Testing
 
-Vitest + jsdom; coverage ≥80%. Call `ensureTestIsolation()`. Refactor large or complex code instead of adding brittle tests. Run suites via VS Code `runTests` tool only (never `pnpm test`).
+Vitest + jsdom; coverage ≥80% per file. Barrel files (`src/**/index.ts`) and `src/types/**` are excluded from coverage. Call `ensureTestIsolation()`. Prefer running suites via the VS Code runTests integration; when you need full text coverage reports or CI parity, `pnpm test` is acceptable.
 Refactor triggers: >20 public methods, >6 returns, >12 branches, >5 args, >15 vars, >50 statements, >5 boolean clauses in an `if`, or >5 nested blocks.
 
 ## Build

@@ -6,9 +6,14 @@ Reusable utilities for common operations across the application.
 
 ## Core Utilities
 
-### WindowRefreshManager
+### WindowSyncService (Replaces legacy WindowRefreshManager)
 
-BroadcastChannel communication: `notifyConfigurationSaved()` (full reload), `notifyChallengeStateChanged()` (DOM-only), `isAvailable()` (support check).
+BroadcastChannel communication & connectivity:
+
+-   `notifyConfigurationSaved({ suppressSelfRefresh? })` → schedules reload after delay
+-   `notifyConfigurationSavedViewerOnly()` → viewer windows only, admin origin skips self-refresh
+-   `notifyChallengeStateChanged()` → challenge refresh event + DOM update
+-   Heartbeat: viewer windows track admin availability; tests simulate heartbeat messages to cover connection state transitions.
 
 ### ChallengeRenderer
 

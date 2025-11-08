@@ -1,4 +1,5 @@
 import { ELEMENT_IDS, HTML_ELEMENTS } from "@/types/DOMConstants";
+import { mount } from "svelte";
 import App from "./App.svelte";
 
 type MountTarget = HTMLElement;
@@ -15,7 +16,8 @@ const ensureMountTarget = (): MountTarget => {
     return createdTarget;
 };
 
-const app = new App({
+// Svelte 5: use the imperative mount API instead of `new App(...)`.
+const app = mount(App, {
     target: ensureMountTarget(),
 });
 

@@ -7,6 +7,7 @@
  * @module windowRefresh
  */
 
+import { getWindowSyncService } from "@backend/services/windowSyncService";
 import { BROADCAST_CHANNEL_NAMES, URL_HASH } from "../types/DOMConstants";
 import { MessageVariant } from "../types/MessageVariant";
 import { RefreshMessageType } from "../types/RefreshMessageType";
@@ -63,6 +64,14 @@ export class WindowRefreshManager {
      */
     constructor(config: Partial<RefreshConfig> = {}) {
         this.config = { ...DEFAULT_CONFIG, ...config };
+        try {
+            getWindowSyncService().setRefreshDelay(this.config.refreshDelay);
+        } catch (error) {
+            console.error(
+                "Failed to synchronize refresh delay with WindowSyncService:",
+                error
+            );
+        }
         this.isAdminMode = window.location.hash === URL_HASH.ADMIN;
         this.initializeBroadcastChannel();
 
@@ -144,7 +153,7 @@ export class WindowRefreshManager {
                     type === RefreshMessageType.CHALLENGE_STATE_CHANGED
                 ) {
                     // Received challenge-state-changed message from source window, triggering DOM update...`
-                    this.triggerChallengeListRefresh();
+                    this.triggerChallengeListRefresh(source);
                 } else if (type === RefreshMessageType.HEARTBEAT) {
                     // Update last heartbeat timestamp (viewer mode only)
                     if (!this.isAdminMode) {
@@ -164,6 +173,16 @@ export class WindowRefreshManager {
             console.warn(
                 "BroadcastChannel not available, cannot notify other windows"
             );
+            try {
+                getWindowSyncService().announceLocalConfigSaved(
+                    MessageVariant.ALL
+                );
+            } catch (announceError) {
+                console.error(
+                    "Failed to announce configuration save via WindowSyncService:",
+                    announceError
+                );
+            }
             return;
         }
 
@@ -183,6 +202,17 @@ export class WindowRefreshManager {
             setTimeout(() => {
                 this.performRefresh();
             }, this.config.refreshDelay);
+
+            try {
+                getWindowSyncService().announceLocalConfigSaved(
+                    MessageVariant.ALL
+                );
+            } catch (announceError) {
+                console.error(
+                    "Failed to announce configuration save via WindowSyncService:",
+                    announceError
+                );
+            }
         } catch (error) {
             console.error(
                 "Failed to send configuration saved notification:",
@@ -201,6 +231,16 @@ export class WindowRefreshManager {
             console.warn(
                 "BroadcastChannel not available, cannot notify other windows"
             );
+            try {
+                getWindowSyncService().announceLocalConfigSaved(
+                    MessageVariant.VIEWER_ONLY
+                );
+            } catch (announceError) {
+                console.error(
+                    "Failed to announce viewer-only config save via WindowSyncService:",
+                    announceError
+                );
+            }
             return;
         }
 
@@ -216,6 +256,16 @@ export class WindowRefreshManager {
 
             // NOTE: We do NOT call this.performRefresh() here
             // Admin window updates UI directly without refresh
+            try {
+                getWindowSyncService().announceLocalConfigSaved(
+                    MessageVariant.VIEWER_ONLY
+                );
+            } catch (announceError) {
+                console.error(
+                    "Failed to announce viewer-only config save via WindowSyncService:",
+                    announceError
+                );
+            }
         } catch (error) {
             console.error(
                 "Failed to send configuration saved notification:",
@@ -233,6 +283,14 @@ export class WindowRefreshManager {
             console.warn(
                 "BroadcastChannel not available, cannot notify other windows"
             );
+            try {
+                getWindowSyncService().announceLocalChallengeStateChanged();
+            } catch (announceError) {
+                console.error(
+                    "Failed to announce challenge state change via WindowSyncService:",
+                    announceError
+                );
+            }
             return;
         }
 
@@ -247,6 +305,15 @@ export class WindowRefreshManager {
             console.log(
                 "Challenge state changed notification sent to other windows"
             );
+
+            try {
+                getWindowSyncService().announceLocalChallengeStateChanged();
+            } catch (announceError) {
+                console.error(
+                    "Failed to announce challenge state change via WindowSyncService:",
+                    announceError
+                );
+            }
         } catch (error) {
             console.error(
                 "Failed to send challenge state changed notification:",
@@ -278,10 +345,15 @@ export class WindowRefreshManager {
      * This allows the App to handle the refresh without a full page reload
      * @returns {void}
      */
-    private triggerChallengeListRefresh(): void {
+    private triggerChallengeListRefresh(
+        source: WindowMode | null = null
+    ): void {
         try {
             const event = new CustomEvent("challenge-list-refresh", {
-                detail: { timestamp: Date.now() },
+                detail: {
+                    timestamp: Date.now(),
+                    source: source ?? null,
+                },
             });
             window.dispatchEvent(event);
             console.log("Challenge list refresh event dispatched");

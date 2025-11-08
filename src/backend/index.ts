@@ -1,8 +1,19 @@
+import { getChallengeService } from "@backend/services/challengeService";
+import { getConfigService } from "@backend/services/configService";
+import { getTimerService } from "@backend/services/timerService";
+import { getWindowSyncService } from "@backend/services/windowSyncService";
+
 /**
- * Entry point for backend services during the Svelte migration.
- * This placeholder keeps the module graph stable while the legacy
- * implementation remains active.
+ * Initialize backend services to support the Svelte migration bridge.
+ * Optionally provide a default configuration for ConfigManager bootstrapping.
  */
-export const initializeBackendServices = (): void => {
-    // Phase 1 does not instantiate backend services yet.
+export const initializeBackendServices = (defaultConfig?: Config): void => {
+    getWindowSyncService();
+    getChallengeService();
+    getTimerService();
+    if (defaultConfig) {
+        getConfigService(defaultConfig);
+    } else {
+        getConfigService();
+    }
 };

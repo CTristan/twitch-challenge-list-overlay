@@ -61,6 +61,7 @@ export default class ClassName {
 -   **Animation**: Web Animations API for smooth transitions
 -   **Memory management**: Clean up event listeners and intervals
 -   **Lazy loading**: Initialize features only when needed
+-   **Test performance**: All unit tests must complete in <1 second (enforced by Vitest timeout). Code that causes slow tests requires refactoring.
 
 ## Module Imports
 
@@ -81,6 +82,12 @@ import ChallengeRenderer from "./utils/ChallengeRenderer";
 ## Svelte Integration
 
 -   Use the `@frontend/*` alias when importing Svelte components or utilities and `@backend/*` for non-visual services.
--   Svelte components must keep DOM contract parity with existing constants—import selectors, dataset keys, and hash values from `src/types` rather than inlining strings.
+-   Adopt Svelte v5 mount/unmount in app entrypoints; avoid legacy `new App(...)` component API.
+-   Components must keep DOM contract parity with existing constants—import selectors, dataset keys, and hash values from `src/types` rather than inlining strings.
 -   Keep Svelte component script sections in TypeScript mode (`lang="ts"`) and expose explicit props with typed interfaces.
 -   Shared stores should live in `src/backend` if they own persistence or side effects; re-export UI-friendly helpers from `src/frontend` when needed to avoid cross-layer coupling.
+
+## Coverage & Barrels
+
+-   Coverage is enforced per file (≥80%) with V8 provider. Barrel files under `src/**/index.ts` and type-only files under `src/types/**` are excluded from coverage.
+-   Do not add executable code to barrels to game coverage. Keep logic in dedicated modules with tests.

@@ -1,6 +1,7 @@
 import { ChallengeStatus } from "../types/ChallengeStatus";
 import { CHALLENGE_STATES } from "../types/DOMConstants";
 import { STORAGE_KEYS } from "../types/StorageConstants";
+import { TimerEndBehavior } from "../types/TimerEndBehavior";
 import { StorageManager } from "../utils/StorageManager";
 import Challenge from "./Challenge";
 
@@ -8,12 +9,14 @@ import Challenge from "./Challenge";
  * Interface for serialized challenge data in localStorage
  */
 interface SerializedChallenge {
+    id?: string;
     title: string;
     description: string;
     amount: number;
     progress: number;
     status: ChallengeStatus;
     createdAt: number;
+    timerEndBehavior?: TimerEndBehavior;
     timer?: any;
 }
 
@@ -61,7 +64,9 @@ export default class ChallengeList {
      * Load the challenge list from local storage
      * @returns The challenge list
      */
-    #loadChallengeListFromLocalStorage(): Challenge[] {
+    #loadChallengeListFromLocalStorage(
+        existingChallenges: Map<string, Challenge> = new Map()
+    ): Challenge[] {
         const challengeList: Challenge[] = [];
 
         const result = StorageManager.load<SerializedChallenge[]>(
@@ -72,21 +77,34 @@ export default class ChallengeList {
 
         if (result.success && result.data && Array.isArray(result.data)) {
             result.data.forEach((serializedChallenge) => {
-                const challenge =
-                    Challenge.fromSerializedData(serializedChallenge);
+                const persistedId =
+                    typeof serializedChallenge.id === "string" &&
+                    serializedChallenge.id.trim().length > 0
+                        ? serializedChallenge.id.trim()
+                        : null;
+
+                const reusableChallenge =
+                    persistedId !== null
+                        ? existingChallenges.get(persistedId)
+                        : undefined;
+
+                const challenge = reusableChallenge
+                    ? this.#updateChallengeFromSerialized(
+                          reusableChallenge,
+                          serializedChallenge
+                      )
+                    : Challenge.fromSerializedData(serializedChallenge);
+
                 this.#totalChallenges++;
 
-                // Count completed challenges during loading
                 if (challenge.isComplete()) {
                     this.#challengesCompleted++;
                 }
 
-                challengeList.push(challenge);
-                // Populate the challenge map for O(1) lookups
                 this.#challengeMap.set(challenge.id, challenge);
+                challengeList.push(challenge);
             });
         } else {
-            // Initialize empty storage if no data found
             this.#commitToLocalStorage();
         }
 
@@ -102,10 +120,45 @@ export default class ChallengeList {
         // Reset counters and map
         this.#challengesCompleted = 0;
         this.#totalChallenges = 0;
+        const existingChallenges = new Map(this.#challengeMap);
         this.#challengeMap.clear();
 
-        // Reload challenges from localStorage
-        this.challenges = this.#loadChallengeListFromLocalStorage();
+        // Reload challenges from localStorage while preserving existing instances
+        this.challenges =
+            this.#loadChallengeListFromLocalStorage(existingChallenges);
+    }
+
+    #updateChallengeFromSerialized(
+        challenge: Challenge,
+        serialized: SerializedChallenge
+    ): Challenge {
+        const updatedChallenge = Challenge.fromSerializedData(serialized);
+
+        challenge.setTitle(updatedChallenge.title);
+        challenge.setDescription(updatedChallenge.description);
+        challenge.setAmount(updatedChallenge.amount);
+        challenge.setProgress(updatedChallenge.progress);
+        challenge.setTimerEndBehavior(updatedChallenge.timerEndBehavior);
+
+        if (typeof updatedChallenge.createdAt === "number") {
+            challenge.createdAt = updatedChallenge.createdAt;
+        }
+
+        challenge.clearTimer();
+        if (updatedChallenge.timer) {
+            challenge.timer = updatedChallenge.timer;
+        }
+
+        challenge.setStatus(updatedChallenge.status);
+
+        if (
+            typeof serialized.id === "string" &&
+            serialized.id.trim().length > 0
+        ) {
+            challenge.id = updatedChallenge.id;
+        }
+
+        return challenge;
     }
 
     /**

@@ -158,6 +158,13 @@ export default class Challenge {
         }
     }
 
+    clearTimer(): void {
+        if (this.timer) {
+            this.timer.stop();
+        }
+        delete this.timer;
+    }
+
     /**
      * Start the challenge timer
      */
@@ -416,6 +423,14 @@ export default class Challenge {
         challenge.timerEndBehavior =
             data.timerEndBehavior ?? TimerEndBehavior.AUTO_FAIL;
 
+        const persistedId =
+            typeof data.id === "string" && data.id.trim().length > 0
+                ? data.id.trim()
+                : null;
+        if (persistedId) {
+            challenge.id = persistedId;
+        }
+
         return challenge;
     }
 
@@ -425,6 +440,7 @@ export default class Challenge {
      */
     toSerializedData(): any {
         return {
+            id: this.id,
             title: this.title,
             description: this.description,
             amount: this.amount,

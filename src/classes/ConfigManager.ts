@@ -168,6 +168,17 @@ export default class ConfigManager {
     }
 
     /**
+     * Reload configuration from persistent storage and replace in-memory state.
+     * This is used when other browser contexts update the configuration.
+     * @returns Fresh configuration snapshot
+     */
+    public reloadFromStorage(): Config {
+        const reloaded = this.loadConfiguration();
+        this.config = this.deepClone(reloaded);
+        return this.deepClone(this.config);
+    }
+
+    /**
      * Reset configuration to defaults
      * @returns Success status
      */

@@ -43,19 +43,19 @@
 
 ## Migration Phases & Checklists
 
-### Phase 1 — Project Foundation
-- [ ] Create `src/backend` and `src/frontend` directories (retain `src/types`, `src/utils`, etc.) and update project tooling to treat them as first-class roots.
-- [ ] Install `@sveltejs/vite-plugin-svelte` and configure `vite.config.ts` for Svelte + TypeScript, including aliases that map `@frontend/*` and `@backend/*` to the new directories.
-- [ ] Add `svelte.config.js` with OBS-compatible compiler and preprocess options (e.g., PostCSS, SCSS if needed).
-- [ ] Update `tsconfig.json` / `jsconfig.json` paths to include Svelte type support plus path mappings for `src/frontend` and `src/backend` entry points.
-- [ ] Introduce `src/frontend/main.ts` mounting logic and placeholder `src/frontend/App.svelte`, exporting any necessary hooks through `src/backend/index.ts` for non-UI services.
-- [ ] Ensure linting/type-check pipeline (ESLint or `svelte-check`) is wired into CI and understands the dual-namespace layout.
+### Phase 1 — Project Foundation *(Completed: 2025-10-27)*
+- [x] Create `src/backend` and `src/frontend` directories (retain `src/types`, `src/utils`, etc.) and update project tooling to treat them as first-class roots.
+- [x] Install `@sveltejs/vite-plugin-svelte` and configure `vite.config.ts` for Svelte + TypeScript, including aliases that map `@frontend/*` and `@backend/*` to the new directories.
+- [x] Add `svelte.config.js` with OBS-compatible compiler and preprocess options (e.g., PostCSS, SCSS if needed).
+- [x] Update `tsconfig.json` / `jsconfig.json` paths to include Svelte type support plus path mappings for `src/frontend` and `src/backend` entry points.
+- [x] Introduce `src/frontend/main.ts` mounting logic and placeholder `src/frontend/App.svelte`, exporting any necessary hooks through `src/backend/index.ts` for non-UI services.
+- [x] Ensure linting/type-check pipeline (ESLint or `svelte-check`) is wired into CI and understands the dual-namespace layout.
 
 ### Phase 2 — Shared State & Services
-- [ ] Create Svelte stores in `src/frontend/lib/stores` that mirror `ChallengeList`, `ConfigManager`, and timer state while delegating persistence to `src/backend` services.
-- [ ] Port `WindowRefreshManager` notification logic into backend BroadcastChannel utilities with frontend store subscribers wiring updates.
-- [ ] Abstract Twitch `EventEmitter` + `TwitchChat` into `src/backend/services/twitchChat.ts` and expose reactive connection state via a frontend adapter store.
-- [ ] Provide a migration wrapper so legacy scripts can read from the new stores during incremental roll-out (if dual-running is required).
+- [x] Create Svelte stores in `src/frontend/lib/stores` that mirror `ChallengeList`, `ConfigManager`, and timer state while delegating persistence to `src/backend` services.
+- [x] Port `WindowRefreshManager` notification logic into backend BroadcastChannel utilities with frontend store subscribers wiring updates.
+- [x] Abstract Twitch `EventEmitter` + `TwitchChat` into `src/backend/services/twitchChat.ts` and expose reactive connection state via a frontend adapter store.
+- [x] Provide a migration wrapper so legacy scripts can read from the new stores during incremental roll-out (if dual-running is required).
 
 ### Phase 3 — UI Shell & Global Layout
 - [ ] Implement `src/frontend/App.svelte` shell with hash-based mode switching (admin vs viewer) using derived store or `onMount` hash listener.

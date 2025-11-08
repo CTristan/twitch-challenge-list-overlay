@@ -1,6 +1,6 @@
 # tests/ - Testing Patterns & Coverage
 
-Tests mirror `src/` structure. 80% minimum coverage (v8). Use runTests tool with mode="coverage".
+Tests mirror `src/` structure. 80% minimum per-file coverage (v8). Barrel files (`src/**/index.ts`) and type-only modules (`src/types/**`) are excluded from coverage.
 
 ## Test Structure
 
@@ -15,19 +15,34 @@ describe("ClassName", () => {
 });
 ```
 
+## Performance Requirement
+
+**CRITICAL**: Individual unit tests MUST complete in under 1 second. Vitest is configured with a 1-second timeout (`testTimeout: 1000`). If tests time out:
+
+1. **Refactor the test**: Simplify setup, reduce iterations, or remove unnecessary operations.
+2. **Refactor the code**: Eliminate performance bottlenecks in the implementation.
+3. **Break up code**: Split complex logic into smaller, testable units.
+
+Never increase the timeout—fix the test or the underlying code instead.
+
 ## TypeScript Strict Patterns
 
 **Optional properties**: `{...(val !== undefined && {prop: val})}` (never pass undefined)
 **Dataset access**: `element.dataset[DATA_ATTRIBUTES.KEY]` (bracket notation only)
 
-## Coverage Summary
+## Coverage Strategy
 
-**High (90%+)**: index.ts, CommandRegistry, TwitchChat, ChallengeRenderer, CommandHandler, ValidationUtils
-**Good (80-89%)**: App (92.59%), AdminPanel (89.92%), Commands (10+ classes)
+Target ≥80% statements/branches/functions/lines per file. Focus on:
+
+1. Exercising error paths (listener throws, BroadcastChannel unavailability, timer absence).
+2. Covering optional parameter branches (challenge add/update fields, config setAll/reset/import variants).
+3. Branch variance for admin vs viewer modes (hash-based).
+
+Avoid artificially inflating coverage with meaningless assertions—prefer meaningful state transitions.
 
 ## Branch Coverage
 
-Test all branches: error paths, conditionals (admin/viewer mode), state variations (empty/max), DOM errors, integration flows.
+Test all branches: error paths, conditionals (admin/viewer mode), state variations (empty/max), DOM errors, integration flows. For listener error handling, subscribe first with a conditional throw flag set after initial `init` emission to ensure the service’s internal try/catch blocks are executed.
 
 ## Test Utilities
 
@@ -47,4 +62,4 @@ Test all branches: error paths, conditionals (admin/viewer mode), state variatio
 -   Coverage: `runTests({mode: "coverage", coverageFiles: ["path/to/file.ts"]})`
 -   Debug: `it.only()` to focus, `it.skip()` to disable
 
-> **Do not** run `pnpm test`; rely exclusively on the VS Code runTests integration.
+> Preferred runner is the VS Code runTests integration; `pnpm test` acceptable for full textual coverage diagnostics or CI parity.

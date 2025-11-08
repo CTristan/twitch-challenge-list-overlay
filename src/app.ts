@@ -41,6 +41,7 @@ import {
     VALIDATION_CONSTRAINTS,
     VALIDATION_PATTERNS,
 } from "./types/ValidationConstants";
+import { WindowMode } from "./types/WindowMode";
 import ChallengeRenderer from "./utils/ChallengeRenderer";
 import { combineColorWithOpacity } from "./utils/ColorUtils";
 import CommandHandler from "./utils/CommandHandler";
@@ -222,7 +223,23 @@ export default class App {
      * Reloads the challenge list from localStorage and re-renders the DOM
      * @returns {void}
      */
-    private handleChallengeListRefresh = (): void => {
+    private handleChallengeListRefresh = (event?: Event): void => {
+        const currentMode =
+            window.location.hash === URL_HASH.ADMIN
+                ? WindowMode.ADMIN
+                : WindowMode.VIEWER;
+
+        if (event instanceof CustomEvent) {
+            const eventSource =
+                typeof event.detail?.source === "string"
+                    ? (event.detail.source as WindowMode)
+                    : null;
+
+            if (eventSource && eventSource === currentMode) {
+                return;
+            }
+        }
+
         // Reload the challenge list from localStorage
         this.challengeList.loadFromLocalStorage();
 

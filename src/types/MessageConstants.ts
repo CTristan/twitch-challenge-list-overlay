@@ -394,6 +394,52 @@ export const COMMAND_HANDLER_MESSAGES = {
 } as const;
 
 /**
+ * Console log messages for ConfigService operations
+ */
+export const CONFIG_SERVICE_MESSAGES = {
+    UNDEFINED_VALUE_FOR_PATH:
+        "ConfigService.setValue called with undefined value for path",
+    RELOAD_FAILED: "ConfigService failed to reload configuration from storage",
+    BROADCAST_FAILED: "ConfigService failed to broadcast configuration change",
+    LISTENER_ERROR: "ConfigService listener error",
+} as const;
+
+/**
+ * Console log messages for TwitchChatService operations
+ */
+export const TWITCH_CHAT_SERVICE_MESSAGES = {
+    RECONNECT_WITHOUT_AUTH:
+        "TwitchChatService reconnect called without authentication config",
+    OAUTH_AUTHENTICATION_FAILED: "OAuth authentication failed",
+    MISSING_CREDENTIALS: "Missing Twitch credentials",
+    DISCONNECT_ERROR: "TwitchChatService disconnect error",
+    SEND_MESSAGE_WITHOUT_CLIENT:
+        "TwitchChatService.sendMessage called without an active client",
+    SEND_MESSAGE_FAILED: "TwitchChatService failed to send message",
+    COMMAND_LISTENER_ERROR: "TwitchChatService command listener error",
+    CONNECTION_LISTENER_ERROR: "TwitchChatService connection listener error",
+} as const;
+
+/**
+ * Console messages for WindowSyncService operations
+ */
+export const WINDOW_SYNC_SERVICE_MESSAGES = {
+    BROADCAST_CHANNEL_UNSUPPORTED:
+        "BroadcastChannel is not supported in this environment",
+    INIT_BROADCAST_CHANNEL_FAILED: "Failed to initialize BroadcastChannel",
+    INVALID_REFRESH_DELAY: "Refresh delay must be non-negative",
+    DISPATCH_CONFIG_FAILED: "Failed to dispatch configuration message",
+    DISPATCH_CHALLENGE_FAILED: "Failed to dispatch challenge state message",
+    CONFIG_LISTENER_ERROR: "WindowSyncService config listener error",
+    CHALLENGE_LISTENER_ERROR: "WindowSyncService challenge listener error",
+    CUSTOM_EVENT_DISPATCH_FAILED:
+        "WindowSyncService failed to dispatch challenge-list-refresh",
+    REFRESH_SCHEDULE_FAILED: "WindowSyncService failed to schedule refresh",
+    HEARTBEAT_FAILED: "WindowSyncService failed to send heartbeat",
+    CONNECTION_LISTENER_ERROR: "WindowSyncService connection listener error",
+} as const;
+
+/**
  * Console warning messages for AdminPanel operations
  */
 export const ADMIN_PANEL_CONSOLE_MESSAGES = {
