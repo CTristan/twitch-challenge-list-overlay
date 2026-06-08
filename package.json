@@ -26,6 +26,6 @@
     "standard-version": "^9.5.0",
     "typescript": "^5.9.2",
     "vite": "^7.1.12",
-    "vitest": "^3.0.7"
+    "vitest": "^3.2.6"
   }
 }
